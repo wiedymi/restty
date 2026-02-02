@@ -3168,8 +3168,9 @@ async function init() {
       if (backendEl) backendEl.textContent = "webgpu";
       log("webgpu ready");
       activeState = gpuState;
-      updateGrid();
-      needsRender = true;
+      // Force full size/grid sync after context creation
+      updateSize(true);
+      console.log(`[init webgpu] canvas=${canvas.width}x${canvas.height} grid=${gridState.cols}x${gridState.rows}`);
       loop(gpuState);
       await wasmPromise;
       return;
@@ -3188,8 +3189,9 @@ async function init() {
       if (backendEl) backendEl.textContent = "webgl2";
       log("webgl2 ready");
       activeState = glState;
-      updateGrid();
-      needsRender = true;
+      // Force full size/grid sync after context creation
+      updateSize(true);
+      console.log(`[init webgl2] canvas=${canvas.width}x${canvas.height} grid=${gridState.cols}x${gridState.rows}`);
       loop(glState);
       await wasmPromise;
       return;
