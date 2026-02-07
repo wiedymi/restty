@@ -48,12 +48,8 @@ export type ResttyAppCallbacks = {
   onMouseStatus?: (status: string) => void;
 };
 
-export type FontSource = {
-  name: string;
-  url?: string;
-  buffer?: ArrayBuffer;
-  matchers?: string[];
-};
+export type ResttyFontSource = string | ArrayBuffer | ArrayBufferView;
+export type FontSource = ResttyFontSource;
 
 export type ResttyAppOptions = {
   canvas: HTMLCanvasElement;
@@ -64,10 +60,7 @@ export type ResttyAppOptions = {
   renderer?: "auto" | "webgpu" | "webgl2";
   fontSize?: number;
   alphaBlending?: "native" | "linear" | "linear-corrected";
-  fontSources?: {
-    primary?: { url?: string; buffer?: ArrayBuffer; matchers?: string[] };
-    fallbacks?: FontSource[];
-  };
+  fontSources?: ResttyFontSource[];
   maxSymbolAtlasScale?: number;
   fontScaleOverrides?: { match: RegExp; scale: number }[];
   nerdIconScale?: number;

@@ -49075,57 +49075,11 @@ function createResttyPaneManager(options) {
 }
 
 // src/app/index.ts
-var DEFAULT_PRIMARY_FONT_SOURCE = {
-  url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-  matchers: [
-    "jetbrainsmono nerd font",
-    "jetbrains mono nerd font",
-    "fira code nerd font",
-    "fira code nerd",
-    "hack nerd font",
-    "meslo lgm nerd font",
-    "monaspace nerd font",
-    "nerd font mono",
-    "jetbrains mono"
-  ]
-};
-var DEFAULT_FALLBACK_FONT_SOURCES = [
-  {
-    name: "Symbols Nerd Font Mono",
-    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
-    matchers: ["symbols nerd font mono", "symbols nerd font", "nerd fonts symbols"]
-  },
-  {
-    name: "Noto Sans Symbols 2",
-    url: "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
-    matchers: ["noto sans symbols 2", "noto sans symbols"]
-  },
-  {
-    name: "Apple Color Emoji",
-    matchers: ["apple color emoji"]
-  },
-  {
-    name: "OpenMoji Black",
-    url: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf",
-    matchers: ["openmoji", "emoji"]
-  },
-  {
-    name: "Noto Sans CJK",
-    matchers: [
-      "noto sans cjk",
-      "source han sans",
-      "pingfang",
-      "hiragino",
-      "yu gothic",
-      "meiryo",
-      "microsoft yahei",
-      "ms gothic",
-      "simhei",
-      "simsun",
-      "apple sd gothic",
-      "nanum"
-    ]
-  }
+var DEFAULT_FONT_SOURCES = [
+  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+  "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
+  "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf"
 ];
 function createResttyApp(options) {
   const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
@@ -51308,7 +51262,7 @@ function createResttyApp(options) {
       return image;
     };
   }
-  const fallbackFontSources = options.fontSources?.fallbacks && options.fontSources.fallbacks.length ? options.fontSources.fallbacks : DEFAULT_FALLBACK_FONT_SOURCES;
+  const configuredFontSources = options.fontSources && options.fontSources.length ? options.fontSources : DEFAULT_FONT_SOURCES;
   const gridState = {
     cols: 0,
     rows: 0,
@@ -51737,20 +51691,47 @@ function createResttyApp(options) {
     }
     return null;
   }
-  async function loadFontBuffer() {
-    const primary = options.fontSources?.primary ?? DEFAULT_PRIMARY_FONT_SOURCE;
-    if (primary?.buffer)
-      return primary.buffer;
-    if (primary?.url) {
-      const buffer = await tryFetchFontBuffer(primary.url);
-      if (buffer)
-        return buffer;
+  function sourceLabelFromUrl(url, index) {
+    try {
+      const parsed = new URL(url, window.location.href);
+      const pathname = parsed.pathname;
+      const slashIndex = pathname.lastIndexOf("/");
+      const rawName = slashIndex >= 0 ? pathname.slice(slashIndex + 1) : pathname;
+      const decoded = decodeURIComponent(rawName);
+      return decoded || `font-${index + 1}`;
+    } catch {
+      return `font-${index + 1}`;
     }
-    if (primary?.matchers?.length) {
-      const local2 = await tryLocalFontBuffer(primary.matchers);
-      if (local2)
-        return local2;
+  }
+  function sourceBufferFromView(view) {
+    const out = new Uint8Array(view.byteLength);
+    out.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    return out.buffer;
+  }
+  async function resolveFontSourceBuffer(source) {
+    if (typeof source === "string") {
+      return tryFetchFontBuffer(source);
     }
+    if (source instanceof ArrayBuffer) {
+      return source;
+    }
+    if (ArrayBuffer.isView(source)) {
+      return sourceBufferFromView(source);
+    }
+    return null;
+  }
+  async function loadConfiguredFontBuffers() {
+    const loaded = [];
+    for (let i3 = 0;i3 < configuredFontSources.length; i3 += 1) {
+      const source = configuredFontSources[i3];
+      const buffer = await resolveFontSourceBuffer(source);
+      if (!buffer)
+        continue;
+      const label = typeof source === "string" ? sourceLabelFromUrl(source, i3) : `font-buffer-${i3 + 1}`;
+      loaded.push({ label, buffer });
+    }
+    if (loaded.length)
+      return loaded;
     const nerdLocal = await tryLocalFontBuffer([
       "jetbrainsmono nerd font",
       "jetbrains mono nerd font",
@@ -51762,70 +51743,47 @@ function createResttyApp(options) {
       "nerd font mono"
     ]);
     if (nerdLocal)
-      return nerdLocal;
-    if (DEFAULT_PRIMARY_FONT_SOURCE.url && primary?.url !== DEFAULT_PRIMARY_FONT_SOURCE.url) {
-      const cdnBuffer = await tryFetchFontBuffer(DEFAULT_PRIMARY_FONT_SOURCE.url);
-      if (cdnBuffer)
-        return cdnBuffer;
-    }
+      return [{ label: "local-nerd-font", buffer: nerdLocal }];
     const local = await tryLocalFontBuffer(["jetbrains mono"]);
     if (local)
-      return local;
-    throw new Error("Unable to load JetBrains Mono font.");
-  }
-  async function loadFallbackFontBuffers() {
-    const results = [];
-    for (const source of fallbackFontSources) {
-      if (source.buffer) {
-        results.push({ name: source.name, buffer: source.buffer });
-        continue;
-      }
-      if (source.url) {
-        const buffer = await tryFetchFontBuffer(source.url);
-        if (buffer) {
-          results.push({ name: source.name, buffer });
-          continue;
-        }
-      }
-      if (source.matchers && source.matchers.length) {
-        const local = await tryLocalFontBuffer(source.matchers);
-        if (local)
-          results.push({ name: source.name, buffer: local });
-      }
-    }
-    return results;
+      return [{ label: "local-jetbrains-mono", buffer: local }];
+    return [];
   }
   async function ensureFont() {
     if (fontState.font || fontPromise)
       return fontPromise;
     fontPromise = (async () => {
       try {
-        const buffer = await loadFontBuffer();
-        const primaryFont = await Font.loadAsync(buffer);
-        const entries = [createFontEntry(primaryFont, "primary")];
-        const fallbackBuffers = await loadFallbackFontBuffers();
-        for (const fallback of fallbackBuffers) {
+        const configuredBuffers = await loadConfiguredFontBuffers();
+        if (!configuredBuffers.length) {
+          throw new Error("Unable to load any configured font source.");
+        }
+        const entries = [];
+        for (const source of configuredBuffers) {
           try {
-            const collection = Font.collection ? Font.collection(fallback.buffer) : null;
+            const collection = Font.collection ? Font.collection(source.buffer) : null;
             if (collection) {
               const names = collection.names();
               for (const info of names) {
                 try {
                   const face = collection.get(info.index);
                   const metadataLabel = info.fullName || info.family || info.postScriptName || "";
-                  const label = metadataLabel ? `${fallback.name} (${metadataLabel})` : `${fallback.name} ${info.index}`;
+                  const label = metadataLabel ? `${source.label} (${metadataLabel})` : `${source.label} ${info.index}`;
                   entries.push(createFontEntry(face, label));
                 } catch (err) {
-                  console.warn(`fallback face load failed (${fallback.name} ${info.index})`, err);
+                  console.warn(`font face load failed (${source.label} ${info.index})`, err);
                 }
               }
             } else {
-              const fbFont = await Font.loadAsync(fallback.buffer);
-              entries.push(createFontEntry(fbFont, fallback.name));
+              const loadedFont = await Font.loadAsync(source.buffer);
+              entries.push(createFontEntry(loadedFont, source.label));
             }
           } catch (err) {
-            console.warn(`fallback font load failed (${fallback.name})`, err);
+            console.warn(`font load failed (${source.label})`, err);
           }
+        }
+        if (!entries.length) {
+          throw new Error("Unable to parse any loaded font source.");
         }
         fontState.fonts = entries;
         fontState.font = entries[0].font;
@@ -56439,5 +56397,5 @@ var firstPane = manager2.createInitialPane({ focus: true });
 activePaneId = firstPane.id;
 queueResizeAllPanes();
 
-//# debugId=4F49753AEF5BC53A64756E2164756E21
+//# debugId=384951F8862A3EF864756E2164756E21
 //# sourceMappingURL=app.js.map

@@ -54,7 +54,7 @@ import {
   type AtlasConstraintContext,
 } from "./atlas-builder";
 import * as bundledTextShaper from "text-shaper";
-import type { FontSource, ResttyApp, ResttyAppOptions } from "./types";
+import type { ResttyFontSource, ResttyApp, ResttyAppOptions } from "./types";
 import { getDefaultResttyAppSession } from "./session";
 export { createResttyAppSession, getDefaultResttyAppSession } from "./session";
 export {
@@ -67,6 +67,7 @@ export type {
   ResttyAppElements,
   ResttyAppCallbacks,
   FontSource,
+  ResttyFontSource,
   ResttyWasmLogListener,
   ResttyAppSession,
   ResttyAppOptions,
@@ -85,58 +86,11 @@ export type {
 } from "./panes";
 export type { ResttyOptions } from "./restty";
 
-const DEFAULT_PRIMARY_FONT_SOURCE = {
-  url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-  matchers: [
-    "jetbrainsmono nerd font",
-    "jetbrains mono nerd font",
-    "fira code nerd font",
-    "fira code nerd",
-    "hack nerd font",
-    "meslo lgm nerd font",
-    "monaspace nerd font",
-    "nerd font mono",
-    "jetbrains mono",
-  ],
-};
-
-const DEFAULT_FALLBACK_FONT_SOURCES: FontSource[] = [
-  {
-    name: "Symbols Nerd Font Mono",
-    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
-    matchers: ["symbols nerd font mono", "symbols nerd font", "nerd fonts symbols"],
-  },
-  {
-    name: "Noto Sans Symbols 2",
-    url: "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
-    matchers: ["noto sans symbols 2", "noto sans symbols"],
-  },
-  {
-    name: "Apple Color Emoji",
-    matchers: ["apple color emoji"],
-  },
-  {
-    name: "OpenMoji Black",
-    url: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf",
-    matchers: ["openmoji", "emoji"],
-  },
-  {
-    name: "Noto Sans CJK",
-    matchers: [
-      "noto sans cjk",
-      "source han sans",
-      "pingfang",
-      "hiragino",
-      "yu gothic",
-      "meiryo",
-      "microsoft yahei",
-      "ms gothic",
-      "simhei",
-      "simsun",
-      "apple sd gothic",
-      "nanum",
-    ],
-  },
+const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
+  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+  "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
+  "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf",
 ];
 
 export function createResttyApp(options: ResttyAppOptions): ResttyApp {
@@ -2680,10 +2634,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     };
   }
 
-  const fallbackFontSources: FontSource[] =
-    options.fontSources?.fallbacks && options.fontSources.fallbacks.length
-      ? options.fontSources.fallbacks
-      : DEFAULT_FALLBACK_FONT_SOURCES;
+  const configuredFontSources =
+    options.fontSources && options.fontSources.length ? options.fontSources : DEFAULT_FONT_SOURCES;
 
   const gridState = {
     cols: 0,
@@ -3183,17 +3135,49 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     return null;
   }
 
-  async function loadFontBuffer() {
-    const primary = options.fontSources?.primary ?? DEFAULT_PRIMARY_FONT_SOURCE;
-    if (primary?.buffer) return primary.buffer;
-    if (primary?.url) {
-      const buffer = await tryFetchFontBuffer(primary.url);
-      if (buffer) return buffer;
+  function sourceLabelFromUrl(url: string, index: number): string {
+    try {
+      const parsed = new URL(url, window.location.href);
+      const pathname = parsed.pathname;
+      const slashIndex = pathname.lastIndexOf("/");
+      const rawName = slashIndex >= 0 ? pathname.slice(slashIndex + 1) : pathname;
+      const decoded = decodeURIComponent(rawName);
+      return decoded || `font-${index + 1}`;
+    } catch {
+      return `font-${index + 1}`;
     }
-    if (primary?.matchers?.length) {
-      const local = await tryLocalFontBuffer(primary.matchers);
-      if (local) return local;
+  }
+
+  function sourceBufferFromView(view: ArrayBufferView): ArrayBuffer {
+    const out = new Uint8Array(view.byteLength);
+    out.set(new Uint8Array(view.buffer, view.byteOffset, view.byteLength));
+    return out.buffer;
+  }
+
+  async function resolveFontSourceBuffer(source: ResttyFontSource): Promise<ArrayBuffer | null> {
+    if (typeof source === "string") {
+      return tryFetchFontBuffer(source);
     }
+    if (source instanceof ArrayBuffer) {
+      return source;
+    }
+    if (ArrayBuffer.isView(source)) {
+      return sourceBufferFromView(source);
+    }
+    return null;
+  }
+
+  async function loadConfiguredFontBuffers() {
+    const loaded: Array<{ label: string; buffer: ArrayBuffer }> = [];
+    for (let i = 0; i < configuredFontSources.length; i += 1) {
+      const source = configuredFontSources[i];
+      const buffer = await resolveFontSourceBuffer(source);
+      if (!buffer) continue;
+      const label =
+        typeof source === "string" ? sourceLabelFromUrl(source, i) : `font-buffer-${i + 1}`;
+      loaded.push({ label, buffer });
+    }
+    if (loaded.length) return loaded;
 
     const nerdLocal = await tryLocalFontBuffer([
       "jetbrainsmono nerd font",
@@ -3205,72 +3189,50 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       "monaspace nerd font",
       "nerd font mono",
     ]);
-    if (nerdLocal) return nerdLocal;
-    if (DEFAULT_PRIMARY_FONT_SOURCE.url && primary?.url !== DEFAULT_PRIMARY_FONT_SOURCE.url) {
-      const cdnBuffer = await tryFetchFontBuffer(DEFAULT_PRIMARY_FONT_SOURCE.url);
-      if (cdnBuffer) return cdnBuffer;
-    }
-    const local = await tryLocalFontBuffer(["jetbrains mono"]);
-    if (local) return local;
-    throw new Error("Unable to load JetBrains Mono font.");
-  }
+    if (nerdLocal) return [{ label: "local-nerd-font", buffer: nerdLocal }];
 
-  async function loadFallbackFontBuffers() {
-    const results: { name: string; buffer: ArrayBuffer }[] = [];
-    for (const source of fallbackFontSources) {
-      if (source.buffer) {
-        results.push({ name: source.name, buffer: source.buffer });
-        continue;
-      }
-      if (source.url) {
-        const buffer = await tryFetchFontBuffer(source.url);
-        if (buffer) {
-          results.push({ name: source.name, buffer });
-          continue;
-        }
-      }
-      if (source.matchers && source.matchers.length) {
-        const local = await tryLocalFontBuffer(source.matchers);
-        if (local) results.push({ name: source.name, buffer: local });
-      }
-    }
-    return results;
+    const local = await tryLocalFontBuffer(["jetbrains mono"]);
+    if (local) return [{ label: "local-jetbrains-mono", buffer: local }];
+
+    return [];
   }
 
   async function ensureFont() {
     if (fontState.font || fontPromise) return fontPromise;
     fontPromise = (async () => {
       try {
-        const buffer = await loadFontBuffer();
-        const primaryFont = await Font.loadAsync(buffer);
-        const entries = [createFontEntry(primaryFont, "primary")];
-        const fallbackBuffers = await loadFallbackFontBuffers();
-        for (const fallback of fallbackBuffers) {
+        const configuredBuffers = await loadConfiguredFontBuffers();
+        if (!configuredBuffers.length) {
+          throw new Error("Unable to load any configured font source.");
+        }
+        const entries: FontEntry[] = [];
+        for (const source of configuredBuffers) {
           try {
-            const collection = Font.collection ? Font.collection(fallback.buffer) : null;
+            const collection = Font.collection ? Font.collection(source.buffer) : null;
             if (collection) {
               const names = collection.names();
               for (const info of names) {
                 try {
                   const face = collection.get(info.index);
-                  // Use font metadata if available, but prefer configured name for symbol fonts
                   const metadataLabel = info.fullName || info.family || info.postScriptName || "";
-                  // Include both configured name and metadata to ensure symbol font detection works
                   const label = metadataLabel
-                    ? `${fallback.name} (${metadataLabel})`
-                    : `${fallback.name} ${info.index}`;
+                    ? `${source.label} (${metadataLabel})`
+                    : `${source.label} ${info.index}`;
                   entries.push(createFontEntry(face, label));
                 } catch (err) {
-                  console.warn(`fallback face load failed (${fallback.name} ${info.index})`, err);
+                  console.warn(`font face load failed (${source.label} ${info.index})`, err);
                 }
               }
             } else {
-              const fbFont = await Font.loadAsync(fallback.buffer);
-              entries.push(createFontEntry(fbFont, fallback.name));
+              const loadedFont = await Font.loadAsync(source.buffer);
+              entries.push(createFontEntry(loadedFont, source.label));
             }
           } catch (err) {
-            console.warn(`fallback font load failed (${fallback.name})`, err);
+            console.warn(`font load failed (${source.label})`, err);
           }
+        }
+        if (!entries.length) {
+          throw new Error("Unable to parse any loaded font source.");
         }
         fontState.fonts = entries;
         fontState.font = entries[0].font;

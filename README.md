@@ -35,7 +35,7 @@ const restty = new Restty({
 });
 ```
 
-By default, `restty` loads primary/fallback fonts from CDN URLs. You can override them at init via `fontSources`.
+By default, `restty` loads fonts from CDN URLs. You can override them at init via `fontSources`.
 
 ## Common examples
 
@@ -78,17 +78,10 @@ restty.sendInput("ls -la\n");
 ```ts
 const restty = new Restty({
   root: document.getElementById("termRoot") as HTMLElement,
-  fontSources: {
-    primary: {
-      url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-    },
-    fallbacks: [
-      {
-        name: "Symbols Nerd Font Mono",
-        url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
-      },
-    ],
-  },
+  fontSources: [
+    "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
+    "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+  ],
 });
 ```
 
