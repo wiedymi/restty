@@ -68,10 +68,10 @@
     "playground:static": "bun run playground/server.ts"
   },
   "dependencies": {
-    "@webcontainer/api": "^1.6.1",
     "text-shaper": "^0.1.17"
   },
   "devDependencies": {
+    "@webcontainer/api": "^1.6.1",
     "@webgpu/types": "^0.1.69",
     "oxfmt": "^0.28.0",
     "oxlint": "^1.19.0",
