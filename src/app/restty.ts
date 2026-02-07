@@ -126,6 +126,7 @@ export class Restty {
   async setFontSources(sources: ResttyFontSource[]): Promise<void> {
     this.fontSources = sources.length ? [...sources] : undefined;
     const panes = this.getPanes();
+    // eslint-disable-next-line unicorn/no-new-array
     const updates: Array<Promise<void>> = new Array(panes.length);
     for (let i = 0; i < panes.length; i += 1) {
       updates[i] = panes[i].app.setFontSources(this.fontSources ?? []);

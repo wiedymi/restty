@@ -174,56 +174,44 @@ main {
 .pane-divider {
   position: relative;
   z-index: 2;
-  flex: 0 0 4px;
+  flex: 0 0 1px;
   touch-action: none;
 }
 
 .pane-divider.is-vertical {
   cursor: col-resize;
-  background: linear-gradient(
-    to right,
-    #0f0f0f 0%,
-    #171717 24%,
-    #2f2f2f 50%,
-    #171717 76%,
-    #0f0f0f 100%
-  );
+  background: transparent;
 }
 
 .pane-divider.is-horizontal {
   cursor: row-resize;
-  background: linear-gradient(
-    to bottom,
-    #0f0f0f 0%,
-    #171717 24%,
-    #2f2f2f 50%,
-    #171717 76%,
-    #0f0f0f 100%
-  );
+  background: transparent;
 }
 
 .pane-divider.is-vertical:hover,
 .pane-divider.is-vertical.is-dragging {
-  background: linear-gradient(
-    to right,
-    #151515 0%,
-    #242424 24%,
-    #434343 50%,
-    #242424 76%,
-    #151515 100%
-  );
+  background:
+    radial-gradient(
+      100px 46% at 50% 50%,
+      rgba(235, 235, 235, 0.92) 0%,
+      rgba(200, 200, 200, 0.48) 46%,
+      rgba(155, 155, 155, 0.12) 68%,
+      rgba(120, 120, 120, 0) 100%
+    ),
+    rgba(185, 185, 185, 0.24);
 }
 
 .pane-divider.is-horizontal:hover,
 .pane-divider.is-horizontal.is-dragging {
-  background: linear-gradient(
-    to bottom,
-    #151515 0%,
-    #242424 24%,
-    #434343 50%,
-    #242424 76%,
-    #151515 100%
-  );
+  background:
+    radial-gradient(
+      46% 100px at 50% 50%,
+      rgba(235, 235, 235, 0.92) 0%,
+      rgba(200, 200, 200, 0.48) 46%,
+      rgba(155, 155, 155, 0.12) 68%,
+      rgba(120, 120, 120, 0) 100%
+    ),
+    rgba(185, 185, 185, 0.24);
 }
 
 body.is-resizing-split {

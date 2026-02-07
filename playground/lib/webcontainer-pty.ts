@@ -15,12 +15,135 @@ type CommandSpec = {
 };
 
 let sharedWebContainerPromise: Promise<WebContainer> | null = null;
+let sharedSeedPromise: Promise<void> | null = null;
+
+const FALLBACK_DEMO_SCRIPT = `#!/usr/bin/env sh
+set -eu
+ESC=$(printf '\\033')
+CSI="\${ESC}["
+printf '%s?25l%s2J%sH' "\$CSI" "\$CSI" "\$CSI"
+printf 'restty demo fallback\\n\\n'
+i=0
+while [ "\$i" -le 20 ]; do
+  pct=\$(( i * 100 / 20 ))
+  printf '\\rloading... %3s%%' "\$pct"
+  sleep 0.03
+  i=\$((i + 1))
+done
+printf '\\n\\n'
+printf '%s1mstyles:%s0m %s1mBold%s0m %s3mItalic%s0m\\n' "\$CSI" "\$CSI" "\$CSI" "\$CSI" "\$CSI" "\$CSI"
+printf '%s1mtruecolor:%s0m %s38;2;255;100;0mOrange%s0m\\n' "\$CSI" "\$CSI" "\$CSI" "\$CSI"
+printf '\\nrun ./test.sh for static checks.\\n'
+printf '%s0m%s?25h\\n' "\$CSI" "\$CSI"
+`;
+
+const FALLBACK_TEST_SCRIPT = `#!/usr/bin/env sh
+set -eu
+ESC=$(printf '\\033')
+CSI="\${ESC}["
+printf '%s?25l%s2J%sH' "\$CSI" "\$CSI" "\$CSI"
+printf 'restty quick test\\n\\n'
+printf '%s1mBold%s0m %s3mItalic%s0m %s4mUnderline%s0m\\n' "\$CSI" "\$CSI" "\$CSI" "\$CSI" "\$CSI" "\$CSI"
+printf '%s38;2;255;100;0mOrange%s0m %s38;2;120;200;255mSky%s0m\\n\\n' "\$CSI" "\$CSI" "\$CSI" "\$CSI"
+printf 'Done.\\n'
+printf '%s0m%s?25h\\n' "\$CSI" "\$CSI"
+`;
+
+type SeedScriptSpec = {
+  urls: string[];
+  target: string;
+  fallback: string;
+};
+
+const seedScripts: SeedScriptSpec[] = [
+  {
+    urls: ["/playground/public/demo.sh", "/demo.sh"],
+    target: "demo.sh",
+    fallback: FALLBACK_DEMO_SCRIPT,
+  },
+  {
+    urls: ["/playground/public/test.sh", "/test.sh"],
+    target: "test.sh",
+    fallback: FALLBACK_TEST_SCRIPT,
+  },
+];
 
 async function getSharedWebContainer(): Promise<WebContainer> {
   if (!sharedWebContainerPromise) {
     sharedWebContainerPromise = WebContainer.boot({ coep: "require-corp" });
   }
   return sharedWebContainerPromise;
+}
+
+async function fetchScriptText(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return null;
+    const text = await res.text();
+    return text.trim().length > 0 ? text : null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchFirstScript(urls: string[]): Promise<string | null> {
+  for (const url of urls) {
+    const text = await fetchScriptText(url);
+    if (text) return text;
+  }
+  return null;
+}
+
+async function ensureScriptsExecutable(webcontainer: WebContainer): Promise<void> {
+  const workdir = webcontainer.workdir;
+  const execPaths = ["demo.sh", "test.sh", `${workdir}/demo.sh`, `${workdir}/test.sh`];
+  const chmodViaNode = await webcontainer.spawn("node", [
+    "-e",
+    [
+      "const fs = require('node:fs');",
+      "const paths = process.argv.slice(1);",
+      "let touched = false;",
+      "let ok = true;",
+      "for (const p of paths) {",
+      "  try {",
+      "    if (!fs.existsSync(p)) continue;",
+      "    touched = true;",
+      "    const mode = fs.statSync(p).mode | 0o111;",
+      "    fs.chmodSync(p, mode);",
+      "    fs.accessSync(p, fs.constants.X_OK);",
+      "  } catch {",
+      "    ok = false;",
+      "  }",
+      "}",
+      "if (!touched || !ok) process.exit(1);",
+    ].join(" "),
+    ...execPaths,
+  ]);
+
+  const nodeCode = await chmodViaNode.exit.catch(() => 1);
+  if (nodeCode === 0) return;
+
+  const chmod = await webcontainer.spawn("chmod", ["+x", "demo.sh", "test.sh"]);
+  const chmodCode = await chmod.exit.catch(() => 1);
+  if (chmodCode !== 0) {
+    throw new Error("Failed to set executable permissions for demo scripts");
+  }
+}
+
+async function ensureSeedScripts(webcontainer: WebContainer): Promise<void> {
+  if (!sharedSeedPromise) {
+    sharedSeedPromise = (async () => {
+      for (const spec of seedScripts) {
+        const text = await fetchFirstScript(spec.urls);
+        await webcontainer.fs.writeFile(spec.target, text ?? spec.fallback);
+      }
+    })().catch((err) => {
+      sharedSeedPromise = null;
+      throw err;
+    });
+  }
+  await sharedSeedPromise;
+  await ensureScriptsExecutable(webcontainer);
 }
 
 function parseCommand(spec: string): CommandSpec {
@@ -153,6 +276,8 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
 
       try {
         const webcontainer = await getSharedWebContainer();
+        if (connectionToken !== token) return;
+        await ensureSeedScripts(webcontainer);
         if (connectionToken !== token) return;
 
         const cwd = normalizeCwd(options.getCwd?.());

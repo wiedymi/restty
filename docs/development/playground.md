@@ -13,6 +13,10 @@ Static-file-only option:
 
 - `bun run playground:static`
 
+WebContainer mode note:
+
+- When using the in-browser WebContainer backend, `/demo.sh` and `/test.sh` are auto-seeded so you can run `./demo.sh` or `./test.sh` directly in the shell.
+
 Cloudflare Pages static deploy:
 
 1. Run `bun run build:assets`

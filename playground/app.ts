@@ -12,6 +12,7 @@ import {
   parseGhosttyTheme,
   type GhosttyTheme,
   type PtyTransport,
+  type ResttyFontSource,
 } from "../src/index.ts";
 import { createDemoController } from "./lib/demos.ts";
 import { parseCodepointInput } from "./lib/codepoint.ts";
@@ -54,6 +55,10 @@ const ptyBtn = document.getElementById("btnPty");
 const themeSelect = document.getElementById("themeSelect") as HTMLSelectElement | null;
 const themeFileInput = document.getElementById("themeFile") as HTMLInputElement | null;
 const fontSizeInput = document.getElementById("fontSize") as HTMLInputElement | null;
+const fontFamilySelect = document.getElementById("fontFamily") as HTMLSelectElement | null;
+const fontFamilyLocalSelect = document.getElementById("fontFamilyLocal") as HTMLSelectElement | null;
+const btnLoadLocalFonts = document.getElementById("btnLoadLocalFonts") as HTMLButtonElement | null;
+const fontFamilyHintEl = document.getElementById("fontFamilyHint");
 const atlasCpInput = document.getElementById("atlasCp") as HTMLInputElement | null;
 const atlasBtn = document.getElementById("btnAtlas");
 const btnCopyLog = document.getElementById("btnCopyLog");
@@ -64,6 +69,16 @@ const settingsDialog = document.getElementById("settingsDialog") as HTMLDialogEl
 const settingsClose = document.getElementById("settingsClose") as HTMLButtonElement | null;
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
+const DEFAULT_FONT_FAMILY = "jetbrains";
+const FONT_FAMILY_LOCAL_PREFIX = "local:";
+const FONT_URL_JETBRAINS_MONO =
+  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf";
+const FONT_URL_NERD_SYMBOLS =
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf";
+const FONT_URL_NOTO_SYMBOLS =
+  "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf";
+const FONT_URL_OPENMOJI =
+  "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf";
 const LOG_LIMIT = 200;
 const logBuffer: string[] = [];
 
@@ -160,6 +175,150 @@ let resizeRaf = 0;
 let paneManager: ReturnType<typeof createResttyPaneManager<Pane>> | undefined;
 
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
+let selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
+let selectedLocalFontMatcher = "";
+
+function supportsLocalFontPicker() {
+  return typeof navigator !== "undefined" && "queryLocalFonts" in navigator;
+}
+
+function setFontFamilyHint(text: string) {
+  if (fontFamilyHintEl) fontFamilyHintEl.textContent = text;
+}
+
+function buildFontSourcesForSelection(
+  value: string,
+  localMatcher: string,
+): ResttyFontSource[] {
+  const sources: ResttyFontSource[] = [];
+
+  if (localMatcher) {
+    sources.push({
+      type: "local",
+      label: `local:${localMatcher}`,
+      matchers: [localMatcher],
+      required: true,
+    });
+  }
+
+  if (value === "jetbrains") {
+    sources.push({
+      type: "local",
+      label: "local:jetbrains mono",
+      matchers: ["jetbrains mono"],
+    });
+  }
+  sources.push({
+    type: "url",
+    label: "JetBrains Mono",
+    url: FONT_URL_JETBRAINS_MONO,
+  });
+
+  sources.push({
+    type: "url",
+    label: "Symbols Nerd Font Mono",
+    url: FONT_URL_NERD_SYMBOLS,
+  });
+  sources.push({
+    type: "url",
+    label: "Noto Sans Symbols 2",
+    url: FONT_URL_NOTO_SYMBOLS,
+  });
+  sources.push({
+    type: "url",
+    label: "OpenMoji",
+    url: FONT_URL_OPENMOJI,
+  });
+
+  return sources;
+}
+
+function getCurrentFontSources(): ResttyFontSource[] {
+  return buildFontSourcesForSelection(selectedFontFamily, selectedLocalFontMatcher);
+}
+
+function syncFontFamilyControls() {
+  if (fontFamilySelect) {
+    fontFamilySelect.value = selectedFontFamily;
+  }
+  if (fontFamilyLocalSelect) {
+    fontFamilyLocalSelect.value = selectedLocalFontMatcher
+      ? `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(selectedLocalFontMatcher)}`
+      : "";
+  }
+  if (!supportsLocalFontPicker() && btnLoadLocalFonts) {
+    btnLoadLocalFonts.disabled = true;
+  }
+  if (!supportsLocalFontPicker() && fontFamilyLocalSelect) {
+    fontFamilyLocalSelect.disabled = true;
+  }
+}
+
+async function applyFontSourcesToAllPanes() {
+  const sources = getCurrentFontSources();
+  const updates: Array<Promise<void>> = [];
+  const iterator = panes.values();
+  for (let next = iterator.next(); !next.done; next = iterator.next()) {
+    updates.push(next.value.app.setFontSources(sources));
+  }
+  if (!updates.length) return;
+  try {
+    await Promise.all(updates);
+    appendLog(`[ui] font family applied (${selectedFontFamily})`);
+  } catch (err: any) {
+    appendLog(`[ui] font family apply failed: ${err?.message ?? err}`);
+  }
+}
+
+function upsertDetectedLocalFontOption(family: string) {
+  if (!fontFamilyLocalSelect) return;
+  const matcher = family.trim().toLowerCase();
+  if (!matcher) return;
+  const value = `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(matcher)}`;
+  for (let i = 0; i < fontFamilyLocalSelect.options.length; i += 1) {
+    if (fontFamilyLocalSelect.options[i].value === value) return;
+  }
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = `Local Font: ${family}`;
+  option.dataset.localDetected = "1";
+  fontFamilyLocalSelect.appendChild(option);
+}
+
+async function detectLocalFonts() {
+  if (!supportsLocalFontPicker()) {
+    setFontFamilyHint("Local font picker is not supported in this browser.");
+    return;
+  }
+  try {
+    if (fontFamilyLocalSelect) {
+      for (let i = fontFamilyLocalSelect.options.length - 1; i >= 0; i -= 1) {
+        if (fontFamilyLocalSelect.options[i].dataset.localDetected === "1") {
+          fontFamilyLocalSelect.remove(i);
+        }
+      }
+    }
+    const fonts = await (navigator as any).queryLocalFonts();
+    const seen = new Set<string>();
+    let added = 0;
+    for (let i = 0; i < fonts.length; i += 1) {
+      const family = String(fonts[i]?.family ?? "").trim();
+      if (!family) continue;
+      const key = family.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      upsertDetectedLocalFontOption(family);
+      added += 1;
+    }
+    if (fontFamilyLocalSelect) {
+      fontFamilyLocalSelect.disabled = false;
+    }
+    setFontFamilyHint(`Detected ${added} local font families.`);
+  } catch (err: any) {
+    setFontFamilyHint("Local font access denied or unavailable.");
+    appendLog(`[ui] local font detect failed: ${err?.message ?? err}`);
+  }
+}
 
 function isRendererChoice(value: string | null | undefined): value is RendererChoice {
   return value === "auto" || value === "webgpu" || value === "webgl2";
@@ -317,6 +476,7 @@ function renderActivePaneControls(pane: Pane) {
   syncPauseButton(pane);
   if (rendererSelect) rendererSelect.value = pane.renderer;
   if (fontSizeInput) fontSizeInput.value = `${pane.fontSize}`;
+  syncFontFamilyControls();
   pane.mouseMode = pane.app.getMouseStatus().mode;
   if (mouseModeEl) {
     const hasOption = Array.from(mouseModeEl.options).some((option) => option.value === pane.mouseMode);
@@ -479,6 +639,7 @@ function createPane(id: number, cloneFrom?: Pane | null): Pane {
     debugExpose: true,
     renderer: pane.renderer,
     fontSize: pane.fontSize,
+    fontSources: getCurrentFontSources(),
     callbacks: {
       onLog: (line) => appendLog(`[pane ${id}] ${line}`),
       onBackend: (backend) => {
@@ -770,6 +931,36 @@ if (fontSizeInput) {
   fontSizeInput.addEventListener("input", applyFontSize);
 }
 
+if (fontFamilySelect) {
+  fontFamilySelect.addEventListener("change", () => {
+    selectedFontFamily = fontFamilySelect.value || DEFAULT_FONT_FAMILY;
+    syncFontFamilyControls();
+    void applyFontSourcesToAllPanes();
+  });
+}
+
+if (fontFamilyLocalSelect) {
+  fontFamilyLocalSelect.addEventListener("change", () => {
+    const value = fontFamilyLocalSelect.value;
+    if (!value) {
+      selectedLocalFontMatcher = "";
+    } else if (value.startsWith(FONT_FAMILY_LOCAL_PREFIX)) {
+      const encoded = value.slice(FONT_FAMILY_LOCAL_PREFIX.length);
+      selectedLocalFontMatcher = decodeURIComponent(encoded).trim().toLowerCase();
+    } else {
+      selectedLocalFontMatcher = "";
+    }
+    syncFontFamilyControls();
+    void applyFontSourcesToAllPanes();
+  });
+}
+
+if (btnLoadLocalFonts) {
+  btnLoadLocalFonts.addEventListener("click", () => {
+    void detectLocalFonts();
+  });
+}
+
 if (btnCopyLog) {
   btnCopyLog.addEventListener("click", async () => {
     const text = logDumpEl ? logDumpEl.value : "";
@@ -821,6 +1012,12 @@ if (atlasCpInput) {
 }
 
 syncConnectionUi();
+syncFontFamilyControls();
+if (supportsLocalFontPicker()) {
+  setFontFamilyHint("Select a base font, then pick a local font from the local picker.");
+} else {
+  setFontFamilyHint("Local font picker is not supported in this browser.");
+}
 
 const firstPane = manager.createInitialPane({ focus: true });
 activePaneId = firstPane.id;

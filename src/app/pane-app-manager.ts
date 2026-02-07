@@ -137,8 +137,6 @@ export function createResttyAppPaneManager(
     };
   }
 
-  let managerRef: ResttyPaneManager<ResttyManagedAppPane> | null = null;
-
   const manager = createResttyPaneManager<ResttyManagedAppPane>({
     root: options.root,
     minPaneSize: options.minPaneSize,
@@ -200,15 +198,9 @@ export function createResttyAppPaneManager(
     onPaneSplit: options.onPaneSplit,
     onActivePaneChange: options.onActivePaneChange,
     onLayoutChanged: () => {
-      if (managerRef) {
-        for (const pane of managerRef.getPanes()) {
-          pane.app.updateSize(true);
-        }
-      }
       options.onLayoutChanged?.();
     },
   });
 
-  managerRef = manager;
   return manager;
 }

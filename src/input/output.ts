@@ -25,6 +25,45 @@ export type OutputFilterOptions = {
 
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
+const ESC = "\x1b";
+
+function parsePrivateModeSeq(seq: string): { codes: number[]; enabled: boolean } | null {
+  if (!seq.startsWith(`${ESC}[?`) || seq.length < 5) return null;
+  const final = seq[seq.length - 1];
+  if (final !== "h" && final !== "l") return null;
+  const body = seq.slice(3, -1);
+  if (!body || /[^0-9;]/.test(body)) return null;
+  const parts = body.split(";");
+  const codes: number[] = [];
+  for (let i = 0; i < parts.length; i += 1) {
+    const part = parts[i];
+    if (!part) return null;
+    const code = Number(part);
+    if (!Number.isFinite(code)) return null;
+    codes.push(code);
+  }
+  return { codes, enabled: final === "h" };
+}
+
+function parseWindowOpSeq(seq: string): number[] | null {
+  if (!seq.startsWith(`${ESC}[`) || !seq.endsWith("t")) return null;
+  const body = seq.slice(2, -1);
+  if (/[^0-9;]/.test(body)) return null;
+  return body ? body.split(";").map((part) => Number(part)) : [];
+}
+
+function isDeviceAttributesQuery(seq: string): boolean {
+  if (!seq.startsWith(`${ESC}[`) || !seq.endsWith("c")) return false;
+  const body = seq.slice(2, -1);
+  let i = 0;
+  while (i < body.length && (body[i] === "?" || body[i] === ">")) i += 1;
+  while (i < body.length && body.charCodeAt(i) >= 48 && body.charCodeAt(i) <= 57) i += 1;
+  if (i < body.length && body[i] === ";") {
+    i += 1;
+    while (i < body.length && body.charCodeAt(i) >= 48 && body.charCodeAt(i) <= 57) i += 1;
+  }
+  return i === body.length;
+}
 
 function decodeBase64(data: string): Uint8Array {
   if (!data) return new Uint8Array();
@@ -178,10 +217,9 @@ export class OutputFilter {
   }
 
   private handleModeSeq(seq: string) {
-    const match = /^\x1b\[\?([0-9;]+)([hl])$/.exec(seq);
-    if (!match) return false;
-    const enabled = match[2] === "h";
-    const codes = match[1].split(";").map((part) => Number(part));
+    const mode = parsePrivateModeSeq(seq);
+    if (!mode) return false;
+    const { enabled, codes } = mode;
     let handled = false;
     for (const code of codes) {
       if (code === 2004) {
@@ -196,9 +234,8 @@ export class OutputFilter {
   }
 
   private handleWindowOp(seq: string) {
-    const match = /^\x1b\[([0-9;]*)t$/.exec(seq);
-    if (!match) return false;
-    const params = match[1] ? match[1].split(";").map((part) => Number(part)) : [];
+    const params = parseWindowOpSeq(seq);
+    if (!params) return false;
     const op = params[0] ?? 0;
     const metrics = this.getWindowMetrics?.();
 
@@ -293,10 +330,9 @@ export class OutputFilter {
       }
 
       const seq = data.slice(i, j + 1);
-      const altMatch = /^\x1b\[\?([0-9;]+)([hl])$/.exec(seq);
-      if (altMatch) {
-        const enabled = altMatch[2] === "h";
-        const codes = altMatch[1].split(";").map((part) => Number(part));
+      const altMode = parsePrivateModeSeq(seq);
+      if (altMode) {
+        const { enabled, codes } = altMode;
         if (codes.some((code) => code === 47 || code === 1047 || code === 1048 || code === 1049)) {
           this.altScreen = enabled;
         }
@@ -318,7 +354,7 @@ export class OutputFilter {
         // XTVERSION query used by plugins (e.g. snacks.nvim) to detect
         // kitty/ghostty/wezterm support. Reply with a ghostty-compatible id.
         this.sendReply("\x1bP>|ghostty 1.0\x1b\\");
-      } else if (/^\x1b\[[\?\>]*\d*;?\d*c$/.test(seq)) {
+      } else if (isDeviceAttributesQuery(seq)) {
         this.sendReply("\x1b[?1;2c");
       } else {
         result += seq;

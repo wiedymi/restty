@@ -24,6 +24,7 @@ const mime: Record<string, string> = {
   ".conf": "text/plain; charset=utf-8",
   ".theme": "text/plain; charset=utf-8",
   ".txt": "text/plain; charset=utf-8",
+  ".sh": "text/plain; charset=utf-8",
 };
 
 function contentTypeFor(pathname: string) {

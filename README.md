@@ -190,6 +190,8 @@ bun run format:check  # formatting check (src only)
 bun run build:assets  # playground bundles
 bun run pty           # local PTY server
 bun run playground    # playground dev server
+./test.sh             # static terminal capability sweep
+./demo.sh             # animated terminal demo (good for WebContainer demos)
 ```
 
 ## Acknowledgements

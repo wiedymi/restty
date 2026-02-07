@@ -65,7 +65,7 @@ test("kitty bridge leaves direct-medium transfers untouched", () => {
 test("kitty bridge unwraps tmux passthrough wrappers", () => {
   const bridge = createKittyGraphicsBridge();
   const inner = kittyApc("i=9,t=d,f=100", "aGVsbG8=");
-  const wrapped = `\x1bPtmux;${inner.replace(/\x1b/g, "\x1b\x1b")}\x1b\\`;
+  const wrapped = `\x1bPtmux;${inner.split("\x1b").join("\x1b\x1b")}\x1b\\`;
   expect(bridge.transform(wrapped)).toBe(inner);
 });
 
@@ -78,7 +78,7 @@ test("kitty bridge rewrites file-medium inside tmux passthrough", () => {
 
     const payload = Buffer.from(file).toString("base64");
     const inner = kittyApc("i=77,t=f,f=100", payload);
-    const wrapped = `\x1bPtmux;${inner.replace(/\x1b/g, "\x1b\x1b")}\x1b\\`;
+    const wrapped = `\x1bPtmux;${inner.split("\x1b").join("\x1b\x1b")}\x1b\\`;
     const out = createKittyGraphicsBridge().transform(wrapped);
 
     expect(out).toContain("t=d");

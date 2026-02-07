@@ -137,6 +137,7 @@ export function colorToRgbU32(color: ThemeColor): number {
 
 export function parseGhosttyTheme(text: string): GhosttyTheme {
   const raw: Record<string, string> = {};
+  // eslint-disable-next-line unicorn/no-new-array
   const palette: Array<ThemeColor | undefined> = new Array(256).fill(undefined);
   const colors: GhosttyTheme["colors"] = { palette };
 

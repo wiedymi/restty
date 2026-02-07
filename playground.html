@@ -78,6 +78,18 @@
         <section class="section">
           <div class="section-title">Appearance</div>
           <div class="field-row">
+            <select id="fontFamily">
+              <option value="jetbrains">Base Font: JetBrains Mono (default)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <select id="fontFamilyLocal">
+              <option value="">Local Font: None</option>
+            </select>
+            <button id="btnLoadLocalFonts" type="button">Detect Local</button>
+          </div>
+          <div id="fontFamilyHint" class="hint">Main font family for all panes. Use Detect Local to add system fonts.</div>
+          <div class="field-row">
             <select id="themeSelect">
               <option value="">Default</option>
             </select>

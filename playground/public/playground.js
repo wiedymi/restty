@@ -458,6 +458,30 @@ function mapKeyForPty(seq) {
 }
 
 // src/input/mouse.ts
+var ESC = "\x1B";
+function parsePrivateModeSeq(seq) {
+  if (!seq.startsWith(`${ESC}[?`) || seq.length < 5)
+    return null;
+  const final = seq[seq.length - 1];
+  if (final !== "h" && final !== "l")
+    return null;
+  const body = seq.slice(3, -1);
+  if (!body || /[^0-9;]/.test(body))
+    return null;
+  const parts = body.split(";");
+  const codes = [];
+  for (let i = 0;i < parts.length; i += 1) {
+    const part = parts[i];
+    if (!part)
+      return null;
+    const code = Number(part);
+    if (!Number.isFinite(code))
+      return null;
+    codes.push(code);
+  }
+  return { codes, enabled: final === "h" };
+}
+
 class MouseController {
   mode = "auto";
   enabled = false;
@@ -505,11 +529,10 @@ class MouseController {
     }
   }
   handleModeSeq(seq) {
-    const match = /^\x1b\[\?([0-9;]+)([hl])$/.exec(seq);
-    if (!match)
+    const mode = parsePrivateModeSeq(seq);
+    if (!mode)
       return false;
-    const enabled = match[2] === "h";
-    const codes = match[1].split(";").map((part) => Number(part));
+    const { enabled, codes } = mode;
     let handled = false;
     for (const code of codes) {
       if (code === 9) {
@@ -661,6 +684,53 @@ class MouseController {
 // src/input/output.ts
 var textDecoder = new TextDecoder;
 var textEncoder = new TextEncoder;
+var ESC2 = "\x1B";
+function parsePrivateModeSeq2(seq) {
+  if (!seq.startsWith(`${ESC2}[?`) || seq.length < 5)
+    return null;
+  const final = seq[seq.length - 1];
+  if (final !== "h" && final !== "l")
+    return null;
+  const body = seq.slice(3, -1);
+  if (!body || /[^0-9;]/.test(body))
+    return null;
+  const parts = body.split(";");
+  const codes = [];
+  for (let i = 0;i < parts.length; i += 1) {
+    const part = parts[i];
+    if (!part)
+      return null;
+    const code = Number(part);
+    if (!Number.isFinite(code))
+      return null;
+    codes.push(code);
+  }
+  return { codes, enabled: final === "h" };
+}
+function parseWindowOpSeq(seq) {
+  if (!seq.startsWith(`${ESC2}[`) || !seq.endsWith("t"))
+    return null;
+  const body = seq.slice(2, -1);
+  if (/[^0-9;]/.test(body))
+    return null;
+  return body ? body.split(";").map((part) => Number(part)) : [];
+}
+function isDeviceAttributesQuery(seq) {
+  if (!seq.startsWith(`${ESC2}[`) || !seq.endsWith("c"))
+    return false;
+  const body = seq.slice(2, -1);
+  let i = 0;
+  while (i < body.length && (body[i] === "?" || body[i] === ">"))
+    i += 1;
+  while (i < body.length && body.charCodeAt(i) >= 48 && body.charCodeAt(i) <= 57)
+    i += 1;
+  if (i < body.length && body[i] === ";") {
+    i += 1;
+    while (i < body.length && body.charCodeAt(i) >= 48 && body.charCodeAt(i) <= 57)
+      i += 1;
+  }
+  return i === body.length;
+}
 function decodeBase64(data) {
   if (!data)
     return new Uint8Array;
@@ -787,11 +857,10 @@ class OutputFilter {
     return false;
   }
   handleModeSeq(seq) {
-    const match = /^\x1b\[\?([0-9;]+)([hl])$/.exec(seq);
-    if (!match)
+    const mode = parsePrivateModeSeq2(seq);
+    if (!mode)
       return false;
-    const enabled = match[2] === "h";
-    const codes = match[1].split(";").map((part) => Number(part));
+    const { enabled, codes } = mode;
     let handled = false;
     for (const code of codes) {
       if (code === 2004) {
@@ -805,10 +874,9 @@ class OutputFilter {
     return handled;
   }
   handleWindowOp(seq) {
-    const match = /^\x1b\[([0-9;]*)t$/.exec(seq);
-    if (!match)
+    const params = parseWindowOpSeq(seq);
+    if (!params)
       return false;
-    const params = match[1] ? match[1].split(";").map((part) => Number(part)) : [];
     const op = params[0] ?? 0;
     const metrics = this.getWindowMetrics?.();
     if (metrics && op === 14 && params.length === 1) {
@@ -899,10 +967,9 @@ class OutputFilter {
         break;
       }
       const seq = data.slice(i, j + 1);
-      const altMatch = /^\x1b\[\?([0-9;]+)([hl])$/.exec(seq);
-      if (altMatch) {
-        const enabled = altMatch[2] === "h";
-        const codes = altMatch[1].split(";").map((part) => Number(part));
+      const altMode = parsePrivateModeSeq2(seq);
+      if (altMode) {
+        const { enabled, codes } = altMode;
         if (codes.some((code) => code === 47 || code === 1047 || code === 1048 || code === 1049)) {
           this.altScreen = enabled;
         }
@@ -922,7 +989,7 @@ class OutputFilter {
         this.sendReply(`\x1B[${row};${col}R`);
       } else if (seq === "\x1B[>q") {
         this.sendReply("\x1BP>|ghostty 1.0\x1B\\");
-      } else if (/^\x1b\[[\?\>]*\d*;?\d*c$/.test(seq)) {
+      } else if (isDeviceAttributesQuery(seq)) {
         this.sendReply("\x1B[?1;2c");
       } else {
         result += seq;
@@ -49216,6 +49283,8 @@ function createResttyApp(options) {
   let sizeRaf = 0;
   const RESIZE_OVERLAY_HOLD_MS = 500;
   const RESIZE_OVERLAY_FADE_MS = 400;
+  const RESIZE_ACTIVE_MS = 180;
+  const RESIZE_COMMIT_DEBOUNCE_MS = 36;
   const resizeState = {
     active: false,
     lastAt: 0,
@@ -49225,6 +49294,9 @@ function createResttyApp(options) {
   };
   let needsRender = true;
   let lastRenderTime = 0;
+  let resizeWasActive = false;
+  let pendingTerminalResize = null;
+  let terminalResizeTimer = 0;
   let nextBlinkTime = performance.now() + CURSOR_BLINK_MS;
   const ptyTransport = options.ptyTransport ?? createWebSocketPtyTransport();
   let lastCursorForCpr = { row: 1, col: 1 };
@@ -49281,12 +49353,26 @@ function createResttyApp(options) {
   let kittyOverlayLastHash = -1;
   let isFocused = typeof document !== "undefined" ? document.activeElement === canvas : true;
   const imeInput = imeInputInput ?? null;
+  const isMacPlatform = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
   const imeState = {
     composing: false,
     preedit: "",
     selectionStart: 0,
     selectionEnd: 0
   };
+  function configureImeInputElement() {
+    if (!imeInput)
+      return;
+    const style = imeInput.style;
+    style.position = "fixed";
+    style.left = "0";
+    style.top = "0";
+    style.width = "1px";
+    style.height = "1px";
+    style.opacity = "0";
+    style.pointerEvents = "none";
+  }
+  configureImeInputElement();
   const selectionState = {
     active: false,
     dragging: false,
@@ -51311,14 +51397,32 @@ function createResttyApp(options) {
       return source;
     }
     if (source.type === "local") {
-      if (!Array.isArray(source.matchers) || !source.matchers.some(Boolean)) {
+      if (!Array.isArray(source.matchers)) {
+        throw new Error(`fontSources[${index}] local source requires at least one matcher`);
+      }
+      let hasMatcher = false;
+      for (let i3 = 0;i3 < source.matchers.length; i3 += 1) {
+        if (source.matchers[i3]) {
+          hasMatcher = true;
+          break;
+        }
+      }
+      if (!hasMatcher) {
         throw new Error(`fontSources[${index}] local source requires at least one matcher`);
       }
       return source;
     }
     throw new Error(`fontSources[${index}] has unsupported source type`);
   };
-  const normalizeFontSources = (sources) => sources && sources.length ? sources.map((source, index) => validateFontSource(source, index)) : [...DEFAULT_FONT_SOURCES];
+  const normalizeFontSources = (sources) => {
+    if (!sources || !sources.length)
+      return [...DEFAULT_FONT_SOURCES];
+    const normalized = new Array(sources.length);
+    for (let i3 = 0;i3 < sources.length; i3 += 1) {
+      normalized[i3] = validateFontSource(sources[i3], i3);
+    }
+    return normalized;
+  };
   let configuredFontSources = normalizeFontSources(options.fontSources);
   const gridState = {
     cols: 0,
@@ -51517,20 +51621,15 @@ function createResttyApp(options) {
       resizeState.cols = Math.max(1, Math.floor(canvas.width / metrics.cellW));
       resizeState.rows = Math.max(1, Math.floor(canvas.height / metrics.cellH));
     }
-    if (backend === "webgpu" && activeState && activeState.context) {
-      activeState.context.configure({
-        device: activeState.device,
-        format: activeState.format,
-        alphaMode: "opaque"
-      });
-    }
     syncKittyOverlaySize();
     updateGrid();
     needsRender = true;
+    lastRenderTime = 0;
   }
   function scheduleSizeUpdate() {
+    updateSize();
     if (sizeRaf)
-      cancelAnimationFrame(sizeRaf);
+      return;
     sizeRaf = requestAnimationFrame(() => {
       sizeRaf = 0;
       updateSize();
@@ -51567,7 +51666,8 @@ function createResttyApp(options) {
       canvas.removeEventListener("blur", handleBlur);
     });
   }
-  if (attachWindowEvents && autoResize) {
+  const hasResizeObserver = autoResize && "ResizeObserver" in window;
+  if (attachWindowEvents && autoResize && !hasResizeObserver) {
     window.addEventListener("resize", scheduleSizeUpdate);
     window.addEventListener("load", scheduleSizeUpdate);
     cleanupFns.push(() => {
@@ -51575,7 +51675,7 @@ function createResttyApp(options) {
       window.removeEventListener("load", scheduleSizeUpdate);
     });
   }
-  if (autoResize && "ResizeObserver" in window) {
+  if (hasResizeObserver) {
     const ro = new ResizeObserver(() => scheduleSizeUpdate());
     const target = canvas.parentElement ?? document.body;
     ro.observe(target);
@@ -51778,7 +51878,13 @@ function createResttyApp(options) {
       return null;
     }
     if (source.type === "local") {
-      const matchers = source.matchers.map((matcher) => matcher.toLowerCase()).filter(Boolean);
+      const matchers = [];
+      for (let i3 = 0;i3 < source.matchers.length; i3 += 1) {
+        const matcher = source.matchers[i3];
+        if (!matcher)
+          continue;
+        matchers.push(matcher.toLowerCase());
+      }
       if (!matchers.length)
         return null;
       return tryLocalFontBuffer(matchers);
@@ -51822,8 +51928,8 @@ function createResttyApp(options) {
     configuredFontSources = normalizeFontSources(sources);
     fontPromise = null;
     fontError = null;
-    for (const entry of fontState.fonts) {
-      resetFontEntry(entry);
+    for (let i3 = 0;i3 < fontState.fonts.length; i3 += 1) {
+      resetFontEntry(fontState.fonts[i3]);
     }
     fontState.font = null;
     fontState.fonts = [];
@@ -51847,12 +51953,14 @@ function createResttyApp(options) {
           throw new Error("Unable to load any configured font source.");
         }
         const entries = [];
-        for (const source of configuredBuffers) {
+        for (let sourceIndex = 0;sourceIndex < configuredBuffers.length; sourceIndex += 1) {
+          const source = configuredBuffers[sourceIndex];
           try {
             const collection = Font.collection ? Font.collection(source.buffer) : null;
             if (collection) {
               const names = collection.names();
-              for (const info of names) {
+              for (let infoIndex = 0;infoIndex < names.length; infoIndex += 1) {
+                const info = names[infoIndex];
                 try {
                   const face = collection.get(info.index);
                   const metadataLabel = info.fullName || info.family || info.postScriptName || "";
@@ -52043,16 +52151,48 @@ function createResttyApp(options) {
     Object.assign(gridState, metrics, { cols, rows });
     if (wasmReady && wasm && wasmHandle) {
       wasm.setPixelSize(wasmHandle, canvas.width, canvas.height);
-      if (changed) {
-        wasm.resize(wasmHandle, cols, rows);
-        wasm.renderUpdate(wasmHandle);
-        needsRender = true;
-      }
     }
-    if (changed && ptyTransport.isConnected()) {
-      ptyTransport.resize(cols, rows);
+    if (changed) {
+      const resizeActive = performance.now() - resizeState.lastAt <= RESIZE_ACTIVE_MS;
+      scheduleTerminalResizeCommit(cols, rows, { immediate: !resizeActive });
     }
     syncKittyOverlaySize();
+  }
+  function commitTerminalResize(cols, rows) {
+    if (wasmReady && wasm && wasmHandle) {
+      wasm.resize(wasmHandle, cols, rows);
+      wasm.renderUpdate(wasmHandle);
+    }
+    if (ptyTransport.isConnected()) {
+      ptyTransport.resize(cols, rows);
+    }
+    needsRender = true;
+  }
+  function flushPendingTerminalResize() {
+    if (terminalResizeTimer) {
+      clearTimeout(terminalResizeTimer);
+      terminalResizeTimer = 0;
+    }
+    if (!pendingTerminalResize)
+      return;
+    const { cols, rows } = pendingTerminalResize;
+    pendingTerminalResize = null;
+    commitTerminalResize(cols, rows);
+  }
+  function scheduleTerminalResizeCommit(cols, rows, options2 = {}) {
+    pendingTerminalResize = { cols, rows };
+    if (options2.immediate) {
+      flushPendingTerminalResize();
+      return;
+    }
+    if (terminalResizeTimer) {
+      clearTimeout(terminalResizeTimer);
+      terminalResizeTimer = 0;
+    }
+    terminalResizeTimer = window.setTimeout(() => {
+      terminalResizeTimer = 0;
+      flushPendingTerminalResize();
+    }, RESIZE_COMMIT_DEBOUNCE_MS);
   }
   function ensureAtlasForFont(device, state, entry, neededGlyphIds, fontSizePx, fontIndex, atlasScale, glyphMeta, constraintContext) {
     const built = buildFontAtlasIfNeeded({
@@ -52279,6 +52419,10 @@ function createResttyApp(options) {
     updateGrid();
     const render = getRenderState();
     if (!render || !fontState.font) {
+      if (lastRenderState) {
+        clearKittyOverlay();
+        return;
+      }
       const { useLinearBlending: useLinearBlending2 } = resolveBlendFlags("webgpu", state);
       const clearColor2 = useLinearBlending2 ? srgbToLinearColor(defaultBg) : defaultBg;
       const encoder2 = device.createCommandEncoder();
@@ -54000,7 +54144,14 @@ function createResttyApp(options) {
         nextBlinkTime = now + CURSOR_BLINK_MS;
         needsRender = true;
       }
-      const renderBudget = now - lastRenderTime >= 1000 / 30;
+      const resizeActive = now - resizeState.lastAt <= RESIZE_ACTIVE_MS;
+      if (resizeActive) {
+        needsRender = true;
+      } else if (resizeWasActive) {
+        flushPendingTerminalResize();
+      }
+      resizeWasActive = resizeActive;
+      const renderBudget = resizeActive ? true : now - lastRenderTime >= 1000 / 30;
       if (needsRender && renderBudget) {
         if (backend === "webgpu")
           tickWebGPU(state);
@@ -54140,6 +54291,7 @@ function createResttyApp(options) {
       const active = document.activeElement;
       return active === canvas || (imeInput ? active === imeInput : false);
     };
+    const isMacInputSourceShortcut = (event) => isMacPlatform && event.ctrlKey && !event.metaKey && (event.code === "Space" || event.key === " " || event.key === "Spacebar");
     const shouldSkipKeyEvent = (event) => {
       const target = event.target;
       if (target && target !== imeInput && ["BUTTON", "SELECT", "INPUT", "TEXTAREA"].includes(target.tagName)) {
@@ -54159,6 +54311,8 @@ function createResttyApp(options) {
       return false;
     };
     const onKeyDown = (event) => {
+      if (isMacInputSourceShortcut(event))
+        return;
       if (shouldSkipKeyEvent(event))
         return;
       if (!hasInputFocus())
@@ -54186,6 +54340,8 @@ function createResttyApp(options) {
       }
     };
     const onKeyUp = (event) => {
+      if (isMacInputSourceShortcut(event))
+        return;
       if (!wasm || !wasmHandle)
         return;
       if ((wasm.getKittyKeyboardFlags(wasmHandle) & KITTY_FLAG_REPORT_EVENTS2) === 0)
@@ -54300,6 +54456,11 @@ function createResttyApp(options) {
     cancelAnimationFrame(rafId);
     if (sizeRaf)
       cancelAnimationFrame(sizeRaf);
+    if (terminalResizeTimer) {
+      clearTimeout(terminalResizeTimer);
+      terminalResizeTimer = 0;
+    }
+    pendingTerminalResize = null;
     disconnectPty2();
     ptyTransport.destroy?.();
     if (wasm && wasmHandle) {
@@ -55573,11 +55734,122 @@ function syncSubscription(listener) {
 
 // playground/lib/webcontainer-pty.ts
 var sharedWebContainerPromise = null;
+var sharedSeedPromise = null;
+var FALLBACK_DEMO_SCRIPT = `#!/usr/bin/env sh
+set -eu
+ESC=$(printf '\\033')
+CSI="\${ESC}["
+printf '%s?25l%s2J%sH' "$CSI" "$CSI" "$CSI"
+printf 'restty demo fallback\\n\\n'
+i=0
+while [ "$i" -le 20 ]; do
+  pct=$(( i * 100 / 20 ))
+  printf '\\rloading... %3s%%' "$pct"
+  sleep 0.03
+  i=$((i + 1))
+done
+printf '\\n\\n'
+printf '%s1mstyles:%s0m %s1mBold%s0m %s3mItalic%s0m\\n' "$CSI" "$CSI" "$CSI" "$CSI" "$CSI" "$CSI"
+printf '%s1mtruecolor:%s0m %s38;2;255;100;0mOrange%s0m\\n' "$CSI" "$CSI" "$CSI" "$CSI"
+printf '\\nrun ./test.sh for static checks.\\n'
+printf '%s0m%s?25h\\n' "$CSI" "$CSI"
+`;
+var FALLBACK_TEST_SCRIPT = `#!/usr/bin/env sh
+set -eu
+ESC=$(printf '\\033')
+CSI="\${ESC}["
+printf '%s?25l%s2J%sH' "$CSI" "$CSI" "$CSI"
+printf 'restty quick test\\n\\n'
+printf '%s1mBold%s0m %s3mItalic%s0m %s4mUnderline%s0m\\n' "$CSI" "$CSI" "$CSI" "$CSI" "$CSI" "$CSI"
+printf '%s38;2;255;100;0mOrange%s0m %s38;2;120;200;255mSky%s0m\\n\\n' "$CSI" "$CSI" "$CSI" "$CSI"
+printf 'Done.\\n'
+printf '%s0m%s?25h\\n' "$CSI" "$CSI"
+`;
+var seedScripts = [
+  {
+    urls: ["/playground/public/demo.sh", "/demo.sh"],
+    target: "demo.sh",
+    fallback: FALLBACK_DEMO_SCRIPT
+  },
+  {
+    urls: ["/playground/public/test.sh", "/test.sh"],
+    target: "test.sh",
+    fallback: FALLBACK_TEST_SCRIPT
+  }
+];
 async function getSharedWebContainer() {
   if (!sharedWebContainerPromise) {
     sharedWebContainerPromise = WebContainer.boot({ coep: "require-corp" });
   }
   return sharedWebContainerPromise;
+}
+async function fetchScriptText(url) {
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok)
+      return null;
+    const text = await res.text();
+    return text.trim().length > 0 ? text : null;
+  } catch {
+    return null;
+  }
+}
+async function fetchFirstScript(urls) {
+  for (const url of urls) {
+    const text = await fetchScriptText(url);
+    if (text)
+      return text;
+  }
+  return null;
+}
+async function ensureScriptsExecutable(webcontainer) {
+  const workdir = webcontainer.workdir;
+  const execPaths = ["demo.sh", "test.sh", `${workdir}/demo.sh`, `${workdir}/test.sh`];
+  const chmodViaNode = await webcontainer.spawn("node", [
+    "-e",
+    [
+      "const fs = require('node:fs');",
+      "const paths = process.argv.slice(1);",
+      "let touched = false;",
+      "let ok = true;",
+      "for (const p of paths) {",
+      "  try {",
+      "    if (!fs.existsSync(p)) continue;",
+      "    touched = true;",
+      "    const mode = fs.statSync(p).mode | 0o111;",
+      "    fs.chmodSync(p, mode);",
+      "    fs.accessSync(p, fs.constants.X_OK);",
+      "  } catch {",
+      "    ok = false;",
+      "  }",
+      "}",
+      "if (!touched || !ok) process.exit(1);"
+    ].join(" "),
+    ...execPaths
+  ]);
+  const nodeCode = await chmodViaNode.exit.catch(() => 1);
+  if (nodeCode === 0)
+    return;
+  const chmod = await webcontainer.spawn("chmod", ["+x", "demo.sh", "test.sh"]);
+  const chmodCode = await chmod.exit.catch(() => 1);
+  if (chmodCode !== 0) {
+    throw new Error("Failed to set executable permissions for demo scripts");
+  }
+}
+async function ensureSeedScripts(webcontainer) {
+  if (!sharedSeedPromise) {
+    sharedSeedPromise = (async () => {
+      for (const spec of seedScripts) {
+        const text = await fetchFirstScript(spec.urls);
+        await webcontainer.fs.writeFile(spec.target, text ?? spec.fallback);
+      }
+    })().catch((err) => {
+      sharedSeedPromise = null;
+      throw err;
+    });
+  }
+  await sharedSeedPromise;
+  await ensureScriptsExecutable(webcontainer);
 }
 function parseCommand(spec) {
   const tokens = spec.match(/(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\\.|\S)+/g) ?? [];
@@ -55693,6 +55965,9 @@ function createWebContainerPtyTransport(options = {}) {
       }
       try {
         const webcontainer = await getSharedWebContainer();
+        if (connectionToken !== token)
+          return;
+        await ensureSeedScripts(webcontainer);
         if (connectionToken !== token)
           return;
         const cwd = normalizeCwd(options.getCwd?.());
@@ -55811,6 +56086,10 @@ var ptyBtn = document.getElementById("btnPty");
 var themeSelect = document.getElementById("themeSelect");
 var themeFileInput = document.getElementById("themeFile");
 var fontSizeInput = document.getElementById("fontSize");
+var fontFamilySelect = document.getElementById("fontFamily");
+var fontFamilyLocalSelect = document.getElementById("fontFamilyLocal");
+var btnLoadLocalFonts = document.getElementById("btnLoadLocalFonts");
+var fontFamilyHintEl = document.getElementById("fontFamilyHint");
 var atlasCpInput = document.getElementById("atlasCp");
 var atlasBtn = document.getElementById("btnAtlas");
 var btnCopyLog = document.getElementById("btnCopyLog");
@@ -55820,6 +56099,12 @@ var settingsFab = document.getElementById("settingsFab");
 var settingsDialog = document.getElementById("settingsDialog");
 var settingsClose = document.getElementById("settingsClose");
 var DEFAULT_THEME_NAME = "Aizen Dark";
+var DEFAULT_FONT_FAMILY = "jetbrains";
+var FONT_FAMILY_LOCAL_PREFIX = "local:";
+var FONT_URL_JETBRAINS_MONO = "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf";
+var FONT_URL_NERD_SYMBOLS = "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf";
+var FONT_URL_NOTO_SYMBOLS = "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf";
+var FONT_URL_OPENMOJI = "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf";
 var LOG_LIMIT = 200;
 var logBuffer = [];
 function appendLog(line) {
@@ -55872,6 +56157,140 @@ var activePaneId = null;
 var resizeRaf = 0;
 var paneManager;
 var initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
+var selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
+var selectedLocalFontMatcher = "";
+function supportsLocalFontPicker() {
+  return typeof navigator !== "undefined" && "queryLocalFonts" in navigator;
+}
+function setFontFamilyHint(text) {
+  if (fontFamilyHintEl)
+    fontFamilyHintEl.textContent = text;
+}
+function buildFontSourcesForSelection(value, localMatcher) {
+  const sources = [];
+  if (localMatcher) {
+    sources.push({
+      type: "local",
+      label: `local:${localMatcher}`,
+      matchers: [localMatcher],
+      required: true
+    });
+  }
+  if (value === "jetbrains") {
+    sources.push({
+      type: "local",
+      label: "local:jetbrains mono",
+      matchers: ["jetbrains mono"]
+    });
+  }
+  sources.push({
+    type: "url",
+    label: "JetBrains Mono",
+    url: FONT_URL_JETBRAINS_MONO
+  });
+  sources.push({
+    type: "url",
+    label: "Symbols Nerd Font Mono",
+    url: FONT_URL_NERD_SYMBOLS
+  });
+  sources.push({
+    type: "url",
+    label: "Noto Sans Symbols 2",
+    url: FONT_URL_NOTO_SYMBOLS
+  });
+  sources.push({
+    type: "url",
+    label: "OpenMoji",
+    url: FONT_URL_OPENMOJI
+  });
+  return sources;
+}
+function getCurrentFontSources() {
+  return buildFontSourcesForSelection(selectedFontFamily, selectedLocalFontMatcher);
+}
+function syncFontFamilyControls() {
+  if (fontFamilySelect) {
+    fontFamilySelect.value = selectedFontFamily;
+  }
+  if (fontFamilyLocalSelect) {
+    fontFamilyLocalSelect.value = selectedLocalFontMatcher ? `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(selectedLocalFontMatcher)}` : "";
+  }
+  if (!supportsLocalFontPicker() && btnLoadLocalFonts) {
+    btnLoadLocalFonts.disabled = true;
+  }
+  if (!supportsLocalFontPicker() && fontFamilyLocalSelect) {
+    fontFamilyLocalSelect.disabled = true;
+  }
+}
+async function applyFontSourcesToAllPanes() {
+  const sources = getCurrentFontSources();
+  const updates = [];
+  const iterator = panes.values();
+  for (let next = iterator.next();!next.done; next = iterator.next()) {
+    updates.push(next.value.app.setFontSources(sources));
+  }
+  if (!updates.length)
+    return;
+  try {
+    await Promise.all(updates);
+    appendLog(`[ui] font family applied (${selectedFontFamily})`);
+  } catch (err) {
+    appendLog(`[ui] font family apply failed: ${err?.message ?? err}`);
+  }
+}
+function upsertDetectedLocalFontOption(family) {
+  if (!fontFamilyLocalSelect)
+    return;
+  const matcher = family.trim().toLowerCase();
+  if (!matcher)
+    return;
+  const value = `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(matcher)}`;
+  for (let i3 = 0;i3 < fontFamilyLocalSelect.options.length; i3 += 1) {
+    if (fontFamilyLocalSelect.options[i3].value === value)
+      return;
+  }
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = `Local Font: ${family}`;
+  option.dataset.localDetected = "1";
+  fontFamilyLocalSelect.appendChild(option);
+}
+async function detectLocalFonts() {
+  if (!supportsLocalFontPicker()) {
+    setFontFamilyHint("Local font picker is not supported in this browser.");
+    return;
+  }
+  try {
+    if (fontFamilyLocalSelect) {
+      for (let i3 = fontFamilyLocalSelect.options.length - 1;i3 >= 0; i3 -= 1) {
+        if (fontFamilyLocalSelect.options[i3].dataset.localDetected === "1") {
+          fontFamilyLocalSelect.remove(i3);
+        }
+      }
+    }
+    const fonts = await navigator.queryLocalFonts();
+    const seen = new Set;
+    let added = 0;
+    for (let i3 = 0;i3 < fonts.length; i3 += 1) {
+      const family = String(fonts[i3]?.family ?? "").trim();
+      if (!family)
+        continue;
+      const key = family.toLowerCase();
+      if (seen.has(key))
+        continue;
+      seen.add(key);
+      upsertDetectedLocalFontOption(family);
+      added += 1;
+    }
+    if (fontFamilyLocalSelect) {
+      fontFamilyLocalSelect.disabled = false;
+    }
+    setFontFamilyHint(`Detected ${added} local font families.`);
+  } catch (err) {
+    setFontFamilyHint("Local font access denied or unavailable.");
+    appendLog(`[ui] local font detect failed: ${err?.message ?? err}`);
+  }
+}
 function isRendererChoice(value) {
   return value === "auto" || value === "webgpu" || value === "webgl2";
 }
@@ -56022,6 +56441,7 @@ function renderActivePaneControls(pane) {
     rendererSelect.value = pane.renderer;
   if (fontSizeInput)
     fontSizeInput.value = `${pane.fontSize}`;
+  syncFontFamilyControls();
   pane.mouseMode = pane.app.getMouseStatus().mode;
   if (mouseModeEl) {
     const hasOption = Array.from(mouseModeEl.options).some((option) => option.value === pane.mouseMode);
@@ -56168,6 +56588,7 @@ function createPane(id, cloneFrom) {
     debugExpose: true,
     renderer: pane.renderer,
     fontSize: pane.fontSize,
+    fontSources: getCurrentFontSources(),
     callbacks: {
       onLog: (line) => appendLog(`[pane ${id}] ${line}`),
       onBackend: (backend) => {
@@ -56445,6 +56866,33 @@ if (fontSizeInput) {
   fontSizeInput.addEventListener("change", applyFontSize);
   fontSizeInput.addEventListener("input", applyFontSize);
 }
+if (fontFamilySelect) {
+  fontFamilySelect.addEventListener("change", () => {
+    selectedFontFamily = fontFamilySelect.value || DEFAULT_FONT_FAMILY;
+    syncFontFamilyControls();
+    applyFontSourcesToAllPanes();
+  });
+}
+if (fontFamilyLocalSelect) {
+  fontFamilyLocalSelect.addEventListener("change", () => {
+    const value = fontFamilyLocalSelect.value;
+    if (!value) {
+      selectedLocalFontMatcher = "";
+    } else if (value.startsWith(FONT_FAMILY_LOCAL_PREFIX)) {
+      const encoded = value.slice(FONT_FAMILY_LOCAL_PREFIX.length);
+      selectedLocalFontMatcher = decodeURIComponent(encoded).trim().toLowerCase();
+    } else {
+      selectedLocalFontMatcher = "";
+    }
+    syncFontFamilyControls();
+    applyFontSourcesToAllPanes();
+  });
+}
+if (btnLoadLocalFonts) {
+  btnLoadLocalFonts.addEventListener("click", () => {
+    detectLocalFonts();
+  });
+}
 if (btnCopyLog) {
   btnCopyLog.addEventListener("click", async () => {
     const text = logDumpEl ? logDumpEl.value : "";
@@ -56499,9 +56947,15 @@ if (atlasCpInput) {
   });
 }
 syncConnectionUi();
+syncFontFamilyControls();
+if (supportsLocalFontPicker()) {
+  setFontFamilyHint("Select a base font, then pick a local font from the local picker.");
+} else {
+  setFontFamilyHint("Local font picker is not supported in this browser.");
+}
 var firstPane = manager2.createInitialPane({ focus: true });
 activePaneId = firstPane.id;
 queueResizeAllPanes();
 
-//# debugId=8AFD64E211FD8F3764756E2164756E21
+//# debugId=D5D379096E527DCB64756E2164756E21
 //# sourceMappingURL=app.js.map

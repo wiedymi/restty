@@ -221,6 +221,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   let sizeRaf = 0;
   const RESIZE_OVERLAY_HOLD_MS = 500;
   const RESIZE_OVERLAY_FADE_MS = 400;
+  const RESIZE_ACTIVE_MS = 180;
+  const RESIZE_COMMIT_DEBOUNCE_MS = 36;
   const resizeState = {
     active: false,
     lastAt: 0,
@@ -230,6 +232,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   };
   let needsRender = true;
   let lastRenderTime = 0;
+  let resizeWasActive = false;
+  let pendingTerminalResize: { cols: number; rows: number } | null = null;
+  let terminalResizeTimer = 0;
   let nextBlinkTime = performance.now() + CURSOR_BLINK_MS;
   const ptyTransport: PtyTransport = options.ptyTransport ?? createWebSocketPtyTransport();
   let lastCursorForCpr = { row: 1, col: 1 };
@@ -2703,6 +2708,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
   const normalizeFontSources = (sources: ResttyFontSource[] | undefined): ResttyFontSource[] => {
     if (!sources || !sources.length) return [...DEFAULT_FONT_SOURCES];
+    // eslint-disable-next-line unicorn/no-new-array
     const normalized: ResttyFontSource[] = new Array(sources.length);
     for (let i = 0; i < sources.length; i += 1) {
       normalized[i] = validateFontSource(sources[i], i);
@@ -2942,22 +2948,20 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       resizeState.cols = Math.max(1, Math.floor(canvas.width / metrics.cellW));
       resizeState.rows = Math.max(1, Math.floor(canvas.height / metrics.cellH));
     }
-
-    if (backend === "webgpu" && activeState && activeState.context) {
-      activeState.context.configure({
-        device: activeState.device,
-        format: activeState.format,
-        alphaMode: "opaque",
-      });
-    }
-
     syncKittyOverlaySize();
     updateGrid();
     needsRender = true;
+    // Allow the loop to present a fresh frame immediately after resize.
+    lastRenderTime = 0;
   }
 
   function scheduleSizeUpdate() {
-    if (sizeRaf) cancelAnimationFrame(sizeRaf);
+    // Apply one immediate update so canvas backing size follows live drag.
+    updateSize();
+    // Coalesce resize bursts to at most one update per frame.
+    // Cancelling/re-requesting here can starve updates during continuous drag,
+    // leaving old content stretched/shrunk by CSS until the next draw.
+    if (sizeRaf) return;
     sizeRaf = requestAnimationFrame(() => {
       sizeRaf = 0;
       updateSize();
@@ -2996,7 +3000,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     });
   }
 
-  if (attachWindowEvents && autoResize) {
+  const hasResizeObserver = autoResize && "ResizeObserver" in window;
+  if (attachWindowEvents && autoResize && !hasResizeObserver) {
     window.addEventListener("resize", scheduleSizeUpdate);
     window.addEventListener("load", scheduleSizeUpdate);
     cleanupFns.push(() => {
@@ -3005,7 +3010,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     });
   }
 
-  if (autoResize && "ResizeObserver" in window) {
+  if (hasResizeObserver) {
     const ro = new ResizeObserver(() => scheduleSizeUpdate());
     const target = canvas.parentElement ?? document.body;
     ro.observe(target);
@@ -3536,18 +3541,56 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
     if (wasmReady && wasm && wasmHandle) {
       wasm.setPixelSize(wasmHandle, canvas.width, canvas.height);
-      if (changed) {
-        wasm.resize(wasmHandle, cols, rows);
-        wasm.renderUpdate(wasmHandle);
-        needsRender = true;
-      }
     }
 
-    if (changed && ptyTransport.isConnected()) {
-      ptyTransport.resize(cols, rows);
+    if (changed) {
+      const resizeActive = performance.now() - resizeState.lastAt <= RESIZE_ACTIVE_MS;
+      scheduleTerminalResizeCommit(cols, rows, { immediate: !resizeActive });
     }
 
     syncKittyOverlaySize();
+  }
+
+  function commitTerminalResize(cols: number, rows: number) {
+    if (wasmReady && wasm && wasmHandle) {
+      wasm.resize(wasmHandle, cols, rows);
+      wasm.renderUpdate(wasmHandle);
+    }
+    if (ptyTransport.isConnected()) {
+      ptyTransport.resize(cols, rows);
+    }
+    needsRender = true;
+  }
+
+  function flushPendingTerminalResize() {
+    if (terminalResizeTimer) {
+      clearTimeout(terminalResizeTimer);
+      terminalResizeTimer = 0;
+    }
+    if (!pendingTerminalResize) return;
+    const { cols, rows } = pendingTerminalResize;
+    pendingTerminalResize = null;
+    commitTerminalResize(cols, rows);
+  }
+
+  function scheduleTerminalResizeCommit(
+    cols: number,
+    rows: number,
+    options: { immediate?: boolean } = {},
+  ) {
+    pendingTerminalResize = { cols, rows };
+    if (options.immediate) {
+      flushPendingTerminalResize();
+      return;
+    }
+    if (terminalResizeTimer) {
+      clearTimeout(terminalResizeTimer);
+      terminalResizeTimer = 0;
+    }
+    terminalResizeTimer = window.setTimeout(() => {
+      terminalResizeTimer = 0;
+      flushPendingTerminalResize();
+    }, RESIZE_COMMIT_DEBOUNCE_MS);
   }
 
   function ensureAtlasForFont(
@@ -3799,6 +3842,12 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
     const render = getRenderState();
     if (!render || !fontState.font) {
+      // During live resize, render state can be momentarily unavailable.
+      // Keep the last presented frame instead of flashing a cleared frame.
+      if (lastRenderState) {
+        clearKittyOverlay();
+        return;
+      }
       const { useLinearBlending } = resolveBlendFlags("webgpu", state);
       const clearColor = useLinearBlending ? srgbToLinearColor(defaultBg) : defaultBg;
       const encoder = device.createCommandEncoder();
@@ -5907,7 +5956,15 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         nextBlinkTime = now + CURSOR_BLINK_MS;
         needsRender = true;
       }
-      const renderBudget = now - lastRenderTime >= 1000 / 30;
+      const resizeActive = now - resizeState.lastAt <= RESIZE_ACTIVE_MS;
+      if (resizeActive) {
+        // During live resize, render on every animation frame.
+        needsRender = true;
+      } else if (resizeWasActive) {
+        flushPendingTerminalResize();
+      }
+      resizeWasActive = resizeActive;
+      const renderBudget = resizeActive ? true : now - lastRenderTime >= 1000 / 30;
       if (needsRender && renderBudget) {
         if (backend === "webgpu") tickWebGPU(state);
         if (backend === "webgl2") tickWebGL(state);
@@ -6239,6 +6296,11 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   function destroy() {
     cancelAnimationFrame(rafId);
     if (sizeRaf) cancelAnimationFrame(sizeRaf);
+    if (terminalResizeTimer) {
+      clearTimeout(terminalResizeTimer);
+      terminalResizeTimer = 0;
+    }
+    pendingTerminalResize = null;
     disconnectPty();
     ptyTransport.destroy?.();
     if (wasm && wasmHandle) {
