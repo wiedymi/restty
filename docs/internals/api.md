@@ -1,5 +1,15 @@
 # Public API (Draft)
 
+This file captures a target high-level API shape that is still evolving.
+
+Current exported surfaces in `src/index.ts` are centered on:
+
+- `createResttyApp(...)` for app-level integration.
+- `loadResttyWasm(...)` / `ResttyWasm` for low-level ABI access.
+- `createInputHandler(...)` and PTY helpers in `src/input` + `src/pty`.
+
+For practical usage examples, see `docs/usage.md`.
+
 ## Core
 - `createTerminal({ cols, rows, scrollback }) -> Terminal`
 - `terminal.write(data: Uint8Array)`

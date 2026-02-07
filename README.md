@@ -23,6 +23,14 @@ restty combines a Zig/WASM VT engine, modern browser rendering pipelines, and a 
 4. Renderer draws frames via WebGPU (or WebGL2 fallback).
 5. Input (keyboard/mouse/IME) is encoded and sent back to PTY.
 
+## Documentation
+
+- Start here: `docs/README.md`
+- Initial goals and scope: `docs/goals.md`
+- End-to-end runtime flow: `docs/how-it-works.md`
+- Integration and usage: `docs/usage.md`
+- Internal architecture notes: `docs/internals/`
+
 ## Repository layout
 
 - `src/` - Main library/runtime code (renderer, input, PTY bridge, app integration).
@@ -32,7 +40,7 @@ restty combines a Zig/WASM VT engine, modern browser rendering pipelines, and a 
 - `assets/themes/` - Source-of-truth Ghostty theme files.
 - `scripts/` - Setup helper scripts.
 - `wasm/` - Zig source and build config for the WASM core.
-- `architecture/` - Design/implementation notes.
+- `docs/` - User docs, architecture notes, and development references.
 - `reference/ghostty` - Upstream Ghostty reference (submodule).
 - `reference/text-shaper` - Upstream text-shaper reference (submodule).
 

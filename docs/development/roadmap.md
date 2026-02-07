@@ -1,5 +1,7 @@
 # Milestones and Validation
 
+Planning reference for development phases and validation targets.
+
 ## Prototype (P0)
 - WASM wrapper builds and loads.
 - Terminal renders 80x24 text via WebGPU.

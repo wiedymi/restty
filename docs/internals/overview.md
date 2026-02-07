@@ -28,13 +28,15 @@
 - **Font Manager**: bundled font + optional queryLocalFonts integration.
 - **Input**: key encoder + IME text input handling.
 
-## Directory Map (planned)
-- `src/wasm/` Zig wrapper + build scripts.
-- `src/runtime/` JS host, memory views, input/output bridging.
-- `src/render/` WebGPU + WebGL2 renderers.
-- `src/text/` shaping, glyph cache, atlas manager.
-- `src/fonts/` font loading, local font adapter.
-- `architecture/` design docs (this folder).
+## Directory Map (current)
+- `wasm/` Zig wrapper source and build config for the WASM module.
+- `src/wasm/` JS runtime wrapper and embedded wasm loader.
+- `src/renderer/` WebGPU + WebGL2 rendering paths.
+- `src/fonts/` font loading and fallback/font-metadata helpers.
+- `src/input/` key/mouse encoding and output filtering.
+- `src/pty/` websocket PTY connection helpers.
+- `src/app/` high-level app integration (`createResttyApp`).
+- `docs/internals/` internal architecture docs.
 
 ## Assumptions
 - WebGPU is the primary path; WebGL2 is a fallback.

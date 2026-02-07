@@ -8,6 +8,8 @@ renderer.
 - `restty_create(cols, rows, max_scrollback) -> handle`
 - `restty_destroy(handle)`
 - `restty_write(handle, ptr, len) -> error`
+- `restty_resize(handle, cols, rows) -> error`
+- `restty_set_pixel_size(handle, width_px, height_px) -> error`
 - `restty_render_update(handle) -> error`
 - `restty_rows(handle) -> u32`
 - `restty_cols(handle) -> u32`
@@ -27,6 +29,7 @@ renderer.
 - `restty_cell_wide_ptr(handle) -> ptr` (u8 wide flags)
 - `restty_cell_flags_ptr(handle) -> ptr` (u16 flags)
 - `restty_cell_style_flags_ptr(handle) -> ptr` (u16 style flags)
+- `restty_cell_link_ids_ptr(handle) -> ptr` (u32 link id index)
 
 RGBA packing is `0xRRGGBBAA`.
 
@@ -52,3 +55,28 @@ Layout: `u16 row`, `u16 col`, `u8 visible`, `u8 style`, `u8 blinking`,
 ## Allocation Helpers
 - `restty_alloc(len) -> ptr`
 - `restty_free(ptr, len)`
+
+## Additional runtime exports used today
+- Viewport/scrollbar:
+  - `restty_scroll_viewport`
+  - `restty_scrollbar_total`
+  - `restty_scrollbar_offset`
+  - `restty_scrollbar_len`
+- Terminal output drain:
+  - `restty_output_ptr`
+  - `restty_output_len`
+  - `restty_output_consume`
+- Palette/default colors:
+  - `restty_set_default_colors`
+  - `restty_set_palette`
+  - `restty_reset_palette`
+- Hyperlink metadata:
+  - `restty_link_offsets_ptr`
+  - `restty_link_lengths_ptr`
+  - `restty_link_buffer_ptr`
+  - `restty_link_count`
+  - `restty_link_buffer_len`
+- Kitty image placements:
+  - `restty_kitty_placement_stride`
+  - `restty_kitty_placement_count`
+  - `restty_kitty_placements_ptr`
