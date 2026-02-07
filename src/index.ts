@@ -183,8 +183,12 @@ export {
   parseGhosttyColor,
   colorToFloats,
   colorToRgbU32,
+  listBuiltinThemeNames,
+  isBuiltinThemeName,
+  getBuiltinThemeSource,
+  getBuiltinTheme,
 } from "./theme";
-export type { GhosttyTheme, ThemeColor } from "./theme";
+export type { GhosttyTheme, ThemeColor, ResttyBuiltinThemeName } from "./theme";
 
 // App / high-level integration
 export {

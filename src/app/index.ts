@@ -1,4 +1,4 @@
-import { createInputHandler, type InputHandler } from "./input";
+import { createInputHandler, type InputHandler } from "../input";
 import {
   isNerdSymbolCodepoint,
   getNerdConstraint,
@@ -7,14 +7,13 @@ import {
   isNerdSymbolFont,
   fontMaxCellSpan,
   fontScaleOverride,
-  fontRasterScale,
   fontAdvanceUnits,
   glyphWidthUnits,
   createFontEntry,
   resetFontEntry,
   type FontEntry,
   type FontManagerState,
-} from "./fonts";
+} from "../fonts";
 import {
   loadResttyWasm,
   ResttyWasm,
@@ -22,7 +21,7 @@ import {
   type CursorInfo,
   type KittyPlacement,
   type ResttyWasmExports,
-} from "./wasm";
+} from "../wasm";
 import {
   createPtyConnection,
   connectPty as connectPtyLib,
@@ -30,8 +29,8 @@ import {
   sendPtyInput,
   sendPtyResize,
   isPtyConnected,
-} from "./pty";
-import { colorToFloats, colorToRgbU32, type GhosttyTheme } from "./theme";
+} from "../pty";
+import { colorToFloats, colorToRgbU32, type GhosttyTheme } from "../theme";
 import {
   initWebGPU,
   initWebGL,
@@ -54,163 +53,23 @@ import {
   type Color,
   type WebGPUState,
   type WebGLState,
-} from "./renderer";
-import { fontHeightUnits, clamp } from "./grid";
-import { PREEDIT_BG, PREEDIT_ACTIVE_BG, PREEDIT_FG, PREEDIT_UL, PREEDIT_CARET } from "./ime";
-
-export type TextShaper = {
-  Font: {
-    loadAsync: (buffer: ArrayBuffer) => Promise<any>;
-    collection?: (buffer: ArrayBuffer) => {
-      names: () => Array<{
-        index: number;
-        fullName?: string;
-        family?: string;
-        postScriptName?: string;
-      }>;
-      get: (index: number) => any;
-    } | null;
-  };
-  UnicodeBuffer: new () => { addStr: (text: string) => void };
-  shape: (font: any, buffer: any) => any;
-  glyphBufferToShapedGlyphs: (glyphBuffer: any) => Array<{
-    glyphId: number;
-    xAdvance: number;
-    xOffset: number;
-    yOffset: number;
-  }>;
-  buildAtlas: (font: any, glyphIds: number[], options: any) => any;
-  atlasToRGBA: (atlas: any) => Uint8Array | null;
-  rasterizeGlyph?: (
-    font: any,
-    glyphId: number,
-    fontSize: number,
-    options?: any,
-  ) => { bitmap: any; bearingX: number; bearingY: number } | null;
-  rasterizeGlyphWithTransform?: (
-    font: any,
-    glyphId: number,
-    fontSize: number,
-    matrix: number[] | number[][],
-    options?: any,
-  ) => { bitmap: any; bearingX: number; bearingY: number } | null;
-  PixelMode: { Gray: any; RGBA?: any };
-};
-
-type GlyphConstraintMeta = {
-  cp: number;
-  constraintWidth: number;
-  variable?: boolean;
-  widths?: Set<number>;
-};
-
-type AtlasConstraintContext = {
-  cellW: number;
-  cellH: number;
-  yPad: number;
-  baselineOffset: number;
-  baselineAdjust: number;
-  fontScale: number;
-  nerdMetrics: {
-    cellWidth: number;
-    cellHeight: number;
-    faceWidth: number;
-    faceHeight: number;
-    faceY: number;
-    iconHeight: number;
-    iconHeightSingle: number;
-  };
-  fontEntry: FontEntry;
-};
-
-export type ResttyAppElements = {
-  backendEl?: HTMLElement | null;
-  fpsEl?: HTMLElement | null;
-  dprEl?: HTMLElement | null;
-  sizeEl?: HTMLElement | null;
-  gridEl?: HTMLElement | null;
-  cellEl?: HTMLElement | null;
-  termSizeEl?: HTMLElement | null;
-  cursorPosEl?: HTMLElement | null;
-  inputDebugEl?: HTMLElement | null;
-  dbgEl?: HTMLElement | null;
-  ptyStatusEl?: HTMLElement | null;
-  mouseStatusEl?: HTMLElement | null;
-  termDebugEl?: HTMLElement | null;
-  logEl?: HTMLElement | null;
-  atlasInfoEl?: HTMLElement | null;
-  atlasCanvas?: HTMLCanvasElement | null;
-};
-
-export type ResttyAppCallbacks = {
-  onLog?: (line: string) => void;
-  onBackend?: (backend: string) => void;
-  onFps?: (fps: number) => void;
-  onDpr?: (dpr: number) => void;
-  onCanvasSize?: (width: number, height: number) => void;
-  onGridSize?: (cols: number, rows: number) => void;
-  onCellSize?: (cellW: number, cellH: number) => void;
-  onTermSize?: (cols: number, rows: number) => void;
-  onCursor?: (col: number, row: number) => void;
-  onDebug?: (text: string) => void;
-  onInputDebug?: (text: string) => void;
-  onPtyStatus?: (status: string) => void;
-  onMouseStatus?: (status: string) => void;
-};
-
-export type FontSource = {
-  name: string;
-  url?: string;
-  buffer?: ArrayBuffer;
-  matchers?: string[];
-};
-
-export type ResttyAppOptions = {
-  canvas: HTMLCanvasElement;
-  imeInput?: HTMLTextAreaElement | null;
-  textShaper: TextShaper;
-  elements?: ResttyAppElements;
-  callbacks?: ResttyAppCallbacks;
-  renderer?: "auto" | "webgpu" | "webgl2";
-  fontSize?: number;
-  assetBaseUrl?: string;
-  alphaBlending?: "native" | "linear" | "linear-corrected";
-  fontSources?: {
-    primary?: { url?: string; buffer?: ArrayBuffer; matchers?: string[] };
-    fallbacks?: FontSource[];
-  };
-  maxSymbolAtlasScale?: number;
-  fontScaleOverrides?: { match: RegExp; scale: number }[];
-  nerdIconScale?: number;
-  autoResize?: boolean;
-  attachWindowEvents?: boolean;
-  attachCanvasEvents?: boolean;
-  debugExpose?: boolean;
-};
-
-export type ResttyApp = {
-  init: () => Promise<void>;
-  destroy: () => void;
-  setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
-  setPaused: (value: boolean) => void;
-  togglePause: () => void;
-  setFontSize: (value: number) => void;
-  applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
-  resetTheme: () => void;
-  sendInput: (text: string, source?: string) => void;
-  sendKeyInput: (text: string, source?: string) => void;
-  clearScreen: () => void;
-  connectPty: (url: string) => void;
-  disconnectPty: () => void;
-  isPtyConnected: () => boolean;
-  setMouseMode: (value: string) => void;
-  getMouseStatus: () => ReturnType<InputHandler["getMouseStatus"]>;
-  copySelectionToClipboard: () => Promise<boolean>;
-  pasteFromClipboard: () => Promise<boolean>;
-  dumpAtlasForCodepoint: (cp: number) => void;
-  updateSize: (force?: boolean) => void;
-  getBackend: () => string;
-};
+} from "../renderer";
+import { fontHeightUnits, clamp } from "../grid";
+import { PREEDIT_BG, PREEDIT_ACTIVE_BG, PREEDIT_FG, PREEDIT_UL, PREEDIT_CARET } from "../ime";
+import {
+  buildFontAtlasIfNeeded,
+  type GlyphConstraintMeta,
+  type AtlasConstraintContext,
+} from "./atlas-builder";
+import type { ResttyApp, ResttyAppOptions } from "./types";
+export type {
+  TextShaper,
+  ResttyAppElements,
+  ResttyAppCallbacks,
+  FontSource,
+  ResttyAppOptions,
+  ResttyApp,
+} from "./types";
 
 export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   const {
@@ -330,9 +189,7 @@ let wasm: ResttyWasm | null = null;
 let wasmExports: ResttyWasmExports | null = null;
 let wasmHandle = 0;
 let wasmReady = false;
-let lastWasmUpdate = 0;
 let activeState: WebGPUState | WebGLState | null = null;
-let demoTimer = 0;
 let sizeRaf = 0;
 const RESIZE_OVERLAY_HOLD_MS = 500;
 const RESIZE_OVERLAY_FADE_MS = 400;
@@ -364,7 +221,6 @@ const WASM_LOG_FILTERS = [
 ];
 const wasmLogNotes = new Set();
 const ATLAS_PADDING = 4;
-const MAX_SYMBOL_ATLAS_SCALE = options.maxSymbolAtlasScale ?? 1;
 const SYMBOL_ATLAS_PADDING = 10;
 const SYMBOL_ATLAS_MAX_SIZE = 4096;
 const GLYPH_INSTANCE_FLOATS = 18;
@@ -1523,28 +1379,6 @@ function applyFontSize(value) {
   wasm?.renderUpdate?.(wasmHandle);
   needsRender = true;
   appendLog(`[ui] font size ${clamped}px`);
-}
-
-function parseCodepointInput(value) {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const upper = trimmed.toUpperCase();
-  if (upper.startsWith("U+")) {
-    const hex = upper.slice(2);
-    const cp = Number.parseInt(hex, 16);
-    return Number.isFinite(cp) ? cp : null;
-  }
-  if (upper.startsWith("0X")) {
-    const cp = Number.parseInt(upper.slice(2), 16);
-    return Number.isFinite(cp) ? cp : null;
-  }
-  if (/^[0-9A-F]+$/i.test(trimmed) && trimmed.length >= 4) {
-    const cp = Number.parseInt(trimmed, 16);
-    return Number.isFinite(cp) ? cp : null;
-  }
-  const codepoint = trimmed.codePointAt(0);
-  return codepoint ?? null;
 }
 
 function formatCodepoint(cp) {
@@ -3602,7 +3436,6 @@ function updateGrid() {
     if (changed) {
       wasm.resize(wasmHandle, cols, rows);
       wasm.renderUpdate(wasmHandle);
-      lastWasmUpdate = performance.now();
       needsRender = true;
     }
   }
@@ -3615,146 +3448,57 @@ function updateGrid() {
 }
 
 function ensureAtlasForFont(
-  device,
-  state,
-  entry,
-  neededGlyphIds,
-  fontSizePx,
-  fontIndex,
-  atlasScale,
+  device: GPUDevice,
+  state: WebGPUState,
+  entry: FontEntry,
+  neededGlyphIds: Set<number>,
+  fontSizePx: number,
+  fontIndex: number,
+  atlasScale: number,
   glyphMeta?: Map<number, GlyphConstraintMeta>,
   constraintContext?: AtlasConstraintContext | null,
-) {
-  if (!entry || !entry.font) return false;
-  const scaleOverride = fontScaleOverride(entry, FONT_SCALE_OVERRIDES);
-  const effectiveFontSizePx = Math.max(
-    1,
-    Math.round(fontSizePx * (atlasScale || 1) * scaleOverride),
-  );
-  let needsRebuild =
-    !entry.atlas ||
-    entry.fontSizePx !== effectiveFontSizePx ||
-    entry.atlasScale !== (atlasScale || 1);
-  const isSymbol = isSymbolFont(entry);
-  const constraintSignature = isSymbol
-    ? nerdConstraintSignature(glyphMeta, constraintContext)
-    : "";
-  if (!needsRebuild && isSymbol) {
-    if ((entry.constraintSignature ?? "") !== constraintSignature) {
-      needsRebuild = true;
-    }
-  }
-
-  if (!needsRebuild) {
-    for (const glyphId of neededGlyphIds) {
-      if (!entry.glyphIds.has(glyphId)) {
-        needsRebuild = true;
-        break;
-      }
-    }
-  }
-
-  if (!needsRebuild && glyphMeta && glyphMeta.size && isSymbol) {
-    const widthMaps = entry.atlas?.glyphsByWidth;
-    if (!widthMaps) {
-      needsRebuild = true;
-    } else {
-      for (const [glyphId, meta] of glyphMeta.entries()) {
-        const widths = meta.widths ?? new Set([meta.constraintWidth ?? 1]);
-        for (const width of widths) {
-          if (!widthMaps.get(width)?.has(glyphId)) {
-            needsRebuild = true;
-            break;
-          }
-        }
-        if (needsRebuild) break;
-      }
-    }
-  }
-
-  if (!needsRebuild) return false;
-
-  const union = new Set(entry.glyphIds);
-  for (const glyphId of neededGlyphIds) union.add(glyphId);
-
-  const useHinting = fontIndex === 0 && !isSymbol;
-  const atlasPadding = isSymbol ? Math.max(ATLAS_PADDING, SYMBOL_ATLAS_PADDING) : ATLAS_PADDING;
-  const atlasMaxSize = isSymbol ? SYMBOL_ATLAS_MAX_SIZE : 2048;
-  const glyphPixelMode = resolveGlyphPixelMode(entry);
-  const colorGlyphAtlas = glyphPixelMode === (PixelMode.RGBA ?? 4) || glyphPixelMode === 4;
-  const useCanvasColorAtlas = colorGlyphAtlas;
-  let atlas = null;
-  if (isSymbol && rasterizeGlyph && rasterizeGlyphWithTransform && constraintContext && glyphMeta) {
-    const result = buildGlyphAtlasWithConstraints({
-      font: entry.font,
-      glyphIds: [...union],
-      fontSize: effectiveFontSizePx,
+): boolean {
+  const built = buildFontAtlasIfNeeded({
+    entry,
+    neededGlyphIds,
+    glyphMeta,
+    fontSizePx,
+    atlasScale,
+    fontIndex,
+    constraintContext,
+    deps: {
+      fontScaleOverrides: FONT_SCALE_OVERRIDES,
       sizeMode: fontState.sizeMode,
-      padding: atlasPadding,
-      pixelMode: glyphPixelMode,
-      hinting: useHinting,
-      maxWidth: atlasMaxSize,
-      maxHeight: atlasMaxSize,
+      isSymbolFont,
+      fontScaleOverride,
+      resolveGlyphPixelMode,
+      atlasBitmapToRGBA,
+      padAtlasRGBA,
+      buildAtlas,
+      buildGlyphAtlasWithConstraints,
+      buildColorEmojiAtlasWithCanvas,
       rasterizeGlyph,
       rasterizeGlyphWithTransform,
-      glyphMeta,
-      constraintContext,
-    });
-    atlas = result.atlas;
-  }
-  if (!atlas && useCanvasColorAtlas) {
-    const result = buildColorEmojiAtlasWithCanvas({
-      font: entry.font,
-      fontEntry: entry,
-      glyphIds: [...union],
-      fontSize: effectiveFontSizePx,
-      sizeMode: fontState.sizeMode,
-      padding: atlasPadding,
-      maxWidth: atlasMaxSize,
-      maxHeight: atlasMaxSize,
-      pixelMode: glyphPixelMode,
-    });
-    atlas = result?.atlas ?? null;
-  }
-  if (!atlas && rasterizeGlyph && colorGlyphAtlas) {
-    const result = buildGlyphAtlasWithConstraints({
-      font: entry.font,
-      glyphIds: [...union],
-      fontSize: effectiveFontSizePx,
-      sizeMode: fontState.sizeMode,
-      padding: atlasPadding,
-      pixelMode: glyphPixelMode,
-      hinting: useHinting,
-      maxWidth: atlasMaxSize,
-      maxHeight: atlasMaxSize,
-      rasterizeGlyph,
-      rasterizeGlyphWithTransform,
-    });
-    atlas = result.atlas;
-  }
-  if (!atlas) {
-    atlas = buildAtlas(entry.font, [...union], {
-      fontSize: effectiveFontSizePx,
-      sizeMode: fontState.sizeMode,
-      padding: atlasPadding,
-      pixelMode: glyphPixelMode,
-      hinting: useHinting,
-      maxWidth: atlasMaxSize,
-      maxHeight: atlasMaxSize,
-    });
-  }
+      nerdConstraintSignature,
+      constants: {
+        atlasPadding: ATLAS_PADDING,
+        symbolAtlasPadding: SYMBOL_ATLAS_PADDING,
+        symbolAtlasMaxSize: SYMBOL_ATLAS_MAX_SIZE,
+        defaultAtlasMaxSize: 2048,
+        pixelModeRgbaValue: PixelMode.RGBA ?? 4,
+      },
+      resolvePreferNearest: ({ fontIndex: idx, isSymbol, atlasScale: scale }) => {
+        const scaleHint = scale ?? 1;
+        return idx === 0 || isSymbol || scaleHint >= 0.99;
+      },
+    },
+  });
+  if (!built.rebuilt || !built.atlas || !built.rgba) return false;
 
-  entry.atlas = atlas;
-  entry.glyphIds = union;
-  entry.fontSizePx = effectiveFontSizePx;
-  entry.atlasScale = atlasScale || 1;
-  entry.constraintSignature = constraintSignature;
-  const colorGlyphs = colorGlyphAtlas ? new Set<number>(atlas.glyphs.keys()) : undefined;
-  atlas.colorGlyphs = colorGlyphs;
-
-  let rgba = atlasBitmapToRGBA(atlas);
-  if (!rgba) return false;
-  rgba = padAtlasRGBA(rgba, atlas, atlasPadding);
+  const atlas = built.atlas;
+  const colorGlyphs = built.colorGlyphs;
+  const preferNearest = built.preferNearest;
+  const rgba = built.rgba;
 
   const texture = device.createTexture({
     size: [atlas.bitmap.width, atlas.bitmap.rows, 1],
@@ -3787,8 +3531,6 @@ function ensureAtlasForFont(
     { width, height, depthOrArrayLayers: 1 },
   );
 
-  const scaleHint = atlasScale ?? 1;
-  const preferNearest = fontIndex === 0 || isSymbol || scaleHint >= 0.99;
   const samplerNearest = device.createSampler({
     magFilter: "nearest",
     minFilter: "nearest",
@@ -3979,7 +3721,6 @@ function tickWebGPU(state) {
   const {
     rows,
     cols,
-    cellCount,
     codepoints,
     contentTags,
     wide,
@@ -5069,7 +4810,6 @@ function tickWebGL(state: WebGLState) {
   const {
     rows,
     cols,
-    cellCount,
     codepoints,
     contentTags,
     wide,
@@ -5692,160 +5432,98 @@ function tickWebGL(state: WebGLState) {
 
     // Use bitmap scale for symbol fonts (matches WebGPU)
     const bitmapScale = bitmapScaleByFont[fontIndex] ?? 1;
-    const scaleOverride = fontScaleOverride(fontEntry, FONT_SCALE_OVERRIDES);
-    const effectiveFontSizePx = Math.max(1, Math.round(fontSizePx * bitmapScale * scaleOverride));
-
-    let needsRebuild = !atlasState || !fontEntry.atlas || fontEntry.fontSizePx !== effectiveFontSizePx || fontEntry.atlasScale !== bitmapScale;
-    if (!needsRebuild) {
-      for (const glyphId of neededIds) {
-        if (!fontEntry.glyphIds.has(glyphId)) {
-          needsRebuild = true;
-          break;
-        }
-      }
-    }
-
-    if (!needsRebuild && meta && meta.size && isSymbolFont(fontEntry)) {
-      const widthMaps = fontEntry.atlas?.glyphsByWidth;
-      if (!widthMaps) {
-        needsRebuild = true;
-      } else {
-        for (const [glyphId, metaEntry] of meta.entries()) {
-          const widths = metaEntry.widths ?? new Set([metaEntry.constraintWidth ?? 1]);
-          for (const width of widths) {
-            if (!widthMaps.get(width)?.has(glyphId)) {
-              needsRebuild = true;
-              break;
-            }
-          }
-          if (needsRebuild) break;
-        }
-      }
-    }
-
-    if (needsRebuild) {
-      const union = new Set(fontEntry.glyphIds);
-      for (const glyphId of neededIds) union.add(glyphId);
-      if (union.size === 0) continue;
-
-      const useHinting = fontIndex === 0 && !isSymbolFont(fontEntry);
-      const isSymbol = isSymbolFont(fontEntry);
-      const atlasPadding = isSymbol ? Math.max(ATLAS_PADDING, SYMBOL_ATLAS_PADDING) : ATLAS_PADDING;
-      const atlasMaxSize = isSymbol ? SYMBOL_ATLAS_MAX_SIZE : 2048;
-      const glyphPixelMode = resolveGlyphPixelMode(fontEntry);
-      const colorGlyphAtlas = glyphPixelMode === (PixelMode.RGBA ?? 4) || glyphPixelMode === 4;
-      const useCanvasColorAtlas = colorGlyphAtlas;
-
-      const constraintContext = meta
-        ? {
-            cellW,
-            cellH,
-            yPad,
-            baselineOffset,
-            baselineAdjust: baselineAdjustByFont[fontIndex] ?? 0,
-            fontScale: scaleByFont[fontIndex] ?? primaryScale,
-            nerdMetrics,
-            fontEntry,
-          }
-        : null;
-
-      let atlas = null;
-      if (isSymbol && rasterizeGlyph && rasterizeGlyphWithTransform && constraintContext && meta) {
-        const result = buildGlyphAtlasWithConstraints({
-          font: fontEntry.font,
-          glyphIds: [...union],
-          fontSize: effectiveFontSizePx,
-          sizeMode: fontState.sizeMode,
-          padding: atlasPadding,
-          pixelMode: glyphPixelMode,
-          hinting: useHinting,
-          maxWidth: atlasMaxSize,
-          maxHeight: atlasMaxSize,
-          rasterizeGlyph,
-          rasterizeGlyphWithTransform,
-          glyphMeta: meta,
-          constraintContext,
-        });
-        atlas = result.atlas;
-      }
-      if (!atlas && useCanvasColorAtlas) {
-        const result = buildColorEmojiAtlasWithCanvas({
-          font: fontEntry.font,
+    const constraintContext = meta
+      ? {
+          cellW,
+          cellH,
+          yPad,
+          baselineOffset,
+          baselineAdjust: baselineAdjustByFont[fontIndex] ?? 0,
+          fontScale: scaleByFont[fontIndex] ?? primaryScale,
+          nerdMetrics,
           fontEntry,
-          glyphIds: [...union],
-          fontSize: effectiveFontSizePx,
-          sizeMode: fontState.sizeMode,
-          padding: atlasPadding,
-          pixelMode: glyphPixelMode,
-          maxWidth: atlasMaxSize,
-          maxHeight: atlasMaxSize,
-        });
-        atlas = result?.atlas ?? null;
-      }
-      if (!atlas && rasterizeGlyph && colorGlyphAtlas) {
-        const result = buildGlyphAtlasWithConstraints({
-          font: fontEntry.font,
-          glyphIds: [...union],
-          fontSize: effectiveFontSizePx,
-          sizeMode: fontState.sizeMode,
-          padding: atlasPadding,
-          pixelMode: glyphPixelMode,
-          hinting: useHinting,
-          maxWidth: atlasMaxSize,
-          maxHeight: atlasMaxSize,
-          rasterizeGlyph,
-          rasterizeGlyphWithTransform,
-        });
-        atlas = result.atlas;
-      }
-      if (!atlas) {
-        atlas = buildAtlas(fontEntry.font, [...union], {
-          fontSize: effectiveFontSizePx,
-          sizeMode: fontState.sizeMode,
-          padding: atlasPadding,
-          pixelMode: glyphPixelMode,
-          hinting: useHinting,
-          maxWidth: atlasMaxSize,
-          maxHeight: atlasMaxSize,
-        });
-      }
-      if (!atlas || !atlas.bitmap?.width || !atlas.bitmap?.rows) continue;
-      const colorGlyphs = colorGlyphAtlas ? new Set<number>(atlas.glyphs.keys()) : undefined;
-      atlas.colorGlyphs = colorGlyphs;
+        }
+      : null;
 
-      let rgba = atlasBitmapToRGBA(atlas);
-      if (!rgba) continue;
-      rgba = padAtlasRGBA(rgba, atlas, atlasPadding);
+    const built = buildFontAtlasIfNeeded({
+      entry: fontEntry,
+      neededGlyphIds: neededIds,
+      glyphMeta: meta,
+      fontSizePx,
+      atlasScale: bitmapScale,
+      fontIndex,
+      constraintContext,
+      deps: {
+        fontScaleOverrides: FONT_SCALE_OVERRIDES,
+        sizeMode: fontState.sizeMode,
+        isSymbolFont,
+        fontScaleOverride,
+        resolveGlyphPixelMode,
+        atlasBitmapToRGBA,
+        padAtlasRGBA,
+        buildAtlas,
+        buildGlyphAtlasWithConstraints,
+        buildColorEmojiAtlasWithCanvas,
+        rasterizeGlyph,
+        rasterizeGlyphWithTransform,
+        nerdConstraintSignature,
+        constants: {
+          atlasPadding: ATLAS_PADDING,
+          symbolAtlasPadding: SYMBOL_ATLAS_PADDING,
+          symbolAtlasMaxSize: SYMBOL_ATLAS_MAX_SIZE,
+          defaultAtlasMaxSize: 2048,
+          pixelModeRgbaValue: PixelMode.RGBA ?? 4,
+        },
+        resolvePreferNearest: ({ fontIndex: idx, isSymbol }) => idx === 0 || isSymbol,
+      },
+    });
 
-      if (atlasState) {
-        gl.deleteTexture(atlasState.texture);
-      }
+    if (!built.rebuilt || !built.atlas || !built.rgba) continue;
+    const atlas = built.atlas;
+    const colorGlyphs = built.colorGlyphs;
+    const rgba = built.rgba;
+    const preferNearest = built.preferNearest;
 
-      const texture = gl.createTexture();
-      if (!texture) continue;
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, atlas.bitmap.width, atlas.bitmap.rows, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(rgba));
-      const preferNearest = fontIndex === 0 || isSymbol;
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, preferNearest ? gl.NEAREST : gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, preferNearest ? gl.NEAREST : gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-      atlasState = {
-        texture,
-        width: atlas.bitmap.width,
-        height: atlas.bitmap.rows,
-        inset: atlas.inset,
-        colorGlyphs,
-        nearest: preferNearest,
-      };
-      state.glyphAtlases.set(fontIndex, atlasState);
-
-      fontEntry.atlas = atlas;
-      fontEntry.glyphIds = union;
-      fontEntry.fontSizePx = effectiveFontSizePx;
-      fontEntry.atlasScale = bitmapScale;
+    if (atlasState) {
+      gl.deleteTexture(atlasState.texture);
     }
+
+    const texture = gl.createTexture();
+    if (!texture) continue;
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      atlas.bitmap.width,
+      atlas.bitmap.rows,
+      0,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      new Uint8Array(rgba),
+    );
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MIN_FILTER,
+      preferNearest ? gl.NEAREST : gl.LINEAR,
+    );
+    gl.texParameteri(
+      gl.TEXTURE_2D,
+      gl.TEXTURE_MAG_FILTER,
+      preferNearest ? gl.NEAREST : gl.LINEAR,
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    atlasState = {
+      texture,
+      width: atlas.bitmap.width,
+      height: atlas.bitmap.rows,
+      inset: atlas.inset,
+      colorGlyphs,
+      nearest: preferNearest,
+    };
+    state.glyphAtlases.set(fontIndex, atlasState);
   }
 
   const emitGlyphs = (queueByFont: Map<number, any[]>, targetMap: Map<number, number[]>) => {
@@ -6190,7 +5868,6 @@ function sendInput(text, source = "program") {
     const ay = wasmExports.restty_debug_cursor_y(wasmHandle);
     appendLog(`[key] after cursor=${ax},${ay}`);
   }
-  lastWasmUpdate = performance.now();
   needsRender = true;
 }
 
@@ -6201,7 +5878,7 @@ async function copySelectionToClipboard() {
     await navigator.clipboard.writeText(text);
     appendLog("[ui] selection copied");
     return true;
-  } catch (err) {
+  } catch {
     const temp = document.createElement("textarea");
     temp.value = text;
     temp.style.position = "fixed";
@@ -6236,139 +5913,6 @@ async function pasteFromClipboard() {
 
 function clearScreen() {
   sendInput("\x1b[2J\x1b[H");
-}
-
-function joinLines(lines) {
-  return lines.join("\r\n");
-}
-
-function demoBasic() {
-  const lines = [
-    "restty demo: basics",
-    "",
-    "Styles: " +
-      "\x1b[1mBold\x1b[0m " +
-      "\x1b[3mItalic\x1b[0m " +
-      "\x1b[4mUnderline\x1b[0m " +
-      "\x1b[7mReverse\x1b[0m " +
-      "\x1b[9mStrike\x1b[0m",
-    "",
-    "RGB: " +
-      "\x1b[38;2;255;100;0mOrange\x1b[0m " +
-      "\x1b[38;2;120;200;255mSky\x1b[0m " +
-      "\x1b[38;2;160;255;160mMint\x1b[0m",
-    "BG:  " +
-      "\x1b[48;2;60;60;60m  \x1b[0m " +
-      "\x1b[48;2;120;40;40m  \x1b[0m " +
-      "\x1b[48;2;40;120;40m  \x1b[0m " +
-      "\x1b[48;2;40;40;120m  \x1b[0m",
-    "",
-    "Box: ┌────────────────────┐",
-    "     │  mono renderer     │",
-    "     └────────────────────┘",
-    "",
-  ];
-  return `\x1b[2J\x1b[H${joinLines(lines)}`;
-}
-
-function demoPalette() {
-  const lines = ["restty demo: palette", ""];
-  const blocks = [];
-  for (let i = 0; i < 16; i += 1) {
-    blocks.push(`\x1b[48;5;${i}m  \x1b[0m`);
-  }
-  lines.push(`Base 16: ${blocks.join(" ")}`);
-
-  lines.push("");
-  for (let row = 0; row < 6; row += 1) {
-    const rowBlocks = [];
-    for (let col = 0; col < 12; col += 1) {
-      const idx = 16 + row * 12 + col;
-      rowBlocks.push(`\x1b[48;5;${idx}m  \x1b[0m`);
-    }
-    lines.push(rowBlocks.join(""));
-  }
-
-  lines.push("");
-  const gray = [];
-  for (let i = 232; i <= 255; i += 1) {
-    gray.push(`\x1b[48;5;${i}m \x1b[0m`);
-  }
-  lines.push(`Grayscale: ${gray.join("")}`);
-  lines.push("");
-  return `\x1b[2J\x1b[H${joinLines(lines)}`;
-}
-
-function demoUnicode() {
-  const lines = [
-    "restty demo: unicode",
-    "",
-    "Arrows: ← ↑ → ↓  ↖ ↗ ↘ ↙",
-    "Math:   ∑ √ ∞ ≈ ≠ ≤ ≥",
-    "Blocks: ░ ▒ ▓ █ ▌ ▐ ▀ ▄",
-    "Lines:  ─ │ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼",
-    "Braille: ⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏",
-    "",
-  ];
-  return `\x1b[2J\x1b[H${joinLines(lines)}`;
-}
-
-function stopDemo() {
-  if (demoTimer) {
-    clearInterval(demoTimer);
-    demoTimer = 0;
-  }
-}
-
-function startAnimationDemo() {
-  stopDemo();
-  clearScreen();
-  const start = performance.now();
-  let tick = 0;
-  demoTimer = window.setInterval(() => {
-    const now = performance.now();
-    const elapsed = (now - start) / 1000;
-    const spinner = ["|", "/", "-", "\\"][tick % 4];
-    const cols = gridState.cols || 80;
-    const barWidth = Math.max(10, Math.min(60, cols - 20));
-    const phase = (Math.sin(elapsed * 1.6) + 1) * 0.5;
-    const fill = Math.floor(barWidth * phase);
-    const bar = "█".repeat(fill) + " ".repeat(Math.max(0, barWidth - fill));
-
-    const lines = [
-      `restty demo: animation ${spinner}`,
-      "",
-      `time ${elapsed.toFixed(2)}s`,
-      `progress [${bar}]`,
-      "",
-      "palette:",
-      `  \x1b[38;5;45mcyan\x1b[0m \x1b[38;5;202morange\x1b[0m \x1b[38;5;118mgreen\x1b[0m \x1b[38;5;213mpink\x1b[0m`,
-      "",
-      "type to echo input below...",
-      "",
-    ];
-    sendInput(`\x1b[H\x1b[J${joinLines(lines)}`);
-    tick += 1;
-  }, 80);
-}
-
-function runDemo(kind) {
-  stopDemo();
-  switch (kind) {
-    case "palette":
-      sendInput(demoPalette());
-      break;
-    case "unicode":
-      sendInput(demoUnicode());
-      break;
-    case "anim":
-      startAnimationDemo();
-      break;
-    case "basic":
-    default:
-      sendInput(demoBasic());
-      break;
-  }
 }
 
 if (attachWindowEvents) {
@@ -6476,7 +6020,6 @@ async function initWasmHarness() {
     ].join("\r\n");
     writeToWasm(wasmHandle, sample);
     instance.renderUpdate(wasmHandle);
-    lastWasmUpdate = performance.now();
     needsRender = true;
   } catch (err) {
     console.error(`restty error: ${err.message}`);
@@ -6553,7 +6096,6 @@ async function init() {
 function destroy() {
   cancelAnimationFrame(rafId);
   if (sizeRaf) cancelAnimationFrame(sizeRaf);
-  stopDemo();
   disconnectPty();
   if (wasm && wasmHandle) {
     try {

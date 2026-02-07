@@ -7,16 +7,31 @@ const distIndex = join(distDir, "index.js");
 const libDir = join(projectRoot, "node_modules", "lib");
 const packageLibDir = join(projectRoot, "node_modules", "wgpu-polyfill", "lib");
 const libIndex = join(libDir, `${process.platform}-${process.arch}`, "lib");
-const packageLibIndex = join(packageLibDir, `${process.platform}-${process.arch}`, "lib");
+const packageLibIndex = join(
+  packageLibDir,
+  `${process.platform}-${process.arch}`,
+  "lib",
+);
 
-if (!existsSync(distIndex) || !existsSync(libIndex) || !existsSync(packageLibIndex)) {
+if (
+  !existsSync(distIndex) ||
+  !existsSync(libIndex) ||
+  !existsSync(packageLibIndex)
+) {
   const tmpRoot = join(projectRoot, ".tmp");
   const repoDir = join(tmpRoot, "wgpu-polyfill");
   mkdirSync(tmpRoot, { recursive: true });
 
   if (!existsSync(repoDir)) {
     const clone = Bun.spawnSync(
-      ["git", "clone", "--depth", "1", "https://github.com/wiedymi/wgpu-polyfill", repoDir],
+      [
+        "git",
+        "clone",
+        "--depth",
+        "1",
+        "https://github.com/wiedymi/wgpu-polyfill",
+        repoDir,
+      ],
       { stdio: ["ignore", "inherit", "inherit"] },
     );
     if (clone.exitCode !== 0) {

@@ -28,7 +28,8 @@ restty combines a Zig/WASM VT engine, modern browser rendering pipelines, and a 
 - `src/` - Main library/runtime code (renderer, input, PTY bridge, app integration).
 - `tests/` - Bun test suite.
 - `playground/` - Browser playground app and local PTY websocket server.
-- `playground/public/` - Playground static assets (fonts/themes/wasm bundles).
+- `playground/public/` - Playground static assets (fonts/wasm bundles).
+- `assets/themes/` - Source-of-truth Ghostty theme files.
 - `scripts/` - Setup helper scripts.
 - `wasm/` - Zig source and build config for the WASM core.
 - `architecture/` - Design/implementation notes.
@@ -46,6 +47,7 @@ restty combines a Zig/WASM VT engine, modern browser rendering pipelines, and a 
 ```bash
 git submodule update --init --recursive
 bun install
+bun run build:themes
 bun run build:assets
 bun run playground
 ```
@@ -64,6 +66,13 @@ bun run pty
 # Build playground/runtime bundles
 bun run build:assets
 
+# Regenerate embedded built-in theme catalog for the library
+bun run build:themes
+
+# Lint + format checks
+bun run lint
+bun run format:check
+
 # Serve playground static files only
 bun run playground:static
 ```
@@ -80,4 +89,5 @@ Current suite covers:
 ## Notes
 
 - `tests/webgpu-glyph.test.ts` can bootstrap polyfill artifacts via `scripts/setup-wgpu-polyfill.ts`.
+- Built-in themes are embedded in `src/theme/builtin-themes.ts` (generated via `scripts/generate-builtin-themes.ts`).
 - Some generated playground assets are intentionally committed for reproducible local runs.

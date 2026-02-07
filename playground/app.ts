@@ -12,9 +12,13 @@ import {
 
 import {
   createResttyApp,
+  listBuiltinThemeNames,
+  getBuiltinTheme,
   parseGhosttyTheme,
   type GhosttyTheme,
 } from "../src/index.ts";
+import { createDemoController } from "./lib/demos.ts";
+import { parseCodepointInput } from "./lib/codepoint.ts";
 
 const canvas = document.getElementById("screen") as HTMLCanvasElement;
 const imeInput = document.getElementById("imeInput") as HTMLTextAreaElement | null;
@@ -57,16 +61,6 @@ const mouseModeEl = document.getElementById("mouseMode") as HTMLSelectElement | 
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const LOG_LIMIT = 200;
 const logBuffer: string[] = [];
-
-function assetUrl(path: string) {
-  let normalized = path;
-  if (normalized.startsWith("./public/")) {
-    normalized = `/playground/public/${normalized.slice("./public/".length)}`;
-  } else if (!normalized.startsWith("/playground/public/") && !normalized.startsWith("/")) {
-    normalized = `/playground/public/${normalized}`;
-  }
-  return new URL(normalized, window.location.origin).toString();
-}
 
 function appendLog(line: string) {
   const timestamp = new Date().toISOString().slice(11, 23);
@@ -127,16 +121,9 @@ const app = createResttyApp({
   },
   fontSize: Number.isFinite(initialFontSize) ? initialFontSize : 18,
 });
+const demos = createDemoController(app);
 
 let paused = false;
-let demoTimer = 0;
-
-function stopDemo() {
-  if (demoTimer) {
-    clearInterval(demoTimer);
-    demoTimer = 0;
-  }
-}
 
 function setPaused(value: boolean) {
   paused = value;
@@ -144,139 +131,10 @@ function setPaused(value: boolean) {
   if (btnPause) btnPause.textContent = paused ? "Resume" : "Pause";
 }
 
-function joinLines(lines: string[]) {
-  return lines.join("\r\n");
-}
-
-function demoBasic() {
-  const lines = [
-    "restty demo: basics",
-    "",
-    "Styles: " +
-      "\x1b[1mBold\x1b[0m " +
-      "\x1b[3mItalic\x1b[0m " +
-      "\x1b[4mUnderline\x1b[0m " +
-      "\x1b[7mReverse\x1b[0m " +
-      "\x1b[9mStrike\x1b[0m",
-    "",
-    "RGB: " +
-      "\x1b[38;2;255;100;0mOrange\x1b[0m " +
-      "\x1b[38;2;120;200;255mSky\x1b[0m " +
-      "\x1b[38;2;160;255;160mMint\x1b[0m",
-    "BG:  " +
-      "\x1b[48;2;60;60;60m  \x1b[0m " +
-      "\x1b[48;2;120;40;40m  \x1b[0m " +
-      "\x1b[48;2;40;120;40m  \x1b[0m " +
-      "\x1b[48;2;40;40;120m  \x1b[0m",
-    "",
-    "Box: ┌────────────────────┐",
-    "     │  mono renderer     │",
-    "     └────────────────────┘",
-    "",
-  ];
-  return `\x1b[2J\x1b[H${joinLines(lines)}`;
-}
-
-function demoPalette() {
-  const lines = ["restty demo: palette", ""];
-  const blocks: string[] = [];
-  for (let i = 0; i < 16; i += 1) {
-    blocks.push(`\x1b[48;5;${i}m  \x1b[0m`);
-  }
-  lines.push(`Base 16: ${blocks.join(" ")}`);
-
-  lines.push("");
-  for (let row = 0; row < 6; row += 1) {
-    const rowBlocks: string[] = [];
-    for (let col = 0; col < 12; col += 1) {
-      const idx = 16 + row * 12 + col;
-      rowBlocks.push(`\x1b[48;5;${idx}m  \x1b[0m`);
-    }
-    lines.push(rowBlocks.join(""));
-  }
-
-  lines.push("");
-  const gray: string[] = [];
-  for (let i = 232; i <= 255; i += 1) {
-    gray.push(`\x1b[48;5;${i}m \x1b[0m`);
-  }
-  lines.push(`Grayscale: ${gray.join("")}`);
-  lines.push("");
-  return `\x1b[2J\x1b[H${joinLines(lines)}`;
-}
-
-function demoUnicode() {
-  const lines = [
-    "restty demo: unicode",
-    "",
-    "Arrows: ← ↑ → ↓  ↖ ↗ ↘ ↙",
-    "Math:   ∑ √ ∞ ≈ ≠ ≤ ≥",
-    "Blocks: ░ ▒ ▓ █ ▌ ▐ ▀ ▄",
-    "Lines:  ─ │ ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼",
-    "Braille: ⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏",
-    "",
-  ];
-  return `\x1b[2J\x1b[H${joinLines(lines)}`;
-}
-
-function startAnimationDemo() {
-  stopDemo();
-  app.clearScreen();
-  const start = performance.now();
-  let tick = 0;
-  demoTimer = window.setInterval(() => {
-    const now = performance.now();
-    const elapsed = (now - start) / 1000;
-    const spinner = ["|", "/", "-", "\\"][tick % 4];
-    const cols = 80;
-    const barWidth = Math.max(10, Math.min(60, cols - 20));
-    const phase = (Math.sin(elapsed * 1.6) + 1) * 0.5;
-    const fill = Math.floor(barWidth * phase);
-    const bar = "█".repeat(fill) + " ".repeat(Math.max(0, barWidth - fill));
-
-    const lines = [
-      `restty demo: animation ${spinner}`,
-      "",
-      `time ${elapsed.toFixed(2)}s`,
-      `progress [${bar}]`,
-      "",
-      "palette:",
-      `  \x1b[38;5;45mcyan\x1b[0m \x1b[38;5;202morange\x1b[0m \x1b[38;5;118mgreen\x1b[0m \x1b[38;5;213mpink\x1b[0m`,
-      "",
-      "type to echo input below...",
-      "",
-    ];
-    app.sendInput(`\x1b[H\x1b[J${joinLines(lines)}`);
-    tick += 1;
-  }, 80);
-}
-
-function runDemo(kind: string) {
-  stopDemo();
-  switch (kind) {
-    case "palette":
-      app.sendInput(demoPalette());
-      break;
-    case "unicode":
-      app.sendInput(demoUnicode());
-      break;
-    case "anim":
-      startAnimationDemo();
-      break;
-    case "basic":
-    default:
-      app.sendInput(demoBasic());
-      break;
-  }
-}
-
-async function loadThemeByName(name: string, sourceLabel = name) {
+function loadThemeByName(name: string, sourceLabel = name) {
   try {
-    const url = assetUrl(`./public/themes/${encodeURIComponent(name)}`);
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`theme ${resp.status}`);
-    const text = await resp.text();
-    const theme = parseGhosttyTheme(text);
+    const theme = getBuiltinTheme(name);
+    if (!theme) throw new Error(`unknown theme: ${name}`);
     app.applyTheme(theme, sourceLabel);
     return true;
   } catch (err: any) {
@@ -285,7 +143,6 @@ async function loadThemeByName(name: string, sourceLabel = name) {
   }
 }
 
-let themeManifestLoaded = false;
 let defaultThemeApplied = false;
 
 function populateThemeSelect(names: string[]) {
@@ -303,53 +160,20 @@ function populateThemeSelect(names: string[]) {
   }
 }
 
-async function loadThemeManifest() {
-  if (themeManifestLoaded) return;
-  themeManifestLoaded = true;
-  try {
-    const url = assetUrl("./public/themes/manifest.json");
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`theme manifest ${resp.status}`);
-    const data = await resp.json();
-    if (data && Array.isArray(data.themes)) {
-      populateThemeSelect(data.themes);
-      appendLog(`[ui] themes loaded (${data.themes.length})`);
-      if (!defaultThemeApplied && data.themes.includes(DEFAULT_THEME_NAME)) {
-        defaultThemeApplied = true;
-        if (themeSelect) themeSelect.value = DEFAULT_THEME_NAME;
-        await loadThemeByName(DEFAULT_THEME_NAME, "default theme");
-      }
-    }
-  } catch (err: any) {
-    appendLog(`[ui] theme manifest failed: ${err?.message ?? err}`);
+function loadBuiltinThemes() {
+  const names = listBuiltinThemeNames();
+  populateThemeSelect(names);
+  appendLog(`[ui] themes loaded (${names.length})`);
+  if (!defaultThemeApplied && names.includes(DEFAULT_THEME_NAME)) {
+    defaultThemeApplied = true;
+    if (themeSelect) themeSelect.value = DEFAULT_THEME_NAME;
+    loadThemeByName(DEFAULT_THEME_NAME, "default theme");
   }
-}
-
-function parseCodepointInput(value: string) {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const upper = trimmed.toUpperCase();
-  if (upper.startsWith("U+")) {
-    const hex = upper.slice(2);
-    const cp = Number.parseInt(hex, 16);
-    return Number.isFinite(cp) ? cp : null;
-  }
-  if (upper.startsWith("0X")) {
-    const cp = Number.parseInt(upper.slice(2), 16);
-    return Number.isFinite(cp) ? cp : null;
-  }
-  if (/^[0-9A-F]+$/i.test(trimmed) && trimmed.length >= 4) {
-    const cp = Number.parseInt(trimmed, 16);
-    return Number.isFinite(cp) ? cp : null;
-  }
-  const codepoint = trimmed.codePointAt(0);
-  return codepoint ?? null;
 }
 
 btnInit?.addEventListener("click", () => {
   setPaused(false);
-  stopDemo();
+  demos.stop();
   app.init();
 });
 
@@ -358,12 +182,12 @@ btnPause?.addEventListener("click", () => {
 });
 
 btnClear?.addEventListener("click", () => {
-  stopDemo();
+  demos.stop();
   app.clearScreen();
 });
 
 btnRunDemo?.addEventListener("click", () => {
-  runDemo(demoSelect?.value ?? "basic");
+  demos.run(demoSelect?.value ?? "basic");
 });
 
 ptyBtn?.addEventListener("click", () => {
@@ -401,13 +225,13 @@ if (themeFileInput) {
 }
 
 if (themeSelect) {
-  themeSelect.addEventListener("change", async () => {
+  themeSelect.addEventListener("change", () => {
     const name = themeSelect.value;
     if (!name) {
       app.resetTheme();
       return;
     }
-    await loadThemeByName(name);
+    loadThemeByName(name);
   });
 }
 
@@ -475,7 +299,7 @@ if (atlasCpInput) {
   });
 }
 
-loadThemeManifest();
+loadBuiltinThemes();
 app.init();
 if (mouseModeEl) mouseModeEl.value = app.getMouseStatus().mode;
 if (fontSizeInput) fontSizeInput.value = `${Number.isFinite(initialFontSize) ? initialFontSize : 18}`;

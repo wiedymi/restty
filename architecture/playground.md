@@ -17,7 +17,7 @@ Requires Zig 0.15.2+ (matches Ghostty's minimum).
 
 ## Build text-shaper bundle
 From repo root:
-- `bun playground/scripts/build-text-shaper.ts`
+- `bun playground/build-text-shaper.ts`
 
 This bundles `reference/text-shaper/src/index.ts` to `playground/public/text-shaper.js`.
 

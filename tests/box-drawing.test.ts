@@ -157,7 +157,7 @@ test("box drawing single-stroke lines avoid per-cell overlap hot spots", () => {
 });
 
 test("both WebGPU and WebGL loops use the same procedural box drawing path", () => {
-  const appPath = join(process.cwd(), "src/app.ts");
+  const appPath = join(process.cwd(), "src/app/index.ts");
   const source = readFileSync(appPath, "utf8");
   const matches = source.match(/drawBoxDrawing\(cp,\s*x,\s*rowY,\s*cellW,\s*cellH,\s*fg,\s*fgRectData\)/g) ?? [];
   expect(matches.length).toBe(2);

@@ -23,5 +23,19 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Verify generated themes
+        run: bun run check:themes
+
+      - name: Check formatting
+        run: bun run format:check
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Build library
+        run: |
+          bun run build:lib
+          bun run build:types
+
       - name: Run tests
         run: bun run test

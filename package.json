@@ -6,30 +6,36 @@
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
-  "types": "./src/index.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
   "files": [
     "dist",
-    "src",
     "README.md",
     "LICENSE"
   ],
   "dependencies": {},
   "scripts": {
     "setup:wgpu-polyfill": "bun run scripts/setup-wgpu-polyfill.ts",
+    "clean:dist": "rm -rf dist && mkdir -p dist",
+    "build:themes": "bun run scripts/generate-builtin-themes.ts",
     "build:lib": "bun build ./src/index.ts --outdir ./dist --target browser --format esm",
+    "build:types": "tsc -p tsconfig.build.json",
     "build:text-shaper": "bun run playground/build-text-shaper.ts",
     "build:restty-input": "bun run playground/build-restty-input.ts",
     "build:restty-wasm": "bun run playground/build-restty-wasm.ts",
     "build:assets": "bun run build:text-shaper && bun run build:restty-input && bun run build:restty-wasm",
-    "prepublishOnly": "bun run build:lib",
-    "test": "bun test tests/webgpu-glyph.test.ts tests/box-drawing.test.ts tests/pty-utf8.test.ts tests/input-kitty.test.ts tests/input-keymap.test.ts tests/output-filter.test.ts tests/kitty-graphics-probe.test.ts tests/kitty-graphics-placement.test.ts tests/kitty-bridge.test.ts",
+    "check:themes": "bun run build:themes && git diff --exit-code -- src/theme/builtin-themes.ts",
+    "lint": "oxlint src playground scripts tests --ignore-pattern 'playground/public/**' --ignore-pattern 'src/theme/builtin-themes.ts'",
+    "format": "prettier --write README.md package.json .github/workflows/*.yml scripts/*.ts playground/lib/*.ts src/app/types.ts src/app/atlas-builder.ts src/theme/catalog.ts src/theme/index.ts tests/builtin-themes.test.ts",
+    "format:check": "prettier --check README.md package.json .github/workflows/*.yml scripts/*.ts playground/lib/*.ts src/app/types.ts src/app/atlas-builder.ts src/theme/catalog.ts src/theme/index.ts tests/builtin-themes.test.ts",
+    "prepublishOnly": "bun run build:themes && bun run clean:dist && bun run build:lib && bun run build:types",
+    "test": "bun test tests/webgpu-glyph.test.ts tests/box-drawing.test.ts tests/pty-utf8.test.ts tests/input-kitty.test.ts tests/input-keymap.test.ts tests/output-filter.test.ts tests/kitty-graphics-probe.test.ts tests/kitty-graphics-placement.test.ts tests/kitty-bridge.test.ts tests/builtin-themes.test.ts",
     "pty": "bun run playground/pty-server.ts",
     "playground": "bun run playground/dev-server.ts",
     "playground:static": "bun run playground/server.ts"
@@ -39,6 +45,9 @@
   },
   "devDependencies": {
     "@webgpu/types": "^0.1.69",
+    "oxlint": "^1.19.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
     "wgpu-polyfill": "^0.1.0"
   }
 }
