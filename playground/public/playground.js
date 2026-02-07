@@ -428,6 +428,25 @@ function encodeBeforeInput(event) {
   return "";
 }
 function mapKeyForPty(seq) {
+  const csi = "\x1B[";
+  if (seq.startsWith(csi) && seq.endsWith("u")) {
+    const body = seq.slice(csi.length, -1);
+    const [codeText] = body.split(";");
+    if (codeText && /^[0-9]+$/.test(codeText)) {
+      const code = Number(codeText);
+      if (code === 127)
+        return "";
+      if (code === 13)
+        return "\r";
+      if (code === 9)
+        return "\t";
+    }
+  }
+  if (seq.startsWith(csi) && seq.endsWith("~")) {
+    const body = seq.slice(csi.length, -1);
+    if (body === "3" || body.startsWith("3;"))
+      return "\x1B[3~";
+  }
   if (seq === sequences.backspace || seq === "\b" || seq === "\b\x1B[P")
     return "";
   if (seq === sequences.delete || seq === "\x1B[P")
@@ -49076,10 +49095,22 @@ function createResttyPaneManager(options) {
 
 // src/app/index.ts
 var DEFAULT_FONT_SOURCES = [
-  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
-  "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
-  "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf"
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf"
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf"
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf"
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf"
+  }
 ];
 function createResttyApp(options) {
   const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
@@ -51262,7 +51293,33 @@ function createResttyApp(options) {
       return image;
     };
   }
-  const configuredFontSources = options.fontSources && options.fontSources.length ? options.fontSources : DEFAULT_FONT_SOURCES;
+  const validateFontSource = (source, index) => {
+    if (!source || typeof source !== "object" || !("type" in source)) {
+      throw new Error(`fontSources[${index}] must be a typed source object`);
+    }
+    if (source.type === "url") {
+      if (typeof source.url !== "string" || !source.url.trim()) {
+        throw new Error(`fontSources[${index}] url source requires a non-empty url`);
+      }
+      return source;
+    }
+    if (source.type === "buffer") {
+      const data = source.data;
+      if (!(data instanceof ArrayBuffer) && !ArrayBuffer.isView(data)) {
+        throw new Error(`fontSources[${index}] buffer source requires ArrayBuffer or ArrayBufferView`);
+      }
+      return source;
+    }
+    if (source.type === "local") {
+      if (!Array.isArray(source.matchers) || !source.matchers.some(Boolean)) {
+        throw new Error(`fontSources[${index}] local source requires at least one matcher`);
+      }
+      return source;
+    }
+    throw new Error(`fontSources[${index}] has unsupported source type`);
+  };
+  const normalizeFontSources = (sources) => sources && sources.length ? sources.map((source, index) => validateFontSource(source, index)) : [...DEFAULT_FONT_SOURCES];
+  let configuredFontSources = normalizeFontSources(options.fontSources);
   const gridState = {
     cols: 0,
     rows: 0,
@@ -51709,14 +51766,22 @@ function createResttyApp(options) {
     return out.buffer;
   }
   async function resolveFontSourceBuffer(source) {
-    if (typeof source === "string") {
-      return tryFetchFontBuffer(source);
+    if (source.type === "url") {
+      return tryFetchFontBuffer(source.url);
     }
-    if (source instanceof ArrayBuffer) {
-      return source;
+    if (source.type === "buffer") {
+      const data = source.data;
+      if (data instanceof ArrayBuffer)
+        return data;
+      if (ArrayBuffer.isView(data))
+        return sourceBufferFromView(data);
+      return null;
     }
-    if (ArrayBuffer.isView(source)) {
-      return sourceBufferFromView(source);
+    if (source.type === "local") {
+      const matchers = source.matchers.map((matcher) => matcher.toLowerCase()).filter(Boolean);
+      if (!matchers.length)
+        return null;
+      return tryLocalFontBuffer(matchers);
     }
     return null;
   }
@@ -51725,9 +51790,13 @@ function createResttyApp(options) {
     for (let i3 = 0;i3 < configuredFontSources.length; i3 += 1) {
       const source = configuredFontSources[i3];
       const buffer = await resolveFontSourceBuffer(source);
-      if (!buffer)
+      if (!buffer) {
+        if (source.type === "local" && source.required) {
+          console.warn(`[font] required local font missing (${source.matchers.join(", ")})`);
+        }
         continue;
-      const label = typeof source === "string" ? sourceLabelFromUrl(source, i3) : `font-buffer-${i3 + 1}`;
+      }
+      const label = source.label ?? (source.type === "url" ? sourceLabelFromUrl(source.url, i3) : source.type === "local" ? source.matchers[0] ?? `local-font-${i3 + 1}` : `font-buffer-${i3 + 1}`);
       loaded.push({ label, buffer });
     }
     if (loaded.length)
@@ -51748,6 +51817,25 @@ function createResttyApp(options) {
     if (local)
       return [{ label: "local-jetbrains-mono", buffer: local }];
     return [];
+  }
+  async function setFontSources(sources) {
+    configuredFontSources = normalizeFontSources(sources);
+    fontPromise = null;
+    fontError = null;
+    for (const entry of fontState.fonts) {
+      resetFontEntry(entry);
+    }
+    fontState.font = null;
+    fontState.fonts = [];
+    fontState.fontSizePx = 0;
+    fontState.fontPickCache.clear();
+    if (activeState?.glyphAtlases) {
+      activeState.glyphAtlases.clear();
+    }
+    await ensureFont();
+    updateGrid();
+    needsRender = true;
+    appendLog("[ui] font sources updated");
   }
   async function ensureFont() {
     if (fontState.font || fontPromise)
@@ -54264,6 +54352,7 @@ function createResttyApp(options) {
     setPaused,
     togglePause,
     setFontSize: applyFontSize,
+    setFontSources,
     applyTheme,
     resetTheme,
     sendInput,
@@ -55521,6 +55610,7 @@ function createWebContainerPtyTransport(options = {}) {
   let outputReader = null;
   let connected = false;
   let connectionToken = 0;
+  let activeCommand = "";
   const log = (line) => {
     options.onLog?.(`[webcontainer] ${line}`);
   };
@@ -55539,6 +55629,7 @@ function createWebContainerPtyTransport(options = {}) {
     callbacks = null;
     connected = false;
     connectionToken += 1;
+    activeCommand = "";
     try {
       outputReader?.cancel();
     } catch {}
@@ -55581,6 +55672,13 @@ function createWebContainerPtyTransport(options = {}) {
       }
     })();
   };
+  const mapInputForCommand = (data) => {
+    if (activeCommand === "jsh") {
+      if (data === "")
+        return "\b";
+    }
+    return data;
+  };
   return {
     connect: async ({ cols = 80, rows = 24, callbacks: cb }) => {
       stopProcess(false);
@@ -55598,7 +55696,13 @@ function createWebContainerPtyTransport(options = {}) {
         if (connectionToken !== token)
           return;
         const cwd = normalizeCwd(options.getCwd?.());
-        const env = options.getEnv?.();
+        const env = {
+          TERM: "xterm-256color",
+          COLORTERM: "truecolor",
+          COLUMNS: String(cols),
+          LINES: String(rows),
+          ...options.getEnv?.()
+        };
         const spawned = await webcontainer.spawn(spec.command, spec.args, {
           terminal: { cols, rows },
           cwd,
@@ -55611,6 +55715,7 @@ function createWebContainerPtyTransport(options = {}) {
           return;
         }
         proc = spawned;
+        activeCommand = spec.command;
         inputWriter = spawned.input.getWriter();
         outputReader = spawned.output.getReader();
         connected = true;
@@ -55649,7 +55754,8 @@ function createWebContainerPtyTransport(options = {}) {
     sendInput: (data) => {
       if (!connected || !inputWriter)
         return false;
-      inputWriter.write(data).catch(() => {});
+      const payload = mapInputForCommand(data);
+      inputWriter.write(payload).catch(() => {});
       return true;
     },
     resize: (cols, rows) => {
@@ -56397,5 +56503,5 @@ var firstPane = manager2.createInitialPane({ focus: true });
 activePaneId = firstPane.id;
 queueResizeAllPanes();
 
-//# debugId=384951F8862A3EF864756E2164756E21
+//# debugId=8AFD64E211FD8F3764756E2164756E21
 //# sourceMappingURL=app.js.map

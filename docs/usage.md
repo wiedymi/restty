@@ -34,16 +34,35 @@ Default font loading uses CDN URLs. To override:
 const restty = new Restty({
   root: document.getElementById("paneRoot") as HTMLElement,
   fontSources: [
-    "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-    "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+    {
+      type: "url",
+      url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
+    },
+    {
+      type: "local",
+      matchers: ["jetbrains mono nerd font", "fira code nerd font"],
+    },
   ],
 });
+```
+
+Switch runtime fonts for all panes:
+
+```ts
+await restty.setFontSources([
+  { type: "local", matchers: ["sf mono"], required: true },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+  },
+]);
 ```
 
 Useful methods:
 
 - `restty.setRenderer("webgpu" | "webgl2" | "auto")`
 - `restty.setFontSize(number)`
+- `await restty.setFontSources([...])`
 - `restty.applyTheme(theme)` / `restty.resetTheme()`
 - `restty.sendInput(text)` and `restty.sendKeyInput(encoded)`
 - `restty.copySelectionToClipboard()` / `restty.pasteFromClipboard()`

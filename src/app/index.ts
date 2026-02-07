@@ -68,6 +68,9 @@ export type {
   ResttyAppCallbacks,
   FontSource,
   ResttyFontSource,
+  ResttyUrlFontSource,
+  ResttyBufferFontSource,
+  ResttyLocalFontSource,
   ResttyWasmLogListener,
   ResttyAppSession,
   ResttyAppOptions,
@@ -87,10 +90,22 @@ export type {
 export type { ResttyOptions } from "./restty";
 
 const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
-  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
-  "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
-  "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf",
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf",
+  },
 ];
 
 export function createResttyApp(options: ResttyAppOptions): ResttyApp {
@@ -282,12 +297,26 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   let isFocused = typeof document !== "undefined" ? document.activeElement === canvas : true;
 
   const imeInput = imeInputInput ?? null;
+  const isMacPlatform = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
   const imeState = {
     composing: false,
     preedit: "",
     selectionStart: 0,
     selectionEnd: 0,
   };
+
+  function configureImeInputElement() {
+    if (!imeInput) return;
+    const style = imeInput.style;
+    style.position = "fixed";
+    style.left = "0";
+    style.top = "0";
+    style.width = "1px";
+    style.height = "1px";
+    style.opacity = "0";
+    style.pointerEvents = "none";
+  }
+  configureImeInputElement();
 
   const selectionState: {
     active: boolean;
@@ -2634,8 +2663,53 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     };
   }
 
-  const configuredFontSources =
-    options.fontSources && options.fontSources.length ? options.fontSources : DEFAULT_FONT_SOURCES;
+  const validateFontSource = (source: ResttyFontSource, index: number): ResttyFontSource => {
+    if (!source || typeof source !== "object" || !("type" in source)) {
+      throw new Error(`fontSources[${index}] must be a typed source object`);
+    }
+    if (source.type === "url") {
+      if (typeof source.url !== "string" || !source.url.trim()) {
+        throw new Error(`fontSources[${index}] url source requires a non-empty url`);
+      }
+      return source;
+    }
+    if (source.type === "buffer") {
+      const data = source.data;
+      if (!(data instanceof ArrayBuffer) && !ArrayBuffer.isView(data)) {
+        throw new Error(
+          `fontSources[${index}] buffer source requires ArrayBuffer or ArrayBufferView`,
+        );
+      }
+      return source;
+    }
+    if (source.type === "local") {
+      if (!Array.isArray(source.matchers)) {
+        throw new Error(`fontSources[${index}] local source requires at least one matcher`);
+      }
+      let hasMatcher = false;
+      for (let i = 0; i < source.matchers.length; i += 1) {
+        if (source.matchers[i]) {
+          hasMatcher = true;
+          break;
+        }
+      }
+      if (!hasMatcher) {
+        throw new Error(`fontSources[${index}] local source requires at least one matcher`);
+      }
+      return source;
+    }
+    throw new Error(`fontSources[${index}] has unsupported source type`);
+  };
+
+  const normalizeFontSources = (sources: ResttyFontSource[] | undefined): ResttyFontSource[] => {
+    if (!sources || !sources.length) return [...DEFAULT_FONT_SOURCES];
+    const normalized: ResttyFontSource[] = new Array(sources.length);
+    for (let i = 0; i < sources.length; i += 1) {
+      normalized[i] = validateFontSource(sources[i], i);
+    }
+    return normalized;
+  };
+  let configuredFontSources = normalizeFontSources(options.fontSources);
 
   const gridState = {
     cols: 0,
@@ -3155,14 +3229,24 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   }
 
   async function resolveFontSourceBuffer(source: ResttyFontSource): Promise<ArrayBuffer | null> {
-    if (typeof source === "string") {
-      return tryFetchFontBuffer(source);
+    if (source.type === "url") {
+      return tryFetchFontBuffer(source.url);
     }
-    if (source instanceof ArrayBuffer) {
-      return source;
+    if (source.type === "buffer") {
+      const data = source.data;
+      if (data instanceof ArrayBuffer) return data;
+      if (ArrayBuffer.isView(data)) return sourceBufferFromView(data);
+      return null;
     }
-    if (ArrayBuffer.isView(source)) {
-      return sourceBufferFromView(source);
+    if (source.type === "local") {
+      const matchers: string[] = [];
+      for (let i = 0; i < source.matchers.length; i += 1) {
+        const matcher = source.matchers[i];
+        if (!matcher) continue;
+        matchers.push(matcher.toLowerCase());
+      }
+      if (!matchers.length) return null;
+      return tryLocalFontBuffer(matchers);
     }
     return null;
   }
@@ -3172,9 +3256,19 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     for (let i = 0; i < configuredFontSources.length; i += 1) {
       const source = configuredFontSources[i];
       const buffer = await resolveFontSourceBuffer(source);
-      if (!buffer) continue;
+      if (!buffer) {
+        if (source.type === "local" && source.required) {
+          console.warn(`[font] required local font missing (${source.matchers.join(", ")})`);
+        }
+        continue;
+      }
       const label =
-        typeof source === "string" ? sourceLabelFromUrl(source, i) : `font-buffer-${i + 1}`;
+        source.label ??
+        (source.type === "url"
+          ? sourceLabelFromUrl(source.url, i)
+          : source.type === "local"
+            ? (source.matchers[0] ?? `local-font-${i + 1}`)
+            : `font-buffer-${i + 1}`);
       loaded.push({ label, buffer });
     }
     if (loaded.length) return loaded;
@@ -3197,6 +3291,29 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     return [];
   }
 
+  async function setFontSources(sources: ResttyFontSource[]) {
+    configuredFontSources = normalizeFontSources(sources);
+    fontPromise = null;
+    fontError = null;
+
+    for (let i = 0; i < fontState.fonts.length; i += 1) {
+      resetFontEntry(fontState.fonts[i]);
+    }
+    fontState.font = null;
+    fontState.fonts = [];
+    fontState.fontSizePx = 0;
+    fontState.fontPickCache.clear();
+
+    if (activeState?.glyphAtlases) {
+      activeState.glyphAtlases.clear();
+    }
+
+    await ensureFont();
+    updateGrid();
+    needsRender = true;
+    appendLog("[ui] font sources updated");
+  }
+
   async function ensureFont() {
     if (fontState.font || fontPromise) return fontPromise;
     fontPromise = (async () => {
@@ -3206,12 +3323,14 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
           throw new Error("Unable to load any configured font source.");
         }
         const entries: FontEntry[] = [];
-        for (const source of configuredBuffers) {
+        for (let sourceIndex = 0; sourceIndex < configuredBuffers.length; sourceIndex += 1) {
+          const source = configuredBuffers[sourceIndex];
           try {
             const collection = Font.collection ? Font.collection(source.buffer) : null;
             if (collection) {
               const names = collection.names();
-              for (const info of names) {
+              for (let infoIndex = 0; infoIndex < names.length; infoIndex += 1) {
+                const info = names[infoIndex];
                 try {
                   const face = collection.get(info.index);
                   const metadataLabel = info.fullName || info.family || info.postScriptName || "";
@@ -5930,6 +6049,12 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       return active === canvas || (imeInput ? active === imeInput : false);
     };
 
+    const isMacInputSourceShortcut = (event: KeyboardEvent) =>
+      isMacPlatform &&
+      event.ctrlKey &&
+      !event.metaKey &&
+      (event.code === "Space" || event.key === " " || event.key === "Spacebar");
+
     const shouldSkipKeyEvent = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement | null;
       if (
@@ -5959,6 +6084,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (isMacInputSourceShortcut(event)) return;
       if (shouldSkipKeyEvent(event)) return;
       if (!hasInputFocus()) return;
       isFocused = true;
@@ -5992,6 +6118,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       }
     };
     const onKeyUp = (event: KeyboardEvent) => {
+      if (isMacInputSourceShortcut(event)) return;
       if (!wasm || !wasmHandle) return;
       if ((wasm.getKittyKeyboardFlags(wasmHandle) & KITTY_FLAG_REPORT_EVENTS) === 0) return;
       if (shouldSkipKeyEvent(event)) return;
@@ -6169,6 +6296,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     setPaused,
     togglePause,
     setFontSize: applyFontSize,
+    setFontSources,
     applyTheme,
     resetTheme,
     sendInput,

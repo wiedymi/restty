@@ -7,6 +7,7 @@ import {
   type ResttyManagedAppPane,
 } from "./pane-app-manager";
 import type { ResttyPaneManager, ResttyPaneSplitDirection } from "./panes";
+import type { ResttyFontSource } from "./types";
 
 export type ResttyOptions = Omit<CreateResttyAppPaneManagerOptions, "appOptions"> & {
   appOptions?: CreateResttyAppPaneManagerOptions["appOptions"];
@@ -16,28 +17,19 @@ export type ResttyOptions = Omit<CreateResttyAppPaneManagerOptions, "appOptions"
 
 export class Restty {
   readonly paneManager: ResttyPaneManager<ResttyManagedAppPane>;
+  private fontSources: ResttyFontSource[] | undefined;
 
   constructor(options: ResttyOptions) {
     const { createInitialPane = true, appOptions, fontSources, ...paneManagerOptions } = options;
-    const mergedAppOptions: CreateResttyAppPaneManagerOptions["appOptions"] =
-      fontSources === undefined
-        ? appOptions
-        : typeof appOptions === "function"
-          ? (context) => {
-              const resolved = appOptions(context);
-              return {
-                ...resolved,
-                fontSources,
-              };
-            }
-          : appOptions
-            ? {
-                ...appOptions,
-                fontSources,
-              }
-            : {
-                fontSources,
-              };
+    this.fontSources = fontSources ? [...fontSources] : undefined;
+    const mergedAppOptions: CreateResttyAppPaneManagerOptions["appOptions"] = (context) => {
+      const resolved = typeof appOptions === "function" ? appOptions(context) : (appOptions ?? {});
+      if (!this.fontSources) return resolved;
+      return {
+        ...resolved,
+        fontSources: this.fontSources,
+      };
+    };
 
     this.paneManager = createResttyAppPaneManager({
       ...paneManagerOptions,
@@ -45,7 +37,8 @@ export class Restty {
     });
 
     if (createInitialPane) {
-      const focus = typeof createInitialPane === "object" ? createInitialPane.focus ?? true : true;
+      const focus =
+        typeof createInitialPane === "object" ? (createInitialPane.focus ?? true) : true;
       this.paneManager.createInitialPane({ focus });
     }
   }
@@ -128,6 +121,16 @@ export class Restty {
 
   setFontSize(value: number): void {
     this.requireActivePane().app.setFontSize(value);
+  }
+
+  async setFontSources(sources: ResttyFontSource[]): Promise<void> {
+    this.fontSources = sources.length ? [...sources] : undefined;
+    const panes = this.getPanes();
+    const updates: Array<Promise<void>> = new Array(panes.length);
+    for (let i = 0; i < panes.length; i += 1) {
+      updates[i] = panes[i].app.setFontSources(this.fontSources ?? []);
+    }
+    await Promise.all(updates);
   }
 
   applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {

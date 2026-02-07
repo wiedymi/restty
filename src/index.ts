@@ -203,3 +203,9 @@ export type {
   ResttyPaneDomDefaults,
   ResttyPaneAppOptionsInput,
 } from "./app/pane-app-manager";
+export type {
+  ResttyFontSource,
+  ResttyUrlFontSource,
+  ResttyBufferFontSource,
+  ResttyLocalFontSource,
+} from "./app/types";

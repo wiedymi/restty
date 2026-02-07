@@ -69,6 +69,13 @@ function createImeInput(className: string): HTMLTextAreaElement {
   imeInput.autocorrect = "off";
   imeInput.spellcheck = false;
   imeInput.setAttribute("aria-hidden", "true");
+  imeInput.style.position = "fixed";
+  imeInput.style.left = "0";
+  imeInput.style.top = "0";
+  imeInput.style.width = "1px";
+  imeInput.style.height = "1px";
+  imeInput.style.opacity = "0";
+  imeInput.style.pointerEvents = "none";
   return imeInput;
 }
 

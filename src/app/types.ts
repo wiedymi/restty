@@ -48,7 +48,28 @@ export type ResttyAppCallbacks = {
   onMouseStatus?: (status: string) => void;
 };
 
-export type ResttyFontSource = string | ArrayBuffer | ArrayBufferView;
+export type ResttyFontBufferData = ArrayBuffer | ArrayBufferView;
+
+export type ResttyUrlFontSource = {
+  type: "url";
+  url: string;
+  label?: string;
+};
+
+export type ResttyBufferFontSource = {
+  type: "buffer";
+  data: ResttyFontBufferData;
+  label?: string;
+};
+
+export type ResttyLocalFontSource = {
+  type: "local";
+  matchers: string[];
+  label?: string;
+  required?: boolean;
+};
+
+export type ResttyFontSource = ResttyUrlFontSource | ResttyBufferFontSource | ResttyLocalFontSource;
 export type FontSource = ResttyFontSource;
 
 export type ResttyAppOptions = {
@@ -78,6 +99,7 @@ export type ResttyApp = {
   setPaused: (value: boolean) => void;
   togglePause: () => void;
   setFontSize: (value: number) => void;
+  setFontSources: (sources: ResttyFontSource[]) => Promise<void>;
   applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
   resetTheme: () => void;
   sendInput: (text: string, source?: string) => void;
