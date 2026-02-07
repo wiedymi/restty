@@ -150,12 +150,15 @@ export {
   type PtyServerMessage,
   type PtyConnectionState,
   type PtyCallbacks,
+  type PtyConnectOptions,
+  type PtyTransport,
   createPtyConnection,
   connectPty,
   disconnectPty,
   sendPtyInput,
   sendPtyResize,
   isPtyConnected,
+  createWebSocketPtyTransport,
 } from "./pty";
 
 // Input
@@ -193,12 +196,10 @@ export {
 export type { GhosttyTheme, ThemeColor, ResttyBuiltinThemeName } from "./theme";
 
 // App / high-level integration
-export { createResttyApp, createResttyAppSession, getDefaultResttyAppSession } from "./app";
+export { Restty } from "./app/restty";
+export type { ResttyOptions } from "./app/restty";
 export type {
-  ResttyWasmLogListener,
-  ResttyAppSession,
-  ResttyApp,
-  ResttyAppOptions,
-  ResttyAppElements,
-  ResttyAppCallbacks,
-} from "./app";
+  ResttyManagedAppPane,
+  ResttyPaneDomDefaults,
+  ResttyPaneAppOptionsInput,
+} from "./app/pane-app-manager";

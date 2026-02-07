@@ -1,8 +1,11 @@
-import playground from "../playground.html";
-
 const root = process.cwd();
 const port = Number(Bun.env.PORT ?? 5173);
 const publicRoot = `${root}/playground/public`;
+const playgroundHtmlPath = `${root}/playground.html`;
+const isolationHeaders = {
+  "cross-origin-opener-policy": "same-origin",
+  "cross-origin-embedder-policy": "require-corp",
+};
 
 const mime: Record<string, string> = {
   ".js": "text/javascript; charset=utf-8",
@@ -43,7 +46,10 @@ async function servePublic(pathname: string) {
   const file = Bun.file(filePath);
   if (!(await file.exists())) return null;
   return new Response(file, {
-    headers: { "content-type": contentTypeFor(pathname) },
+    headers: {
+      "content-type": contentTypeFor(pathname),
+      ...isolationHeaders,
+    },
   });
 }
 
@@ -59,25 +65,35 @@ async function serveAppTs() {
   }
   const code = await result.outputs[0].text();
   return new Response(code, {
-    headers: { "content-type": "text/javascript; charset=utf-8" },
+    headers: {
+      "content-type": "text/javascript; charset=utf-8",
+      ...isolationHeaders,
+    },
   });
 }
 
 const server = Bun.serve({
   port,
   development: true,
-  routes: {
-    "/": playground,
-    "/playground.html": playground,
-  },
   async fetch(req) {
     const url = new URL(req.url);
+    if (url.pathname === "/" || url.pathname === "/playground.html") {
+      return new Response(Bun.file(playgroundHtmlPath), {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          ...isolationHeaders,
+        },
+      });
+    }
     if (url.pathname === "/playground/app.ts" || url.pathname === "/playground/app.js") {
       return serveAppTs();
     }
     const publicFile = await servePublic(url.pathname);
     if (publicFile) return publicFile;
-    return new Response("Not found", { status: 404 });
+    return new Response("Not found", {
+      status: 404,
+      headers: isolationHeaders,
+    });
   },
 });
 

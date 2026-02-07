@@ -8,12 +8,14 @@ This is the runtime flow used by the current playground and library components.
   - `text-shaper.js`
   - `restty-input.js`
   - `restty-wasm.js`
+  - `playground.js` (static playground entry for `playground/public/index.html`)
 - `bun run playground` starts the dev server.
 - `bun run pty` starts a websocket PTY server (`ws://localhost:8787/pty`) that spawns a local shell.
 
 ## 2) App initialization
 
-- `playground/app.ts` creates the app via `createResttyApp(...)` from `src/app/index.ts`.
+- `playground/app.ts` orchestrates panes and creates terminal apps using internals from `src/app/`.
+- Package users initialize via `new Restty({ root })` from `src/index.ts`.
 - The app loads WASM via `loadResttyWasm()` (`src/wasm/runtime.ts`), which instantiates the embedded base64 module from `src/wasm/embedded.ts`.
 - A terminal instance is created with `restty_create(cols, rows, maxScrollback)`.
 
@@ -30,7 +32,7 @@ This is the runtime flow used by the current playground and library components.
 
 ## 4) Input path (browser -> PTY/WASM)
 
-1. Keyboard/mouse/IME events are captured in `createResttyApp`.
+1. Keyboard/mouse/IME events are captured by the app layer (`ResttyApp` internals).
 2. `createInputHandler(...)` encodes keys and mouse protocol sequences (`src/input/keymap.ts`, `src/input/mouse.ts`).
 3. If PTY is connected, encoded input is sent to websocket server (`sendPtyInput`).
 4. If PTY is not connected, text can still be written directly to WASM for local demos/harness behavior.

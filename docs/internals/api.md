@@ -4,7 +4,7 @@ This file captures a target high-level API shape that is still evolving.
 
 Current exported surfaces in `src/index.ts` are centered on:
 
-- `createResttyApp(...)` for app-level integration.
+- `new Restty(...)` for app-level integration.
 - `loadResttyWasm(...)` / `ResttyWasm` for low-level ABI access.
 - `createInputHandler(...)` and PTY helpers in `src/input` + `src/pty`.
 

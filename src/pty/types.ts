@@ -23,3 +23,19 @@ export type PtyCallbacks = {
   onError?: (message: string, errors?: string[]) => void;
   onExit?: (code: number) => void;
 };
+
+export type PtyConnectOptions = {
+  url: string;
+  cols?: number;
+  rows?: number;
+  callbacks: PtyCallbacks;
+};
+
+export type PtyTransport = {
+  connect: (options: PtyConnectOptions) => void | Promise<void>;
+  disconnect: () => void;
+  sendInput: (data: string) => boolean;
+  resize: (cols: number, rows: number) => boolean;
+  isConnected: () => boolean;
+  destroy?: () => void | Promise<void>;
+};

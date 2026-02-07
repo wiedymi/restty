@@ -55,9 +55,23 @@
         <section class="section">
           <div class="section-title">Connection</div>
           <div class="field-row">
+            <label>
+              <span>Backend</span>
+              <select id="connectionBackend">
+                <option value="ws">WebSocket PTY</option>
+                <option value="webcontainer" selected>WebContainer</option>
+              </select>
+            </label>
+          </div>
+          <div class="field-row">
             <input id="ptyUrl" type="text" value="ws://localhost:8787/pty" placeholder="PTY URL" />
             <button id="btnPty">Connect</button>
           </div>
+          <div class="field-row">
+            <input id="wcCommand" type="text" value="jsh" placeholder="WebContainer command" />
+            <input id="wcCwd" type="text" value="/" placeholder="WebContainer cwd" />
+          </div>
+          <div id="connectionHint" class="hint">Using in-browser WebContainer process</div>
           <div class="pty-status"><span id="ptyStatus">disconnected</span></div>
         </section>
 

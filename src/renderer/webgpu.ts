@@ -229,7 +229,12 @@ export async function initWebGPUCore(canvas: HTMLCanvasElement): Promise<WebGPUC
   if (!context) return null;
 
   const { preferredFormat, srgbFormat } = getPreferredAndSrgbFormats();
-  const { format, srgbSwapchain } = configureContextFormat(context, device, preferredFormat, srgbFormat);
+  const { format, srgbSwapchain } = configureContextFormat(
+    context,
+    device,
+    preferredFormat,
+    srgbFormat,
+  );
 
   return createWebGPUCoreState(device, format, srgbSwapchain);
 }

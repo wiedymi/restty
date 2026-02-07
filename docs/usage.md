@@ -13,33 +13,49 @@ bun run playground
 
 Open `http://localhost:5173`, then connect to `ws://localhost:8787/pty` from the UI.
 
-## High-level integration (`createResttyApp`)
+## High-level integration (`new Restty(...)`)
 
-`createResttyApp` is the primary integration surface in this repo.
+`Restty` is the primary integration surface in this repo.
 
 Simple usage (built-in `text-shaper` is used by default):
 
 ```ts
-import { createResttyApp } from "restty";
+import { Restty } from "restty";
 
-const app = createResttyApp({
-  canvas: document.getElementById("screen") as HTMLCanvasElement,
-  imeInput: document.getElementById("imeInput") as HTMLTextAreaElement | null,
-  renderer: "auto", // "auto" | "webgpu" | "webgl2"
+const restty = new Restty({
+  root: document.getElementById("paneRoot") as HTMLElement,
 });
-
-await app.init();
-app.connectPty("ws://localhost:8787/pty");
+restty.connectPty("ws://localhost:8787/pty");
 ```
 
 Useful methods:
 
-- `app.setRenderer("webgpu" | "webgl2" | "auto")`
-- `app.setFontSize(number)`
-- `app.applyTheme(theme)` / `app.resetTheme()`
-- `app.sendInput(text)` and `app.sendKeyInput(encoded)`
-- `app.copySelectionToClipboard()` / `app.pasteFromClipboard()`
-- `app.disconnectPty()` and `app.destroy()`
+- `restty.setRenderer("webgpu" | "webgl2" | "auto")`
+- `restty.setFontSize(number)`
+- `restty.applyTheme(theme)` / `restty.resetTheme()`
+- `restty.sendInput(text)` and `restty.sendKeyInput(encoded)`
+- `restty.copySelectionToClipboard()` / `restty.pasteFromClipboard()`
+- `restty.disconnectPty()` and `restty.destroy()`
+
+## Pane manager integration
+
+`Restty` supports split panes with default shortcuts/context-menu out of the box.
+It auto-creates each pane container, canvas, and hidden IME textarea.
+
+```ts
+import {
+  Restty,
+} from "restty";
+
+const restty = new Restty({
+  root: document.getElementById("paneRoot") as HTMLElement,
+  defaultContextMenu: true,
+  shortcuts: true,
+});
+
+restty.splitActivePane("vertical");
+restty.splitActivePane("horizontal");
+```
 
 ## Low-level integration (`loadResttyWasm`)
 
@@ -76,3 +92,5 @@ wasm.destroy(handle);
 - Theme catalog: `bun run build:themes`
 - Playground bundles: `bun run build:assets`
 - Optional font fetch helper: `bun run playground/fetch-fonts.ts`
+
+For static hosting (for example Cloudflare Pages), deploy `playground/public/` after `bun run build:assets`.

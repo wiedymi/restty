@@ -13,6 +13,12 @@ Static-file-only option:
 
 - `bun run playground:static`
 
+Cloudflare Pages static deploy:
+
+1. Run `bun run build:assets`
+2. Deploy `playground/public/` as the output directory.
+3. Keep `playground/public/_headers` so COOP/COEP headers are applied (required for WebContainer mode).
+
 ## Build the WASM module
 From `wasm/`:
 - `zig build`

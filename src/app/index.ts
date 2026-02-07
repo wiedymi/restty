@@ -21,14 +21,7 @@ import type {
   KittyPlacement,
   ResttyWasmExports,
 } from "../wasm";
-import {
-  createPtyConnection,
-  connectPty as connectPtyLib,
-  disconnectPty as disconnectPtyLib,
-  sendPtyInput,
-  sendPtyResize,
-  isPtyConnected,
-} from "../pty";
+import { createWebSocketPtyTransport, type PtyTransport } from "../pty";
 import { colorToFloats, colorToRgbU32, type GhosttyTheme } from "../theme";
 import {
   initWebGPU,
@@ -64,6 +57,12 @@ import * as bundledTextShaper from "text-shaper";
 import type { ResttyApp, ResttyAppOptions } from "./types";
 import { getDefaultResttyAppSession } from "./session";
 export { createResttyAppSession, getDefaultResttyAppSession } from "./session";
+export {
+  createResttyPaneManager,
+  createDefaultResttyPaneContextMenuItems,
+  getResttyShortcutModifierLabel,
+} from "./panes";
+export { Restty } from "./restty";
 export type {
   ResttyAppElements,
   ResttyAppCallbacks,
@@ -73,6 +72,18 @@ export type {
   ResttyAppOptions,
   ResttyApp,
 } from "./types";
+export type {
+  ResttyPaneSplitDirection,
+  ResttyPaneContextMenuItem,
+  ResttyPaneDefinition,
+  ResttyPaneShortcutsOptions,
+  ResttyPaneContextMenuOptions,
+  CreateResttyPaneManagerOptions,
+  ResttyPaneManager,
+  ResttyPaneWithApp,
+  CreateDefaultResttyPaneContextMenuItemsOptions,
+} from "./panes";
+export type { ResttyOptions } from "./restty";
 
 export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
@@ -198,7 +209,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   let needsRender = true;
   let lastRenderTime = 0;
   let nextBlinkTime = performance.now() + CURSOR_BLINK_MS;
-  const ptyState = createPtyConnection();
+  const ptyTransport: PtyTransport = options.ptyTransport ?? createWebSocketPtyTransport();
   let lastCursorForCpr = { row: 1, col: 1 };
   let inputHandler: InputHandler | null = null;
   let activeTheme: GhosttyTheme | null = null;
@@ -924,7 +935,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   inputHandler = createInputHandler({
     getCursorPosition: () => lastCursorForCpr,
     sendReply: (data) => {
-      sendPtyInput(ptyState, data);
+      ptyTransport.sendInput(data);
     },
     positionToCell,
     positionToPixel,
@@ -1030,56 +1041,69 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   }
 
   function disconnectPty() {
-    disconnectPtyLib(ptyState);
+    ptyTransport.disconnect();
     updateMouseStatus();
     setPtyStatus("disconnected");
   }
 
-  function connectPty(url: string) {
-    if (!url) return;
-    if (isPtyConnected(ptyState)) return;
+  function connectPty(url = "") {
+    if (ptyTransport.isConnected()) return;
     setPtyStatus("connecting...");
-    connectPtyLib(ptyState, url, {
-      onConnect: () => {
-        setPtyStatus("connected");
-        updateMouseStatus();
-        if (gridState.cols && gridState.rows) {
-          sendPtyResize(ptyState, gridState.cols, gridState.rows);
-        }
-        appendLog("[pty] connected");
-      },
-      onDisconnect: () => {
-        appendLog("[pty] disconnected");
-        setPtyStatus("disconnected");
-        updateMouseStatus();
-      },
-      onStatus: (shell) => {
-        appendLog(`[pty] shell ${shell ?? ""}`);
-      },
-      onError: (message, errors) => {
-        appendLog(`[pty] error ${message ?? ""}`);
-        if (errors) {
-          for (const err of errors) appendLog(`[pty] spawn ${err}`);
-        }
+    try {
+      const connectResult = ptyTransport.connect({
+        url,
+        cols: gridState.cols || 80,
+        rows: gridState.rows || 24,
+        callbacks: {
+          onConnect: () => {
+            setPtyStatus("connected");
+            updateMouseStatus();
+            if (gridState.cols && gridState.rows) {
+              ptyTransport.resize(gridState.cols, gridState.rows);
+            }
+            appendLog("[pty] connected");
+          },
+          onDisconnect: () => {
+            appendLog("[pty] disconnected");
+            setPtyStatus("disconnected");
+            updateMouseStatus();
+          },
+          onStatus: (shell) => {
+            appendLog(`[pty] shell ${shell ?? ""}`);
+          },
+          onError: (message, errors) => {
+            appendLog(`[pty] error ${message ?? ""}`);
+            if (errors) {
+              for (const err of errors) appendLog(`[pty] spawn ${err}`);
+            }
+            disconnectPty();
+          },
+          onExit: (code) => {
+            appendLog(`[pty] exit ${code ?? ""}`);
+            disconnectPty();
+          },
+          onData: (text) => {
+            const sanitized = inputHandler ? inputHandler.filterOutput(text) : text;
+            updateMouseStatus();
+            if (sanitized) sendInput(sanitized, "pty");
+          },
+        },
+      });
+      Promise.resolve(connectResult).catch((err) => {
+        appendLog(`[pty] error ${err?.message ?? err}`);
         disconnectPty();
-      },
-      onExit: (code) => {
-        appendLog(`[pty] exit ${code ?? ""}`);
-        disconnectPty();
-      },
-      onData: (text) => {
-        const sanitized = inputHandler ? inputHandler.filterOutput(text) : text;
-        updateMouseStatus();
-        if (sanitized) sendInput(sanitized, "pty");
-      },
-    });
+      });
+    } catch (err) {
+      appendLog(`[pty] error ${err?.message ?? err}`);
+      disconnectPty();
+    }
   }
 
   function sendKeyInput(text, source = "key") {
     if (!text) return;
-    if (isPtyConnected(ptyState)) {
+    if (ptyTransport.isConnected()) {
       const payload = inputHandler.mapKeyForPty(text);
-      sendPtyInput(ptyState, payload);
+      ptyTransport.sendInput(payload);
       return;
     }
     sendInput(text, source);
@@ -3435,8 +3459,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       }
     }
 
-    if (changed && isPtyConnected(ptyState)) {
-      sendPtyResize(ptyState, cols, rows);
+    if (changed && ptyTransport.isConnected()) {
+      ptyTransport.resize(cols, rows);
     }
 
     syncKittyOverlaySize();
@@ -5837,13 +5861,13 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
   function flushWasmOutputToPty() {
     if (!wasm || !wasmHandle) return;
-    if (!isPtyConnected(ptyState)) return;
+    if (!ptyTransport.isConnected()) return;
 
     let iterations = 0;
     while (iterations < 32) {
       const out = wasm.drainOutput(wasmHandle);
       if (!out) break;
-      sendPtyInput(ptyState, out);
+      ptyTransport.sendInput(out);
       iterations += 1;
     }
   }
@@ -6041,15 +6065,6 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       if (activeTheme) {
         applyTheme(activeTheme, activeTheme.name ?? "cached theme");
       }
-      const sample = [
-        "restty wasm online",
-        "WebGPU/WebGL harness still running.",
-        "Sample output:",
-        "> The quick brown fox jumps over the lazy dog.",
-        "> 1234567890 !@#$%^&*()",
-        "",
-      ].join("\r\n");
-      writeToWasm(wasmHandle, sample);
       instance.renderUpdate(wasmHandle);
       needsRender = true;
     } catch (err) {
@@ -6133,6 +6148,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     cancelAnimationFrame(rafId);
     if (sizeRaf) cancelAnimationFrame(sizeRaf);
     disconnectPty();
+    ptyTransport.destroy?.();
     if (wasm && wasmHandle) {
       try {
         wasm.destroy(wasmHandle);
@@ -6195,7 +6211,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     clearScreen,
     connectPty,
     disconnectPty,
-    isPtyConnected: () => isPtyConnected(ptyState),
+    isPtyConnected: () => ptyTransport.isConnected(),
     setMouseMode,
     getMouseStatus,
     copySelectionToClipboard,

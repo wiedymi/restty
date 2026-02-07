@@ -1,4 +1,5 @@
 import type { InputHandler } from "../input";
+import type { PtyTransport } from "../pty";
 import type { WebGPUCoreState } from "../renderer";
 import type { GhosttyTheme } from "../theme";
 import type { ResttyWasm } from "../wasm";
@@ -75,6 +76,7 @@ export type ResttyAppOptions = {
   attachWindowEvents?: boolean;
   attachCanvasEvents?: boolean;
   debugExpose?: boolean;
+  ptyTransport?: PtyTransport;
 };
 
 export type ResttyApp = {
@@ -89,7 +91,7 @@ export type ResttyApp = {
   sendInput: (text: string, source?: string) => void;
   sendKeyInput: (text: string, source?: string) => void;
   clearScreen: () => void;
-  connectPty: (url: string) => void;
+  connectPty: (url?: string) => void;
   disconnectPty: () => void;
   isPtyConnected: () => boolean;
   setMouseMode: (value: string) => void;

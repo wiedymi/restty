@@ -1,4 +1,11 @@
-import type { PtyCallbacks, PtyConnectionState, PtyMessage, PtyServerMessage } from "./types";
+import type {
+  PtyCallbacks,
+  PtyConnectionState,
+  PtyConnectOptions,
+  PtyMessage,
+  PtyServerMessage,
+  PtyTransport,
+} from "./types";
 
 export function decodePtyBinary(
   decoder: TextDecoder,
@@ -143,4 +150,33 @@ function handleServerMessage(payload: string, callbacks: PtyCallbacks): boolean 
 
 export function isPtyConnected(state: PtyConnectionState): boolean {
   return state.connected && state.socket?.readyState === WebSocket.OPEN;
+}
+
+export function createWebSocketPtyTransport(
+  state: PtyConnectionState = createPtyConnection(),
+): PtyTransport {
+  return {
+    connect: (options: PtyConnectOptions) => {
+      const url = options.url?.trim?.() ?? "";
+      if (!url) {
+        throw new Error("PTY URL is required for WebSocket transport");
+      }
+      connectPty(state, url, options.callbacks);
+    },
+    disconnect: () => {
+      disconnectPty(state);
+    },
+    sendInput: (data: string) => {
+      return sendPtyInput(state, data);
+    },
+    resize: (cols: number, rows: number) => {
+      return sendPtyResize(state, cols, rows);
+    },
+    isConnected: () => {
+      return isPtyConnected(state);
+    },
+    destroy: () => {
+      disconnectPty(state);
+    },
+  };
 }

@@ -21,23 +21,18 @@ npm i restty
 
 ## Minimal setup
 
-`restty` ships with built-in text shaping and embedded WASM. You only need a canvas (and optional IME textarea).
+`restty` auto-creates panes, canvas, and hidden IME inputs for you.
 
 ```html
-<canvas id="term"></canvas>
-<textarea id="ime" style="position:absolute;left:-9999px;top:-9999px"></textarea>
+<div id="termRoot"></div>
 ```
 
 ```ts
-import { createResttyApp } from "restty";
+import { Restty } from "restty";
 
-const app = createResttyApp({
-  canvas: document.getElementById("term") as HTMLCanvasElement,
-  imeInput: document.getElementById("ime") as HTMLTextAreaElement,
-  renderer: "auto", // "auto" | "webgpu" | "webgl2"
+const restty = new Restty({
+  root: document.getElementById("termRoot") as HTMLElement,
 });
-
-await app.init();
 ```
 
 ## Common examples
@@ -45,7 +40,7 @@ await app.init();
 ### Connect to a PTY websocket
 
 ```ts
-app.connectPty("ws://localhost:8787/pty");
+restty.connectPty("ws://localhost:8787/pty");
 ```
 
 ### Apply a built-in theme
@@ -54,7 +49,7 @@ app.connectPty("ws://localhost:8787/pty");
 import { getBuiltinTheme } from "restty";
 
 const theme = getBuiltinTheme("Aizen Dark");
-if (theme) app.applyTheme(theme);
+if (theme) restty.applyTheme(theme);
 ```
 
 ### Parse and apply a custom Ghostty theme
@@ -67,22 +62,61 @@ foreground = #c0caf5
 background = #1a1b26
 cursor-color = #c0caf5
 `;
-app.applyTheme(parseGhosttyTheme(themeText), "inline");
+restty.applyTheme(parseGhosttyTheme(themeText), "inline");
 ```
 
 ### Send input manually
 
 ```ts
-app.sendInput("ls -la\n");
+restty.sendInput("ls -la\n");
 ```
 
-## App API (high level)
+## Multi-pane + Context Menu Defaults
+
+`restty` ships a pane manager and a default terminal context menu so you can add split panes quickly.
+It auto-creates pane DOM, canvas, and hidden IME inputs for you.
+
+```ts
+import {
+  Restty,
+  getBuiltinTheme,
+} from "restty";
+
+const root = document.getElementById("paneRoot") as HTMLElement;
+
+const restty = new Restty({
+  root,
+  appOptions: {
+    renderer: "auto",
+    fontSize: 18,
+    callbacks: {
+      onLog: (line) => console.log(line),
+    },
+    elements: {},
+  },
+  defaultContextMenu: {
+    getPtyUrl: () => "ws://localhost:8787/pty",
+  },
+  shortcuts: true,
+});
+
+const first = restty.getActivePane();
+const theme = getBuiltinTheme("Aizen Dark");
+if (theme && first) first.app.applyTheme(theme);
+```
+
+Default split shortcuts are enabled:
+- `Cmd/Ctrl + D` split right
+- `Cmd/Ctrl + Shift + D` split down
+
+## Restty API
 
 Main methods:
-- `init()`
+- `new Restty({ root, ...options })`
 - `destroy()`
-- `connectPty(url)` / `disconnectPty()`
-- `isPtyConnected()`
+- `getPanes()` / `getActivePane()` / `getFocusedPane()`
+- `splitActivePane("vertical" | "horizontal")` / `splitPane(id, direction)` / `closePane(id)`
+- `connectPty(url)` / `disconnectPty()` / `isPtyConnected()`
 - `setRenderer("auto" | "webgpu" | "webgl2")`
 - `setFontSize(number)`
 - `applyTheme(theme)` / `resetTheme()`
@@ -91,7 +125,7 @@ Main methods:
 - `copySelectionToClipboard()` / `pasteFromClipboard()`
 - `updateSize(force?)`
 
-Low-level ABI access is also available via `loadResttyWasm()` if you need direct render-state integration.
+Low-level ABI access is available via `loadResttyWasm()` when you need direct render-state integration.
 
 ## Local development
 
@@ -107,6 +141,11 @@ bun run playground
 ```
 
 Open `http://localhost:5173`.
+
+Static deploy (Cloudflare Pages):
+- Build: `bun run build:assets`
+- Output directory: `playground/public`
+- Keep `_headers` in that folder for COOP/COEP (required by WebContainer mode).
 
 ## Commands (repo)
 
