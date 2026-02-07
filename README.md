@@ -121,9 +121,16 @@ bun run pty           # local PTY server
 bun run playground    # playground dev server
 ```
 
+## Acknowledgements
+
+Huge thanks to the Ghostty project and contributors for `libghostty-vt`, which powers restty's terminal core.
+
+`text-shaper` is my own library, and it also makes this project possible by handling shaping and glyph rasterization in the browser pipeline.
+
 ## Docs
 
 - `docs/README.md` - docs index
 - `docs/usage.md` - integration details
 - `docs/how-it-works.md` - runtime flow
 - `docs/internals/` - architecture docs
+- `THIRD_PARTY_NOTICES.md` - third-party credits and notices
