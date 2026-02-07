@@ -1,7 +1,7 @@
 .{
-    .name = .wterm_wasm,
+    .name = .restty_wasm,
     .version = "0.0.0",
-    .fingerprint = 0x3f6941ef05155347,
+    .fingerprint = 0x1d960b595966b365,
     .minimum_zig_version = "0.15.2",
     .paths = .{""},
     .dependencies = .{

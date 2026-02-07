@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "wterm",
+      "name": "restty",
       "devDependencies": {
         "@webgpu/types": "^0.1.69",
         "wgpu-polyfill": "^0.1.0",

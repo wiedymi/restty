@@ -61,80 +61,80 @@ export type RenderState = {
   cursor: CursorInfo | null;
 };
 
-export type WtermWasmExports = WebAssembly.Exports & {
+export type ResttyWasmExports = WebAssembly.Exports & {
   memory: WebAssembly.Memory;
-  wterm_create: (cols: number, rows: number, maxScrollback: number) => number;
-  wterm_destroy: (handle: number) => void;
-  wterm_write: (handle: number, ptr: number, len: number) => void;
-  wterm_resize: (handle: number, cols: number, rows: number) => void;
-  wterm_set_pixel_size?: (handle: number, widthPx: number, heightPx: number) => number;
-  wterm_render_update: (handle: number) => void;
-  wterm_alloc: (len: number) => number;
-  wterm_free: (ptr: number, len: number) => void;
-  wterm_set_default_colors?: (handle: number, fg: number, bg: number, cursor: number) => number;
-  wterm_set_palette?: (handle: number, ptr: number, len: number) => number;
-  wterm_reset_palette?: (handle: number) => number;
-  wterm_scroll_viewport?: (handle: number, delta: number) => number;
-  wterm_scrollbar_total?: (handle: number) => number;
-  wterm_scrollbar_offset?: (handle: number) => number;
-  wterm_scrollbar_len?: (handle: number) => number;
-  wterm_render_info?: (handle: number) => number;
-  wterm_render_rows?: (handle: number) => number;
-  wterm_render_cols?: (handle: number) => number;
-  wterm_render_codepoints_ptr?: (handle: number) => number;
-  wterm_render_fg_rgba_ptr?: (handle: number) => number;
-  wterm_render_bg_rgba_ptr?: (handle: number) => number;
-  wterm_render_ul_rgba_ptr?: (handle: number) => number;
-  wterm_render_ul_style_ptr?: (handle: number) => number;
-  wterm_render_grapheme_offset_ptr?: (handle: number) => number;
-  wterm_render_grapheme_len_ptr?: (handle: number) => number;
-  wterm_render_grapheme_buffer_ptr?: (handle: number) => number;
-  wterm_render_grapheme_buffer_len?: (handle: number) => number;
-  wterm_render_selection_start_ptr?: (handle: number) => number;
-  wterm_render_selection_end_ptr?: (handle: number) => number;
-  wterm_render_cursor_ptr?: (handle: number) => number;
-  wterm_rows?: (handle: number) => number;
-  wterm_cols?: (handle: number) => number;
-  wterm_cell_codepoints_ptr?: (handle: number) => number;
-  wterm_cell_content_tags_ptr?: (handle: number) => number;
-  wterm_cell_wide_ptr?: (handle: number) => number;
-  wterm_cell_flags_ptr?: (handle: number) => number;
-  wterm_cell_style_flags_ptr?: (handle: number) => number;
-  wterm_cell_link_ids_ptr?: (handle: number) => number;
-  wterm_cell_fg_rgba_ptr?: (handle: number) => number;
-  wterm_cell_bg_rgba_ptr?: (handle: number) => number;
-  wterm_cell_ul_rgba_ptr?: (handle: number) => number;
-  wterm_cell_underline_styles_ptr?: (handle: number) => number;
-  wterm_cell_grapheme_offsets_ptr?: (handle: number) => number;
-  wterm_cell_grapheme_lengths_ptr?: (handle: number) => number;
-  wterm_grapheme_buffer_ptr?: (handle: number) => number;
-  wterm_grapheme_buffer_len?: (handle: number) => number;
-  wterm_row_selection_start_ptr?: (handle: number) => number;
-  wterm_row_selection_end_ptr?: (handle: number) => number;
-  wterm_cursor_info_ptr?: (handle: number) => number;
-  wterm_link_offsets_ptr?: (handle: number) => number;
-  wterm_link_lengths_ptr?: (handle: number) => number;
-  wterm_link_buffer_ptr?: (handle: number) => number;
-  wterm_link_count?: (handle: number) => number;
-  wterm_link_buffer_len?: (handle: number) => number;
-  wterm_debug_cursor_x?: (handle: number) => number;
-  wterm_debug_cursor_y?: (handle: number) => number;
-  wterm_debug_scroll_left?: (handle: number) => number;
-  wterm_debug_scroll_right?: (handle: number) => number;
-  wterm_debug_term_cols?: (handle: number) => number;
-  wterm_debug_term_rows?: (handle: number) => number;
-  wterm_debug_page_cols?: (handle: number) => number;
-  wterm_debug_page_rows?: (handle: number) => number;
-  wterm_output_ptr?: (handle: number) => number;
-  wterm_output_len?: (handle: number) => number;
-  wterm_output_consume?: (handle: number, len: number) => number;
-  wterm_kitty_keyboard_flags?: (handle: number) => number;
-  wterm_kitty_placement_stride?: () => number;
-  wterm_kitty_placement_count?: (handle: number) => number;
-  wterm_kitty_placements_ptr?: (handle: number) => number;
+  restty_create: (cols: number, rows: number, maxScrollback: number) => number;
+  restty_destroy: (handle: number) => void;
+  restty_write: (handle: number, ptr: number, len: number) => void;
+  restty_resize: (handle: number, cols: number, rows: number) => void;
+  restty_set_pixel_size?: (handle: number, widthPx: number, heightPx: number) => number;
+  restty_render_update: (handle: number) => void;
+  restty_alloc: (len: number) => number;
+  restty_free: (ptr: number, len: number) => void;
+  restty_set_default_colors?: (handle: number, fg: number, bg: number, cursor: number) => number;
+  restty_set_palette?: (handle: number, ptr: number, len: number) => number;
+  restty_reset_palette?: (handle: number) => number;
+  restty_scroll_viewport?: (handle: number, delta: number) => number;
+  restty_scrollbar_total?: (handle: number) => number;
+  restty_scrollbar_offset?: (handle: number) => number;
+  restty_scrollbar_len?: (handle: number) => number;
+  restty_render_info?: (handle: number) => number;
+  restty_render_rows?: (handle: number) => number;
+  restty_render_cols?: (handle: number) => number;
+  restty_render_codepoints_ptr?: (handle: number) => number;
+  restty_render_fg_rgba_ptr?: (handle: number) => number;
+  restty_render_bg_rgba_ptr?: (handle: number) => number;
+  restty_render_ul_rgba_ptr?: (handle: number) => number;
+  restty_render_ul_style_ptr?: (handle: number) => number;
+  restty_render_grapheme_offset_ptr?: (handle: number) => number;
+  restty_render_grapheme_len_ptr?: (handle: number) => number;
+  restty_render_grapheme_buffer_ptr?: (handle: number) => number;
+  restty_render_grapheme_buffer_len?: (handle: number) => number;
+  restty_render_selection_start_ptr?: (handle: number) => number;
+  restty_render_selection_end_ptr?: (handle: number) => number;
+  restty_render_cursor_ptr?: (handle: number) => number;
+  restty_rows?: (handle: number) => number;
+  restty_cols?: (handle: number) => number;
+  restty_cell_codepoints_ptr?: (handle: number) => number;
+  restty_cell_content_tags_ptr?: (handle: number) => number;
+  restty_cell_wide_ptr?: (handle: number) => number;
+  restty_cell_flags_ptr?: (handle: number) => number;
+  restty_cell_style_flags_ptr?: (handle: number) => number;
+  restty_cell_link_ids_ptr?: (handle: number) => number;
+  restty_cell_fg_rgba_ptr?: (handle: number) => number;
+  restty_cell_bg_rgba_ptr?: (handle: number) => number;
+  restty_cell_ul_rgba_ptr?: (handle: number) => number;
+  restty_cell_underline_styles_ptr?: (handle: number) => number;
+  restty_cell_grapheme_offsets_ptr?: (handle: number) => number;
+  restty_cell_grapheme_lengths_ptr?: (handle: number) => number;
+  restty_grapheme_buffer_ptr?: (handle: number) => number;
+  restty_grapheme_buffer_len?: (handle: number) => number;
+  restty_row_selection_start_ptr?: (handle: number) => number;
+  restty_row_selection_end_ptr?: (handle: number) => number;
+  restty_cursor_info_ptr?: (handle: number) => number;
+  restty_link_offsets_ptr?: (handle: number) => number;
+  restty_link_lengths_ptr?: (handle: number) => number;
+  restty_link_buffer_ptr?: (handle: number) => number;
+  restty_link_count?: (handle: number) => number;
+  restty_link_buffer_len?: (handle: number) => number;
+  restty_debug_cursor_x?: (handle: number) => number;
+  restty_debug_cursor_y?: (handle: number) => number;
+  restty_debug_scroll_left?: (handle: number) => number;
+  restty_debug_scroll_right?: (handle: number) => number;
+  restty_debug_term_cols?: (handle: number) => number;
+  restty_debug_term_rows?: (handle: number) => number;
+  restty_debug_page_cols?: (handle: number) => number;
+  restty_debug_page_rows?: (handle: number) => number;
+  restty_output_ptr?: (handle: number) => number;
+  restty_output_len?: (handle: number) => number;
+  restty_output_consume?: (handle: number, len: number) => number;
+  restty_kitty_keyboard_flags?: (handle: number) => number;
+  restty_kitty_placement_stride?: () => number;
+  restty_kitty_placement_count?: (handle: number) => number;
+  restty_kitty_placements_ptr?: (handle: number) => number;
 };
 
-export type WtermWasmOptions = {
+export type ResttyWasmOptions = {
   log?: (message: string) => void;
 };
 
@@ -179,14 +179,14 @@ function decodeBase64(base64: string): Uint8Array {
   throw new Error("No base64 decoder available in this environment.");
 }
 
-function resolveWasmAbi(exports: WtermWasmExports): WasmAbi | null {
-  if (exports.wterm_render_info) {
+function resolveWasmAbi(exports: ResttyWasmExports): WasmAbi | null {
+  if (exports.restty_render_info) {
     return { kind: "info" };
   }
-  if (exports.wterm_render_codepoints_ptr) {
+  if (exports.restty_render_codepoints_ptr) {
     return { kind: "render" };
   }
-  if (exports.wterm_cell_codepoints_ptr) {
+  if (exports.restty_cell_codepoints_ptr) {
     return { kind: "cells" };
   }
   return null;
@@ -214,9 +214,9 @@ function unpackCursor(bytes: Uint8Array, ptr: number): CursorInfo | null {
   };
 }
 
-function readRenderInfo(exports: WtermWasmExports, handle: number): RenderPtrs | null {
-  if (!exports.wterm_render_info) return null;
-  const base = exports.wterm_render_info(handle);
+function readRenderInfo(exports: ResttyWasmExports, handle: number): RenderPtrs | null {
+  if (!exports.restty_render_info) return null;
+  const base = exports.restty_render_info(handle);
   if (!base) return null;
   const mem = exports.memory;
   const view = new DataView(mem.buffer, base, 64);
@@ -263,72 +263,72 @@ function readRenderInfo(exports: WtermWasmExports, handle: number): RenderPtrs |
   };
 }
 
-function readRenderPtrs(exports: WtermWasmExports, handle: number): RenderPtrs {
-  const rows = exports.wterm_render_rows ? exports.wterm_render_rows(handle) : exports.wterm_rows!(handle);
-  const cols = exports.wterm_render_cols ? exports.wterm_render_cols(handle) : exports.wterm_cols!(handle);
+function readRenderPtrs(exports: ResttyWasmExports, handle: number): RenderPtrs {
+  const rows = exports.restty_render_rows ? exports.restty_render_rows(handle) : exports.restty_rows!(handle);
+  const cols = exports.restty_render_cols ? exports.restty_render_cols(handle) : exports.restty_cols!(handle);
   return {
     rows,
     cols,
-    codepointsPtr: exports.wterm_render_codepoints_ptr!(handle),
+    codepointsPtr: exports.restty_render_codepoints_ptr!(handle),
     contentTagsPtr: 0,
     widePtr: 0,
     flagsPtr: 0,
     styleFlagsPtr: 0,
     linkIdsPtr: 0,
-    fgPtr: exports.wterm_render_fg_rgba_ptr!(handle),
-    bgPtr: exports.wterm_render_bg_rgba_ptr!(handle),
-    ulPtr: exports.wterm_render_ul_rgba_ptr!(handle),
-    ulStylePtr: exports.wterm_render_ul_style_ptr!(handle),
-    graphemeOffsetPtr: exports.wterm_render_grapheme_offset_ptr!(handle),
-    graphemeLenPtr: exports.wterm_render_grapheme_len_ptr!(handle),
-    graphemeBufferPtr: exports.wterm_render_grapheme_buffer_ptr!(handle),
-    graphemeBufferLen: exports.wterm_render_grapheme_buffer_len
-      ? exports.wterm_render_grapheme_buffer_len(handle)
+    fgPtr: exports.restty_render_fg_rgba_ptr!(handle),
+    bgPtr: exports.restty_render_bg_rgba_ptr!(handle),
+    ulPtr: exports.restty_render_ul_rgba_ptr!(handle),
+    ulStylePtr: exports.restty_render_ul_style_ptr!(handle),
+    graphemeOffsetPtr: exports.restty_render_grapheme_offset_ptr!(handle),
+    graphemeLenPtr: exports.restty_render_grapheme_len_ptr!(handle),
+    graphemeBufferPtr: exports.restty_render_grapheme_buffer_ptr!(handle),
+    graphemeBufferLen: exports.restty_render_grapheme_buffer_len
+      ? exports.restty_render_grapheme_buffer_len(handle)
       : 0,
-    selectionStartPtr: exports.wterm_render_selection_start_ptr!(handle),
-    selectionEndPtr: exports.wterm_render_selection_end_ptr!(handle),
-    cursorPtr: exports.wterm_render_cursor_ptr!(handle),
+    selectionStartPtr: exports.restty_render_selection_start_ptr!(handle),
+    selectionEndPtr: exports.restty_render_selection_end_ptr!(handle),
+    cursorPtr: exports.restty_render_cursor_ptr!(handle),
   };
 }
 
-function readCellPtrs(exports: WtermWasmExports, handle: number): RenderPtrs {
-  const rows = exports.wterm_rows!(handle);
-  const cols = exports.wterm_cols!(handle);
+function readCellPtrs(exports: ResttyWasmExports, handle: number): RenderPtrs {
+  const rows = exports.restty_rows!(handle);
+  const cols = exports.restty_cols!(handle);
   return {
     rows,
     cols,
-    codepointsPtr: exports.wterm_cell_codepoints_ptr!(handle),
-    contentTagsPtr: exports.wterm_cell_content_tags_ptr ? exports.wterm_cell_content_tags_ptr(handle) : 0,
-    widePtr: exports.wterm_cell_wide_ptr ? exports.wterm_cell_wide_ptr(handle) : 0,
-    flagsPtr: exports.wterm_cell_flags_ptr ? exports.wterm_cell_flags_ptr(handle) : 0,
-    styleFlagsPtr: exports.wterm_cell_style_flags_ptr ? exports.wterm_cell_style_flags_ptr(handle) : 0,
-    linkIdsPtr: exports.wterm_cell_link_ids_ptr ? exports.wterm_cell_link_ids_ptr(handle) : 0,
-    fgPtr: exports.wterm_cell_fg_rgba_ptr!(handle),
-    bgPtr: exports.wterm_cell_bg_rgba_ptr!(handle),
-    ulPtr: exports.wterm_cell_ul_rgba_ptr!(handle),
-    ulStylePtr: exports.wterm_cell_underline_styles_ptr!(handle),
-    graphemeOffsetPtr: exports.wterm_cell_grapheme_offsets_ptr!(handle),
-    graphemeLenPtr: exports.wterm_cell_grapheme_lengths_ptr!(handle),
-    graphemeBufferPtr: exports.wterm_grapheme_buffer_ptr!(handle),
-    graphemeBufferLen: exports.wterm_grapheme_buffer_len!(handle),
-    selectionStartPtr: exports.wterm_row_selection_start_ptr!(handle),
-    selectionEndPtr: exports.wterm_row_selection_end_ptr!(handle),
-    cursorPtr: exports.wterm_cursor_info_ptr!(handle),
+    codepointsPtr: exports.restty_cell_codepoints_ptr!(handle),
+    contentTagsPtr: exports.restty_cell_content_tags_ptr ? exports.restty_cell_content_tags_ptr(handle) : 0,
+    widePtr: exports.restty_cell_wide_ptr ? exports.restty_cell_wide_ptr(handle) : 0,
+    flagsPtr: exports.restty_cell_flags_ptr ? exports.restty_cell_flags_ptr(handle) : 0,
+    styleFlagsPtr: exports.restty_cell_style_flags_ptr ? exports.restty_cell_style_flags_ptr(handle) : 0,
+    linkIdsPtr: exports.restty_cell_link_ids_ptr ? exports.restty_cell_link_ids_ptr(handle) : 0,
+    fgPtr: exports.restty_cell_fg_rgba_ptr!(handle),
+    bgPtr: exports.restty_cell_bg_rgba_ptr!(handle),
+    ulPtr: exports.restty_cell_ul_rgba_ptr!(handle),
+    ulStylePtr: exports.restty_cell_underline_styles_ptr!(handle),
+    graphemeOffsetPtr: exports.restty_cell_grapheme_offsets_ptr!(handle),
+    graphemeLenPtr: exports.restty_cell_grapheme_lengths_ptr!(handle),
+    graphemeBufferPtr: exports.restty_grapheme_buffer_ptr!(handle),
+    graphemeBufferLen: exports.restty_grapheme_buffer_len!(handle),
+    selectionStartPtr: exports.restty_row_selection_start_ptr!(handle),
+    selectionEndPtr: exports.restty_row_selection_end_ptr!(handle),
+    cursorPtr: exports.restty_cursor_info_ptr!(handle),
   };
 }
 
-export class WtermWasm {
-  readonly exports: WtermWasmExports;
+export class ResttyWasm {
+  readonly exports: ResttyWasmExports;
   readonly abi: WasmAbi;
   readonly memory: WebAssembly.Memory;
 
-  private constructor(exports: WtermWasmExports, abi: WasmAbi) {
+  private constructor(exports: ResttyWasmExports, abi: WasmAbi) {
     this.exports = exports;
     this.abi = abi;
     this.memory = exports.memory;
   }
 
-  static async load(options: WtermWasmOptions = {}): Promise<WtermWasm> {
+  static async load(options: ResttyWasmOptions = {}): Promise<ResttyWasm> {
     const bytes = decodeBase64(WASM_BASE64);
     let memory: WebAssembly.Memory | null = null;
     const log = options.log;
@@ -345,18 +345,18 @@ export class WtermWasm {
     };
 
     const { instance } = await WebAssembly.instantiate(bytes, imports);
-    const exports = instance.exports as WtermWasmExports;
+    const exports = instance.exports as ResttyWasmExports;
     memory = exports.memory ?? null;
 
     const required = [
       "memory",
-      "wterm_create",
-      "wterm_destroy",
-      "wterm_write",
-      "wterm_resize",
-      "wterm_render_update",
-      "wterm_alloc",
-      "wterm_free",
+      "restty_create",
+      "restty_destroy",
+      "restty_write",
+      "restty_resize",
+      "restty_render_update",
+      "restty_alloc",
+      "restty_free",
     ];
 
     for (const name of required) {
@@ -370,65 +370,65 @@ export class WtermWasm {
       throw new Error("missing render ABI exports");
     }
 
-    return new WtermWasm(exports, abi);
+    return new ResttyWasm(exports, abi);
   }
 
   create(cols: number, rows: number, maxScrollback: number): number {
-    return this.exports.wterm_create(cols, rows, maxScrollback);
+    return this.exports.restty_create(cols, rows, maxScrollback);
   }
 
   destroy(handle: number): void {
-    this.exports.wterm_destroy(handle);
+    this.exports.restty_destroy(handle);
   }
 
   resize(handle: number, cols: number, rows: number): void {
-    this.exports.wterm_resize(handle, cols, rows);
+    this.exports.restty_resize(handle, cols, rows);
   }
 
   setPixelSize(handle: number, widthPx: number, heightPx: number): void {
-    if (!this.exports.wterm_set_pixel_size) return;
-    this.exports.wterm_set_pixel_size(handle, widthPx, heightPx);
+    if (!this.exports.restty_set_pixel_size) return;
+    this.exports.restty_set_pixel_size(handle, widthPx, heightPx);
   }
 
   renderUpdate(handle: number): void {
-    this.exports.wterm_render_update(handle);
+    this.exports.restty_render_update(handle);
   }
 
   scrollViewport(handle: number, delta: number): void {
-    if (!this.exports.wterm_scroll_viewport) return;
-    this.exports.wterm_scroll_viewport(handle, delta);
+    if (!this.exports.restty_scroll_viewport) return;
+    this.exports.restty_scroll_viewport(handle, delta);
   }
 
   drainOutput(handle: number): string {
-    if (!this.exports.wterm_output_ptr || !this.exports.wterm_output_len) return "";
-    const len = this.exports.wterm_output_len(handle);
+    if (!this.exports.restty_output_ptr || !this.exports.restty_output_len) return "";
+    const len = this.exports.restty_output_len(handle);
     if (!len) return "";
-    const ptr = this.exports.wterm_output_ptr(handle);
+    const ptr = this.exports.restty_output_ptr(handle);
     if (!ptr) return "";
     const bytes = new Uint8Array(this.memory.buffer, ptr, len);
     const copy = new Uint8Array(len);
     copy.set(bytes);
-    if (this.exports.wterm_output_consume) {
-      this.exports.wterm_output_consume(handle, len);
+    if (this.exports.restty_output_consume) {
+      this.exports.restty_output_consume(handle, len);
     }
     return textDecoder.decode(copy);
   }
 
   getKittyKeyboardFlags(handle: number): number {
-    if (!this.exports.wterm_kitty_keyboard_flags) return 0;
-    return this.exports.wterm_kitty_keyboard_flags(handle) >>> 0;
+    if (!this.exports.restty_kitty_keyboard_flags) return 0;
+    return this.exports.restty_kitty_keyboard_flags(handle) >>> 0;
   }
 
   getKittyPlacements(handle: number): KittyPlacement[] {
-    if (!this.exports.wterm_kitty_placement_count || !this.exports.wterm_kitty_placements_ptr) {
+    if (!this.exports.restty_kitty_placement_count || !this.exports.restty_kitty_placements_ptr) {
       return [];
     }
-    const count = this.exports.wterm_kitty_placement_count(handle) >>> 0;
+    const count = this.exports.restty_kitty_placement_count(handle) >>> 0;
     if (!count) return [];
-    const ptr = this.exports.wterm_kitty_placements_ptr(handle) >>> 0;
+    const ptr = this.exports.restty_kitty_placements_ptr(handle) >>> 0;
     if (!ptr) return [];
-    const stride = this.exports.wterm_kitty_placement_stride
-      ? this.exports.wterm_kitty_placement_stride() >>> 0
+    const stride = this.exports.restty_kitty_placement_stride
+      ? this.exports.restty_kitty_placement_stride() >>> 0
       : 68;
     if (!stride) return [];
 
@@ -462,34 +462,34 @@ export class WtermWasm {
   write(handle: number, text: string): void {
     if (!text) return;
     const bytes = textEncoder.encode(text);
-    const ptr = this.exports.wterm_alloc(bytes.length);
+    const ptr = this.exports.restty_alloc(bytes.length);
     if (!ptr) return;
     const view = new Uint8Array(this.memory.buffer, ptr, bytes.length);
     view.set(bytes);
-    this.exports.wterm_write(handle, ptr, bytes.length);
-    this.exports.wterm_free(ptr, bytes.length);
+    this.exports.restty_write(handle, ptr, bytes.length);
+    this.exports.restty_free(ptr, bytes.length);
   }
 
   setDefaultColors(handle: number, fg: number, bg: number, cursor: number): void {
-    if (!this.exports.wterm_set_default_colors) return;
-    this.exports.wterm_set_default_colors(handle, fg, bg, cursor);
+    if (!this.exports.restty_set_default_colors) return;
+    this.exports.restty_set_default_colors(handle, fg, bg, cursor);
   }
 
   setPalette(handle: number, colors: Uint8Array, count: number): void {
-    if (!this.exports.wterm_set_palette) return;
+    if (!this.exports.restty_set_palette) return;
     if (count <= 0 || colors.length < count * 3) return;
     const byteLen = count * 3;
-    const ptr = this.exports.wterm_alloc(byteLen);
+    const ptr = this.exports.restty_alloc(byteLen);
     if (!ptr) return;
     const view = new Uint8Array(this.memory.buffer, ptr, byteLen);
     view.set(colors.subarray(0, byteLen));
-    this.exports.wterm_set_palette(handle, ptr, count);
-    this.exports.wterm_free(ptr, byteLen);
+    this.exports.restty_set_palette(handle, ptr, count);
+    this.exports.restty_free(ptr, byteLen);
   }
 
   resetPalette(handle: number): void {
-    if (!this.exports.wterm_reset_palette) return;
-    this.exports.wterm_reset_palette(handle);
+    if (!this.exports.restty_reset_palette) return;
+    this.exports.restty_reset_palette(handle);
   }
 
   getRenderState(handle: number): RenderState | null {
@@ -536,18 +536,18 @@ export class WtermWasm {
     const ulStyle = info.ulStylePtr
       ? new Uint8Array(mem.buffer, info.ulStylePtr, cellCount)
       : null;
-    const linkCount = this.exports.wterm_link_count ? this.exports.wterm_link_count(handle) : 0;
-    const linkOffsets = linkCount && this.exports.wterm_link_offsets_ptr
-      ? new Uint32Array(mem.buffer, this.exports.wterm_link_offsets_ptr(handle), linkCount)
+    const linkCount = this.exports.restty_link_count ? this.exports.restty_link_count(handle) : 0;
+    const linkOffsets = linkCount && this.exports.restty_link_offsets_ptr
+      ? new Uint32Array(mem.buffer, this.exports.restty_link_offsets_ptr(handle), linkCount)
       : null;
-    const linkLengths = linkCount && this.exports.wterm_link_lengths_ptr
-      ? new Uint32Array(mem.buffer, this.exports.wterm_link_lengths_ptr(handle), linkCount)
+    const linkLengths = linkCount && this.exports.restty_link_lengths_ptr
+      ? new Uint32Array(mem.buffer, this.exports.restty_link_lengths_ptr(handle), linkCount)
       : null;
-    const linkBufferLen = this.exports.wterm_link_buffer_len
-      ? this.exports.wterm_link_buffer_len(handle)
+    const linkBufferLen = this.exports.restty_link_buffer_len
+      ? this.exports.restty_link_buffer_len(handle)
       : 0;
-    const linkBuffer = linkBufferLen && this.exports.wterm_link_buffer_ptr
-      ? new Uint8Array(mem.buffer, this.exports.wterm_link_buffer_ptr(handle), linkBufferLen)
+    const linkBuffer = linkBufferLen && this.exports.restty_link_buffer_ptr
+      ? new Uint8Array(mem.buffer, this.exports.restty_link_buffer_ptr(handle), linkBufferLen)
       : null;
     const graphemeOffset = info.graphemeOffsetPtr
       ? new Uint32Array(mem.buffer, info.graphemeOffsetPtr, cellCount)
@@ -597,6 +597,6 @@ export class WtermWasm {
   }
 }
 
-export async function loadWtermWasm(options: WtermWasmOptions = {}): Promise<WtermWasm> {
-  return WtermWasm.load(options);
+export async function loadResttyWasm(options: ResttyWasmOptions = {}): Promise<ResttyWasm> {
+  return ResttyWasm.load(options);
 }

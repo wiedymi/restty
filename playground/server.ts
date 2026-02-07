@@ -40,4 +40,4 @@ Bun.serve({
   },
 });
 
-console.log(`wterm playground: http://localhost:${port}`);
+console.log(`restty playground: http://localhost:${port}`);

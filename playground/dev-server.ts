@@ -81,4 +81,4 @@ const server = Bun.serve({
   },
 });
 
-console.log(`wterm playground: ${server.url}`);
+console.log(`restty playground: ${server.url}`);

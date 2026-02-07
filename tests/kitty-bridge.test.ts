@@ -3,14 +3,14 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createKittyGraphicsBridge } from "../playground/kitty-graphics-bridge";
-import { loadWtermWasm } from "../src/wasm/runtime";
+import { loadResttyWasm } from "../src/wasm/runtime";
 
 function kittyApc(params: string, payload: string): string {
   return `\x1b_G${params};${payload}\x1b\\`;
 }
 
 test("kitty bridge rewrites file-medium transfer to direct-medium", () => {
-  const dir = mkdtempSync(join(tmpdir(), "wterm-kitty-bridge-"));
+  const dir = mkdtempSync(join(tmpdir(), "restty-kitty-bridge-"));
   try {
     const file = join(dir, "image.png");
     const bytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
@@ -33,7 +33,7 @@ test("kitty bridge rewrites file-medium transfer to direct-medium", () => {
 });
 
 test("kitty bridge handles chunk boundaries without leaking partial APC", () => {
-  const dir = mkdtempSync(join(tmpdir(), "wterm-kitty-bridge-"));
+  const dir = mkdtempSync(join(tmpdir(), "restty-kitty-bridge-"));
   try {
     const file = join(dir, "image.png");
     const bytes = Buffer.from("PNGDATA");
@@ -70,7 +70,7 @@ test("kitty bridge unwraps tmux passthrough wrappers", () => {
 });
 
 test("kitty bridge rewrites file-medium inside tmux passthrough", () => {
-  const dir = mkdtempSync(join(tmpdir(), "wterm-kitty-bridge-"));
+  const dir = mkdtempSync(join(tmpdir(), "restty-kitty-bridge-"));
   try {
     const file = join(dir, "image.png");
     const bytes = Buffer.from("PNGDATA");
@@ -158,7 +158,7 @@ test("kitty bridge sanitizes no-payload APC control values", () => {
 });
 
 test("kitty bridge repairs virtual placement columns from known image size", () => {
-  const dir = mkdtempSync(join(tmpdir(), "wterm-kitty-bridge-"));
+  const dir = mkdtempSync(join(tmpdir(), "restty-kitty-bridge-"));
   try {
     const file = join(dir, "image.png");
     const png1x1 = Buffer.from(
@@ -204,7 +204,7 @@ test("kitty bridge preserves split surrogate pairs across chunks", () => {
 });
 
 test("rewritten APC is accepted by kitty graphics parser", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "wterm-kitty-bridge-"));
+  const dir = mkdtempSync(join(tmpdir(), "restty-kitty-bridge-"));
   try {
     const file = join(dir, "image.png");
     const png1x1 = Buffer.from(
@@ -217,7 +217,7 @@ test("rewritten APC is accepted by kitty graphics parser", async () => {
     const bridge = createKittyGraphicsBridge();
     const rewritten = bridge.transform(kittyApc("a=T,t=f,f=100,i=35", payload));
 
-    const wasm = await loadWtermWasm();
+    const wasm = await loadResttyWasm();
     const handle = wasm.create(80, 24, 1000);
     expect(handle).toBeGreaterThan(0);
 

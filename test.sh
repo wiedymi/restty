@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Basic terminal capability showcase for wterm visual checks.
+# Basic terminal capability showcase for restty visual checks.
 # Usage: ./test.sh
 
 ESC=$'\x1b'
@@ -16,7 +16,7 @@ trap cleanup EXIT
 printf '%s' "${CSI}?25l"  # hide cursor
 printf '%s' "${CSI}2J${CSI}H"  # clear screen, home
 
-printf '%s\n' "wterm terminal capability test"
+printf '%s\n' "restty terminal capability test"
 printf '%s\n' "---------------------------------"
 
 # Styles

@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test";
-import { loadWtermWasm } from "../src/wasm/runtime";
+import { loadResttyWasm } from "../src/wasm/runtime";
 
 test("kitty graphics query returns OK", async () => {
-  const wasm = await loadWtermWasm();
+  const wasm = await loadResttyWasm();
   const handle = wasm.create(80, 24, 1000);
   expect(handle).toBeGreaterThan(0);
 

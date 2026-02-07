@@ -1,4 +1,4 @@
-// wterm library - main entry point
+// restty library - main entry point
 
 // Renderer - shapes, WebGPU, shaders
 export {
@@ -167,14 +167,14 @@ export type {
 } from "./input";
 
 // WASM runtime
-export { loadWtermWasm, WtermWasm } from "./wasm";
+export { loadResttyWasm, ResttyWasm } from "./wasm";
 export type {
   WasmAbi,
   WasmAbiKind,
   CursorInfo,
   RenderState,
-  WtermWasmExports,
-  WtermWasmOptions,
+  ResttyWasmExports,
+  ResttyWasmOptions,
 } from "./wasm";
 
 // Theme
@@ -188,12 +188,12 @@ export type { GhosttyTheme, ThemeColor } from "./theme";
 
 // App / high-level integration
 export {
-  createWtermApp,
+  createResttyApp,
 } from "./app";
 export type {
-  WtermApp,
-  WtermAppOptions,
-  WtermAppElements,
-  WtermAppCallbacks,
+  ResttyApp,
+  ResttyAppOptions,
+  ResttyAppElements,
+  ResttyAppCallbacks,
   TextShaper,
 } from "./app";

@@ -126,7 +126,7 @@ const server = Bun.serve<PtySocket>({
     if (url.pathname === "/pty" && server.upgrade(req, { data: { url } })) {
       return;
     }
-    return new Response("wterm pty server");
+    return new Response("restty pty server");
   },
   websocket: {
     open(ws) {
@@ -243,4 +243,4 @@ const server = Bun.serve<PtySocket>({
   },
 });
 
-console.log(`wterm pty server running on ws://localhost:${server.port}/pty`);
+console.log(`restty pty server running on ws://localhost:${server.port}/pty`);

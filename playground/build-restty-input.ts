@@ -1,9 +1,9 @@
 import { mkdir, rename, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 
-const entry = resolve("src/wasm/index.ts");
+const entry = resolve("src/input/index.ts");
 const outDir = resolve("playground/public");
-const outFile = resolve(outDir, "wterm-wasm.js");
+const outFile = resolve(outDir, "restty-input.js");
 const outMap = `${outFile}.map`;
 
 await mkdir(outDir, { recursive: true });
@@ -41,4 +41,4 @@ if (mapOutput && mapOutput.path !== outMap) {
   await rename(mapOutput.path, outMap);
 }
 
-console.log(`wterm-wasm bundle: ${outFile}`);
+console.log(`restty-input bundle: ${outFile}`);

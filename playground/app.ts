@@ -11,7 +11,7 @@ import {
 } from "./public/text-shaper.js";
 
 import {
-  createWtermApp,
+  createResttyApp,
   parseGhosttyTheme,
   type GhosttyTheme,
 } from "../src/index.ts";
@@ -84,7 +84,7 @@ function appendLog(line: string) {
 
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
 
-const app = createWtermApp({
+const app = createResttyApp({
   canvas,
   imeInput,
   textShaper: {
@@ -150,7 +150,7 @@ function joinLines(lines: string[]) {
 
 function demoBasic() {
   const lines = [
-    "wterm demo: basics",
+    "restty demo: basics",
     "",
     "Styles: " +
       "\x1b[1mBold\x1b[0m " +
@@ -178,7 +178,7 @@ function demoBasic() {
 }
 
 function demoPalette() {
-  const lines = ["wterm demo: palette", ""];
+  const lines = ["restty demo: palette", ""];
   const blocks: string[] = [];
   for (let i = 0; i < 16; i += 1) {
     blocks.push(`\x1b[48;5;${i}m  \x1b[0m`);
@@ -207,7 +207,7 @@ function demoPalette() {
 
 function demoUnicode() {
   const lines = [
-    "wterm demo: unicode",
+    "restty demo: unicode",
     "",
     "Arrows: ← ↑ → ↓  ↖ ↗ ↘ ↙",
     "Math:   ∑ √ ∞ ≈ ≠ ≤ ≥",
@@ -235,7 +235,7 @@ function startAnimationDemo() {
     const bar = "█".repeat(fill) + " ".repeat(Math.max(0, barWidth - fill));
 
     const lines = [
-      `wterm demo: animation ${spinner}`,
+      `restty demo: animation ${spinner}`,
       "",
       `time ${elapsed.toFixed(2)}s`,
       `progress [${bar}]`,

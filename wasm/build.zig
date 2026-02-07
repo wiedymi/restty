@@ -5,13 +5,13 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const exe_mod = b.createModule(.{
-        .root_source_file = b.path("src/wterm.zig"),
+        .root_source_file = b.path("src/restty.zig"),
         .target = target,
         .optimize = optimize,
     });
 
     const exe = b.addExecutable(.{
-        .name = "wterm",
+        .name = "restty",
         .root_module = exe_mod,
     });
 

@@ -1,4 +1,4 @@
-# wterm Architecture Overview
+# restty Architecture Overview
 
 ## Goals
 - Terminal emulator library for browsers using libghostty-vt (WASM) for VT state.

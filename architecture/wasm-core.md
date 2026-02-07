@@ -6,7 +6,7 @@ We build a custom Zig -> WASM wrapper that exposes the Ghostty terminal engine
 only exposes key/OSC/SGR/paste utilities; the full Terminal + RenderState is in
 Zig.
 
-**Prototype note:** the current WASM wrapper (`wasm/src/wterm.zig`) exports a
+**Prototype note:** the current WASM wrapper (`wasm/src/restty.zig`) exports a
 minimal subset (create/write/render + cell buffer) for playground integration.
 
 ## Build Strategy
@@ -28,36 +28,36 @@ minimal subset (create/write/render + cell buffer) for playground integration.
 All functions use plain integers, pointers, and lengths (C ABI).
 
 Lifecycle:
-- `wterm_create(cols, rows, max_scrollback) -> handle`
-- `wterm_destroy(handle)`
+- `restty_create(cols, rows, max_scrollback) -> handle`
+- `restty_destroy(handle)`
 
 IO / VT:
-- `wterm_write(handle, ptr, len) -> result` (PTY output into terminal)
-- `wterm_resize(handle, cols, rows, px_w, px_h)`
-- `wterm_scroll_viewport(handle, delta)`
-- `wterm_scroll_viewport_top(handle)`
-- `wterm_scroll_viewport_bottom(handle)`
+- `restty_write(handle, ptr, len) -> result` (PTY output into terminal)
+- `restty_resize(handle, cols, rows, px_w, px_h)`
+- `restty_scroll_viewport(handle, delta)`
+- `restty_scroll_viewport_top(handle)`
+- `restty_scroll_viewport_bottom(handle)`
 
 Render:
-- `wterm_render_update(handle) -> result` (updates RenderState)
-- `wterm_render_info(handle) -> ptr` (pointer to a packed struct with sizes)
-- `wterm_render_rows_ptr(handle) -> ptr` (flat row offsets)
-- `wterm_render_cells_ptr(handle) -> ptr` (flat cell data)
-- `wterm_render_styles_ptr(handle) -> ptr` (style map)
-- `wterm_render_graphemes_ptr(handle) -> ptr` (grapheme array)
-- `wterm_render_dirty_rows_ptr(handle) -> ptr` (bitset or u8 array)
+- `restty_render_update(handle) -> result` (updates RenderState)
+- `restty_render_info(handle) -> ptr` (pointer to a packed struct with sizes)
+- `restty_render_rows_ptr(handle) -> ptr` (flat row offsets)
+- `restty_render_cells_ptr(handle) -> ptr` (flat cell data)
+- `restty_render_styles_ptr(handle) -> ptr` (style map)
+- `restty_render_graphemes_ptr(handle) -> ptr` (grapheme array)
+- `restty_render_dirty_rows_ptr(handle) -> ptr` (bitset or u8 array)
 
 Output from terminal (responses):
-- `wterm_output_ptr(handle) -> ptr`
-- `wterm_output_len(handle) -> len`
-- `wterm_output_consume(handle, len)`
+- `restty_output_ptr(handle) -> ptr`
+- `restty_output_len(handle) -> len`
+- `restty_output_consume(handle, len)`
 
 Input encoding:
-- `wterm_key_encoder_new() -> encoder_handle`
-- `wterm_key_encoder_config(encoder_handle, flags)`
-- `wterm_key_event_new() -> event_handle`
-- `wterm_key_event_set_*` (action, key, mods, utf8, composing)
-- `wterm_key_encode(encoder_handle, event_handle, out_ptr, out_len) -> written`
+- `restty_key_encoder_new() -> encoder_handle`
+- `restty_key_encoder_config(encoder_handle, flags)`
+- `restty_key_event_new() -> event_handle`
+- `restty_key_event_set_*` (action, key, mods, utf8, composing)
+- `restty_key_encode(encoder_handle, event_handle, out_ptr, out_len) -> written`
 
 ## RenderState Marshaling (Draft)
 We will not expose Zig pointers to complex structs. Instead we will:

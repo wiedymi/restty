@@ -386,7 +386,7 @@ export class KittyGraphicsBridge {
   private resizeOversizedPng(sourcePath: string): Uint8Array | null {
     if (typeof Bun === "undefined" || typeof Bun.spawnSync !== "function") return null;
 
-    const dir = mkdtempSync(join(tmpdir(), "wterm-kitty-resize-"));
+    const dir = mkdtempSync(join(tmpdir(), "restty-kitty-resize-"));
     const outPath = join(dir, "resized.png");
     try {
       const proc = Bun.spawnSync([

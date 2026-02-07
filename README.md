@@ -1,4 +1,4 @@
-# wterm
+# restty
 
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)
 ![Bun](https://img.shields.io/badge/Bun-%3E%3D1.2.0-f9f1e1?logo=bun&logoColor=000)
@@ -6,7 +6,7 @@
 
 Experimental project: browser terminal rendering with a WASM terminal core, GPU rendering (WebGPU + WebGL2 fallback), and TypeScript text shaping.
 
-wterm combines a Zig/WASM VT engine, modern browser rendering pipelines, and a local playground + PTY server to iterate quickly on terminal behavior.
+restty combines a Zig/WASM VT engine, modern browser rendering pipelines, and a local playground + PTY server to iterate quickly on terminal behavior.
 
 ## Why
 

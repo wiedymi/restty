@@ -9,9 +9,9 @@
 ## Build the WASM module
 From `wasm/`:
 - `zig build -Dtarget=wasm32-freestanding -Doptimize=ReleaseSmall`
-- `cp zig-out/bin/wterm.wasm ../playground/public/wterm.wasm`
+- `cp zig-out/bin/restty.wasm ../playground/public/restty.wasm`
 
-This installs `wterm.wasm` into `playground/public/` so the playground can load it.
+This installs `restty.wasm` into `playground/public/` so the playground can load it.
 
 Requires Zig 0.15.2+ (matches Ghostty's minimum).
 

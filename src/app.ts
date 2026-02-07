@@ -16,12 +16,12 @@ import {
   type FontManagerState,
 } from "./fonts";
 import {
-  loadWtermWasm,
-  WtermWasm,
+  loadResttyWasm,
+  ResttyWasm,
   type RenderState,
   type CursorInfo,
   type KittyPlacement,
-  type WtermWasmExports,
+  type ResttyWasmExports,
 } from "./wasm";
 import {
   createPtyConnection,
@@ -123,7 +123,7 @@ type AtlasConstraintContext = {
   fontEntry: FontEntry;
 };
 
-export type WtermAppElements = {
+export type ResttyAppElements = {
   backendEl?: HTMLElement | null;
   fpsEl?: HTMLElement | null;
   dprEl?: HTMLElement | null;
@@ -142,7 +142,7 @@ export type WtermAppElements = {
   atlasCanvas?: HTMLCanvasElement | null;
 };
 
-export type WtermAppCallbacks = {
+export type ResttyAppCallbacks = {
   onLog?: (line: string) => void;
   onBackend?: (backend: string) => void;
   onFps?: (fps: number) => void;
@@ -165,12 +165,12 @@ export type FontSource = {
   matchers?: string[];
 };
 
-export type WtermAppOptions = {
+export type ResttyAppOptions = {
   canvas: HTMLCanvasElement;
   imeInput?: HTMLTextAreaElement | null;
   textShaper: TextShaper;
-  elements?: WtermAppElements;
-  callbacks?: WtermAppCallbacks;
+  elements?: ResttyAppElements;
+  callbacks?: ResttyAppCallbacks;
   renderer?: "auto" | "webgpu" | "webgl2";
   fontSize?: number;
   assetBaseUrl?: string;
@@ -188,7 +188,7 @@ export type WtermAppOptions = {
   debugExpose?: boolean;
 };
 
-export type WtermApp = {
+export type ResttyApp = {
   init: () => Promise<void>;
   destroy: () => void;
   setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
@@ -212,7 +212,7 @@ export type WtermApp = {
   getBackend: () => string;
 };
 
-export function createWtermApp(options: WtermAppOptions): WtermApp {
+export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   const {
     canvas: canvasInput,
     imeInput: imeInputInput,
@@ -221,10 +221,10 @@ export function createWtermApp(options: WtermAppOptions): WtermApp {
     callbacks,
   } = options;
   if (!canvasInput) {
-    throw new Error("createWtermApp requires a canvas element");
+    throw new Error("createResttyApp requires a canvas element");
   }
   if (!textShaper) {
-    throw new Error("createWtermApp requires a textShaper implementation");
+    throw new Error("createResttyApp requires a textShaper implementation");
   }
   const {
     Font,
@@ -326,8 +326,8 @@ let rafId = 0;
 let frameCount = 0;
 let lastFpsTime = performance.now();
 let currentDpr = window.devicePixelRatio || 1;
-let wasm: WtermWasm | null = null;
-let wasmExports: WtermWasmExports | null = null;
+let wasm: ResttyWasm | null = null;
+let wasmExports: ResttyWasmExports | null = null;
 let wasmHandle = 0;
 let wasmReady = false;
 let lastWasmUpdate = 0;
@@ -382,7 +382,9 @@ const KITTY_OVERLAY_DEBUG =
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("kittyDebug") === "1") return true;
-      return window.localStorage?.getItem("wterm.kittyDebug") === "1";
+      const value = window.localStorage?.getItem("restty.kittyDebug");
+      if (value != null) return value === "1";
+      return window.localStorage?.getItem("restty.kittyDebug") === "1";
     } catch {
       return false;
     }
@@ -483,7 +485,7 @@ function ensureKittyOverlayCanvas() {
   }
 
   const overlay = document.createElement("canvas");
-  overlay.className = "wterm-kitty-overlay";
+  overlay.className = "restty-kitty-overlay";
   overlay.style.position = "absolute";
   overlay.style.left = "0";
   overlay.style.top = "0";
@@ -3917,9 +3919,9 @@ function resolveCursorPosition(cursor: CursorInfo | null) {
   if (!cursor) return null;
   let col = cursor.col;
   let row = cursor.row;
-  if (wasmExports?.wterm_debug_cursor_x && wasmExports?.wterm_debug_cursor_y && wasmHandle) {
-    const ax = wasmExports.wterm_debug_cursor_x(wasmHandle);
-    const ay = wasmExports.wterm_debug_cursor_y(wasmHandle);
+  if (wasmExports?.restty_debug_cursor_x && wasmExports?.restty_debug_cursor_y && wasmHandle) {
+    const ax = wasmExports.restty_debug_cursor_x(wasmHandle);
+    const ay = wasmExports.restty_debug_cursor_y(wasmHandle);
     if (Number.isFinite(ax) && Number.isFinite(ay)) {
       col = ax;
       row = ay;
@@ -4034,14 +4036,14 @@ function tickWebGPU(state) {
     cursorCell = { row, col, wide };
   }
   if (dbgEl && wasmExports && wasmHandle) {
-    const cx = wasmExports.wterm_debug_cursor_x ? wasmExports.wterm_debug_cursor_x(wasmHandle) : 0;
-    const cy = wasmExports.wterm_debug_cursor_y ? wasmExports.wterm_debug_cursor_y(wasmHandle) : 0;
-    const sl = wasmExports.wterm_debug_scroll_left ? wasmExports.wterm_debug_scroll_left(wasmHandle) : 0;
-    const sr = wasmExports.wterm_debug_scroll_right ? wasmExports.wterm_debug_scroll_right(wasmHandle) : 0;
-    const tc = wasmExports.wterm_debug_term_cols ? wasmExports.wterm_debug_term_cols(wasmHandle) : 0;
-    const tr = wasmExports.wterm_debug_term_rows ? wasmExports.wterm_debug_term_rows(wasmHandle) : 0;
-    const pc = wasmExports.wterm_debug_page_cols ? wasmExports.wterm_debug_page_cols(wasmHandle) : 0;
-    const pr = wasmExports.wterm_debug_page_rows ? wasmExports.wterm_debug_page_rows(wasmHandle) : 0;
+    const cx = wasmExports.restty_debug_cursor_x ? wasmExports.restty_debug_cursor_x(wasmHandle) : 0;
+    const cy = wasmExports.restty_debug_cursor_y ? wasmExports.restty_debug_cursor_y(wasmHandle) : 0;
+    const sl = wasmExports.restty_debug_scroll_left ? wasmExports.restty_debug_scroll_left(wasmHandle) : 0;
+    const sr = wasmExports.restty_debug_scroll_right ? wasmExports.restty_debug_scroll_right(wasmHandle) : 0;
+    const tc = wasmExports.restty_debug_term_cols ? wasmExports.restty_debug_term_cols(wasmHandle) : 0;
+    const tr = wasmExports.restty_debug_term_rows ? wasmExports.restty_debug_term_rows(wasmHandle) : 0;
+    const pc = wasmExports.restty_debug_page_cols ? wasmExports.restty_debug_page_cols(wasmHandle) : 0;
+    const pr = wasmExports.restty_debug_page_rows ? wasmExports.restty_debug_page_rows(wasmHandle) : 0;
     const text = `${cx},${cy} | ${sl}-${sr} | t:${tc}x${tr} p:${pc}x${pr}`;
     dbgEl.textContent = text;
     callbacks?.onDebug?.(text);
@@ -4808,13 +4810,13 @@ function tickWebGPU(state) {
     }
   }
 
-  if (wasmExports && wasmHandle && wasmExports.wterm_scrollbar_total) {
-    const total = wasmExports.wterm_scrollbar_total(wasmHandle) || 0;
-    const offset = wasmExports.wterm_scrollbar_offset
-      ? wasmExports.wterm_scrollbar_offset(wasmHandle)
+  if (wasmExports && wasmHandle && wasmExports.restty_scrollbar_total) {
+    const total = wasmExports.restty_scrollbar_total(wasmHandle) || 0;
+    const offset = wasmExports.restty_scrollbar_offset
+      ? wasmExports.restty_scrollbar_offset(wasmHandle)
       : 0;
-    const len = wasmExports.wterm_scrollbar_len
-      ? wasmExports.wterm_scrollbar_len(wasmHandle)
+    const len = wasmExports.restty_scrollbar_len
+      ? wasmExports.restty_scrollbar_len(wasmHandle)
       : rows;
     if (
       total !== scrollbarState.lastTotal ||
@@ -5633,13 +5635,13 @@ function tickWebGL(state: WebGLState) {
     }
   }
 
-  if (wasmExports && wasmHandle && wasmExports.wterm_scrollbar_total) {
-    const total = wasmExports.wterm_scrollbar_total(wasmHandle) || 0;
-    const offset = wasmExports.wterm_scrollbar_offset
-      ? wasmExports.wterm_scrollbar_offset(wasmHandle)
+  if (wasmExports && wasmHandle && wasmExports.restty_scrollbar_total) {
+    const total = wasmExports.restty_scrollbar_total(wasmHandle) || 0;
+    const offset = wasmExports.restty_scrollbar_offset
+      ? wasmExports.restty_scrollbar_offset(wasmHandle)
       : 0;
-    const len = wasmExports.wterm_scrollbar_len
-      ? wasmExports.wterm_scrollbar_len(wasmHandle)
+    const len = wasmExports.restty_scrollbar_len
+      ? wasmExports.restty_scrollbar_len(wasmHandle)
       : rows;
     if (
       total !== scrollbarState.lastTotal ||
@@ -6122,7 +6124,7 @@ function loop(state) {
 
 async function initWasm() {
   if (wasmReady && wasm) return wasm;
-  const instance = await loadWtermWasm({
+  const instance = await loadResttyWasm({
     log: (text) => {
       if (shouldSuppressWasmLog(text)) return;
       console.log(`[wasm] ${text}`);
@@ -6170,9 +6172,9 @@ function sendInput(text, source = "program") {
   }
   if (source === "key") {
     let before = "";
-    if (wasmExports?.wterm_debug_cursor_x && wasmExports?.wterm_debug_cursor_y) {
-      const bx = wasmExports.wterm_debug_cursor_x(wasmHandle);
-      const by = wasmExports.wterm_debug_cursor_y(wasmHandle);
+    if (wasmExports?.restty_debug_cursor_x && wasmExports?.restty_debug_cursor_y) {
+      const bx = wasmExports.restty_debug_cursor_x(wasmHandle);
+      const by = wasmExports.restty_debug_cursor_y(wasmHandle);
       before = ` cursor=${bx},${by}`;
     }
     appendLog(`[key] ${JSON.stringify(normalized)}${before}`);
@@ -6183,9 +6185,9 @@ function sendInput(text, source = "program") {
   writeToWasm(wasmHandle, normalized);
   wasm.renderUpdate(wasmHandle);
   flushWasmOutputToPty();
-  if (source === "key" && wasmExports?.wterm_debug_cursor_x && wasmExports?.wterm_debug_cursor_y) {
-    const ax = wasmExports.wterm_debug_cursor_x(wasmHandle);
-    const ay = wasmExports.wterm_debug_cursor_y(wasmHandle);
+  if (source === "key" && wasmExports?.restty_debug_cursor_x && wasmExports?.restty_debug_cursor_y) {
+    const ax = wasmExports.restty_debug_cursor_x(wasmHandle);
+    const ay = wasmExports.restty_debug_cursor_y(wasmHandle);
     appendLog(`[key] after cursor=${ax},${ay}`);
   }
   lastWasmUpdate = performance.now();
@@ -6242,7 +6244,7 @@ function joinLines(lines) {
 
 function demoBasic() {
   const lines = [
-    "wterm demo: basics",
+    "restty demo: basics",
     "",
     "Styles: " +
       "\x1b[1mBold\x1b[0m " +
@@ -6270,7 +6272,7 @@ function demoBasic() {
 }
 
 function demoPalette() {
-  const lines = ["wterm demo: palette", ""];
+  const lines = ["restty demo: palette", ""];
   const blocks = [];
   for (let i = 0; i < 16; i += 1) {
     blocks.push(`\x1b[48;5;${i}m  \x1b[0m`);
@@ -6299,7 +6301,7 @@ function demoPalette() {
 
 function demoUnicode() {
   const lines = [
-    "wterm demo: unicode",
+    "restty demo: unicode",
     "",
     "Arrows: ← ↑ → ↓  ↖ ↗ ↘ ↙",
     "Math:   ∑ √ ∞ ≈ ≠ ≤ ≥",
@@ -6334,7 +6336,7 @@ function startAnimationDemo() {
     const bar = "█".repeat(fill) + " ".repeat(Math.max(0, barWidth - fill));
 
     const lines = [
-      `wterm demo: animation ${spinner}`,
+      `restty demo: animation ${spinner}`,
       "",
       `time ${elapsed.toFixed(2)}s`,
       `progress [${bar}]`,
@@ -6458,14 +6460,14 @@ async function initWasmHarness() {
     const maxScrollback = 2000;
     wasmHandle = instance.create(cols, rows, maxScrollback);
     if (!wasmHandle) {
-      throw new Error("wterm_create returned 0");
+      throw new Error("restty create failed (restty_create returned 0)");
     }
     instance.setPixelSize(wasmHandle, canvas.width, canvas.height);
     if (activeTheme) {
       applyTheme(activeTheme, activeTheme.name ?? "cached theme");
     }
     const sample = [
-      "wterm wasm online",
+      "restty wasm online",
       "WebGPU/WebGL harness still running.",
       "Sample output:",
       "> The quick brown fox jumps over the lazy dog.",
@@ -6477,7 +6479,7 @@ async function initWasmHarness() {
     lastWasmUpdate = performance.now();
     needsRender = true;
   } catch (err) {
-    console.error(`wterm error: ${err.message}`);
+    console.error(`restty error: ${err.message}`);
   }
 }
 

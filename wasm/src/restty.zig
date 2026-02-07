@@ -261,7 +261,7 @@ const StreamHandler = struct {
 
 const TerminalStream = ghostty.Stream(StreamHandler);
 
-const WTerm = struct {
+const Restty = struct {
     alloc: Allocator,
     term: ghostty.Terminal,
     stream: TerminalStream,
@@ -308,7 +308,7 @@ fn cursorStyleToAbi(style: CursorVisualStyle) u8 {
     };
 }
 
-fn ensureScrollingRegion(h: *WTerm) void {
+fn ensureScrollingRegion(h: *Restty) void {
     const cols = h.term.cols;
     const rows = h.term.rows;
     if (cols == 0 or rows == 0) return;
@@ -348,7 +348,7 @@ fn kittyFormatToAbi(format: anytype) u8 {
 }
 
 fn appendKittyPlacement(
-    h: *WTerm,
+    h: *Restty,
     image: ghostty.kitty.graphics.Image,
     x: i32,
     y: i32,
@@ -386,7 +386,7 @@ fn appendKittyPlacement(
     });
 }
 
-fn collectKittyPlacements(h: *WTerm) !void {
+fn collectKittyPlacements(h: *Restty) !void {
     h.kitty_placements.clearRetainingCapacity();
     if (comptime !kitty_graphics_enabled) return;
 
@@ -491,7 +491,7 @@ fn collectKittyPlacements(h: *WTerm) !void {
     );
 }
 
-pub export fn wterm_create(cols: u16, rows: u16, max_scrollback: u32) ?*WTerm {
+pub export fn restty_create(cols: u16, rows: u16, max_scrollback: u32) ?*Restty {
     if (cols == 0 or rows == 0) return null;
     const alloc = std.heap.wasm_allocator;
 
@@ -513,7 +513,7 @@ pub export fn wterm_create(cols: u16, rows: u16, max_scrollback: u32) ?*WTerm {
     var buffers = CellBuffers.init(alloc, rows, cols) catch return null;
     errdefer buffers.deinit(alloc);
 
-    const handle = alloc.create(WTerm) catch return null;
+    const handle = alloc.create(Restty) catch return null;
     errdefer alloc.destroy(handle);
     handle.* = .{
         .alloc = alloc,
@@ -531,7 +531,7 @@ pub export fn wterm_create(cols: u16, rows: u16, max_scrollback: u32) ?*WTerm {
     return handle;
 }
 
-pub export fn wterm_destroy(handle: ?*WTerm) void {
+pub export fn restty_destroy(handle: ?*Restty) void {
     const h = handle orelse return;
     h.stream.deinit();
     h.render_state.deinit(h.alloc);
@@ -546,7 +546,7 @@ pub export fn wterm_destroy(handle: ?*WTerm) void {
     h.alloc.destroy(h);
 }
 
-pub export fn wterm_write(handle: ?*WTerm, ptr: [*]const u8, len: usize) u32 {
+pub export fn restty_write(handle: ?*Restty, ptr: [*]const u8, len: usize) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     if (len == 0) return @intFromEnum(ErrorCode.ok);
     const slice = ptr[0..len];
@@ -555,41 +555,41 @@ pub export fn wterm_write(handle: ?*WTerm, ptr: [*]const u8, len: usize) u32 {
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_scroll_viewport(handle: ?*WTerm, delta: i32) u32 {
+pub export fn restty_scroll_viewport(handle: ?*Restty, delta: i32) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     h.term.scrollViewport(.{ .delta = delta }) catch return @intFromEnum(ErrorCode.internal);
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_scrollbar_total(handle: ?*WTerm) u32 {
+pub export fn restty_scrollbar_total(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     const sb = h.term.screens.active.pages.scrollbar();
     return @intCast(sb.total);
 }
 
-pub export fn wterm_scrollbar_offset(handle: ?*WTerm) u32 {
+pub export fn restty_scrollbar_offset(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     const sb = h.term.screens.active.pages.scrollbar();
     return @intCast(sb.offset);
 }
 
-pub export fn wterm_scrollbar_len(handle: ?*WTerm) u32 {
+pub export fn restty_scrollbar_len(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     const sb = h.term.screens.active.pages.scrollbar();
     return @intCast(sb.len);
 }
 
-pub export fn wterm_output_ptr(handle: ?*WTerm) usize {
+pub export fn restty_output_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return if (h.output.items.len == 0) 0 else @intFromPtr(h.output.items.ptr);
 }
 
-pub export fn wterm_output_len(handle: ?*WTerm) u32 {
+pub export fn restty_output_len(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.output.items.len);
 }
 
-pub export fn wterm_output_consume(handle: ?*WTerm, len: u32) u32 {
+pub export fn restty_output_consume(handle: ?*Restty, len: u32) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     if (len == 0 or h.output.items.len == 0) return @intFromEnum(ErrorCode.ok);
 
@@ -605,12 +605,12 @@ pub export fn wterm_output_consume(handle: ?*WTerm, len: u32) u32 {
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_kitty_keyboard_flags(handle: ?*WTerm) u32 {
+pub export fn restty_kitty_keyboard_flags(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return h.term.screens.active.kitty_keyboard.current().int();
 }
 
-pub export fn wterm_set_default_colors(handle: ?*WTerm, fg: u32, bg: u32, cursor: u32) u32 {
+pub export fn restty_set_default_colors(handle: ?*Restty, fg: u32, bg: u32, cursor: u32) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     if (fg != 0xFFFF_FFFF) {
         const rgb = rgbFromU32(fg);
@@ -631,7 +631,7 @@ pub export fn wterm_set_default_colors(handle: ?*WTerm, fg: u32, bg: u32, cursor
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_set_palette(handle: ?*WTerm, ptr: [*]const u8, len: usize) u32 {
+pub export fn restty_set_palette(handle: ?*Restty, ptr: [*]const u8, len: usize) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     if (len == 0) return @intFromEnum(ErrorCode.ok);
     const count: usize = if (len > 256) 256 else len;
@@ -649,14 +649,14 @@ pub export fn wterm_set_palette(handle: ?*WTerm, ptr: [*]const u8, len: usize) u
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_reset_palette(handle: ?*WTerm) u32 {
+pub export fn restty_reset_palette(handle: ?*Restty) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     h.term.colors.palette.resetAll();
     h.term.flags.dirty.palette = true;
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_resize(handle: ?*WTerm, cols: u16, rows: u16) u32 {
+pub export fn restty_resize(handle: ?*Restty, cols: u16, rows: u16) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     if (cols == 0 or rows == 0) return @intFromEnum(ErrorCode.invalid_arg);
     h.term.resize(h.alloc, cols, rows) catch return @intFromEnum(ErrorCode.internal);
@@ -664,7 +664,7 @@ pub export fn wterm_resize(handle: ?*WTerm, cols: u16, rows: u16) u32 {
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_set_pixel_size(handle: ?*WTerm, width_px: u32, height_px: u32) u32 {
+pub export fn restty_set_pixel_size(handle: ?*Restty, width_px: u32, height_px: u32) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     if (width_px == 0 or height_px == 0) return @intFromEnum(ErrorCode.invalid_arg);
     h.term.width_px = width_px;
@@ -672,7 +672,7 @@ pub export fn wterm_set_pixel_size(handle: ?*WTerm, width_px: u32, height_px: u3
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_render_update(handle: ?*WTerm) u32 {
+pub export fn restty_render_update(handle: ?*Restty) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     collectKittyPlacements(h) catch return @intFromEnum(ErrorCode.out_of_memory);
     h.render_state.update(h.alloc, &h.term) catch return @intFromEnum(ErrorCode.internal);
@@ -827,197 +827,197 @@ pub export fn wterm_render_update(handle: ?*WTerm) u32 {
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn wterm_cells_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cells_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.codepoints.ptr);
 }
 
-pub export fn wterm_cells_len(handle: ?*WTerm) u32 {
+pub export fn restty_cells_len(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.buffers.codepoints.len);
 }
 
-pub export fn wterm_cell_codepoints_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_codepoints_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.codepoints.ptr);
 }
 
-pub export fn wterm_cell_content_tags_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_content_tags_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.content_tags.ptr);
 }
 
-pub export fn wterm_cell_wide_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_wide_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.wide.ptr);
 }
 
-pub export fn wterm_cell_flags_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_flags_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.flags.ptr);
 }
 
-pub export fn wterm_cell_style_flags_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_style_flags_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.style_flags.ptr);
 }
 
-pub export fn wterm_cell_underline_styles_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_underline_styles_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.underline_styles.ptr);
 }
 
-pub export fn wterm_cell_link_ids_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_link_ids_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.link_ids.ptr);
 }
 
-pub export fn wterm_cell_fg_rgba_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_fg_rgba_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.fg_rgba.ptr);
 }
 
-pub export fn wterm_cell_bg_rgba_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_bg_rgba_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.bg_rgba.ptr);
 }
 
-pub export fn wterm_cell_ul_rgba_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_ul_rgba_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.ul_rgba.ptr);
 }
 
-pub export fn wterm_link_offsets_ptr(handle: ?*WTerm) usize {
+pub export fn restty_link_offsets_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return if (h.link_offsets.items.len == 0) 0 else @intFromPtr(h.link_offsets.items.ptr);
 }
 
-pub export fn wterm_link_lengths_ptr(handle: ?*WTerm) usize {
+pub export fn restty_link_lengths_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return if (h.link_lengths.items.len == 0) 0 else @intFromPtr(h.link_lengths.items.ptr);
 }
 
-pub export fn wterm_link_buffer_ptr(handle: ?*WTerm) usize {
+pub export fn restty_link_buffer_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return if (h.link_buffer.items.len == 0) 0 else @intFromPtr(h.link_buffer.items.ptr);
 }
 
-pub export fn wterm_link_count(handle: ?*WTerm) u32 {
+pub export fn restty_link_count(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.link_offsets.items.len);
 }
 
-pub export fn wterm_link_buffer_len(handle: ?*WTerm) u32 {
+pub export fn restty_link_buffer_len(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.link_buffer.items.len);
 }
 
-pub export fn wterm_cell_grapheme_offsets_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_grapheme_offsets_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.grapheme_offsets.ptr);
 }
 
-pub export fn wterm_cell_grapheme_lengths_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cell_grapheme_lengths_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.grapheme_lengths.ptr);
 }
 
-pub export fn wterm_grapheme_buffer_ptr(handle: ?*WTerm) usize {
+pub export fn restty_grapheme_buffer_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return if (h.graphemes.items.len == 0) 0 else @intFromPtr(h.graphemes.items.ptr);
 }
 
-pub export fn wterm_grapheme_buffer_len(handle: ?*WTerm) u32 {
+pub export fn restty_grapheme_buffer_len(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.graphemes.items.len);
 }
 
-pub export fn wterm_row_selection_start_ptr(handle: ?*WTerm) usize {
+pub export fn restty_row_selection_start_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.row_selection_start.ptr);
 }
 
-pub export fn wterm_row_selection_end_ptr(handle: ?*WTerm) usize {
+pub export fn restty_row_selection_end_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(h.buffers.row_selection_end.ptr);
 }
 
-pub export fn wterm_cursor_info_ptr(handle: ?*WTerm) usize {
+pub export fn restty_cursor_info_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return @intFromPtr(&h.cursor);
 }
 
-pub export fn wterm_rows(handle: ?*WTerm) u32 {
+pub export fn restty_rows(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return h.rows;
 }
 
-pub export fn wterm_cols(handle: ?*WTerm) u32 {
+pub export fn restty_cols(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return h.cols;
 }
 
-pub export fn wterm_debug_cursor_x(handle: ?*WTerm) u32 {
+pub export fn restty_debug_cursor_x(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.term.screens.active.cursor.x);
 }
 
-pub export fn wterm_debug_cursor_y(handle: ?*WTerm) u32 {
+pub export fn restty_debug_cursor_y(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.term.screens.active.cursor.y);
 }
 
-pub export fn wterm_debug_scroll_left(handle: ?*WTerm) u32 {
+pub export fn restty_debug_scroll_left(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.term.scrolling_region.left);
 }
 
-pub export fn wterm_debug_scroll_right(handle: ?*WTerm) u32 {
+pub export fn restty_debug_scroll_right(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.term.scrolling_region.right);
 }
 
-pub export fn wterm_debug_term_cols(handle: ?*WTerm) u32 {
+pub export fn restty_debug_term_cols(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return h.term.cols;
 }
 
-pub export fn wterm_debug_term_rows(handle: ?*WTerm) u32 {
+pub export fn restty_debug_term_rows(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return h.term.rows;
 }
 
-pub export fn wterm_debug_page_cols(handle: ?*WTerm) u32 {
+pub export fn restty_debug_page_cols(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return h.term.screens.active.pages.cols;
 }
 
-pub export fn wterm_debug_page_rows(handle: ?*WTerm) u32 {
+pub export fn restty_debug_page_rows(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return h.term.screens.active.pages.rows;
 }
 
-pub export fn wterm_kitty_placement_stride() u32 {
+pub export fn restty_kitty_placement_stride() u32 {
     return @sizeOf(KittyPlacementAbi);
 }
 
-pub export fn wterm_kitty_placement_count(handle: ?*WTerm) u32 {
+pub export fn restty_kitty_placement_count(handle: ?*Restty) u32 {
     const h = handle orelse return 0;
     return @intCast(h.kitty_placements.items.len);
 }
 
-pub export fn wterm_kitty_placements_ptr(handle: ?*WTerm) usize {
+pub export fn restty_kitty_placements_ptr(handle: ?*Restty) usize {
     const h = handle orelse return 0;
     return if (h.kitty_placements.items.len == 0) 0 else @intFromPtr(h.kitty_placements.items.ptr);
 }
 
-pub export fn wterm_alloc(len: usize) usize {
+pub export fn restty_alloc(len: usize) usize {
     if (len == 0) return 0;
     const buf = std.heap.wasm_allocator.alloc(u8, len) catch return 0;
     return @intFromPtr(buf.ptr);
 }
 
-pub export fn wterm_free(ptr: usize, len: usize) void {
+pub export fn restty_free(ptr: usize, len: usize) void {
     if (ptr == 0 or len == 0) return;
     const buf = @as([*]u8, @ptrFromInt(ptr));
     std.heap.wasm_allocator.free(buf[0..len]);
