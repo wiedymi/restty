@@ -37,5 +37,8 @@ jobs:
           bun run build:lib
           bun run build:types
 
+      - name: Setup WebGPU polyfill artifacts
+        run: bun run setup:wgpu-polyfill
+
       - name: Run tests
         run: bun run test

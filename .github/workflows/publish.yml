@@ -1,0 +1,94 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (for example: 0.1.1, no v prefix)"
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Build and Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js for npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org/"
+
+      - name: Upgrade npm for trusted publishing
+        run: |
+          npm install -g npm@latest
+          npm --version
+
+      - name: Configure Git
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Update package.json version
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          node -e "
+            const fs = require('fs');
+            const p = 'package.json';
+            const pkg = JSON.parse(fs.readFileSync(p, 'utf8'));
+            pkg.version = process.env.VERSION;
+            fs.writeFileSync(p, JSON.stringify(pkg, null, 2) + '\n');
+          "
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+
+      - name: Build package
+        run: bun run build
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+
+      - name: Commit version bump
+        if: success() && github.event_name == 'workflow_dispatch'
+        run: |
+          git add package.json
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+
+      - name: Push version bump
+        if: success() && github.event_name == 'workflow_dispatch'
+        run: git push origin HEAD:main
