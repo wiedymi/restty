@@ -5,6 +5,7 @@ Powerful, lightweight browser terminal. Batteries included.
 Live demo: `https://restty.pages.dev/`
 
 Powered by:
+
 - `libghostty-vt` (WASM terminal core)
 - `WebGPU` (with WebGL2 fallback)
 - `text-shaper` (shaping + raster)
@@ -124,17 +125,37 @@ await restty.setFontSources([
 ]);
 ```
 
+### Touch behavior (pan-first by default)
+
+On touch devices, restty defaults to pan-first scrolling with long-press selection.
+
+```ts
+const restty = new Restty({
+  root: document.getElementById("terminal") as HTMLElement,
+  appOptions: {
+    // "long-press" (default) | "drag" | "off"
+    touchSelectionMode: "long-press",
+    // Optional tuning knobs:
+    touchSelectionLongPressMs: 450,
+    touchSelectionMoveThresholdPx: 10,
+  },
+});
+```
+
 ## API Snapshot
 
 Primary class:
+
 - `new Restty({ root, ...options })`
 - `createRestty(options)`
 
 Pane access:
+
 - `panes()` / `pane(id)` / `activePane()` / `focusedPane()` / `forEachPane(visitor)`
 - `splitActivePane("vertical" | "horizontal")` / `splitPane(id, direction)` / `closePane(id)`
 
 Active-pane convenience:
+
 - `connectPty(url)` / `disconnectPty()` / `isPtyConnected()`
 - `setRenderer("auto" | "webgpu" | "webgl2")`
 - `setFontSize(number)` / `setFontSources([...])`
@@ -148,6 +169,7 @@ Active-pane convenience:
 ## Advanced / Internal Modules
 
 Use these only when you need lower-level control:
+
 - `restty/wasm`: low-level WASM ABI wrapper (`loadResttyWasm`, `ResttyWasm`)
 - `restty/input`: key/mouse/input encoding utilities
 - `restty/pty`: PTY transport helpers

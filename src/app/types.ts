@@ -72,6 +72,7 @@ export type ResttyLocalFontSource = {
 export type ResttyFontSource = ResttyUrlFontSource | ResttyBufferFontSource | ResttyLocalFontSource;
 export type FontSource = ResttyFontSource;
 export type ResttyFontPreset = "default-cdn" | "none";
+export type ResttyTouchSelectionMode = "drag" | "long-press" | "off";
 
 export type ResttyAppOptions = {
   canvas: HTMLCanvasElement;
@@ -90,6 +91,23 @@ export type ResttyAppOptions = {
   autoResize?: boolean;
   attachWindowEvents?: boolean;
   attachCanvasEvents?: boolean;
+  /**
+   * Touch selection behavior on pointerType=touch:
+   * - drag: immediate drag-selection (legacy behavior)
+   * - long-press: selection starts after press timeout (default)
+   * - off: disable touch selection, keep touch scrolling
+   */
+  touchSelectionMode?: ResttyTouchSelectionMode;
+  /**
+   * Long-press timeout in ms for touch selection intent.
+   * Only used when touchSelectionMode is "long-press".
+   */
+  touchSelectionLongPressMs?: number;
+  /**
+   * Pointer move threshold in CSS pixels before long-press selection is
+   * canceled and touch pan-scroll takes priority.
+   */
+  touchSelectionMoveThresholdPx?: number;
   debugExpose?: boolean;
   ptyTransport?: PtyTransport;
 };

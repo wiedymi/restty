@@ -35,12 +35,23 @@ const restty = new Restty({
 
   // App defaults for each pane
   appOptions: {
-    renderer: "auto",     // "auto" | "webgpu" | "webgl2"
+    renderer: "auto", // "auto" | "webgpu" | "webgl2"
     fontSize: 16,
     autoResize: true,
+    // Touch behavior:
+    // "long-press" (default) | "drag" | "off"
+    touchSelectionMode: "long-press",
+    touchSelectionLongPressMs: 450,
+    touchSelectionMoveThresholdPx: 10,
   },
 });
 ```
+
+Touch mode summary:
+
+- `"long-press"`: one-finger pan scroll, selection starts after long press.
+- `"drag"`: immediate drag selection (legacy behavior).
+- `"off"`: disable touch selection and keep touch scrolling.
 
 ## 3) Single-pane convenience API
 
@@ -82,6 +93,7 @@ if (focused) {
 ```
 
 If needed, legacy/raw pane objects are still available:
+
 - `restty.getPanes()`
 - `restty.getActivePane()`
 - `restty.getFocusedPane()`

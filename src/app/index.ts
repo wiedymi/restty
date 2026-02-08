@@ -55,7 +55,12 @@ import {
 } from "./atlas-builder";
 import { normalizeFontSources } from "./font-sources";
 import * as bundledTextShaper from "text-shaper";
-import type { ResttyFontSource, ResttyApp, ResttyAppOptions } from "./types";
+import type {
+  ResttyFontSource,
+  ResttyApp,
+  ResttyAppOptions,
+  ResttyTouchSelectionMode,
+} from "./types";
 import { getDefaultResttyAppSession } from "./session";
 export { createResttyAppSession, getDefaultResttyAppSession } from "./session";
 export {
@@ -69,6 +74,7 @@ export type {
   ResttyAppCallbacks,
   FontSource,
   ResttyFontSource,
+  ResttyTouchSelectionMode,
   ResttyUrlFontSource,
   ResttyBufferFontSource,
   ResttyLocalFontSource,
@@ -92,6 +98,25 @@ export type {
 } from "./panes";
 export type { ResttyOptions } from "./restty";
 
+function normalizeTouchSelectionMode(
+  value: ResttyTouchSelectionMode | undefined,
+): ResttyTouchSelectionMode {
+  if (value === "drag" || value === "long-press" || value === "off") return value;
+  return "long-press";
+}
+
+function clampFiniteNumber(
+  value: number | undefined,
+  fallback: number,
+  min: number,
+  max: number,
+  round = false,
+): number {
+  if (!Number.isFinite(value)) return fallback;
+  const numeric = round ? Math.round(value as number) : Number(value);
+  return Math.min(max, Math.max(min, numeric));
+}
+
 export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
   const session = options.session ?? getDefaultResttyAppSession();
@@ -114,6 +139,20 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   const attachCanvasEvents = options.attachCanvasEvents ?? true;
   const autoResize = options.autoResize ?? true;
   const debugExpose = options.debugExpose ?? false;
+  const touchSelectionMode = normalizeTouchSelectionMode(options.touchSelectionMode);
+  const touchSelectionLongPressMs = clampFiniteNumber(
+    options.touchSelectionLongPressMs,
+    450,
+    120,
+    2000,
+    true,
+  );
+  const touchSelectionMoveThresholdPx = clampFiniteNumber(
+    options.touchSelectionMoveThresholdPx,
+    10,
+    1,
+    64,
+  );
   const nerdIconScale = Number.isFinite(options.nerdIconScale)
     ? Number(options.nerdIconScale)
     : 1.0;
@@ -342,6 +381,22 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     focus: null,
   };
 
+  const touchSelectionState: {
+    pendingPointerId: number | null;
+    activePointerId: number | null;
+    pendingCell: { row: number; col: number } | null;
+    pendingStartX: number;
+    pendingStartY: number;
+    pendingTimer: number;
+  } = {
+    pendingPointerId: null,
+    activePointerId: null,
+    pendingCell: null,
+    pendingStartX: 0,
+    pendingStartY: 0,
+    pendingTimer: 0,
+  };
+
   const linkState = {
     hoverId: 0,
     hoverUri: "",
@@ -363,6 +418,30 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       return;
     }
     canvas.style.cursor = linkState.hoverId ? "pointer" : "default";
+  }
+
+  function isTouchPointer(event: PointerEvent) {
+    return event.pointerType === "touch";
+  }
+
+  function clearPendingTouchSelection() {
+    if (touchSelectionState.pendingTimer) {
+      clearTimeout(touchSelectionState.pendingTimer);
+      touchSelectionState.pendingTimer = 0;
+    }
+    touchSelectionState.pendingPointerId = null;
+    touchSelectionState.pendingCell = null;
+  }
+
+  function beginSelectionDrag(cell: { row: number; col: number }, pointerId: number) {
+    selectionState.active = true;
+    selectionState.dragging = true;
+    selectionState.anchor = cell;
+    selectionState.focus = cell;
+    touchSelectionState.activePointerId = pointerId;
+    canvas.setPointerCapture?.(pointerId);
+    updateCanvasCursor();
+    needsRender = true;
   }
 
   function noteScrollActivity() {
@@ -1042,6 +1121,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     selectionState.dragging = false;
     selectionState.anchor = null;
     selectionState.focus = null;
+    touchSelectionState.activePointerId = null;
     updateCanvasCursor();
     needsRender = true;
   }
@@ -1257,28 +1337,72 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
   function bindCanvasEvents() {
     if (!attachCanvasEvents) return;
+    canvas.style.touchAction = touchSelectionMode === "drag" ? "none" : "pan-y pinch-zoom";
     const onPointerDown = (event: PointerEvent) => {
       if (inputHandler.sendMouseEvent("down", event)) {
         event.preventDefault();
         canvas.setPointerCapture?.(event.pointerId);
         return;
       }
+      if (isTouchPointer(event)) {
+        if (event.button !== 0) return;
+        const cell = normalizeSelectionCell(positionToCell(event));
+        touchSelectionState.activePointerId = null;
+
+        if (touchSelectionMode === "off") return;
+        if (touchSelectionMode === "drag") {
+          event.preventDefault();
+          beginSelectionDrag(cell, event.pointerId);
+          return;
+        }
+
+        clearPendingTouchSelection();
+        touchSelectionState.pendingPointerId = event.pointerId;
+        touchSelectionState.pendingCell = cell;
+        touchSelectionState.pendingStartX = event.clientX;
+        touchSelectionState.pendingStartY = event.clientY;
+        touchSelectionState.pendingTimer = setTimeout(() => {
+          if (
+            touchSelectionState.pendingPointerId !== event.pointerId ||
+            !touchSelectionState.pendingCell
+          ) {
+            return;
+          }
+          const pendingCell = touchSelectionState.pendingCell;
+          clearPendingTouchSelection();
+          beginSelectionDrag(pendingCell, event.pointerId);
+        }, touchSelectionLongPressMs);
+        return;
+      }
       if (event.button !== 0) return;
       event.preventDefault();
       const cell = normalizeSelectionCell(positionToCell(event));
       updateLinkHover(cell);
-      selectionState.active = true;
-      selectionState.dragging = true;
-      selectionState.anchor = cell;
-      selectionState.focus = cell;
-      canvas.setPointerCapture?.(event.pointerId);
-      updateCanvasCursor();
-      needsRender = true;
+      beginSelectionDrag(cell, event.pointerId);
     };
 
     const onPointerMove = (event: PointerEvent) => {
       if (inputHandler.sendMouseEvent("move", event)) {
         event.preventDefault();
+        return;
+      }
+      if (isTouchPointer(event)) {
+        if (touchSelectionState.pendingPointerId === event.pointerId) {
+          const dx = event.clientX - touchSelectionState.pendingStartX;
+          const dy = event.clientY - touchSelectionState.pendingStartY;
+          if (dx * dx + dy * dy >= touchSelectionMoveThresholdPx * touchSelectionMoveThresholdPx) {
+            clearPendingTouchSelection();
+          }
+          return;
+        }
+        if (selectionState.dragging && touchSelectionState.activePointerId === event.pointerId) {
+          const cell = normalizeSelectionCell(positionToCell(event));
+          event.preventDefault();
+          selectionState.focus = cell;
+          updateLinkHover(null);
+          updateCanvasCursor();
+          needsRender = true;
+        }
         return;
       }
       const cell = normalizeSelectionCell(positionToCell(event));
@@ -1296,6 +1420,32 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     const onPointerUp = (event: PointerEvent) => {
       if (inputHandler.sendMouseEvent("up", event)) {
         event.preventDefault();
+        return;
+      }
+      if (isTouchPointer(event)) {
+        if (touchSelectionState.pendingPointerId === event.pointerId) {
+          clearPendingTouchSelection();
+          touchSelectionState.activePointerId = null;
+          return;
+        }
+        if (selectionState.dragging && touchSelectionState.activePointerId === event.pointerId) {
+          const cell = normalizeSelectionCell(positionToCell(event));
+          event.preventDefault();
+          selectionState.dragging = false;
+          selectionState.focus = cell;
+          touchSelectionState.activePointerId = null;
+          if (
+            selectionState.anchor &&
+            selectionState.focus &&
+            selectionState.anchor.row === selectionState.focus.row &&
+            selectionState.anchor.col === selectionState.focus.col
+          ) {
+            clearSelection();
+          } else {
+            updateCanvasCursor();
+            needsRender = true;
+          }
+        }
         return;
       }
       const cell = normalizeSelectionCell(positionToCell(event));
@@ -1324,6 +1474,22 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         linkState.hoverUri
       ) {
         openLink(linkState.hoverUri);
+      }
+    };
+
+    const onPointerCancel = (event: PointerEvent) => {
+      if (isTouchPointer(event)) {
+        if (touchSelectionState.pendingPointerId === event.pointerId) {
+          clearPendingTouchSelection();
+        }
+        if (touchSelectionState.activePointerId === event.pointerId) {
+          touchSelectionState.activePointerId = null;
+          if (selectionState.dragging) {
+            selectionState.dragging = false;
+            updateCanvasCursor();
+            needsRender = true;
+          }
+        }
       }
     };
 
@@ -1369,6 +1535,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     canvas.addEventListener("pointerdown", onPointerDown);
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerCancel);
     canvas.addEventListener("pointerleave", onPointerLeave);
     canvas.addEventListener("wheel", onWheel, { passive: false });
     canvas.addEventListener("contextmenu", onContextMenu);
@@ -1376,9 +1543,11 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       canvas.removeEventListener("pointerdown", onPointerDown);
       canvas.removeEventListener("pointermove", onPointerMove);
       canvas.removeEventListener("pointerup", onPointerUp);
+      canvas.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("pointerleave", onPointerLeave);
       canvas.removeEventListener("wheel", onWheel);
       canvas.removeEventListener("contextmenu", onContextMenu);
+      clearPendingTouchSelection();
     });
 
     if (imeInput) {
