@@ -228,6 +228,14 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   let lastKeydownSeqAt = 0;
   let nextBlinkTime = performance.now() + CURSOR_BLINK_MS;
   const ptyTransport: PtyTransport = options.ptyTransport ?? createWebSocketPtyTransport();
+  const PTY_OUTPUT_IDLE_MS = 10;
+  const PTY_OUTPUT_MAX_MS = 40;
+  const SYNC_OUTPUT_RESET_MS = 1000;
+  const SYNC_OUTPUT_RESET_SEQ = "\x1b[?2026l";
+  let ptyOutputBuffer = "";
+  let ptyOutputIdleTimer = 0;
+  let ptyOutputMaxTimer = 0;
+  let syncOutputResetTimer = 0;
   let lastCursorForCpr = { row: 1, col: 1 };
   let inputHandler: InputHandler | null = null;
   let activeTheme: GhosttyTheme | null = null;
@@ -1084,7 +1092,73 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     setMouseStatus(label);
   }
 
+  function cancelPtyOutputFlush() {
+    if (ptyOutputIdleTimer) {
+      clearTimeout(ptyOutputIdleTimer);
+      ptyOutputIdleTimer = 0;
+    }
+    if (ptyOutputMaxTimer) {
+      clearTimeout(ptyOutputMaxTimer);
+      ptyOutputMaxTimer = 0;
+    }
+  }
+
+  function cancelSyncOutputReset() {
+    if (syncOutputResetTimer) {
+      clearTimeout(syncOutputResetTimer);
+      syncOutputResetTimer = 0;
+    }
+  }
+
+  function scheduleSyncOutputReset() {
+    if (syncOutputResetTimer) return;
+    syncOutputResetTimer = setTimeout(() => {
+      syncOutputResetTimer = 0;
+      if (!inputHandler?.isSynchronizedOutput?.()) return;
+      const sanitized = inputHandler.filterOutput(SYNC_OUTPUT_RESET_SEQ) || SYNC_OUTPUT_RESET_SEQ;
+      sendInput(sanitized, "pty");
+    }, SYNC_OUTPUT_RESET_MS);
+  }
+
+  function flushPtyOutputBuffer() {
+    const output = ptyOutputBuffer;
+    ptyOutputBuffer = "";
+    if (!output) return;
+    sendInput(output, "pty");
+  }
+
+  function queuePtyOutput(text: string) {
+    if (!text) return;
+    ptyOutputBuffer += text;
+    if (ptyOutputIdleTimer) {
+      clearTimeout(ptyOutputIdleTimer);
+    }
+    ptyOutputIdleTimer = setTimeout(() => {
+      ptyOutputIdleTimer = 0;
+      if (ptyOutputMaxTimer) {
+        clearTimeout(ptyOutputMaxTimer);
+        ptyOutputMaxTimer = 0;
+      }
+      flushPtyOutputBuffer();
+    }, PTY_OUTPUT_IDLE_MS);
+
+    if (!ptyOutputMaxTimer) {
+      ptyOutputMaxTimer = setTimeout(() => {
+        ptyOutputMaxTimer = 0;
+        if (ptyOutputIdleTimer) {
+          clearTimeout(ptyOutputIdleTimer);
+          ptyOutputIdleTimer = 0;
+        }
+        flushPtyOutputBuffer();
+      }, PTY_OUTPUT_MAX_MS);
+    }
+  }
+
   function disconnectPty() {
+    flushPtyOutputBuffer();
+    cancelPtyOutputFlush();
+    cancelSyncOutputReset();
+    ptyOutputBuffer = "";
     ptyTransport.disconnect();
     updateMouseStatus();
     setPtyStatus("disconnected");
@@ -1129,7 +1203,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
           onData: (text) => {
             const sanitized = inputHandler ? inputHandler.filterOutput(text) : text;
             updateMouseStatus();
-            if (sanitized) sendInput(sanitized, "pty");
+            if (sanitized) queuePtyOutput(sanitized);
           },
         },
       });
@@ -3958,7 +4032,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
     const mergedEmojiSkip = new Uint8Array(codepoints.length);
     const isRegionalIndicator = (value: number) => value >= 0x1f1e6 && value <= 0x1f1ff;
-    const readCellCluster = (cellIndex: number): { cp: number; text: string; span: number } | null => {
+    const readCellCluster = (
+      cellIndex: number,
+    ): { cp: number; text: string; span: number } | null => {
       const flag = wide ? (wide[cellIndex] ?? 0) : 0;
       if (flag === 2 || flag === 3) return null;
       const cp = codepoints[cellIndex] ?? 0;
@@ -4294,7 +4370,11 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
         let nextSeqIdx = idx + baseSpan;
         let guard = 0;
-        while ((text.codePointAt(text.length - 1) ?? 0) === 0x200d && nextSeqIdx < rowEnd && guard < 8) {
+        while (
+          (text.codePointAt(text.length - 1) ?? 0) === 0x200d &&
+          nextSeqIdx < rowEnd &&
+          guard < 8
+        ) {
           const next = readCellCluster(nextSeqIdx);
           if (!next || !next.cp || isSpaceCp(next.cp)) break;
           text += next.text;
@@ -5086,7 +5166,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
     const mergedEmojiSkip = new Uint8Array(codepoints.length);
     const isRegionalIndicator = (value: number) => value >= 0x1f1e6 && value <= 0x1f1ff;
-    const readCellCluster = (cellIndex: number): { cp: number; text: string; span: number } | null => {
+    const readCellCluster = (
+      cellIndex: number,
+    ): { cp: number; text: string; span: number } | null => {
       const flag = wide ? (wide[cellIndex] ?? 0) : 0;
       if (flag === 2 || flag === 3) return null;
       const cp = codepoints[cellIndex] ?? 0;
@@ -5397,7 +5479,11 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
         let nextSeqIdx = idx + baseSpan;
         let guard = 0;
-        while ((text.codePointAt(text.length - 1) ?? 0) === 0x200d && nextSeqIdx < rowEnd && guard < 8) {
+        while (
+          (text.codePointAt(text.length - 1) ?? 0) === 0x200d &&
+          nextSeqIdx < rowEnd &&
+          guard < 8
+        ) {
           const next = readCellCluster(nextSeqIdx);
           if (!next || !next.cp || isSpaceCp(next.cp)) break;
           text += next.text;
@@ -6151,7 +6237,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   function sendInput(text, source = "program") {
     if (!wasmReady || !wasm || !wasmHandle) return;
     if (!text) return;
-    const normalized = normalizeNewlines(text);
+    const normalized = source === "pty" ? text : normalizeNewlines(text);
     if (source === "key") {
       const bytes = textEncoder.encode(normalized);
       const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(" ");
@@ -6172,8 +6258,13 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       clearSelection();
     }
     writeToWasm(wasmHandle, normalized);
-    wasm.renderUpdate(wasmHandle);
     flushWasmOutputToPty();
+    if (source === "pty" && inputHandler?.isSynchronizedOutput?.()) {
+      scheduleSyncOutputReset();
+      return;
+    }
+    cancelSyncOutputReset();
+    wasm.renderUpdate(wasmHandle);
     if (
       source === "key" &&
       wasmExports?.restty_debug_cursor_x &&
@@ -6442,6 +6533,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       clearTimeout(terminalResizeTimer);
       terminalResizeTimer = 0;
     }
+    cancelSyncOutputReset();
     pendingTerminalResize = null;
     disconnectPty();
     ptyTransport.destroy?.();

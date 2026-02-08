@@ -39,7 +39,7 @@ const WEB_CONTAINER_WELCOME = (() => {
     `${CSI}38;5;117mTry:${CSI}0m node kitty.js`,
     "",
   ];
-  return `${lines.join("\n")}\n`;
+  return `${lines.join("\r\n")}\r\n`;
 })();
 
 const FALLBACK_DEMO_JS = `#!/usr/bin/env node
@@ -105,10 +105,17 @@ async function getSharedWebContainer(): Promise<WebContainer> {
 }
 
 function normalizeFetchedScript(text: string): string | null {
-  const noBom = text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n").trim();
+  const noBom = text
+    .replace(/^\uFEFF/, "")
+    .replace(/\r\n?/g, "\n")
+    .trim();
   if (!noBom) return null;
 
-  const firstNonEmpty = noBom.split("\n").find((line) => line.trim().length > 0)?.trimStart() ?? "";
+  const firstNonEmpty =
+    noBom
+      .split("\n")
+      .find((line) => line.trim().length > 0)
+      ?.trimStart() ?? "";
   const lower = firstNonEmpty.toLowerCase();
   if (
     lower.startsWith("<!doctype") ||
@@ -238,7 +245,10 @@ async function ensureSeedScripts(webcontainer: WebContainer): Promise<void> {
 function parseCommand(spec: string): CommandSpec {
   const tokens = spec.match(/(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\\.|\S)+/g) ?? [];
   const cleaned = tokens.map((token) => {
-    if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+    if (
+      (token.startsWith('"') && token.endsWith('"')) ||
+      (token.startsWith("'") && token.endsWith("'"))
+    ) {
       return token.slice(1, -1);
     }
     return token.replace(/\\(.)/g, "$1");
@@ -358,7 +368,9 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
       const commandRaw = options.getCommand?.().trim() || "jsh";
       const spec = parseCommand(commandRaw);
       if (!spec.command) {
-        cb.onError?.("Missing command", ["Provide a shell command for WebContainer (for example: jsh)"]);
+        cb.onError?.("Missing command", [
+          "Provide a shell command for WebContainer (for example: jsh)",
+        ]);
         cb.onDisconnect?.();
         return;
       }

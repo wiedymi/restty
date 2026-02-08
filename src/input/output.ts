@@ -71,6 +71,7 @@ export class OutputFilter {
   private altScreen = false;
   private bracketedPaste = false;
   private focusReporting = false;
+  private synchronizedOutput = false;
   private windowOpHandler?: (op: WindowOp) => void;
   private getWindowMetrics?: () => {
     rows: number;
@@ -121,6 +122,10 @@ export class OutputFilter {
 
   isFocusReporting() {
     return this.focusReporting;
+  }
+
+  isSynchronizedOutput() {
+    return this.synchronizedOutput;
   }
 
   private replyOscColor(code: string, rgb: [number, number, number]) {
@@ -190,6 +195,10 @@ export class OutputFilter {
       } else if (code === 1004) {
         this.focusReporting = enabled;
         handled = true;
+      } else if (code === 2026) {
+        // Track synchronized output mode for renderer scheduling, but let the
+        // sequence continue to the terminal core for full VT parity.
+        this.synchronizedOutput = enabled;
       }
     }
     return handled;

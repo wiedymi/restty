@@ -7615,6 +7615,7 @@ class OutputFilter {
   altScreen = false;
   bracketedPaste = false;
   focusReporting = false;
+  synchronizedOutput = false;
   windowOpHandler;
   getWindowMetrics;
   clipboardWrite;
@@ -7647,6 +7648,9 @@ class OutputFilter {
   }
   isFocusReporting() {
     return this.focusReporting;
+  }
+  isSynchronizedOutput() {
+    return this.synchronizedOutput;
   }
   replyOscColor(code, rgb) {
     const toHex4 = (value) => Math.round(Math.max(0, Math.min(255, value)) * 257).toString(16).padStart(4, "0");
@@ -7713,6 +7717,8 @@ class OutputFilter {
       } else if (code === 1004) {
         this.focusReporting = enabled;
         handled = true;
+      } else if (code === 2026) {
+        this.synchronizedOutput = enabled;
       }
     }
     return handled;
@@ -7896,6 +7902,7 @@ function createInputHandler(options = {}) {
     isBracketedPaste: () => filter.isBracketedPaste(),
     isFocusReporting: () => filter.isFocusReporting(),
     isAltScreen: () => filter.isAltScreen(),
+    isSynchronizedOutput: () => filter.isSynchronizedOutput(),
     sendMouseEvent: (kind, event) => mouse.sendMouseEvent(kind, event)
   };
 }
@@ -49702,6 +49709,14 @@ function createResttyApp(options) {
   let lastKeydownSeqAt = 0;
   let nextBlinkTime = performance.now() + CURSOR_BLINK_MS;
   const ptyTransport = options.ptyTransport ?? createWebSocketPtyTransport();
+  const PTY_OUTPUT_IDLE_MS = 10;
+  const PTY_OUTPUT_MAX_MS = 40;
+  const SYNC_OUTPUT_RESET_MS = 1000;
+  const SYNC_OUTPUT_RESET_SEQ = "\x1B[?2026l";
+  let ptyOutputBuffer = "";
+  let ptyOutputIdleTimer = 0;
+  let ptyOutputMaxTimer = 0;
+  let syncOutputResetTimer = 0;
   let lastCursorForCpr = { row: 1, col: 1 };
   let inputHandler = null;
   let activeTheme = null;
@@ -50461,7 +50476,71 @@ function createResttyApp(options) {
     const label = status.active ? `${status.mode} (${status.detail})` : status.mode;
     setMouseStatus(label);
   }
+  function cancelPtyOutputFlush() {
+    if (ptyOutputIdleTimer) {
+      clearTimeout(ptyOutputIdleTimer);
+      ptyOutputIdleTimer = 0;
+    }
+    if (ptyOutputMaxTimer) {
+      clearTimeout(ptyOutputMaxTimer);
+      ptyOutputMaxTimer = 0;
+    }
+  }
+  function cancelSyncOutputReset() {
+    if (syncOutputResetTimer) {
+      clearTimeout(syncOutputResetTimer);
+      syncOutputResetTimer = 0;
+    }
+  }
+  function scheduleSyncOutputReset() {
+    if (syncOutputResetTimer)
+      return;
+    syncOutputResetTimer = setTimeout(() => {
+      syncOutputResetTimer = 0;
+      if (!inputHandler?.isSynchronizedOutput?.())
+        return;
+      const sanitized = inputHandler.filterOutput(SYNC_OUTPUT_RESET_SEQ) || SYNC_OUTPUT_RESET_SEQ;
+      sendInput(sanitized, "pty");
+    }, SYNC_OUTPUT_RESET_MS);
+  }
+  function flushPtyOutputBuffer() {
+    const output = ptyOutputBuffer;
+    ptyOutputBuffer = "";
+    if (!output)
+      return;
+    sendInput(output, "pty");
+  }
+  function queuePtyOutput(text) {
+    if (!text)
+      return;
+    ptyOutputBuffer += text;
+    if (ptyOutputIdleTimer) {
+      clearTimeout(ptyOutputIdleTimer);
+    }
+    ptyOutputIdleTimer = setTimeout(() => {
+      ptyOutputIdleTimer = 0;
+      if (ptyOutputMaxTimer) {
+        clearTimeout(ptyOutputMaxTimer);
+        ptyOutputMaxTimer = 0;
+      }
+      flushPtyOutputBuffer();
+    }, PTY_OUTPUT_IDLE_MS);
+    if (!ptyOutputMaxTimer) {
+      ptyOutputMaxTimer = setTimeout(() => {
+        ptyOutputMaxTimer = 0;
+        if (ptyOutputIdleTimer) {
+          clearTimeout(ptyOutputIdleTimer);
+          ptyOutputIdleTimer = 0;
+        }
+        flushPtyOutputBuffer();
+      }, PTY_OUTPUT_MAX_MS);
+    }
+  }
   function disconnectPty2() {
+    flushPtyOutputBuffer();
+    cancelPtyOutputFlush();
+    cancelSyncOutputReset();
+    ptyOutputBuffer = "";
     ptyTransport.disconnect();
     updateMouseStatus();
     setPtyStatus("disconnected");
@@ -50508,7 +50587,7 @@ function createResttyApp(options) {
             const sanitized = inputHandler ? inputHandler.filterOutput(text) : text;
             updateMouseStatus();
             if (sanitized)
-              sendInput(sanitized, "pty");
+              queuePtyOutput(sanitized);
           }
         }
       });
@@ -54756,7 +54835,7 @@ function createResttyApp(options) {
       return;
     if (!text)
       return;
-    const normalized = normalizeNewlines(text);
+    const normalized = source === "pty" ? text : normalizeNewlines(text);
     if (source === "key") {
       const bytes = textEncoder3.encode(normalized);
       const hex = Array.from(bytes, (b3) => b3.toString(16).padStart(2, "0")).join(" ");
@@ -54778,8 +54857,13 @@ function createResttyApp(options) {
       clearSelection();
     }
     writeToWasm(wasmHandle, normalized);
-    wasm.renderUpdate(wasmHandle);
     flushWasmOutputToPty();
+    if (source === "pty" && inputHandler?.isSynchronizedOutput?.()) {
+      scheduleSyncOutputReset();
+      return;
+    }
+    cancelSyncOutputReset();
+    wasm.renderUpdate(wasmHandle);
     if (source === "key" && wasmExports?.restty_debug_cursor_x && wasmExports?.restty_debug_cursor_y) {
       const ax = wasmExports.restty_debug_cursor_x(wasmHandle);
       const ay = wasmExports.restty_debug_cursor_y(wasmHandle);
@@ -55008,6 +55092,7 @@ function createResttyApp(options) {
       clearTimeout(terminalResizeTimer);
       terminalResizeTimer = 0;
     }
+    cancelSyncOutputReset();
     pendingTerminalResize = null;
     disconnectPty2();
     ptyTransport.destroy?.();
@@ -56643,8 +56728,8 @@ var WEB_CONTAINER_WELCOME = (() => {
     `${CSI}38;5;117mTry:${CSI}0m node kitty.js`,
     ""
   ];
-  return `${lines.join(`
-`)}
+  return `${lines.join(`\r
+`)}\r
 `;
 })();
 var FALLBACK_DEMO_JS = `#!/usr/bin/env node
@@ -57775,5 +57860,5 @@ if (firstState) {
 }
 queueResizeAllPanes();
 
-//# debugId=B6AA864CA03F638664756E2164756E21
+//# debugId=42F66EA62C36202364756E2164756E21
 //# sourceMappingURL=app.js.map

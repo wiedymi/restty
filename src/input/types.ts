@@ -159,6 +159,7 @@ export type InputHandler = {
   isBracketedPaste: () => boolean;
   isFocusReporting: () => boolean;
   isAltScreen: () => boolean;
+  isSynchronizedOutput: () => boolean;
   /**
    * Encode pointer input as terminal mouse events (SGR).
    */

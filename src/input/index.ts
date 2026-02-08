@@ -61,6 +61,7 @@ export function createInputHandler(options: InputHandlerOptions = {}): InputHand
     isBracketedPaste: () => filter.isBracketedPaste(),
     isFocusReporting: () => filter.isFocusReporting(),
     isAltScreen: () => filter.isAltScreen(),
+    isSynchronizedOutput: () => filter.isSynchronizedOutput(),
     sendMouseEvent: (kind, event) => mouse.sendMouseEvent(kind, event),
   };
 }
