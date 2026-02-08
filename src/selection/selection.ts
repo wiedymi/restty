@@ -1,6 +1,7 @@
 import type { CellPosition, SelectionRange, SelectionState } from "./types";
 import { clamp } from "../grid/grid";
 
+/** Create an empty, inactive selection state. */
 export function createSelectionState(): SelectionState {
   return {
     active: false,
@@ -10,6 +11,7 @@ export function createSelectionState(): SelectionState {
   };
 }
 
+/** Reset the selection state, deactivating any active selection. */
 export function clearSelection(state: SelectionState): void {
   state.active = false;
   state.dragging = false;
@@ -17,6 +19,7 @@ export function clearSelection(state: SelectionState): void {
   state.focus = null;
 }
 
+/** Begin a new selection at the given cell, entering drag mode. */
 export function startSelection(state: SelectionState, cell: CellPosition): void {
   state.active = true;
   state.dragging = true;
@@ -24,11 +27,16 @@ export function startSelection(state: SelectionState, cell: CellPosition): void 
   state.focus = cell;
 }
 
+/** Extend the active selection to a new focus cell while dragging. */
 export function updateSelection(state: SelectionState, cell: CellPosition): void {
   if (!state.dragging) return;
   state.focus = cell;
 }
 
+/**
+ * Finish a drag selection at the given cell. Returns true if a non-empty
+ * selection was created, or false if anchor and focus are the same cell.
+ */
 export function endSelection(state: SelectionState, cell: CellPosition): boolean {
   if (!state.dragging) return false;
   state.dragging = false;
@@ -47,6 +55,10 @@ export function endSelection(state: SelectionState, cell: CellPosition): boolean
   return true;
 }
 
+/**
+ * Return the selected column range for a given row, or null if the row
+ * is outside the selection.
+ */
 export function selectionForRow(
   state: SelectionState,
   row: number,
@@ -75,8 +87,13 @@ export function selectionForRow(
   return { start: 0, end: cols };
 }
 
+/** Callback that returns the text content of a cell by flat grid index. */
 export type CellTextGetter = (idx: number) => string;
 
+/**
+ * Extract the selected text as a newline-separated string, with trailing
+ * whitespace trimmed from each line.
+ */
 export function getSelectionText(
   state: SelectionState,
   rows: number,
@@ -107,6 +124,10 @@ export function getSelectionText(
   return lines.join("\n");
 }
 
+/**
+ * Clamp a cell position to the grid bounds and snap wide-character
+ * continuation cells back to the leading cell.
+ */
 export function normalizeSelectionCell(
   cell: CellPosition | null,
   rows: number,
@@ -142,6 +163,7 @@ export function normalizeSelectionCell(
   return { row, col };
 }
 
+/** Convert client pixel coordinates to a grid cell position. */
 export function positionToCell(
   clientX: number,
   clientY: number,
@@ -159,6 +181,7 @@ export function positionToCell(
   return { row, col };
 }
 
+/** Copy text to the system clipboard, with a legacy execCommand fallback. */
 export async function copyToClipboard(text: string): Promise<boolean> {
   if (!text) return false;
   try {
@@ -183,6 +206,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
+/** Read text from the system clipboard, returning null on failure. */
 export async function pasteFromClipboard(): Promise<string | null> {
   try {
     return await navigator.clipboard.readText();

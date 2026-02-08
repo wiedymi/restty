@@ -1,15 +1,25 @@
 import type { CellPosition, MouseMode, MouseStatus } from "./types";
 import { parsePrivateModeSeq } from "./ansi";
 
+/**
+ * Construction options for MouseController.
+ */
 export type MouseControllerOptions = {
+  /** Sink for mouse report sequences sent back to the PTY. */
   sendReply: (data: string) => void;
+  /** Map pointer events to 0-based cell coordinates. */
   positionToCell: (event: MouseEvent | PointerEvent | WheelEvent) => CellPosition;
+  /** Map pointer events to 1-based pixel coordinates (for SGR-Pixels mode). */
   positionToPixel?: (event: MouseEvent | PointerEvent | WheelEvent) => { x: number; y: number };
 };
 
 type MotionMode = "none" | "drag" | "any";
 type MouseFormat = "x10" | "utf8" | "sgr" | "urxvt" | "sgr_pixels";
 
+/**
+ * Tracks mouse reporting state (mode, format, motion tracking) and encodes
+ * pointer events into terminal mouse sequences (X10, UTF-8, URxvt, SGR).
+ */
 export class MouseController {
   private mode: MouseMode = "auto";
   private enabled = false;

@@ -8,6 +8,7 @@ import type {
   PtyTransport,
 } from "./types";
 
+/** Decode a binary WebSocket frame into a UTF-8 string using a streaming TextDecoder. */
 export function decodePtyBinary(
   decoder: TextDecoder,
   payload: ArrayBuffer | Uint8Array,
@@ -17,6 +18,7 @@ export function decodePtyBinary(
   return decoder.decode(bytes, { stream });
 }
 
+/** Create a fresh idle PTY connection state. */
 export function createPtyConnection(): PtyConnectionState {
   return {
     socket: null,
@@ -31,6 +33,10 @@ function setConnectionStatus(state: PtyConnectionState, status: PtyLifecycleStat
   state.status = status;
 }
 
+/**
+ * Open a WebSocket connection to a PTY server. Returns false if the
+ * connection is already active or the URL is empty.
+ */
 export function connectPty(
   state: PtyConnectionState,
   options: Pick<PtyConnectOptions, "url" | "cols" | "rows">,
@@ -140,6 +146,7 @@ export function connectPty(
   return true;
 }
 
+/** Gracefully close the PTY WebSocket connection and reset state to idle. */
 export function disconnectPty(state: PtyConnectionState): void {
   const socket = state.socket;
   if (state.decoder && !socket) {
@@ -172,6 +179,7 @@ export function disconnectPty(state: PtyConnectionState): void {
   }
 }
 
+/** Send terminal input data to the PTY server. Returns false if the socket is not open. */
 export function sendPtyInput(state: PtyConnectionState, data: string): boolean {
   if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return false;
   const message: PtyMessage = { type: "input", data };
@@ -179,6 +187,7 @@ export function sendPtyInput(state: PtyConnectionState, data: string): boolean {
   return true;
 }
 
+/** Send a resize notification to the PTY server. Returns false if the socket is not open. */
 export function sendPtyResize(state: PtyConnectionState, cols: number, rows: number): boolean {
   if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return false;
   const message: PtyMessage = { type: "resize", cols, rows };
@@ -210,10 +219,12 @@ function handleServerMessage(payload: string, callbacks: PtyCallbacks): boolean 
   return false;
 }
 
+/** Check whether the PTY WebSocket is currently open and connected. */
 export function isPtyConnected(state: PtyConnectionState): boolean {
   return state.status === "connected" && state.socket?.readyState === WebSocket.OPEN;
 }
 
+/** Create a PtyTransport backed by a WebSocket connection. */
 export function createWebSocketPtyTransport(
   state: PtyConnectionState = createPtyConnection(),
 ): PtyTransport {

@@ -44,11 +44,16 @@ type SplitResizeState = {
   total: number;
 };
 
+/** Return the platform-appropriate shortcut modifier label ("Cmd" on macOS, "Ctrl" elsewhere). */
 export function getResttyShortcutModifierLabel(): "Cmd" | "Ctrl" {
   const isMac = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
   return isMac ? "Cmd" : "Ctrl";
 }
 
+/**
+ * Build the standard right-click context menu items for a pane
+ * (copy, paste, split, close, clear, PTY toggle, pause toggle).
+ */
 export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPaneWithApp>(
   options: CreateDefaultResttyPaneContextMenuItemsOptions<TPane>,
 ): Array<ResttyPaneContextMenuItem | "separator"> {
@@ -131,6 +136,11 @@ export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPane
   ];
 }
 
+/**
+ * Create a pane manager that owns a split-pane layout inside a root
+ * element. Handles pane creation, splitting, resizing, focus
+ * tracking, keyboard shortcuts, and context menus.
+ */
 export function createResttyPaneManager<TPane extends ResttyPaneDefinition>(
   options: CreateResttyPaneManagerOptions<TPane>,
 ): ResttyPaneManager<TPane> {

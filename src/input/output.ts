@@ -2,18 +2,29 @@ import type { CursorPosition, WindowOp } from "./types";
 import type { MouseController } from "./mouse";
 import { isDeviceAttributesQuery, parsePrivateModeSeq, parseWindowOpSeq } from "./ansi";
 
+/**
+ * Construction options for OutputFilter.
+ */
 export type OutputFilterOptions = {
+  /** Provide the current 1-based cursor position for CPR replies. */
   getCursorPosition: () => CursorPosition;
+  /** Sink for reply sequences (CPR, DA, OSC color queries). */
   sendReply: (data: string) => void;
+  /** MouseController instance for delegating mouse mode toggling. */
   mouse: MouseController;
+  /** Provide default colors for OSC 10/11/12 queries (RGB 0-255). */
   getDefaultColors?: () => {
     fg?: [number, number, number];
     bg?: [number, number, number];
     cursor?: [number, number, number];
   };
+  /** Handler for OSC 52 clipboard write requests. */
   onClipboardWrite?: (text: string) => void | Promise<void>;
+  /** Handler for OSC 52 clipboard read requests. */
   onClipboardRead?: () => string | null | Promise<string | null>;
+  /** Handler for window manipulation sequences (CSI ... t). */
   onWindowOp?: (op: WindowOp) => void;
+  /** Provider for XTWINOPS report queries (CSI 14/16/18 t). */
   getWindowMetrics?: () => {
     rows: number;
     cols: number;

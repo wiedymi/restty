@@ -3,10 +3,12 @@ type KittyTerminator = {
   len: 1 | 2;
 };
 
+/** State for streaming Kitty file-based media rewriting (tracks remainder across chunks). */
 export type KittyMediaRewriteState = {
   remainder?: string;
 };
 
+/** Callback to read file contents for Kitty file-based media payloads. */
 export type KittyMediaReadFile = (path: string) => Uint8Array;
 
 function findKittyTerminator(data: string, from: number): KittyTerminator | null {
@@ -92,6 +94,7 @@ function rewriteOneKittyCommand(body: string, readFile: KittyMediaReadFile): str
   return `${nextParts.join(",")};${encodeBase64Bytes(bytes)}`;
 }
 
+/** Rewrite Kitty file-based media sequences (f=...) to direct base64 payloads (t=d). */
 export function rewriteKittyFileMediaToDirect(
   chunk: string,
   state: KittyMediaRewriteState,

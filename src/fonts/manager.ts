@@ -34,24 +34,28 @@ const WIDE_FONT_HINTS = [
   /apple sd gothic/i,
 ];
 
+/** Check whether a font entry is a symbol/icon font based on its label. */
 export function isSymbolFont(entry: FontEntry | null | undefined): boolean {
   if (!entry?.label) return false;
   const label = String(entry.label).toLowerCase();
   return SYMBOL_FONT_HINTS.some((rule) => rule.test(label));
 }
 
+/** Check whether a font entry is a Nerd Font symbols font. */
 export function isNerdSymbolFont(entry: FontEntry | null | undefined): boolean {
   if (!entry?.label) return false;
   const label = String(entry.label).toLowerCase();
   return NERD_SYMBOL_FONT_HINTS.some((rule) => rule.test(label));
 }
 
+/** Check whether a font entry is a color emoji font. */
 export function isColorEmojiFont(entry: FontEntry | null | undefined): boolean {
   if (!entry?.label) return false;
   const label = String(entry.label).toLowerCase();
   return COLOR_EMOJI_FONT_HINTS.some((rule) => rule.test(label));
 }
 
+/** Return the maximum cell span for a font (2 for CJK/emoji, 1 otherwise). */
 export function fontMaxCellSpan(entry: FontEntry | null | undefined): number {
   if (!entry?.label) return 1;
   const label = String(entry.label).toLowerCase();
@@ -61,6 +65,7 @@ export function fontMaxCellSpan(entry: FontEntry | null | undefined): number {
   return 1;
 }
 
+/** Return the scale multiplier for a font entry by matching its label against overrides. */
 export function fontScaleOverride(
   entry: FontEntry | null | undefined,
   overrides: FontScaleOverride[] = [],
@@ -73,6 +78,7 @@ export function fontScaleOverride(
   return 1;
 }
 
+/** Compute the atlas raster scale for a font, applying symbol atlas scaling for fallback symbol fonts. */
 export function fontRasterScale(
   entry: FontEntry | null | undefined,
   fontIndex: number,
@@ -84,6 +90,7 @@ export function fontRasterScale(
   return scale;
 }
 
+/** Create a new FontEntry with empty caches and default metadata. */
 export function createFontEntry(font: any, label: string): FontEntry {
   return {
     font,
@@ -100,6 +107,7 @@ export function createFontEntry(font: any, label: string): FontEntry {
   };
 }
 
+/** Clear all caches and reset rendering metadata on a font entry. */
 export function resetFontEntry(entry: FontEntry): void {
   entry.glyphCache.clear();
   entry.boundsCache.clear();
@@ -112,6 +120,7 @@ export function resetFontEntry(entry: FontEntry): void {
   entry.constraintSignature = "";
 }
 
+/** Create an empty FontManagerState for initialization. */
 export function createFontManagerState(): FontManagerState {
   return {
     font: null,
@@ -122,11 +131,13 @@ export function createFontManagerState(): FontManagerState {
   };
 }
 
+/** Check whether a font has a non-zero glyph ID for the given character. */
 export function fontHasGlyph(font: any, ch: string): boolean {
   const glyphId = font.glyphIdForChar(ch);
   return glyphId !== undefined && glyphId !== null && glyphId !== 0;
 }
 
+/** Get the horizontal advance width in font design units, computing and caching it if needed. */
 export function fontAdvanceUnits(
   entry: FontEntry,
   shapeClusterWithFont: (entry: FontEntry, text: string) => ShapedCluster,
@@ -149,6 +160,7 @@ export function fontAdvanceUnits(
   return advance;
 }
 
+/** Get the bounding-box width of a glyph in font design units, with caching. */
 export function glyphWidthUnits(entry: FontEntry, glyphId: number | undefined | null): number {
   if (!entry?.font || glyphId === undefined || glyphId === null) return 0;
   if (!entry.boundsCache) entry.boundsCache = new Map();
@@ -179,6 +191,11 @@ function isSymbolCp(cp: number): boolean {
   return isPrivateUse || isGraphicsElement;
 }
 
+/**
+ * Select the best font index from the manager's font list for rendering the
+ * given text cluster, preferring symbol fonts for Nerd/PUA codepoints and
+ * scoring candidates by advance-width ratio fit.
+ */
 export function pickFontIndexForText(
   state: FontManagerState,
   text: string,
@@ -257,7 +274,7 @@ export function pickFontIndexForText(
   return bestIndex;
 }
 
-// Font loading utilities
+/** Fetch a font file from a URL and return its ArrayBuffer, or null on failure. */
 export async function tryFetchFontBuffer(url: string): Promise<ArrayBuffer | null> {
   try {
     const response = await fetch(url);
@@ -268,6 +285,7 @@ export async function tryFetchFontBuffer(url: string): Promise<ArrayBuffer | nul
   return null;
 }
 
+/** Query locally installed fonts via the Local Font Access API and return the first match, or null. */
 export async function tryLocalFontBuffer(matchers: string[]): Promise<ArrayBuffer | null> {
   if (!("queryLocalFonts" in navigator)) return null;
   try {
@@ -287,6 +305,11 @@ export async function tryLocalFontBuffer(matchers: string[]): Promise<ArrayBuffe
   return null;
 }
 
+/**
+ * Load the primary font buffer, trying local Nerd Font matchers first,
+ * then a remote fallback URL, then broader local font matchers. Throws
+ * if all sources fail.
+ */
 export async function loadPrimaryFontBuffer(
   localMatchers: string[],
   fallbackUrl: string,
@@ -304,6 +327,7 @@ export async function loadPrimaryFontBuffer(
   throw new Error("Unable to load primary font.");
 }
 
+/** Load fallback font buffers from a list of sources, trying remote URLs then local matchers. */
 export async function loadFallbackFontBuffers(
   sources: FallbackFontSource[],
 ): Promise<{ name: string; buffer: ArrayBuffer }[]> {

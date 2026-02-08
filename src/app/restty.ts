@@ -10,12 +10,21 @@ import {
 import type { ResttyPaneManager, ResttyPaneSplitDirection } from "./panes";
 import type { ResttyFontSource } from "./types";
 
+/**
+ * Top-level configuration for creating a Restty instance.
+ */
 export type ResttyOptions = Omit<CreateResttyAppPaneManagerOptions, "appOptions"> & {
+  /** Per-pane app options, static or factory. */
   appOptions?: CreateResttyAppPaneManagerOptions["appOptions"];
+  /** Font sources applied to every pane. */
   fontSources?: ResttyPaneAppOptionsInput["fontSources"];
+  /** Whether to create the first pane automatically (default true). */
   createInitialPane?: boolean | { focus?: boolean };
 };
 
+/**
+ * Public API surface exposed by each pane handle.
+ */
 export type ResttyPaneApi = {
   id: number;
   setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
@@ -40,6 +49,11 @@ export type ResttyPaneApi = {
   getRawPane: () => ResttyManagedAppPane;
 };
 
+/**
+ * Thin wrapper around a managed pane that delegates calls to the
+ * underlying app. Resolves the pane lazily so it stays valid across
+ * layout changes.
+ */
 export class ResttyPaneHandle implements ResttyPaneApi {
   private readonly resolvePane: () => ResttyManagedAppPane;
 
@@ -132,6 +146,11 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 }
 
+/**
+ * Main entry point for the restty terminal widget. Manages a set of
+ * split panes, each running its own terminal app, and exposes
+ * convenience methods that operate on the active pane.
+ */
 export class Restty {
   readonly paneManager: ResttyPaneManager<ResttyManagedAppPane>;
   private fontSources: ResttyFontSource[] | undefined;
@@ -353,6 +372,7 @@ export class Restty {
   }
 }
 
+/** Create a new Restty instance with the given options. */
 export function createRestty(options: ResttyOptions): Restty {
   return new Restty(options);
 }

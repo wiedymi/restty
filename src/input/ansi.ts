@@ -1,5 +1,6 @@
 const ESC = "\x1b";
 
+/** Parse a DEC private mode set/reset sequence (CSI ? ... h/l) into mode codes and enabled state. */
 export function parsePrivateModeSeq(seq: string): { codes: number[]; enabled: boolean } | null {
   if (!seq.startsWith(`${ESC}[?`) || seq.length < 5) return null;
   const final = seq[seq.length - 1];
@@ -18,6 +19,7 @@ export function parsePrivateModeSeq(seq: string): { codes: number[]; enabled: bo
   return { codes, enabled: final === "h" };
 }
 
+/** Parse a window manipulation sequence (CSI ... t) into its numeric parameters. */
 export function parseWindowOpSeq(seq: string): number[] | null {
   if (!seq.startsWith(`${ESC}[`) || !seq.endsWith("t")) return null;
   const body = seq.slice(2, -1);
@@ -25,6 +27,7 @@ export function parseWindowOpSeq(seq: string): number[] | null {
   return body ? body.split(";").map((part) => Number(part)) : [];
 }
 
+/** Test whether a CSI sequence is a Device Attributes query (DA1/DA2/DA3). */
 export function isDeviceAttributesQuery(seq: string): boolean {
   if (!seq.startsWith(`${ESC}[`) || !seq.endsWith("c")) return false;
   const body = seq.slice(2, -1);

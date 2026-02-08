@@ -1,3 +1,4 @@
+/** RGBA color with 0-255 byte components. */
 export type ThemeColor = {
   r: number;
   g: number;
@@ -5,17 +6,30 @@ export type ThemeColor = {
   a?: number;
 };
 
+/**
+ * Parsed Ghostty terminal theme with semantic colors and full 256-color palette.
+ */
 export type GhosttyTheme = {
+  /** Optional theme name extracted from source. */
   name?: string;
+  /** Semantic colors and ANSI palette entries. */
   colors: {
+    /** Default background color. */
     background?: ThemeColor;
+    /** Default foreground (text) color. */
     foreground?: ThemeColor;
+    /** Cursor fill color. */
     cursor?: ThemeColor;
+    /** Text color under the cursor. */
     cursorText?: ThemeColor;
+    /** Selection background color. */
     selectionBackground?: ThemeColor;
+    /** Selection foreground (text) color. */
     selectionForeground?: ThemeColor;
+    /** 256-color palette (indices 0-255). */
     palette: Array<ThemeColor | undefined>;
   };
+  /** Original key-value pairs from the theme source. */
   raw: Record<string, string>;
 };
 
@@ -119,10 +133,12 @@ function parseNamedColor(value: string): ThemeColor | null {
   return null;
 }
 
+/** Parse a Ghostty color value (hex, rgb/rgba, or named color). */
 export function parseGhosttyColor(value: string): ThemeColor | null {
   return parseHexColor(value) || parseRgbColor(value) || parseNamedColor(value);
 }
 
+/** Convert ThemeColor to normalized RGBA floats (0.0-1.0). */
 export function colorToFloats(
   color: ThemeColor,
   alphaOverride?: number,
@@ -131,10 +147,12 @@ export function colorToFloats(
   return [color.r / 255, color.g / 255, color.b / 255, a / 255];
 }
 
+/** Convert ThemeColor to packed 24-bit RGB integer (0xRRGGBB). */
 export function colorToRgbU32(color: ThemeColor): number {
   return ((color.r & 0xff) << 16) | ((color.g & 0xff) << 8) | (color.b & 0xff);
 }
 
+/** Parse a Ghostty theme configuration from key=value format. */
 export function parseGhosttyTheme(text: string): GhosttyTheme {
   const raw: Record<string, string> = {};
   const palette: Array<ThemeColor | undefined> = new Array(256).fill(undefined);

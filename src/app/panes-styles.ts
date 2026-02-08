@@ -168,6 +168,7 @@ body.is-resizing-split {
 }
 `;
 
+/** Default style options for pane layout and appearance. */
 export const DEFAULT_RESTTY_PANE_STYLE_OPTIONS: Required<ResttyPaneStyleOptions> = {
   splitBackground: "#000",
   paneBackground: "#000",
@@ -187,6 +188,7 @@ function normalizeColor(value: string | undefined, fallback: string): string {
   return trimmed ? trimmed : fallback;
 }
 
+/** Validates and normalizes pane style options, clamping numeric values to safe ranges and applying defaults. */
 export function normalizePaneStyleOptions(
   options: ResttyPaneStyleOptions,
 ): Required<ResttyPaneStyleOptions> {
@@ -218,6 +220,7 @@ export function normalizePaneStyleOptions(
   };
 }
 
+/** Injects the pane stylesheet into the document if not already present. */
 export function ensureResttyPaneStylesDocument(doc: Document): void {
   if (doc.querySelector(`style[${RESTTY_PANE_STYLE_MARKER}="1"]`)) return;
   const style = doc.createElement("style");
@@ -226,6 +229,7 @@ export function ensureResttyPaneStylesDocument(doc: Document): void {
   doc.head.appendChild(style);
 }
 
+/** Applies pane style options to a root element via CSS custom properties. */
 export function applyPaneStyleOptionsToRoot(
   root: HTMLElement,
   options: Readonly<Required<ResttyPaneStyleOptions>>,
@@ -239,6 +243,7 @@ export function applyPaneStyleOptionsToRoot(
   root.style.setProperty("--restty-pane-divider-thickness", `${options.dividerThicknessPx}px`);
 }
 
+/** Removes pane style class and custom properties from a root element. */
 export function clearPaneStyleOptionsFromRoot(root: HTMLElement): void {
   root.classList.remove(RESTTY_PANE_ROOT_CLASS);
   root.style.removeProperty("--restty-pane-split-background");

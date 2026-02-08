@@ -1,5 +1,6 @@
 // Generated from ghostty nerd_font_attributes.zig. Do not edit by hand.
 
+/** Rendering constraints for Nerd Font symbols (sizing, alignment, padding). */
 export type NerdConstraint = {
   size?: "none" | "fit" | "cover" | "fit_cover1" | "stretch";
   align_horizontal?: "none" | "start" | "end" | "center" | "center1";
@@ -17,12 +18,14 @@ export type NerdConstraint = {
   max_constraint_width?: number;
 };
 
+/** Codepoint range with associated rendering constraint. */
 export type NerdConstraintRange = {
   start: number;
   end: number;
   constraint: NerdConstraint;
 };
 
+/** Nerd Font symbol rendering constraints by codepoint range. */
 export const NERD_CONSTRAINTS: NerdConstraintRange[] = [
   {
     start: 9211,
@@ -4949,6 +4952,7 @@ export const NERD_CONSTRAINTS: NerdConstraintRange[] = [
   },
 ] as const;
 
+/** Binary search for the rendering constraint matching a Nerd Font codepoint, or null if none. */
 export function getNerdConstraint(cp: number): NerdConstraint | null {
   let lo = 0;
   let hi = NERD_CONSTRAINTS.length - 1;

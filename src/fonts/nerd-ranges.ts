@@ -1,3 +1,4 @@
+/** Unicode codepoint ranges for Nerd Font symbols (start, end inclusive). */
 export const NERD_SYMBOL_RANGES: Array<[number, number]> = [
   [0xe000, 0xe00a],
   [0xe0a0, 0xe0a3],
@@ -16,6 +17,7 @@ export const NERD_SYMBOL_RANGES: Array<[number, number]> = [
   [0xf0001, 0xf1af0],
 ];
 
+/** Check if a codepoint falls within Nerd Font symbol ranges. */
 export function isNerdSymbolCodepoint(cp: number): boolean {
   for (const [start, end] of NERD_SYMBOL_RANGES) {
     if (cp >= start && cp <= end) return true;

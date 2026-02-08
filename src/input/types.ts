@@ -32,12 +32,14 @@ export type InputHandlerConfig = {
   enableCtrlCombos?: boolean;
 };
 
+/** Default terminal colors for OSC 10/11/12 query responses (RGB 0-255). */
 export type DefaultColors = {
   fg?: [number, number, number];
   bg?: [number, number, number];
   cursor?: [number, number, number];
 };
 
+/** Terminal window metrics for XTWINOPS reporting (CSI 14/16/18 t). */
 export type WindowMetrics = {
   rows: number;
   cols: number;
@@ -47,6 +49,11 @@ export type WindowMetrics = {
   cellHeightPx: number;
 };
 
+/**
+ * Parsed window manipulation operation (CSI ... t).
+ * - resize: terminal resize request
+ * - unknown: unhandled window operation
+ */
 export type WindowOp =
   | {
       type: "resize";

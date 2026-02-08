@@ -1,5 +1,6 @@
 import type { ResttyFontPreset, ResttyFontSource } from "./types";
 
+/** Default font fallback chain with JetBrains Mono, Nerd Fonts symbols, Noto symbols, color emoji, black emoji, and CJK support. */
 export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
   {
     type: "url",
@@ -65,6 +66,7 @@ function validateFontSource(source: ResttyFontSource, index: number): ResttyFont
   throw new Error(`fontSources[${index}] has unsupported source type`);
 }
 
+/** Validates user-provided font sources or returns defaults based on preset (none returns empty array, otherwise default CDN fonts). */
 export function normalizeFontSources(
   sources: ResttyFontSource[] | undefined,
   preset: ResttyFontPreset | undefined,

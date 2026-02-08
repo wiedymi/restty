@@ -1,19 +1,31 @@
 import type { CellMetrics, GridConfig, GridState } from "./types";
 
+/**
+ * Font metrics interface used to measure glyph dimensions and compute cell sizes.
+ */
 export type FontMetricsProvider = {
+  /** Return the scale factor for a given pixel size and sizing mode. */
   scaleForSize(sizePx: number, sizeMode: string): number;
+  /** Look up the glyph ID for a character, or null/undefined if missing. */
   glyphIdForChar(char: string): number | undefined | null;
+  /** Return the advance width of a glyph in font units. */
   advanceWidth(glyphId: number): number;
+  /** Font ascender in font units. */
   readonly ascender: number;
+  /** Font descender in font units (typically negative). */
   readonly descender?: number;
+  /** Explicit font height in font units, if available. */
   readonly height?: number;
+  /** Units per em of the font. */
   readonly upem: number;
 };
 
+/** Result of shaping a text cluster, containing its advance width. */
 export type ShapeResult = {
   advance: number;
 };
 
+/** Resolve the font height in font units, falling back to ascender-descender or upem. */
 export function fontHeightUnits(font: FontMetricsProvider): number {
   if (!font) return 0;
   const height = font.height;
@@ -25,6 +37,10 @@ export function fontHeightUnits(font: FontMetricsProvider): number {
   return font.upem || 1000;
 }
 
+/**
+ * Compute cell width, height, and baseline from font metrics, grid config,
+ * and device pixel ratio. Returns null if the font is unavailable.
+ */
 export function computeCellMetrics(
   font: FontMetricsProvider,
   config: GridConfig,
@@ -49,6 +65,7 @@ export function computeCellMetrics(
   return { cellW, cellH, fontSizePx, scale, lineHeight, baselineOffset, yPad };
 }
 
+/** Create a zeroed-out grid state with default values. */
 export function createGridState(): GridState {
   return {
     cols: 0,
@@ -63,6 +80,10 @@ export function createGridState(): GridState {
   };
 }
 
+/**
+ * Recompute grid dimensions from cell metrics and canvas size.
+ * Mutates state in place and returns whether cols/rows/metrics changed.
+ */
 export function updateGridState(
   state: GridState,
   metrics: CellMetrics,
@@ -88,6 +109,7 @@ export function updateGridState(
   return { changed, cols, rows };
 }
 
+/** Clamp a number to the inclusive [min, max] range. */
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }

@@ -218,6 +218,7 @@ function createWebGPUCoreState(
   };
 }
 
+/** Initialize shared WebGPU core state (device, pipelines, vertex buffer) from a canvas. */
 export async function initWebGPUCore(canvas: HTMLCanvasElement): Promise<WebGPUCoreState | null> {
   if (!navigator.gpu) return null;
 
@@ -239,6 +240,10 @@ export async function initWebGPUCore(canvas: HTMLCanvasElement): Promise<WebGPUC
   return createWebGPUCoreState(device, format, srgbSwapchain);
 }
 
+/**
+ * Initialize a full WebGPU renderer state for a canvas, including context,
+ * uniform buffer, and bind groups. Accepts an optional pre-initialized core.
+ */
 export async function initWebGPU(
   canvas: HTMLCanvasElement,
   options: { core?: WebGPUCoreState | null } = {},
@@ -333,6 +338,7 @@ function createProgram(
   return program;
 }
 
+/** Initialize a WebGL2 fallback renderer state from a canvas. */
 export function initWebGL(canvas: HTMLCanvasElement): WebGLState | null {
   const gl = canvas.getContext("webgl2", { antialias: false, alpha: false });
   if (!gl) return null;
@@ -456,6 +462,7 @@ export function initWebGL(canvas: HTMLCanvasElement): WebGLState | null {
   };
 }
 
+/** Grow a WebGPU instance buffer if the required byte length exceeds current capacity. */
 export function ensureInstanceBuffer(
   state: WebGPUState,
   kind: "rect" | "glyph",
@@ -474,6 +481,7 @@ export function ensureInstanceBuffer(
   state[capKey] = newSize;
 }
 
+/** Re-configure the WebGPU canvas context with the current device and format. */
 export function configureContext(state: WebGPUState): void {
   state.context.configure({
     device: state.device,
@@ -482,6 +490,7 @@ export function configureContext(state: WebGPUState): void {
   });
 }
 
+/** Grow a WebGL instance buffer if the required byte length exceeds current capacity. */
 export function ensureGLInstanceBuffer(
   state: WebGLState,
   kind: "rect" | "glyph",
@@ -502,6 +511,7 @@ export function ensureGLInstanceBuffer(
   gl.bindVertexArray(null);
 }
 
+/** Create the initial resize tracking state with default values. */
 export function createResizeState(): {
   active: boolean;
   lastAt: number;
@@ -518,6 +528,7 @@ export function createResizeState(): {
   };
 }
 
+/** Create the initial scrollbar position state with default values. */
 export function createScrollbarState(): {
   lastInputAt: number;
   lastTotal: number;

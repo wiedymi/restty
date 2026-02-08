@@ -1,3 +1,4 @@
+/** WebGPU WGSL shader for rendering solid-color rectangles. */
 export const RECT_SHADER = `
 struct Uniforms {
   res: vec2f,
@@ -58,6 +59,7 @@ fn fsMain(input: VSOut) -> @location(0) vec4f {
 }
 `;
 
+/** WebGL2 vertex shader for rendering solid-color rectangles. */
 export const RECT_SHADER_GL_VERT = `#version 300 es
 precision highp float;
 
@@ -81,6 +83,7 @@ void main() {
 }
 `;
 
+/** WebGL2 fragment shader for rendering solid-color rectangles with alpha blending. */
 export const RECT_SHADER_GL_FRAG = `#version 300 es
 precision highp float;
 
@@ -112,6 +115,7 @@ void main() {
 }
 `;
 
+/** WebGL2 vertex shader for rendering textured glyph quads. */
 export const GLYPH_SHADER_GL_VERT = `#version 300 es
 precision highp float;
 
@@ -146,6 +150,7 @@ void main() {
 }
 `;
 
+/** WebGL2 fragment shader for sampling glyph atlas textures with linear filtering. */
 export const GLYPH_SHADER_GL_FRAG = `#version 300 es
 precision highp float;
 
@@ -225,6 +230,7 @@ void main() {
 }
 `;
 
+/** WebGPU WGSL shader for rendering textured glyph quads with linear atlas sampling. */
 export const GLYPH_SHADER = `
 struct Uniforms {
   res: vec2f,
@@ -343,6 +349,7 @@ fn fsMain(input: VSOut) -> @location(0) vec4f {
 }
 `;
 
+/** WebGPU WGSL shader for rendering textured glyph quads with nearest-neighbor atlas sampling. */
 export const GLYPH_SHADER_NEAREST = `
 struct Uniforms {
   res: vec2f,

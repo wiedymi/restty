@@ -1,19 +1,32 @@
 import { BOX_LINE_MAP } from "./box-drawing-map";
 import type { NerdConstraint } from "../fonts/nerd-constraints";
 
+/** RGBA color tuple with components in 0-1 range. */
 export type Color = [number, number, number, number];
+/** Flat array of rect instance data (x, y, w, h, r, g, b, a per rect). */
 export type RectData = number[];
 
+/**
+ * Font metrics used for Nerd Font glyph constraint calculations.
+ */
 export type NerdMetrics = {
+  /** Cell width in pixels. */
   cellWidth: number;
+  /** Cell height in pixels. */
   cellHeight: number;
+  /** Font face bounding-box width. */
   faceWidth: number;
+  /** Font face bounding-box height. */
   faceHeight: number;
+  /** Vertical offset of the font face within the cell. */
   faceY: number;
+  /** Target icon height for multi-cell-width glyphs. */
   iconHeight: number;
+  /** Target icon height for single-cell-width glyphs. */
   iconHeightSingle: number;
 };
 
+/** Positioned bounding box for a rendered glyph. */
 export type GlyphBox = {
   x: number;
   y: number;
@@ -21,13 +34,16 @@ export type GlyphBox = {
   height: number;
 };
 
-// Box line styles
+/** Box-drawing line style: no line. */
 export const BOX_STYLE_NONE = 0;
+/** Box-drawing line style: thin/light stroke. */
 export const BOX_STYLE_LIGHT = 1;
+/** Box-drawing line style: thick/heavy stroke. */
 export const BOX_STYLE_HEAVY = 2;
+/** Box-drawing line style: double parallel strokes. */
 export const BOX_STYLE_DOUBLE = 3;
 
-// Character classification functions
+/** Test whether a codepoint falls in a Unicode Private Use Area. */
 export function isPrivateUse(cp: number): boolean {
   return (
     (cp >= 0xe000 && cp <= 0xf8ff) ||
@@ -36,44 +52,52 @@ export function isPrivateUse(cp: number): boolean {
   );
 }
 
+/** Test whether a codepoint is a space-like character (NUL, SP, or EN SPACE). */
 export function isSpaceCp(cp: number): boolean {
   return cp === 0 || cp === 0x20 || cp === 0x2002;
 }
 
+/** Test whether a codepoint is in the Box Drawing block (U+2500-U+257F). */
 export function isBoxDrawing(cp: number): boolean {
   return cp >= 0x2500 && cp <= 0x257f;
 }
 
+/** Test whether a codepoint is in the Block Elements block (U+2580-U+259F). */
 export function isBlockElement(cp: number): boolean {
   return cp >= 0x2580 && cp <= 0x259f;
 }
 
+/** Test whether a codepoint is in the Legacy Computing Symbols blocks. */
 export function isLegacyComputing(cp: number): boolean {
   return (cp >= 0x1fb00 && cp <= 0x1fbff) || (cp >= 0x1cc00 && cp <= 0x1cebf);
 }
 
+/** Test whether a codepoint is a Powerline symbol (U+E0B0-U+E0D7). */
 export function isPowerline(cp: number): boolean {
   return cp >= 0xe0b0 && cp <= 0xe0d7;
 }
 
+/** Test whether a codepoint is in the Braille Patterns block (U+2800-U+28FF). */
 export function isBraille(cp: number): boolean {
   return cp >= 0x2800 && cp <= 0x28ff;
 }
 
+/** Test whether a codepoint is any GPU-drawable graphics element (box, block, legacy, powerline). */
 export function isGraphicsElement(cp: number): boolean {
   return isBoxDrawing(cp) || isBlockElement(cp) || isLegacyComputing(cp) || isPowerline(cp);
 }
 
+/** Test whether a codepoint is a symbol that may need special rendering (PUA or graphics). */
 export function isSymbolCp(cp: number): boolean {
   return isPrivateUse(cp) || isGraphicsElement(cp);
 }
 
-// Color utilities
+/** Return a new color with its alpha channel multiplied by the given factor. */
 export function applyAlpha(color: Color, alpha: number): Color {
   return [color[0], color[1], color[2], color[3] * alpha];
 }
 
-// Rect push helpers
+/** Append a rect instance (position, size, color) to the output array. */
 export function pushRect(
   out: RectData,
   x: number,
@@ -85,6 +109,7 @@ export function pushRect(
   out.push(x, y, w, h, color[0], color[1], color[2], color[3]);
 }
 
+/** Append a rect snapped to pixel boundaries (floor origin, ceil extent). */
 export function pushRectSnapped(
   out: RectData,
   x: number,
@@ -103,6 +128,7 @@ export function pushRectSnapped(
   out.push(x0, y0, width, height, color[0], color[1], color[2], color[3]);
 }
 
+/** Append a rect with rounded position and at-least-1px dimensions for box drawing. */
 export function pushRectBox(
   out: RectData,
   x: number,
@@ -139,7 +165,7 @@ function fillFrac(
   pushRectSnapped(out, px0, py0, px1 - px0, py1 - py0, color);
 }
 
-// Block element drawing (U+2580-U+259F)
+/** Rasterize a Unicode Block Element (U+2580-U+259F) into rect instances. */
 export function drawBlockElement(
   cp: number,
   x: number,
@@ -265,7 +291,10 @@ export function drawBlockElement(
   }
 }
 
-// Box drawing (U+2500-U+257F)
+/**
+ * Rasterize a Unicode Box Drawing character (U+2500-U+257F) into rect instances.
+ * Handles straight segments, dashed lines, rounded corners, and diagonal lines.
+ */
 export function drawBoxDrawing(
   cp: number,
   x: number,
@@ -507,7 +536,7 @@ export function drawBoxDrawing(
   return true;
 }
 
-// Braille patterns (U+2800-U+28FF)
+/** Rasterize a Unicode Braille Pattern (U+2800-U+28FF) into rect dot instances. */
 export function drawBraille(
   cp: number,
   x: number,
@@ -548,7 +577,7 @@ export function drawBraille(
   return true;
 }
 
-// Powerline glyphs (U+E0B0-U+E0D7)
+/** Rasterize a Powerline glyph (U+E0B0-U+E0D7) into rect scanline instances. */
 export function drawPowerline(
   cp: number,
   x: number,
@@ -621,7 +650,10 @@ export function drawPowerline(
   }
 }
 
-// Nerd font glyph constraint application
+/**
+ * Apply a Nerd Font constraint to a glyph bounding box, adjusting size and
+ * alignment to fit within the cell according to the constraint rules.
+ */
 export function constrainGlyphBox(
   glyph: GlyphBox,
   constraint: NerdConstraint,

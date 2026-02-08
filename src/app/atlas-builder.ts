@@ -1,3 +1,10 @@
+/**
+ * Metadata for constrained glyph rendering.
+ * - cp: Unicode code point
+ * - constraintWidth: target cell width constraint
+ * - variable: whether glyph can render at multiple widths
+ * - widths: set of all required cell widths for this glyph
+ */
 export type GlyphConstraintMeta = {
   cp: number;
   constraintWidth: number;
@@ -5,6 +12,17 @@ export type GlyphConstraintMeta = {
   widths?: Set<number>;
 };
 
+/**
+ * Context for constraint-based atlas building, primarily for Nerd Fonts symbol alignment.
+ * - cellW: cell width in pixels
+ * - cellH: cell height in pixels
+ * - yPad: vertical padding
+ * - baselineOffset: baseline offset adjustment
+ * - baselineAdjust: additional baseline adjustment
+ * - fontScale: scale factor for font rendering
+ * - nerdMetrics: Nerd Fonts specific layout metrics
+ * - fontEntry: reference to font entry object
+ */
 export type AtlasConstraintContext = {
   cellW: number;
   cellH: number;
@@ -57,6 +75,17 @@ type BuildAtlasDeps = {
   }) => boolean;
 };
 
+/**
+ * Parameters for font atlas building.
+ * - entry: font entry containing the font object and cached atlas
+ * - neededGlyphIds: set of glyph IDs required in the atlas
+ * - glyphMeta: optional constraint metadata for symbol font glyphs
+ * - fontSizePx: base font size in pixels
+ * - atlasScale: scaling factor for high-DPI rendering
+ * - fontIndex: index in the font fallback chain (0 = primary font)
+ * - constraintContext: optional constraint context for symbol alignment
+ * - deps: external dependencies for atlas building
+ */
 export type BuildFontAtlasParams = {
   entry: any;
   neededGlyphIds: Set<number>;
@@ -68,6 +97,14 @@ export type BuildFontAtlasParams = {
   deps: BuildAtlasDeps;
 };
 
+/**
+ * Result from font atlas building.
+ * - rebuilt: true if a new atlas was generated
+ * - atlas: the atlas object containing glyph metrics and bitmap
+ * - rgba: RGBA pixel data ready for WebGL upload
+ * - colorGlyphs: set of glyph IDs that are color emoji
+ * - preferNearest: whether to use nearest-neighbor texture filtering
+ */
 export type BuildFontAtlasResult = {
   rebuilt: boolean;
   atlas: any | null;
@@ -76,6 +113,7 @@ export type BuildFontAtlasResult = {
   preferNearest: boolean;
 };
 
+/** Builds or reuses a font atlas, detecting when rebuild is needed based on glyph requirements, size changes, or constraint updates. */
 export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontAtlasResult {
   const {
     entry,
