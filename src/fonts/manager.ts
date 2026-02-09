@@ -7,7 +7,6 @@ import type {
 } from "./types";
 import { isNerdSymbolCodepoint } from "./nerd-ranges";
 import { fontHeightUnits } from "../grid/grid";
-import { isSymbolLikeCodepoint } from "../unicode/symbols";
 
 type LocalFontsPermissionDescriptor = PermissionDescriptor & { name: "local-fonts" };
 type LocalFontFaceData = {
@@ -197,10 +196,6 @@ export function glyphWidthUnits(entry: FontEntry, glyphId: number | undefined | 
   return width;
 }
 
-function isSymbolCp(cp: number): boolean {
-  return isSymbolLikeCodepoint(cp);
-}
-
 function isLikelyEmojiCodepoint(cp: number): boolean {
   if (cp >= 0x1f1e6 && cp <= 0x1f1ff) return true;
   if (cp >= 0x1f300 && cp <= 0x1faff) return true;
@@ -229,7 +224,7 @@ export function pickFontIndexForText(
   state: FontManagerState,
   text: string,
   expectedSpan: number,
-  shapeClusterWithFont: (entry: FontEntry, text: string) => ShapedCluster,
+  _shapeClusterWithFont: (entry: FontEntry, text: string) => ShapedCluster,
 ): number {
   if (!state.fonts.length) return 0;
 
