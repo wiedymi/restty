@@ -167,6 +167,8 @@ export type InputHandler = {
   isFocusReporting: () => boolean;
   isAltScreen: () => boolean;
   isSynchronizedOutput: () => boolean;
+  isPromptClickEventsEnabled: () => boolean;
+  encodePromptClickEvent: (cell: CellPosition) => string;
   /**
    * Encode pointer input as terminal mouse events (SGR).
    */

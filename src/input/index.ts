@@ -62,6 +62,8 @@ export function createInputHandler(options: InputHandlerOptions = {}): InputHand
     isFocusReporting: () => filter.isFocusReporting(),
     isAltScreen: () => filter.isAltScreen(),
     isSynchronizedOutput: () => filter.isSynchronizedOutput(),
+    isPromptClickEventsEnabled: () => filter.isPromptClickEventsEnabled(),
+    encodePromptClickEvent: (cell) => filter.encodePromptClickEvent(cell),
     sendMouseEvent: (kind, event) => mouse.sendMouseEvent(kind, event),
   };
 }

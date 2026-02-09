@@ -1,4 +1,4 @@
-import type { CursorPosition, WindowOp } from "./types";
+import type { CellPosition, CursorPosition, WindowOp } from "./types";
 import type { MouseController } from "./mouse";
 import { isDeviceAttributesQuery, parsePrivateModeSeq, parseWindowOpSeq } from "./ansi";
 
@@ -99,6 +99,10 @@ export class OutputFilter {
     bg?: [number, number, number];
     cursor?: [number, number, number];
   };
+  private semanticPromptSeen = false;
+  private promptClickEvents = false;
+  private promptInputActive = false;
+  private commandRunning = false;
 
   constructor(options: OutputFilterOptions) {
     this.getCursorPosition = options.getCursorPosition;
@@ -137,6 +141,82 @@ export class OutputFilter {
 
   isSynchronizedOutput() {
     return this.synchronizedOutput;
+  }
+
+  isPromptClickEventsEnabled() {
+    return (
+      this.semanticPromptSeen &&
+      this.promptClickEvents &&
+      this.promptInputActive &&
+      !this.commandRunning &&
+      !this.altScreen
+    );
+  }
+
+  encodePromptClickEvent(cell: CellPosition): string {
+    if (!this.isPromptClickEventsEnabled()) return "";
+    const row = Math.max(1, Math.floor(cell.row) + 1);
+    const col = Math.max(1, Math.floor(cell.col) + 1);
+    return `\x1b[<0;${col};${row}M`;
+  }
+
+  private readOsc133BoolOption(options: string, key: string): boolean | null {
+    if (!options) return null;
+    const prefix = `${key}=`;
+    const fields = options.split(";");
+    for (let i = 0; i < fields.length; i += 1) {
+      const field = fields[i];
+      if (!field.startsWith(prefix)) continue;
+      const value = field.slice(prefix.length);
+      if (value === "1") return true;
+      if (value === "0") return false;
+      return null;
+    }
+    return null;
+  }
+
+  private observeSemanticPromptOsc(action: string, options: string) {
+    const clickEvents = this.readOsc133BoolOption(options, "click_events");
+    if (clickEvents !== null) this.promptClickEvents = clickEvents;
+
+    switch (action) {
+      case "A":
+      case "B":
+      case "I":
+        this.semanticPromptSeen = true;
+        this.promptInputActive = true;
+        this.commandRunning = false;
+        break;
+      case "C":
+        this.semanticPromptSeen = true;
+        this.promptInputActive = false;
+        this.commandRunning = true;
+        break;
+      case "D":
+        this.semanticPromptSeen = true;
+        this.promptInputActive = false;
+        this.commandRunning = false;
+        break;
+      case "P":
+        this.semanticPromptSeen = true;
+        break;
+      default:
+        break;
+    }
+  }
+
+  private observeOsc(seq: string) {
+    const content = seq.slice(2);
+    const sep = content.indexOf(";");
+    if (sep < 0) return;
+    const code = content.slice(0, sep);
+    if (code !== "133") return;
+    const rest = content.slice(sep + 1);
+    if (!rest) return;
+    const action = rest[0] ?? "";
+    if (!action) return;
+    const options = rest.length > 2 && rest[1] === ";" ? rest.slice(2) : "";
+    this.observeSemanticPromptOsc(action, options);
   }
 
   private replyOscColor(code: string, rgb: [number, number, number]) {
@@ -287,6 +367,7 @@ export class OutputFilter {
           break;
         }
         const seq = data.slice(i, j);
+        this.observeOsc(seq);
         if (!this.handleOsc(seq)) {
           // Preserve full OSC bytes (including terminator) for sequences
           // we don't intercept, e.g. OSC 8 hyperlinks.

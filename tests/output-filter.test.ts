@@ -114,3 +114,57 @@ test("output filter tracks alt-screen with CSI ? 1049", () => {
   expect(filter.filter("\x1b[?1049l")).toBe("\x1b[?1049l");
   expect(filter.isAltScreen()).toBe(false);
 });
+
+test("output filter tracks OSC 133 click_events prompt state", () => {
+  const filter = new OutputFilter({
+    getCursorPosition: () => ({ row: 1, col: 1 }),
+    sendReply: () => {},
+    mouse: {
+      handleModeSeq: () => false,
+    } as any,
+  });
+
+  expect(filter.isPromptClickEventsEnabled()).toBe(false);
+  expect(filter.encodePromptClickEvent({ row: 3, col: 7 })).toBe("");
+
+  const seqA = "\x1b]133;A;click_events=1\x07";
+  expect(filter.filter(seqA)).toBe(seqA);
+  expect(filter.isPromptClickEventsEnabled()).toBe(true);
+  expect(filter.encodePromptClickEvent({ row: 3, col: 7 })).toBe("\x1b[<0;8;4M");
+
+  const seqC = "\x1b]133;C\x07";
+  expect(filter.filter(seqC)).toBe(seqC);
+  expect(filter.isPromptClickEventsEnabled()).toBe(false);
+
+  const seqD = "\x1b]133;D\x07";
+  expect(filter.filter(seqD)).toBe(seqD);
+  expect(filter.isPromptClickEventsEnabled()).toBe(false);
+
+  const seqB = "\x1b]133;B\x07";
+  expect(filter.filter(seqB)).toBe(seqB);
+  expect(filter.isPromptClickEventsEnabled()).toBe(true);
+
+  const disable = "\x1b]133;A;click_events=0\x07";
+  expect(filter.filter(disable)).toBe(disable);
+  expect(filter.isPromptClickEventsEnabled()).toBe(false);
+});
+
+test("output filter disables prompt click events in alt-screen", () => {
+  const filter = new OutputFilter({
+    getCursorPosition: () => ({ row: 1, col: 1 }),
+    sendReply: () => {},
+    mouse: {
+      handleModeSeq: () => false,
+    } as any,
+  });
+
+  const enable = "\x1b]133;A;click_events=1\x07";
+  expect(filter.filter(enable)).toBe(enable);
+  expect(filter.isPromptClickEventsEnabled()).toBe(true);
+
+  expect(filter.filter("\x1b[?1049h")).toBe("\x1b[?1049h");
+  expect(filter.isPromptClickEventsEnabled()).toBe(false);
+
+  expect(filter.filter("\x1b[?1049l")).toBe("\x1b[?1049l");
+  expect(filter.isPromptClickEventsEnabled()).toBe(true);
+});

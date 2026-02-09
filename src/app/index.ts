@@ -530,6 +530,16 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     pendingTimer: 0,
   };
 
+  const desktopSelectionState: {
+    pendingPointerId: number | null;
+    pendingCell: { row: number; col: number } | null;
+    startedWithActiveSelection: boolean;
+  } = {
+    pendingPointerId: null,
+    pendingCell: null,
+    startedWithActiveSelection: false,
+  };
+
   const linkState = {
     hoverId: 0,
     hoverUri: "",
@@ -550,11 +560,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
 
   function updateCanvasCursor() {
     if (!canvas) return;
-    if (selectionState.dragging || selectionState.active) {
-      canvas.style.cursor = "text";
-      return;
-    }
-    canvas.style.cursor = linkState.hoverId ? "pointer" : "default";
+    canvas.style.cursor = "text";
   }
 
   function isTouchPointer(event: PointerEvent) {
@@ -569,6 +575,12 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     touchSelectionState.pendingPointerId = null;
     touchSelectionState.pendingCell = null;
     touchSelectionState.pendingStartedAt = 0;
+  }
+
+  function clearPendingDesktopSelection() {
+    desktopSelectionState.pendingPointerId = null;
+    desktopSelectionState.pendingCell = null;
+    desktopSelectionState.startedWithActiveSelection = false;
   }
 
   function tryActivatePendingTouchSelection(pointerId: number) {
@@ -586,6 +598,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   }
 
   function beginSelectionDrag(cell: { row: number; col: number }, pointerId: number) {
+    clearPendingDesktopSelection();
     selectionState.active = true;
     selectionState.dragging = true;
     selectionState.anchor = cell;
@@ -1521,6 +1534,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   inputHandler!.setMouseMode("auto");
 
   function clearSelection() {
+    clearPendingDesktopSelection();
     selectionState.active = false;
     selectionState.dragging = false;
     selectionState.anchor = null;
@@ -1797,6 +1811,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         !shouldPreferLocalPrimarySelection(event) &&
         inputHandler.sendMouseEvent("down", event)
       ) {
+        clearPendingDesktopSelection();
         event.preventDefault();
         canvas.setPointerCapture?.(event.pointerId);
         return;
@@ -1831,7 +1846,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       event.preventDefault();
       const cell = normalizeSelectionCell(positionToCell(event));
       updateLinkHover(cell);
-      beginSelectionDrag(cell, event.pointerId);
+      desktopSelectionState.pendingPointerId = event.pointerId;
+      desktopSelectionState.pendingCell = cell;
+      desktopSelectionState.startedWithActiveSelection = selectionState.active;
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -1894,6 +1911,22 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         return;
       }
       const cell = normalizeSelectionCell(positionToCell(event));
+      if (
+        desktopSelectionState.pendingPointerId === event.pointerId &&
+        desktopSelectionState.pendingCell
+      ) {
+        const anchor = desktopSelectionState.pendingCell;
+        if (anchor.row !== cell.row || anchor.col !== cell.col) {
+          beginSelectionDrag(anchor, event.pointerId);
+          selectionState.focus = cell;
+          updateLinkHover(null);
+          updateCanvasCursor();
+          needsRender = true;
+          return;
+        }
+        updateLinkHover(cell);
+        return;
+      }
       if (selectionState.dragging) {
         event.preventDefault();
         selectionState.focus = cell;
@@ -1950,6 +1983,14 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         return;
       }
       const cell = normalizeSelectionCell(positionToCell(event));
+      const clearSelectionFromClick =
+        desktopSelectionState.pendingPointerId === event.pointerId &&
+        desktopSelectionState.startedWithActiveSelection &&
+        !selectionState.dragging;
+      if (desktopSelectionState.pendingPointerId === event.pointerId) {
+        clearPendingDesktopSelection();
+      }
+      if (clearSelectionFromClick) clearSelection();
       if (selectionState.dragging) {
         event.preventDefault();
         selectionState.dragging = false;
@@ -1976,6 +2017,22 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         }
         updateLinkHover(cell);
       }
+      if (
+        !selectionState.active &&
+        event.button === 0 &&
+        !event.shiftKey &&
+        !event.altKey &&
+        !event.ctrlKey &&
+        !event.metaKey &&
+        inputHandler.isPromptClickEventsEnabled()
+      ) {
+        const seq = inputHandler.encodePromptClickEvent(cell);
+        if (seq) {
+          event.preventDefault();
+          sendKeyInput(seq);
+          return;
+        }
+      }
       if (!selectionState.active && event.button === 0 && linkState.hoverUri) {
         openLink(linkState.hoverUri);
       }
@@ -1984,6 +2041,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     const onPointerCancel = (event: PointerEvent) => {
       if (scrollbarDragState.pointerId === event.pointerId) {
         scrollbarDragState.pointerId = null;
+      }
+      if (desktopSelectionState.pendingPointerId === event.pointerId) {
+        clearPendingDesktopSelection();
       }
       if (isTouchPointer(event)) {
         if (touchSelectionState.pendingPointerId === event.pointerId) {
