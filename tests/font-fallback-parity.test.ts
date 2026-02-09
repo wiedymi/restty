@@ -4,7 +4,6 @@ import {
   createFontManagerState,
   isSymbolFont,
   pickFontIndexForText,
-  type FontEntry,
 } from "../src/fonts";
 import { DEFAULT_FONT_SOURCES } from "../src/app/font-sources";
 
@@ -31,17 +30,6 @@ function makeFont(codepoints: number[]) {
   };
 }
 
-function shapeClusterWithFont(entry: FontEntry, text: string) {
-  const chars = Array.from(text);
-  let advance = 0;
-  const glyphs = chars.map((ch) => {
-    const glyphId = entry.font.glyphIdForChar(ch);
-    advance += 600;
-    return { glyphId, xAdvance: 600, yAdvance: 0, xOffset: 0, yOffset: 0 };
-  });
-  return { glyphs, advance };
-}
-
 test("font picking follows fallback order for matching glyphs", () => {
   const state = createFontManagerState();
   state.fonts = [
@@ -49,7 +37,7 @@ test("font picking follows fallback order for matching glyphs", () => {
     createFontEntry(makeFont([0x25a3]), "Symbols Nerd Font Mono"),
     createFontEntry(makeFont([0x25a3]), "Noto Sans Symbols 2"),
   ];
-  const picked = pickFontIndexForText(state, String.fromCodePoint(0x25a3), 1, shapeClusterWithFont);
+  const picked = pickFontIndexForText(state, String.fromCodePoint(0x25a3), 1);
   expect(picked).toBe(1);
 });
 
@@ -59,7 +47,7 @@ test("emoji presentation prefers color emoji fonts", () => {
     createFontEntry(makeFont([0x1f600]), "Primary Mono"),
     createFontEntry(makeFont([0x1f600]), "Noto Color Emoji"),
   ];
-  const picked = pickFontIndexForText(state, String.fromCodePoint(0x1f600), 1, shapeClusterWithFont);
+  const picked = pickFontIndexForText(state, String.fromCodePoint(0x1f600), 1);
   expect(picked).toBe(1);
 });
 
@@ -70,7 +58,7 @@ test("text presentation selector prefers non-emoji fonts", () => {
     createFontEntry(makeFont([0x2764, 0xfe0e]), "Noto Color Emoji"),
   ];
   const text = `${String.fromCodePoint(0x2764)}${String.fromCodePoint(0xfe0e)}`;
-  const picked = pickFontIndexForText(state, text, 1, shapeClusterWithFont);
+  const picked = pickFontIndexForText(state, text, 1);
   expect(picked).toBe(0);
 });
 
@@ -80,7 +68,7 @@ test("non-nerd symbols prefer first matching fallback in order", () => {
     createFontEntry(makeFont([0x276f]), "Primary Nerd Mono"),
     createFontEntry(makeFont([0x276f]), "Noto Sans Symbols 2"),
   ];
-  const picked = pickFontIndexForText(state, String.fromCodePoint(0x276f), 1, shapeClusterWithFont);
+  const picked = pickFontIndexForText(state, String.fromCodePoint(0x276f), 1);
   expect(picked).toBe(0);
 });
 

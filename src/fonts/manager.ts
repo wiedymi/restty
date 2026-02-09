@@ -224,7 +224,6 @@ export function pickFontIndexForText(
   state: FontManagerState,
   text: string,
   expectedSpan: number,
-  _shapeClusterWithFont: (entry: FontEntry, text: string) => ShapedCluster,
 ): number {
   if (!state.fonts.length) return 0;
 
