@@ -1,7 +1,15 @@
 // restty public API - high-level integration first.
 
 export { Restty, ResttyPaneHandle, createRestty } from "./app/restty";
-export type { ResttyOptions, ResttyPaneApi } from "./app/restty";
+export type {
+  ResttyOptions,
+  ResttyPaneApi,
+  ResttyPlugin,
+  ResttyPluginCleanup,
+  ResttyPluginContext,
+  ResttyPluginDisposable,
+  ResttyPluginEvents,
+} from "./app/restty";
 
 export {
   getBuiltinTheme,

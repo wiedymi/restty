@@ -22,6 +22,57 @@ export type ResttyOptions = Omit<CreateResttyAppPaneManagerOptions, "appOptions"
   createInitialPane?: boolean | { focus?: boolean };
 };
 
+/** Event payloads emitted by the Restty plugin host. */
+export type ResttyPluginEvents = {
+  "plugin:activated": { pluginId: string };
+  "plugin:deactivated": { pluginId: string };
+  "pane:created": { paneId: number };
+  "pane:closed": { paneId: number };
+  "pane:split": {
+    sourcePaneId: number;
+    createdPaneId: number;
+    direction: ResttyPaneSplitDirection;
+  };
+  "pane:active-changed": { paneId: number | null };
+  "layout:changed": {};
+  "pane:resized": { paneId: number; cols: number; rows: number };
+  "pane:focused": { paneId: number };
+  "pane:blurred": { paneId: number };
+};
+
+/** A disposable resource returned by plugin APIs. */
+export type ResttyPluginDisposable = {
+  dispose: () => void;
+};
+
+/** Optional cleanup return supported by plugin activation. */
+export type ResttyPluginCleanup = void | (() => void) | ResttyPluginDisposable;
+
+/** Context object provided to each plugin on activation. */
+export type ResttyPluginContext = {
+  restty: Restty;
+  panes: () => ResttyPaneHandle[];
+  pane: (id: number) => ResttyPaneHandle | null;
+  activePane: () => ResttyPaneHandle | null;
+  focusedPane: () => ResttyPaneHandle | null;
+  on: <E extends keyof ResttyPluginEvents>(
+    event: E,
+    listener: (payload: ResttyPluginEvents[E]) => void,
+  ) => ResttyPluginDisposable;
+};
+
+/** Plugin contract for extending Restty behavior. */
+export type ResttyPlugin = {
+  id: string;
+  activate: (context: ResttyPluginContext) => ResttyPluginCleanup | Promise<ResttyPluginCleanup>;
+};
+
+type ResttyPluginRuntime = {
+  plugin: ResttyPlugin;
+  cleanup: (() => void) | null;
+  listenerDisposers: Array<() => void>;
+};
+
 /**
  * Public API surface exposed by each pane handle.
  */
@@ -169,9 +220,24 @@ export class ResttyPaneHandle implements ResttyPaneApi {
 export class Restty {
   readonly paneManager: ResttyPaneManager<ResttyManagedAppPane>;
   private fontSources: ResttyFontSource[] | undefined;
+  private readonly pluginListeners = new Map<
+    keyof ResttyPluginEvents,
+    Set<(payload: unknown) => void>
+  >();
+  private readonly pluginRuntimes = new Map<string, ResttyPluginRuntime>();
 
   constructor(options: ResttyOptions) {
-    const { createInitialPane = true, appOptions, fontSources, ...paneManagerOptions } = options;
+    const {
+      createInitialPane = true,
+      appOptions,
+      fontSources,
+      onPaneCreated,
+      onPaneClosed,
+      onPaneSplit,
+      onActivePaneChange,
+      onLayoutChanged,
+      ...paneManagerOptions
+    } = options;
     this.fontSources = fontSources ? [...fontSources] : undefined;
     const mergedAppOptions: CreateResttyAppPaneManagerOptions["appOptions"] = (context) => {
       const resolved = typeof appOptions === "function" ? appOptions(context) : (appOptions ?? {});
@@ -185,6 +251,30 @@ export class Restty {
     this.paneManager = createResttyAppPaneManager({
       ...paneManagerOptions,
       appOptions: mergedAppOptions,
+      onPaneCreated: (pane) => {
+        this.emitPluginEvent("pane:created", { paneId: pane.id });
+        onPaneCreated?.(pane);
+      },
+      onPaneClosed: (pane) => {
+        this.emitPluginEvent("pane:closed", { paneId: pane.id });
+        onPaneClosed?.(pane);
+      },
+      onPaneSplit: (sourcePane, createdPane, direction) => {
+        this.emitPluginEvent("pane:split", {
+          sourcePaneId: sourcePane.id,
+          createdPaneId: createdPane.id,
+          direction,
+        });
+        onPaneSplit?.(sourcePane, createdPane, direction);
+      },
+      onActivePaneChange: (pane) => {
+        this.emitPluginEvent("pane:active-changed", { paneId: pane?.id ?? null });
+        onActivePaneChange?.(pane);
+      },
+      onLayoutChanged: () => {
+        this.emitPluginEvent("layout:changed", {});
+        onLayoutChanged?.();
+      },
     });
 
     if (createInitialPane) {
@@ -288,7 +378,56 @@ export class Restty {
     this.paneManager.hideContextMenu();
   }
 
+  async use(plugin: ResttyPlugin): Promise<void> {
+    if (!plugin || typeof plugin !== "object") {
+      throw new Error("Restty plugin must be an object");
+    }
+    const pluginId = plugin.id?.trim?.() ?? "";
+    if (!pluginId) {
+      throw new Error("Restty plugin id is required");
+    }
+    if (typeof plugin.activate !== "function") {
+      throw new Error(`Restty plugin ${pluginId} must define activate(context)`);
+    }
+    if (this.pluginRuntimes.has(pluginId)) return;
+
+    const runtime: ResttyPluginRuntime = {
+      plugin: { ...plugin, id: pluginId },
+      cleanup: null,
+      listenerDisposers: [],
+    };
+    this.pluginRuntimes.set(pluginId, runtime);
+    try {
+      const cleanup = await runtime.plugin.activate(this.createPluginContext(runtime));
+      runtime.cleanup = this.normalizePluginCleanup(cleanup);
+      this.emitPluginEvent("plugin:activated", { pluginId });
+    } catch (error) {
+      this.teardownPluginRuntime(runtime);
+      this.pluginRuntimes.delete(pluginId);
+      throw error;
+    }
+  }
+
+  unuse(pluginId: string): boolean {
+    const key = pluginId?.trim?.() ?? "";
+    if (!key) return false;
+    const runtime = this.pluginRuntimes.get(key);
+    if (!runtime) return false;
+    this.pluginRuntimes.delete(key);
+    this.teardownPluginRuntime(runtime);
+    this.emitPluginEvent("plugin:deactivated", { pluginId: key });
+    return true;
+  }
+
+  plugins(): string[] {
+    return Array.from(this.pluginRuntimes.keys());
+  }
+
   destroy(): void {
+    const pluginIds = this.plugins();
+    for (let i = 0; i < pluginIds.length; i += 1) {
+      this.unuse(pluginIds[i]);
+    }
     this.paneManager.destroy();
   }
 
@@ -361,15 +500,21 @@ export class Restty {
   }
 
   resize(cols: number, rows: number): void {
-    this.requireActivePaneHandle().resize(cols, rows);
+    const pane = this.requireActivePaneHandle();
+    pane.resize(cols, rows);
+    this.emitPluginEvent("pane:resized", { paneId: pane.id, cols, rows });
   }
 
   focus(): void {
-    this.requireActivePaneHandle().focus();
+    const pane = this.requireActivePaneHandle();
+    pane.focus();
+    this.emitPluginEvent("pane:focused", { paneId: pane.id });
   }
 
   blur(): void {
-    this.requireActivePaneHandle().blur();
+    const pane = this.requireActivePaneHandle();
+    pane.blur();
+    this.emitPluginEvent("pane:blurred", { paneId: pane.id });
   }
 
   updateSize(force?: boolean): void {
@@ -396,6 +541,89 @@ export class Restty {
       throw new Error("Restty has no active pane. Create or focus a pane first.");
     }
     return this.makePaneHandle(pane.id);
+  }
+
+  private createPluginContext(runtime: ResttyPluginRuntime): ResttyPluginContext {
+    return {
+      restty: this,
+      panes: () => this.panes(),
+      pane: (id: number) => this.pane(id),
+      activePane: () => this.activePane(),
+      focusedPane: () => this.focusedPane(),
+      on: <E extends keyof ResttyPluginEvents>(
+        event: E,
+        listener: (payload: ResttyPluginEvents[E]) => void,
+      ) => {
+        const dispose = this.onPluginEvent(event, listener);
+        runtime.listenerDisposers.push(dispose);
+        return { dispose };
+      },
+    };
+  }
+
+  private onPluginEvent<E extends keyof ResttyPluginEvents>(
+    event: E,
+    listener: (payload: ResttyPluginEvents[E]) => void,
+  ): () => void {
+    let listeners = this.pluginListeners.get(event);
+    if (!listeners) {
+      listeners = new Set();
+      this.pluginListeners.set(event, listeners);
+    }
+    const wrapped = listener as (payload: unknown) => void;
+    listeners.add(wrapped);
+    return () => {
+      const current = this.pluginListeners.get(event);
+      if (!current) return;
+      current.delete(wrapped);
+      if (current.size === 0) {
+        this.pluginListeners.delete(event);
+      }
+    };
+  }
+
+  private emitPluginEvent<E extends keyof ResttyPluginEvents>(
+    event: E,
+    payload: ResttyPluginEvents[E],
+  ): void {
+    const listeners = this.pluginListeners.get(event);
+    if (!listeners || listeners.size === 0) return;
+    const snapshot = Array.from(listeners);
+    for (let i = 0; i < snapshot.length; i += 1) {
+      try {
+        snapshot[i](payload);
+      } catch (error) {
+        console.error(`[restty plugin] listener error (${String(event)}):`, error);
+      }
+    }
+  }
+
+  private teardownPluginRuntime(runtime: ResttyPluginRuntime): void {
+    for (let i = 0; i < runtime.listenerDisposers.length; i += 1) {
+      try {
+        runtime.listenerDisposers[i]();
+      } catch {
+        // ignore listener dispose errors
+      }
+    }
+    runtime.listenerDisposers.length = 0;
+    const cleanup = runtime.cleanup;
+    runtime.cleanup = null;
+    if (!cleanup) return;
+    try {
+      cleanup();
+    } catch (error) {
+      console.error(`[restty plugin] cleanup error (${runtime.plugin.id}):`, error);
+    }
+  }
+
+  private normalizePluginCleanup(cleanup: ResttyPluginCleanup): (() => void) | null {
+    if (!cleanup) return null;
+    if (typeof cleanup === "function") return cleanup;
+    if (typeof cleanup === "object" && typeof cleanup.dispose === "function") {
+      return () => cleanup.dispose();
+    }
+    return null;
   }
 }
 

@@ -198,6 +198,32 @@ if (state) {
 wasm.destroy(handle);
 ```
 
+## 9) Plugin host (native)
+
+```ts
+import type { ResttyPlugin } from "restty";
+
+const logPlugin: ResttyPlugin = {
+  id: "example/log-pane-events",
+  activate(ctx) {
+    const created = ctx.on("pane:created", ({ paneId }) => {
+      console.log("pane created", paneId);
+    });
+    const active = ctx.on("pane:active-changed", ({ paneId }) => {
+      console.log("active pane", paneId);
+    });
+    return () => {
+      created.dispose();
+      active.dispose();
+    };
+  },
+};
+
+await restty.use(logPlugin);
+console.log(restty.plugins()); // ["example/log-pane-events"]
+restty.unuse("example/log-pane-events");
+```
+
 ## Local playground workflow
 
 ```bash

@@ -180,6 +180,10 @@ Active-pane convenience:
 - `updateSize(force?)`
 - `destroy()`
 
+Plugin host:
+
+- `use(plugin)` / `unuse(pluginId)` / `plugins()`
+
 ## Advanced / Internal Modules
 
 Use these only when you need lower-level control:

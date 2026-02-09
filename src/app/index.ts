@@ -97,7 +97,14 @@ export type {
   ResttyPaneWithApp,
   CreateDefaultResttyPaneContextMenuItemsOptions,
 } from "./panes";
-export type { ResttyOptions } from "./restty";
+export type {
+  ResttyOptions,
+  ResttyPlugin,
+  ResttyPluginCleanup,
+  ResttyPluginContext,
+  ResttyPluginDisposable,
+  ResttyPluginEvents,
+} from "./restty";
 
 function normalizeTouchSelectionMode(
   value: ResttyTouchSelectionMode | undefined,
