@@ -38,6 +38,8 @@ These are available for specialized integrations.
   - lower-level building blocks used by app/runtime code
 - `restty/internal`
   - broad internal barrel exposing most implementation modules
+- `restty/xterm`
+  - xterm-style compatibility `Terminal` wrapper for migration
 
 ## Compatibility expectations
 

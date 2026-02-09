@@ -165,7 +165,7 @@ Primary class:
 Xterm compatibility:
 
 - `import { Terminal } from "restty/xterm"`
-- Supports `open`, `write`, `writeln`, `resize`, `focus`, `blur`, `loadAddon`, `dispose`
+- Supports `open`, `write`, `writeln`, `resize`, `focus`, `blur`, `clear`, `reset`, `onData`, `onResize`, `options`, `loadAddon`, `dispose`
 
 Pane access:
 

@@ -8,6 +8,7 @@ type FakeWrite = {
 type FakeManagerState = {
   writes: FakeWrite[];
   resizes: Array<{ cols: number; rows: number }>;
+  clearCount: number;
   focusCount: number;
   blurCount: number;
   destroyed: number;
@@ -69,6 +70,7 @@ function createFakeManager(options: any): FakeManager {
   const state: FakeManagerState = {
     writes: [],
     resizes: [],
+    clearCount: 0,
     focusCount: 0,
     blurCount: 0,
     destroyed: 0,
@@ -133,7 +135,9 @@ function createFakeManager(options: any): FakeManager {
         if (intercepted === null) return;
         state.writes.push({ text: typeof intercepted === "string" ? intercepted : text, source });
       },
-      clearScreen: () => {},
+      clearScreen: () => {
+        state.clearCount += 1;
+      },
       connectPty: () => {
         ptyConnected = true;
       },
@@ -218,6 +222,7 @@ mock.module("../src/app/pane-app-manager", () => ({
 }));
 
 const { Terminal } = await import("../src/xterm");
+const { runXtermMigrationSample } = await import("./fixtures/xterm-migration-sample");
 
 function latestState(): FakeManagerState {
   const state = managerStates.at(-1);
@@ -298,4 +303,72 @@ test("xterm compat write callbacks execute", () => {
   });
 
   expect(callbacks).toBe(2);
+});
+
+test("xterm compat onData and onResize events emit expected payloads", () => {
+  const term = new Terminal();
+  const dataEvents: string[] = [];
+  const resizeEvents: Array<{ cols: number; rows: number }> = [];
+
+  const dataDisposable = term.onData((data) => {
+    dataEvents.push(data);
+  });
+  const resizeDisposable = term.onResize((size) => {
+    resizeEvents.push(size);
+  });
+
+  term.open({} as HTMLElement);
+  term.resize(111, 33);
+  term.restty?.sendKeyInput("k", "key");
+  term.restty?.sendInput("paste", "program");
+  term.restty?.sendInput("from-pty", "pty");
+
+  dataDisposable.dispose();
+  resizeDisposable.dispose();
+  term.restty?.sendKeyInput("ignored", "key");
+  term.resize(120, 40);
+
+  expect(dataEvents).toEqual(["k", "paste"]);
+  expect(resizeEvents).toEqual([{ cols: 111, rows: 33 }]);
+});
+
+test("xterm compat options, clear, and reset are available", () => {
+  const term = new Terminal({
+    cols: 80,
+    rows: 24,
+    cursorBlink: true,
+  });
+
+  expect(term.getOption("cursorBlink")).toBe(true);
+  term.setOption("fontSize", 14);
+  expect(term.getOption("fontSize")).toBe(14);
+  term.setOption("cols", 100);
+  term.setOption("rows", 35);
+
+  term.open({} as HTMLElement);
+  term.clear();
+  term.reset();
+
+  expect(term.cols).toBe(100);
+  expect(term.rows).toBe(35);
+  expect(latestState().resizes).toEqual([{ cols: 100, rows: 35 }]);
+  expect(latestState().clearCount).toBe(2);
+  expect(latestState().writes.at(-1)).toEqual({ text: "\u001bc", source: "pty" });
+});
+
+test("xterm migration sample runs without xterm-specific rewrites", () => {
+  const sample = runXtermMigrationSample({} as HTMLElement);
+  sample.term.restty?.sendKeyInput("ls", "key");
+
+  expect(sample.calls.addonActivated).toBe(1);
+  expect(sample.calls.resizeEvents).toEqual([{ cols: 120, rows: 30 }]);
+  expect(sample.calls.dataEvents).toEqual(["ls"]);
+  expect(latestState().writes).toEqual([
+    { text: "$ ", source: "pty" },
+    { text: "echo ok\r\n", source: "pty" },
+    { text: "ls", source: "key" },
+  ]);
+
+  sample.term.dispose();
+  expect(sample.calls.addonDisposed).toBe(1);
 });

@@ -258,11 +258,17 @@ import { Terminal } from "restty/xterm";
 const term = new Terminal({ cols: 100, rows: 30 });
 term.open(document.getElementById("term")!);
 
+term.onData((data) => console.log("input", data));
+term.onResize(({ cols, rows }) => console.log("resize", cols, rows));
+
 term.write("hello");
 term.writeln(" world");
 term.resize(120, 40);
+term.options = { ...term.options, cursorBlink: true };
 term.focus();
 term.blur();
+term.clear();
+term.reset();
 
 term.loadAddon({
   activate() {
