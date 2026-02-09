@@ -46,6 +46,11 @@
       "types": "./dist/internal.d.ts",
       "import": "./dist/internal.js",
       "default": "./dist/internal.js"
+    },
+    "./xterm": {
+      "types": "./dist/xterm.d.ts",
+      "import": "./dist/xterm.js",
+      "default": "./dist/xterm.js"
     }
   },
   "scripts": {

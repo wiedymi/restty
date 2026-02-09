@@ -162,6 +162,11 @@ Primary class:
 - `new Restty({ root, ...options })`
 - `createRestty(options)`
 
+Xterm compatibility:
+
+- `import { Terminal } from "restty/xterm"`
+- Supports `open`, `write`, `writeln`, `resize`, `focus`, `blur`, `loadAddon`, `dispose`
+
 Pane access:
 
 - `panes()` / `pane(id)` / `activePane()` / `focusedPane()` / `forEachPane(visitor)`
@@ -221,6 +226,7 @@ bun run pty           # PTY websocket server only
 
 - `docs/README.md` - docs index
 - `docs/usage.md` - practical integration guide
+- `docs/xterm-compat.md` - xterm migration shim
 - `docs/how-it-works.md` - runtime flow
 - `docs/internals/` - implementation notes and architecture
 - `THIRD_PARTY_NOTICES.md` - third-party credits and notices

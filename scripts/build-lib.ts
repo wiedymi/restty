@@ -4,6 +4,7 @@ import { relative, resolve } from "node:path";
 const entrypoints = [
   "./src/index.ts",
   "./src/internal.ts",
+  "./src/xterm.ts",
 ];
 
 const result = await Bun.build({

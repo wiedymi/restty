@@ -250,6 +250,30 @@ await restty.loadPlugins(
 );
 ```
 
+## 10) xterm compatibility shim
+
+```ts
+import { Terminal } from "restty/xterm";
+
+const term = new Terminal({ cols: 100, rows: 30 });
+term.open(document.getElementById("term")!);
+
+term.write("hello");
+term.writeln(" world");
+term.resize(120, 40);
+term.focus();
+term.blur();
+
+term.loadAddon({
+  activate() {
+    console.log("addon active");
+  },
+  dispose() {
+    console.log("addon disposed");
+  },
+});
+```
+
 ## Local playground workflow
 
 ```bash
