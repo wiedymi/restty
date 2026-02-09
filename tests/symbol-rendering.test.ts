@@ -14,9 +14,10 @@ test("symbol-like classification follows Ghostty's precomputed table", () => {
 
 test("both render loops apply default centered symbol constraint", () => {
   const source = readFileSync(join(process.cwd(), "src/app/index.ts"), "utf8");
-  const matches = source.match(
-    /const constraint = nerdConstraint \?\? DEFAULT_SYMBOL_CONSTRAINT;/g,
-  ) ?? [];
+  const matches =
+    source.match(
+      /const constraint =\s+nerdConstraint \?\? \(colorGlyph \? DEFAULT_EMOJI_CONSTRAINT : DEFAULT_SYMBOL_CONSTRAINT\);/g,
+    ) ?? [];
   expect(matches.length).toBe(2);
 });
 
@@ -32,8 +33,13 @@ test("nerd constraints are keyed by codepoint, not font label", () => {
 test("render path uses generic symbol handling without per-codepoint override table", () => {
   const source = readFileSync(join(process.cwd(), "src/app/index.ts"), "utf8");
   expect(source.includes("const PARITY_SYMBOL_OVERRIDES")).toBe(false);
+  expect(source.includes("[0x2300, 0x23ff]")).toBe(true);
+  expect(source.includes("[0x25a0, 0x25ff]")).toBe(true);
+  expect(source.includes("[0x2b00, 0x2bff]")).toBe(true);
   expect(source.includes("align_vertical: \"center\"")).toBe(true);
   expect(source.includes("align_horizontal: \"center\"")).toBe(true);
+  expect(source.includes("const DEFAULT_EMOJI_CONSTRAINT")).toBe(true);
+  expect(source.includes("size: \"cover\"")).toBe(true);
   const renderSymbolChecks = source.match(/const symbolLike = isRenderSymbolLike\(cp\);/g) ?? [];
   expect(renderSymbolChecks.length).toBe(2);
 });

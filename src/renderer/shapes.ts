@@ -316,28 +316,62 @@ export function drawBoxDrawing(
   if (!spec) {
     const light = lightStroke;
     const heavy = heavyStroke;
+    const cellWInt = Math.max(1, Math.round(cellW));
+    const cellHInt = Math.max(1, Math.round(cellH));
+    const satSub = (a: number, b: number) => (a > b ? a - b : 0);
 
-    const dashedH = (count: number, thickness: number) => {
-      const gap = Math.max(1, Math.round(thickness));
-      const totalGap = gap * (count - 1);
-      const seg = Math.max(1, Math.floor((cellW - totalGap) / count));
-      const y0 = y + cellH * 0.5 - thickness * 0.5;
-      let px = x;
+    // Mirror Ghostty dash tiling so adjacent cells compose into even dash rhythm.
+    const dashedH = (count: number, thickness: number, desiredGap: number) => {
+      const thickPx = Math.max(1, Math.round(thickness));
+      const gapCount = count;
+      if (cellWInt < count + gapCount) {
+        const y0 = y + Math.floor(satSub(cellHInt, thickPx) / 2);
+        pushRectBox(out, x, y0, cellWInt, thickPx, color);
+        return;
+      }
+      const maxGap = Math.floor(cellWInt / (2 * count));
+      const gapWidth = Math.min(Math.max(1, Math.round(desiredGap)), maxGap);
+      const totalGapWidth = gapCount * gapWidth;
+      const totalDashWidth = cellWInt - totalGapWidth;
+      const dashWidth = Math.floor(totalDashWidth / count);
+      let extra = totalDashWidth % count;
+      const y0 = y + Math.floor(satSub(cellHInt, thickPx) / 2);
+      let px = x + Math.floor(gapWidth / 2);
       for (let i = 0; i < count; i += 1) {
-        pushRectBox(out, px, y0, seg, thickness, color);
-        px += seg + gap;
+        let seg = dashWidth;
+        if (extra > 0) {
+          seg += 1;
+          extra -= 1;
+        }
+        pushRectBox(out, px, y0, seg, thickPx, color);
+        px += seg + gapWidth;
       }
     };
 
-    const dashedV = (count: number, thickness: number) => {
-      const gap = Math.max(1, Math.round(thickness));
-      const totalGap = gap * (count - 1);
-      const seg = Math.max(1, Math.floor((cellH - totalGap) / count));
-      const x0 = x + cellW * 0.5 - thickness * 0.5;
+    const dashedV = (count: number, thickness: number, desiredGap: number) => {
+      const thickPx = Math.max(1, Math.round(thickness));
+      const gapCount = count;
+      if (cellHInt < count + gapCount) {
+        const x0 = x + Math.floor(satSub(cellWInt, thickPx) / 2);
+        pushRectBox(out, x0, y, thickPx, cellHInt, color);
+        return;
+      }
+      const maxGap = Math.floor(cellHInt / (2 * count));
+      const gapHeight = Math.min(Math.max(1, Math.round(desiredGap)), maxGap);
+      const totalGapHeight = gapCount * gapHeight;
+      const totalDashHeight = cellHInt - totalGapHeight;
+      const dashHeight = Math.floor(totalDashHeight / count);
+      let extra = totalDashHeight % count;
+      const x0 = x + Math.floor(satSub(cellWInt, thickPx) / 2);
       let py = y;
       for (let i = 0; i < count; i += 1) {
-        pushRectBox(out, x0, py, thickness, seg, color);
-        py += seg + gap;
+        let seg = dashHeight;
+        if (extra > 0) {
+          seg += 1;
+          extra -= 1;
+        }
+        pushRectBox(out, x0, py, thickPx, seg, color);
+        py += seg + gapHeight;
       }
     };
 
@@ -523,40 +557,40 @@ export function drawBoxDrawing(
 
     switch (cp) {
       case 0x2504:
-        dashedH(3, light);
+        dashedH(3, light, Math.max(4, light));
         return true;
       case 0x2505:
-        dashedH(3, heavy);
+        dashedH(3, heavy, Math.max(4, light));
         return true;
       case 0x2508:
-        dashedH(4, light);
+        dashedH(4, light, Math.max(4, light));
         return true;
       case 0x2509:
-        dashedH(4, heavy);
+        dashedH(4, heavy, Math.max(4, light));
         return true;
       case 0x2506:
-        dashedV(3, light);
+        dashedV(3, light, Math.max(4, light));
         return true;
       case 0x2507:
-        dashedV(3, heavy);
+        dashedV(3, heavy, Math.max(4, light));
         return true;
       case 0x250a:
-        dashedV(4, light);
+        dashedV(4, light, Math.max(4, light));
         return true;
       case 0x250b:
-        dashedV(4, heavy);
+        dashedV(4, heavy, Math.max(4, light));
         return true;
       case 0x254c:
-        dashedH(2, light);
+        dashedH(2, light, light);
         return true;
       case 0x254d:
-        dashedH(2, heavy);
+        dashedH(2, heavy, heavy);
         return true;
       case 0x254e:
-        dashedV(2, light);
+        dashedV(2, light, heavy);
         return true;
       case 0x254f:
-        dashedV(2, heavy);
+        dashedV(2, heavy, heavy);
         return true;
       case 0x256d:
       case 0x256e:

@@ -355,26 +355,59 @@ function drawBoxDrawing(cp, x, y, cellW, cellH, color, out, boxThicknessPx) {
   if (!spec) {
     const light2 = lightStroke;
     const heavy2 = heavyStroke;
-    const dashedH = (count, thickness) => {
-      const gap = Math.max(1, Math.round(thickness));
-      const totalGap = gap * (count - 1);
-      const seg = Math.max(1, Math.floor((cellW - totalGap) / count));
-      const y0 = y + cellH * 0.5 - thickness * 0.5;
-      let px = x;
+    const cellWInt2 = Math.max(1, Math.round(cellW));
+    const cellHInt2 = Math.max(1, Math.round(cellH));
+    const satSub2 = (a, b) => a > b ? a - b : 0;
+    const dashedH = (count, thickness, desiredGap) => {
+      const thickPx = Math.max(1, Math.round(thickness));
+      const gapCount = count;
+      if (cellWInt2 < count + gapCount) {
+        const y02 = y + Math.floor(satSub2(cellHInt2, thickPx) / 2);
+        pushRectBox(out, x, y02, cellWInt2, thickPx, color);
+        return;
+      }
+      const maxGap = Math.floor(cellWInt2 / (2 * count));
+      const gapWidth = Math.min(Math.max(1, Math.round(desiredGap)), maxGap);
+      const totalGapWidth = gapCount * gapWidth;
+      const totalDashWidth = cellWInt2 - totalGapWidth;
+      const dashWidth = Math.floor(totalDashWidth / count);
+      let extra = totalDashWidth % count;
+      const y0 = y + Math.floor(satSub2(cellHInt2, thickPx) / 2);
+      let px = x + Math.floor(gapWidth / 2);
       for (let i = 0;i < count; i += 1) {
-        pushRectBox(out, px, y0, seg, thickness, color);
-        px += seg + gap;
+        let seg = dashWidth;
+        if (extra > 0) {
+          seg += 1;
+          extra -= 1;
+        }
+        pushRectBox(out, px, y0, seg, thickPx, color);
+        px += seg + gapWidth;
       }
     };
-    const dashedV = (count, thickness) => {
-      const gap = Math.max(1, Math.round(thickness));
-      const totalGap = gap * (count - 1);
-      const seg = Math.max(1, Math.floor((cellH - totalGap) / count));
-      const x0 = x + cellW * 0.5 - thickness * 0.5;
+    const dashedV = (count, thickness, desiredGap) => {
+      const thickPx = Math.max(1, Math.round(thickness));
+      const gapCount = count;
+      if (cellHInt2 < count + gapCount) {
+        const x02 = x + Math.floor(satSub2(cellWInt2, thickPx) / 2);
+        pushRectBox(out, x02, y, thickPx, cellHInt2, color);
+        return;
+      }
+      const maxGap = Math.floor(cellHInt2 / (2 * count));
+      const gapHeight = Math.min(Math.max(1, Math.round(desiredGap)), maxGap);
+      const totalGapHeight = gapCount * gapHeight;
+      const totalDashHeight = cellHInt2 - totalGapHeight;
+      const dashHeight = Math.floor(totalDashHeight / count);
+      let extra = totalDashHeight % count;
+      const x0 = x + Math.floor(satSub2(cellWInt2, thickPx) / 2);
       let py = y;
       for (let i = 0;i < count; i += 1) {
-        pushRectBox(out, x0, py, thickness, seg, color);
-        py += seg + gap;
+        let seg = dashHeight;
+        if (extra > 0) {
+          seg += 1;
+          extra -= 1;
+        }
+        pushRectBox(out, x0, py, thickPx, seg, color);
+        py += seg + gapHeight;
       }
     };
     const drawDiagonal = (dir) => {
@@ -530,40 +563,40 @@ function drawBoxDrawing(cp, x, y, cellW, cellH, color, out, boxThicknessPx) {
     };
     switch (cp) {
       case 9476:
-        dashedH(3, light2);
+        dashedH(3, light2, Math.max(4, light2));
         return true;
       case 9477:
-        dashedH(3, heavy2);
+        dashedH(3, heavy2, Math.max(4, light2));
         return true;
       case 9480:
-        dashedH(4, light2);
+        dashedH(4, light2, Math.max(4, light2));
         return true;
       case 9481:
-        dashedH(4, heavy2);
+        dashedH(4, heavy2, Math.max(4, light2));
         return true;
       case 9478:
-        dashedV(3, light2);
+        dashedV(3, light2, Math.max(4, light2));
         return true;
       case 9479:
-        dashedV(3, heavy2);
+        dashedV(3, heavy2, Math.max(4, light2));
         return true;
       case 9482:
-        dashedV(4, light2);
+        dashedV(4, light2, Math.max(4, light2));
         return true;
       case 9483:
-        dashedV(4, heavy2);
+        dashedV(4, heavy2, Math.max(4, light2));
         return true;
       case 9548:
-        dashedH(2, light2);
+        dashedH(2, light2, light2);
         return true;
       case 9549:
-        dashedH(2, heavy2);
+        dashedH(2, heavy2, heavy2);
         return true;
       case 9550:
-        dashedV(2, light2);
+        dashedV(2, light2, heavy2);
         return true;
       case 9551:
-        dashedV(2, heavy2);
+        dashedV(2, heavy2, heavy2);
         return true;
       case 9581:
       case 9582:
@@ -1815,7 +1848,7 @@ function isNerdSymbolCodepoint(cp) {
 }
 
 // src/fonts/manager.ts
-var SYMBOL_FONT_HINTS = [/symbols nerd font/i, /noto sans symbols/i];
+var SYMBOL_FONT_HINTS = [/symbols nerd font/i, /noto sans symbols/i, /apple symbols/i, /symbola/i];
 var NERD_SYMBOL_FONT_HINTS = [/symbols nerd font/i, /nerd fonts symbols/i];
 var COLOR_EMOJI_FONT_HINTS = [
   /apple color emoji/i,
@@ -26367,7 +26400,7 @@ var DEFAULT_FONT_SOURCES = [
   },
   {
     type: "local",
-    matchers: ["apple symbols"],
+    matchers: ["apple symbols", "applesymbols", "apple symbols regular"],
     label: "Apple Symbols"
   },
   {
@@ -26380,7 +26413,7 @@ var DEFAULT_FONT_SOURCES = [
   },
   {
     type: "local",
-    matchers: ["apple color emoji"],
+    matchers: ["apple color emoji", "applecoloremoji"],
     label: "Apple Color Emoji"
   },
   {
@@ -49838,16 +49871,36 @@ function clampFiniteNumber(value, fallback, min, max, round = false) {
   return Math.min(max, Math.max(min, numeric));
 }
 function isRenderSymbolLike(cp) {
-  return isSymbolCp(cp);
+  return isSymbolCp(cp) || isRendererSymbolFallbackRange(cp);
 }
 function resolveSymbolConstraint(cp) {
   return getNerdConstraint(cp);
+}
+var RENDERER_SYMBOL_FALLBACK_RANGES = [
+  [8960, 9215],
+  [9632, 9727],
+  [11008, 11263]
+];
+function isRendererSymbolFallbackRange(cp) {
+  for (let i3 = 0;i3 < RENDERER_SYMBOL_FALLBACK_RANGES.length; i3 += 1) {
+    const [start, end] = RENDERER_SYMBOL_FALLBACK_RANGES[i3];
+    if (cp >= start && cp <= end)
+      return true;
+  }
+  return false;
 }
 var DEFAULT_SYMBOL_CONSTRAINT = {
   size: "fit",
   align_horizontal: "center",
   align_vertical: "center",
   max_constraint_width: 1
+};
+var DEFAULT_EMOJI_CONSTRAINT = {
+  size: "cover",
+  align_horizontal: "center",
+  align_vertical: "center",
+  pad_left: 0.025,
+  pad_right: 0.025
 };
 function createResttyApp(options) {
   const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
@@ -52948,32 +53001,39 @@ function createResttyApp(options) {
     }
     return null;
   }
-  async function tryLocalFontBuffer(matchers) {
+  async function tryLocalFontBuffer(matchers, label = "local-font") {
     if (typeof window === "undefined")
       return null;
-    const nav = navigator;
-    if (typeof nav.queryLocalFonts !== "function")
+    const globalAccess = globalThis;
+    const nav = globalAccess.navigator ?? navigator;
+    const queryLocalFonts = typeof globalAccess.queryLocalFonts === "function" ? globalAccess.queryLocalFonts.bind(globalAccess) : typeof nav.queryLocalFonts === "function" ? nav.queryLocalFonts.bind(nav) : null;
+    if (!queryLocalFonts)
+      return null;
+    const normalizedMatchers = matchers.map((matcher) => matcher.toLowerCase()).filter(Boolean);
+    if (!normalizedMatchers.length)
       return null;
     const queryPermission = nav.permissions?.query;
     if (queryPermission) {
       try {
         const status = await queryPermission({ name: "local-fonts" });
-        if (status?.state !== "granted")
+        if (status?.state === "denied")
           return null;
-      } catch {
-        return null;
-      }
+        console.log(`[font] local permission (${label}): ${status?.state ?? "unknown"}`);
+      } catch {}
     }
     try {
-      const fonts = await nav.queryLocalFonts();
+      const fonts = await queryLocalFonts();
       const match = fonts.find((font) => {
         const name = `${font.family ?? ""} ${font.fullName ?? ""} ${font.postscriptName ?? ""}`.toLowerCase();
-        return matchers.some((matcher) => name.includes(matcher));
+        return normalizedMatchers.some((matcher) => name.includes(matcher));
       });
       if (match) {
+        const matchedName = `${match.family ?? ""} ${match.fullName ?? ""} ${match.postscriptName ?? ""}`.trim();
+        console.log(`[font] local matched (${label}): ${matchedName || "unnamed"}`);
         const blob = await match.blob();
         return blob.arrayBuffer();
       }
+      console.log(`[font] local no-match (${label}): ${normalizedMatchers.join(", ")}`);
     } catch (err) {
       console.warn("queryLocalFonts failed", err);
     }
@@ -53018,7 +53078,7 @@ function createResttyApp(options) {
       }
       if (!matchers.length)
         return null;
-      return tryLocalFontBuffer(matchers);
+      return tryLocalFontBuffer(matchers, source.label ?? source.matchers[0] ?? "local-font");
     }
     return null;
   }
@@ -53028,8 +53088,9 @@ function createResttyApp(options) {
       const source = configuredFontSources[i3];
       const buffer = await resolveFontSourceBuffer(source);
       if (!buffer) {
-        if (source.type === "local" && source.required) {
-          console.warn(`[font] required local font missing (${source.matchers.join(", ")})`);
+        if (source.type === "local") {
+          const prefix = source.required ? "required local font missing" : "optional local font missing";
+          console.warn(`[font] ${prefix} (${source.matchers.join(", ")})`);
         }
         continue;
       }
@@ -53047,10 +53108,10 @@ function createResttyApp(options) {
       "meslo lgm nerd font",
       "monaspace nerd font",
       "nerd font mono"
-    ]);
+    ], "fallback-nerd-font");
     if (nerdLocal)
       return [{ label: "local-nerd-font", buffer: nerdLocal }];
-    const local = await tryLocalFontBuffer(["jetbrains mono"]);
+    const local = await tryLocalFontBuffer(["jetbrains mono"], "fallback-jetbrains");
     if (local)
       return [{ label: "local-jetbrains-mono", buffer: local }];
     return [];
@@ -54227,7 +54288,7 @@ function createResttyApp(options) {
             let y = item.baseY + baselineAdjust - metrics.bearingY * bitmapScale - glyph.yOffset * itemScale;
             if (!glyphConstrained && symbolLike && item.cp) {
               const nerdConstraint = resolveSymbolConstraint(item.cp);
-              const constraint = nerdConstraint ?? DEFAULT_SYMBOL_CONSTRAINT;
+              const constraint = nerdConstraint ?? (colorGlyph ? DEFAULT_EMOJI_CONSTRAINT : DEFAULT_SYMBOL_CONSTRAINT);
               const rowY = item.baseY - yPad - baselineOffset;
               const constraintWidth = Math.max(1, item.constraintWidth ?? Math.round(maxWidth / cellW));
               const adjusted = constrainGlyphBox({
@@ -55186,7 +55247,7 @@ function createResttyApp(options) {
             let y = item.baseY + baselineAdjust - metrics.bearingY * bitmapScale - glyph.yOffset * itemScale;
             if (!glyphConstrained && symbolLike && item.cp) {
               const nerdConstraint = resolveSymbolConstraint(item.cp);
-              const constraint = nerdConstraint ?? DEFAULT_SYMBOL_CONSTRAINT;
+              const constraint = nerdConstraint ?? (colorGlyph ? DEFAULT_EMOJI_CONSTRAINT : DEFAULT_SYMBOL_CONSTRAINT);
               const rowY = item.baseY - yPad - baselineOffset;
               const constraintWidth = Math.max(1, item.constraintWidth ?? Math.round(maxWidth / cellW));
               const adjusted = constrainGlyphBox({
@@ -57702,9 +57763,10 @@ var settingsClose = document.getElementById("settingsClose");
 var DEFAULT_THEME_NAME = "Aizen Dark";
 var DEFAULT_FONT_FAMILY = "jetbrains";
 var FONT_FAMILY_LOCAL_PREFIX = "local:";
-var FONT_URL_JETBRAINS_MONO = "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf";
+var FONT_URL_JETBRAINS_MONO = "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/Regular/JetBrainsMonoNLNerdFontMono-Regular.ttf";
 var FONT_URL_NERD_SYMBOLS = "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf";
 var FONT_URL_NOTO_SYMBOLS = "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf";
+var FONT_URL_SYMBOLA = "https://cdn.jsdelivr.net/gh/ChiefMikeK/ttf-symbola@master/Symbola.ttf";
 var FONT_URL_NOTO_COLOR_EMOJI = "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/fonts/NotoColorEmoji.ttf";
 var FONT_URL_OPENMOJI = "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf";
 var FONT_URL_NOTO_CJK_SC = "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf";
@@ -57761,9 +57823,26 @@ function buildFontSourcesForSelection(value, localMatcher) {
     url: FONT_URL_NERD_SYMBOLS
   });
   sources.push({
+    type: "local",
+    label: "Apple Symbols",
+    matchers: ["apple symbols", "applesymbols", "apple symbols regular"],
+    required: true
+  });
+  sources.push({
     type: "url",
     label: "Noto Sans Symbols 2",
     url: FONT_URL_NOTO_SYMBOLS
+  });
+  sources.push({
+    type: "url",
+    label: "Symbola",
+    url: FONT_URL_SYMBOLA
+  });
+  sources.push({
+    type: "local",
+    label: "Apple Color Emoji",
+    matchers: ["apple color emoji", "applecoloremoji"],
+    required: true
   });
   sources.push({
     type: "url",
@@ -58408,5 +58487,5 @@ if (firstState) {
 }
 queueResizeAllPanes();
 
-//# debugId=09F2AF7178A8501F64756E2164756E21
+//# debugId=B31C2410E9AACF3864756E2164756E21
 //# sourceMappingURL=app.js.map

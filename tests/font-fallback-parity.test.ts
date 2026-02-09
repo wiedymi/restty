@@ -1,5 +1,11 @@
 import { expect, test } from "bun:test";
-import { createFontEntry, createFontManagerState, pickFontIndexForText, type FontEntry } from "../src/fonts";
+import {
+  createFontEntry,
+  createFontManagerState,
+  isSymbolFont,
+  pickFontIndexForText,
+  type FontEntry,
+} from "../src/fonts";
 import { DEFAULT_FONT_SOURCES } from "../src/app/font-sources";
 
 function makeFont(codepoints: number[]) {
@@ -87,4 +93,20 @@ test("default font sources prioritize Noto symbols before Symbola fallback", () 
   expect(symbolaIndex).toBeGreaterThanOrEqual(0);
   expect(notoSymbolsIndex).toBeGreaterThanOrEqual(0);
   expect(notoSymbolsIndex).toBeLessThan(symbolaIndex);
+});
+
+test("symbol font classification includes Symbola and Apple Symbols", () => {
+  const sampleFont = makeFont([0x21b5]);
+  expect(isSymbolFont(createFontEntry(sampleFont, "Symbola"))).toBe(true);
+  expect(isSymbolFont(createFontEntry(sampleFont, "Apple Symbols"))).toBe(true);
+});
+
+test("default local fallback includes robust Apple matcher aliases", () => {
+  const localSources = DEFAULT_FONT_SOURCES.filter((source) => source.type === "local");
+  const appleSymbols = localSources.find((source) => source.label === "Apple Symbols");
+  const appleEmoji = localSources.find((source) => source.label === "Apple Color Emoji");
+  expect(appleSymbols?.matchers.includes("apple symbols")).toBe(true);
+  expect(appleSymbols?.matchers.includes("applesymbols")).toBe(true);
+  expect(appleEmoji?.matchers.includes("apple color emoji")).toBe(true);
+  expect(appleEmoji?.matchers.includes("applecoloremoji")).toBe(true);
 });

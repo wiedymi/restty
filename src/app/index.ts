@@ -119,11 +119,28 @@ function clampFiniteNumber(
 }
 
 function isRenderSymbolLike(cp: number): boolean {
-  return isSymbolCp(cp);
+  return isSymbolCp(cp) || isRendererSymbolFallbackRange(cp);
 }
 
 function resolveSymbolConstraint(cp: number): NerdConstraint | null {
   return getNerdConstraint(cp);
+}
+
+const RENDERER_SYMBOL_FALLBACK_RANGES: ReadonlyArray<readonly [number, number]> = [
+  // Miscellaneous Technical: includes symbols like ⏎/⏵ used by prompts.
+  [0x2300, 0x23ff],
+  // Geometric Shapes: includes boxed/dot indicators often used in prompts.
+  [0x25a0, 0x25ff],
+  // Misc Symbols and Arrows: additional modern prompt icon block.
+  [0x2b00, 0x2bff],
+];
+
+function isRendererSymbolFallbackRange(cp: number): boolean {
+  for (let i = 0; i < RENDERER_SYMBOL_FALLBACK_RANGES.length; i += 1) {
+    const [start, end] = RENDERER_SYMBOL_FALLBACK_RANGES[i];
+    if (cp >= start && cp <= end) return true;
+  }
+  return false;
 }
 
 const DEFAULT_SYMBOL_CONSTRAINT: NerdConstraint = {
@@ -133,6 +150,15 @@ const DEFAULT_SYMBOL_CONSTRAINT: NerdConstraint = {
   align_horizontal: "center",
   align_vertical: "center",
   max_constraint_width: 1,
+};
+
+const DEFAULT_EMOJI_CONSTRAINT: NerdConstraint = {
+  // Match Ghostty's emoji treatment: maximize size, preserve aspect, center.
+  size: "cover",
+  align_horizontal: "center",
+  align_vertical: "center",
+  pad_left: 0.025,
+  pad_right: 0.025,
 };
 
 type LocalFontsPermissionDescriptor = PermissionDescriptor & { name: "local-fonts" };
@@ -147,6 +173,10 @@ type NavigatorWithLocalFontAccess = Navigator & {
   permissions?: {
     query?: (permissionDesc: LocalFontsPermissionDescriptor) => Promise<PermissionStatus>;
   };
+};
+type GlobalWithLocalFontAccess = typeof globalThis & {
+  queryLocalFonts?: () => Promise<LocalFontFaceData[]>;
+  navigator?: NavigatorWithLocalFontAccess;
 };
 
 type ResttyDebugWindow = Window &
@@ -3821,30 +3851,43 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     return null;
   }
 
-  async function tryLocalFontBuffer(matchers) {
+  async function tryLocalFontBuffer(matchers, label = "local-font") {
     if (typeof window === "undefined") return null;
-    const nav = navigator as NavigatorWithLocalFontAccess;
-    if (typeof nav.queryLocalFonts !== "function") return null;
+    const globalAccess = globalThis as GlobalWithLocalFontAccess;
+    const nav = (globalAccess.navigator ?? navigator) as NavigatorWithLocalFontAccess;
+    const queryLocalFonts =
+      typeof globalAccess.queryLocalFonts === "function"
+        ? globalAccess.queryLocalFonts.bind(globalAccess)
+        : typeof nav.queryLocalFonts === "function"
+          ? nav.queryLocalFonts.bind(nav)
+          : null;
+    if (!queryLocalFonts) return null;
+    const normalizedMatchers = matchers.map((matcher: string) => matcher.toLowerCase()).filter(Boolean);
+    if (!normalizedMatchers.length) return null;
     const queryPermission = nav.permissions?.query;
     if (queryPermission) {
       try {
         const status = await queryPermission({ name: "local-fonts" });
-        if (status?.state !== "granted") return null;
+        if (status?.state === "denied") return null;
+        console.log(`[font] local permission (${label}): ${status?.state ?? "unknown"}`);
       } catch {
-        return null;
+        // Ignore permissions API errors and attempt queryLocalFonts directly.
       }
     }
     try {
-      const fonts = await nav.queryLocalFonts();
+      const fonts = await queryLocalFonts();
       const match = fonts.find((font) => {
         const name =
           `${font.family ?? ""} ${font.fullName ?? ""} ${font.postscriptName ?? ""}`.toLowerCase();
-        return matchers.some((matcher) => name.includes(matcher));
+        return normalizedMatchers.some((matcher) => name.includes(matcher));
       });
       if (match) {
+        const matchedName = `${match.family ?? ""} ${match.fullName ?? ""} ${match.postscriptName ?? ""}`.trim();
+        console.log(`[font] local matched (${label}): ${matchedName || "unnamed"}`);
         const blob = await match.blob();
         return blob.arrayBuffer();
       }
+      console.log(`[font] local no-match (${label}): ${normalizedMatchers.join(", ")}`);
     } catch (err) {
       console.warn("queryLocalFonts failed", err);
     }
@@ -3888,7 +3931,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         matchers.push(matcher.toLowerCase());
       }
       if (!matchers.length) return null;
-      return tryLocalFontBuffer(matchers);
+      return tryLocalFontBuffer(matchers, source.label ?? source.matchers[0] ?? "local-font");
     }
     return null;
   }
@@ -3899,8 +3942,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       const source = configuredFontSources[i];
       const buffer = await resolveFontSourceBuffer(source);
       if (!buffer) {
-        if (source.type === "local" && source.required) {
-          console.warn(`[font] required local font missing (${source.matchers.join(", ")})`);
+        if (source.type === "local") {
+          const prefix = source.required ? "required local font missing" : "optional local font missing";
+          console.warn(`[font] ${prefix} (${source.matchers.join(", ")})`);
         }
         continue;
       }
@@ -3915,7 +3959,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     }
     if (loaded.length) return loaded;
 
-    const nerdLocal = await tryLocalFontBuffer([
+    const nerdLocal = await tryLocalFontBuffer(
+      [
       "jetbrainsmono nerd font",
       "jetbrains mono nerd font",
       "fira code nerd font",
@@ -3924,10 +3969,12 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       "meslo lgm nerd font",
       "monaspace nerd font",
       "nerd font mono",
-    ]);
+      ],
+      "fallback-nerd-font",
+    );
     if (nerdLocal) return [{ label: "local-nerd-font", buffer: nerdLocal }];
 
-    const local = await tryLocalFontBuffer(["jetbrains mono"]);
+    const local = await tryLocalFontBuffer(["jetbrains mono"], "fallback-jetbrains");
     if (local) return [{ label: "local-jetbrains-mono", buffer: local }];
 
     return [];
@@ -5260,7 +5307,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
               glyph.yOffset * itemScale;
             if (!glyphConstrained && symbolLike && item.cp) {
               const nerdConstraint = resolveSymbolConstraint(item.cp);
-              const constraint = nerdConstraint ?? DEFAULT_SYMBOL_CONSTRAINT;
+              const constraint =
+                nerdConstraint ?? (colorGlyph ? DEFAULT_EMOJI_CONSTRAINT : DEFAULT_SYMBOL_CONSTRAINT);
               const rowY = item.baseY - yPad - baselineOffset;
               const constraintWidth = Math.max(1, item.constraintWidth ?? Math.round(maxWidth / cellW));
               const adjusted = constrainGlyphBox(
@@ -6456,7 +6504,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
               glyph.yOffset * itemScale;
             if (!glyphConstrained && symbolLike && item.cp) {
               const nerdConstraint = resolveSymbolConstraint(item.cp);
-              const constraint = nerdConstraint ?? DEFAULT_SYMBOL_CONSTRAINT;
+              const constraint =
+                nerdConstraint ?? (colorGlyph ? DEFAULT_EMOJI_CONSTRAINT : DEFAULT_SYMBOL_CONSTRAINT);
               const rowY = item.baseY - yPad - baselineOffset;
               const constraintWidth = Math.max(1, item.constraintWidth ?? Math.round(maxWidth / cellW));
               const adjusted = constrainGlyphBox(

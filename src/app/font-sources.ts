@@ -13,7 +13,7 @@ export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
   // Ghostty parity on macOS: prefer system symbols/emoji when available.
   {
     type: "local",
-    matchers: ["apple symbols"],
+    matchers: ["apple symbols", "applesymbols", "apple symbols regular"],
     label: "Apple Symbols",
   },
   {
@@ -26,7 +26,7 @@ export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
   },
   {
     type: "local",
-    matchers: ["apple color emoji"],
+    matchers: ["apple color emoji", "applecoloremoji"],
     label: "Apple Color Emoji",
   },
   {

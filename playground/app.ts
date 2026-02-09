@@ -54,11 +54,12 @@ const DEFAULT_THEME_NAME = "Aizen Dark";
 const DEFAULT_FONT_FAMILY = "jetbrains";
 const FONT_FAMILY_LOCAL_PREFIX = "local:";
 const FONT_URL_JETBRAINS_MONO =
-  "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf";
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/Regular/JetBrainsMonoNLNerdFontMono-Regular.ttf";
 const FONT_URL_NERD_SYMBOLS =
   "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf";
 const FONT_URL_NOTO_SYMBOLS =
   "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf";
+const FONT_URL_SYMBOLA = "https://cdn.jsdelivr.net/gh/ChiefMikeK/ttf-symbola@master/Symbola.ttf";
 const FONT_URL_NOTO_COLOR_EMOJI =
   "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/fonts/NotoColorEmoji.ttf";
 const FONT_URL_OPENMOJI =
@@ -154,9 +155,26 @@ function buildFontSourcesForSelection(value: string, localMatcher: string): Rest
     url: FONT_URL_NERD_SYMBOLS,
   });
   sources.push({
+    type: "local",
+    label: "Apple Symbols",
+    matchers: ["apple symbols", "applesymbols", "apple symbols regular"],
+    required: true,
+  });
+  sources.push({
     type: "url",
     label: "Noto Sans Symbols 2",
     url: FONT_URL_NOTO_SYMBOLS,
+  });
+  sources.push({
+    type: "url",
+    label: "Symbola",
+    url: FONT_URL_SYMBOLA,
+  });
+  sources.push({
+    type: "local",
+    label: "Apple Color Emoji",
+    matchers: ["apple color emoji", "applecoloremoji"],
+    required: true,
   });
   sources.push({
     type: "url",

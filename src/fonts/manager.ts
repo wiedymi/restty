@@ -22,9 +22,13 @@ type NavigatorWithLocalFontAccess = Navigator & {
     query?: (permissionDesc: LocalFontsPermissionDescriptor) => Promise<PermissionStatus>;
   };
 };
+type GlobalWithLocalFontAccess = typeof globalThis & {
+  queryLocalFonts?: () => Promise<LocalFontFaceData[]>;
+  navigator?: NavigatorWithLocalFontAccess;
+};
 
 // Font classification patterns
-const SYMBOL_FONT_HINTS = [/symbols nerd font/i, /noto sans symbols/i];
+const SYMBOL_FONT_HINTS = [/symbols nerd font/i, /noto sans symbols/i, /apple symbols/i, /symbola/i];
 const NERD_SYMBOL_FONT_HINTS = [/symbols nerd font/i, /nerd fonts symbols/i];
 const COLOR_EMOJI_FONT_HINTS = [
   /apple color emoji/i,
@@ -300,23 +304,32 @@ export async function tryFetchFontBuffer(url: string): Promise<ArrayBuffer | nul
 
 /** Query locally installed fonts via the Local Font Access API and return the first match, or null. */
 export async function tryLocalFontBuffer(matchers: string[]): Promise<ArrayBuffer | null> {
-  const nav = navigator as NavigatorWithLocalFontAccess;
-  if (typeof nav.queryLocalFonts !== "function") return null;
+  const globalAccess = globalThis as GlobalWithLocalFontAccess;
+  const nav = (globalAccess.navigator ?? navigator) as NavigatorWithLocalFontAccess;
+  const queryLocalFonts =
+    typeof globalAccess.queryLocalFonts === "function"
+      ? globalAccess.queryLocalFonts.bind(globalAccess)
+      : typeof nav.queryLocalFonts === "function"
+        ? nav.queryLocalFonts.bind(nav)
+        : null;
+  if (!queryLocalFonts) return null;
+  const normalizedMatchers = matchers.map((matcher) => matcher.toLowerCase()).filter(Boolean);
+  if (!normalizedMatchers.length) return null;
   const queryPermission = nav.permissions?.query;
   if (queryPermission) {
     try {
       const status = await queryPermission({ name: "local-fonts" });
-      if (status?.state !== "granted") return null;
+      if (status?.state === "denied") return null;
     } catch {
-      return null;
+      // Ignore permissions API errors and attempt queryLocalFonts directly.
     }
   }
   try {
-    const fonts = await nav.queryLocalFonts();
+    const fonts = await queryLocalFonts();
     const match = fonts.find((font) => {
       const name =
         `${font.family ?? ""} ${font.fullName ?? ""} ${font.postscriptName ?? ""}`.toLowerCase();
-      return matchers.some((matcher) => name.includes(matcher));
+      return normalizedMatchers.some((matcher) => name.includes(matcher));
     });
     if (match) {
       const blob = await match.blob();
