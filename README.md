@@ -101,7 +101,7 @@ restty.copySelectionToClipboard();
 
 ### Provide custom fonts
 
-By default, restty uses a CDN font preset. To fully control fonts, disable the preset and pass `fontSources`.
+By default, restty uses a local-first font preset with CDN fallback. To fully control fonts, disable the preset and pass `fontSources`.
 
 ```ts
 const restty = new Restty({

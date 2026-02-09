@@ -87,12 +87,48 @@ test("non-nerd symbols prefer first matching fallback in order", () => {
 test("default font sources prioritize Noto symbols before Symbola fallback", () => {
   const urls = DEFAULT_FONT_SOURCES.filter((source) => source.type === "url").map((source) => source.url);
   const primaryIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-Regular.ttf"));
+  const boldIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-Bold.ttf"));
+  const italicIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-Italic.ttf"));
+  const boldItalicIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-BoldItalic.ttf"));
   const symbolaIndex = urls.findIndex((url) => url.includes("ttf-symbola"));
   const notoSymbolsIndex = urls.findIndex((url) => url.includes("NotoSansSymbols2-Regular.ttf"));
   expect(primaryIndex).toBe(0);
+  expect(boldIndex).toBeGreaterThan(primaryIndex);
+  expect(italicIndex).toBeGreaterThan(boldIndex);
+  expect(boldItalicIndex).toBeGreaterThan(italicIndex);
   expect(symbolaIndex).toBeGreaterThanOrEqual(0);
   expect(notoSymbolsIndex).toBeGreaterThanOrEqual(0);
   expect(notoSymbolsIndex).toBeLessThan(symbolaIndex);
+});
+
+test("default font sources prefer local JetBrains and Nerd symbols before CDN fallbacks", () => {
+  const jetbrainsLocalIndex = DEFAULT_FONT_SOURCES.findIndex(
+    (source) =>
+      source.type === "local" &&
+      source.matchers.some((matcher) => matcher.includes("jetbrains mono")),
+  );
+  const jetbrainsUrlIndex = DEFAULT_FONT_SOURCES.findIndex(
+    (source) =>
+      source.type === "url" && source.url.includes("JetBrainsMonoNLNerdFontMono-Regular.ttf"),
+  );
+
+  const nerdSymbolsLocalIndex = DEFAULT_FONT_SOURCES.findIndex(
+    (source) =>
+      source.type === "local" &&
+      source.matchers.some((matcher) => matcher.includes("symbols nerd font")),
+  );
+  const nerdSymbolsUrlIndex = DEFAULT_FONT_SOURCES.findIndex(
+    (source) =>
+      source.type === "url" && source.url.includes("SymbolsNerdFontMono-Regular.ttf"),
+  );
+
+  expect(jetbrainsLocalIndex).toBeGreaterThanOrEqual(0);
+  expect(jetbrainsUrlIndex).toBeGreaterThanOrEqual(0);
+  expect(jetbrainsLocalIndex).toBeLessThan(jetbrainsUrlIndex);
+
+  expect(nerdSymbolsLocalIndex).toBeGreaterThanOrEqual(0);
+  expect(nerdSymbolsUrlIndex).toBeGreaterThanOrEqual(0);
+  expect(nerdSymbolsLocalIndex).toBeLessThan(nerdSymbolsUrlIndex);
 });
 
 test("symbol font classification includes Symbola and Apple Symbols", () => {

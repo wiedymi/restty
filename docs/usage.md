@@ -125,7 +125,7 @@ restty.applyTheme(theme, "inline");
 
 ## 6) Fonts
 
-By default, restty loads a CDN-based font preset.
+By default, restty loads a local-first font preset with CDN fallback.
 
 To fully control font loading:
 

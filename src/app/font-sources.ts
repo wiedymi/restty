@@ -1,10 +1,43 @@
 import type { ResttyFontPreset, ResttyFontSource } from "./types";
 
-/** Default font fallback chain with JetBrains Mono, Nerd Fonts symbols, Noto symbols, color emoji, black emoji, and CJK support. */
+/** Local-first default font fallback chain with CDN fallback for JetBrains Mono, Nerd symbols, emoji, and CJK support. */
 export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
+  {
+    type: "local",
+    matchers: [
+      "jetbrainsmono nerd font",
+      "jetbrains mono nerd font",
+      "jetbrains mono nl nerd font mono",
+      "jetbrains mono",
+      "jetbrainsmono",
+    ],
+    label: "JetBrains Mono Nerd Font (Local)",
+  },
   {
     type: "url",
     url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/Regular/JetBrainsMonoNLNerdFontMono-Regular.ttf",
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/Bold/JetBrainsMonoNLNerdFontMono-Bold.ttf",
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/Italic/JetBrainsMonoNLNerdFontMono-Italic.ttf",
+  },
+  {
+    type: "url",
+    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/BoldItalic/JetBrainsMonoNLNerdFontMono-BoldItalic.ttf",
+  },
+  {
+    type: "local",
+    matchers: [
+      "symbols nerd font mono",
+      "symbols nerd font",
+      "nerd fonts symbols",
+      "nerdfontssymbolsonly",
+    ],
+    label: "Symbols Nerd Font (Local)",
   },
   {
     type: "url",
