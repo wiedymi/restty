@@ -1,6 +1,7 @@
 # restty
 
 [![Version](https://img.shields.io/npm/v/restty?style=flat-square)](https://www.npmjs.com/package/restty)
+[![Downloads](https://img.shields.io/npm/dm/restty)](https://www.npmjs.com/package/restty)
 [![Package Size](https://img.shields.io/npm/unpacked-size/restty?style=flat-square)](https://www.npmjs.com/package/restty)
 [![CI](https://img.shields.io/github/actions/workflow/status/wiedymi/restty/ci.yml?branch=main&style=flat-square)](https://github.com/wiedymi/restty/actions/workflows/ci.yml)
 [![Publish](https://img.shields.io/github/actions/workflow/status/wiedymi/restty/publish.yml?style=flat-square&label=publish)](https://github.com/wiedymi/restty/actions/workflows/publish.yml)
