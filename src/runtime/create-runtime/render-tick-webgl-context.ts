@@ -1,73 +1,11 @@
 import type { Color, WebGLState } from "../../renderer";
 import type { GlyphConstraintMeta } from "../atlas-builder";
+import type { GlyphQueueItem } from "./render-tick-webgpu.types";
+import type { WebGLTickContext, WebGLTickDeps } from "./render-tick-webgl.types";
 
-export interface WebGLTickContext {
-  deps: any;
-  state: WebGLState;
-  rows: number;
-  cols: number;
-  codepoints: any;
-  contentTags: any;
-  wide: any;
-  styleFlags: any;
-  linkIds: any;
-  fgBytes: any;
-  bgBytes: any;
-  ulBytes: any;
-  ulStyle: any;
-  graphemeOffset: any;
-  graphemeLen: any;
-  graphemeBuffer: any;
-  cursor: any;
-  mergedEmojiSkip: Uint8Array;
-  readCellCluster: (cellIndex: number) => { cp: number; text: string; span: number } | null;
-  useLinearBlending: boolean;
-  useLinearCorrection: boolean;
-  blinkVisible: boolean;
-  cursorPos: any;
-  cursorStyle: number | null;
-  cursorCell: { row: number; col: number; wide: boolean } | null;
-  cursorImeAnchor: any;
-  cellW: number;
-  cellH: number;
-  fontSizePx: number;
-  primaryEntry: any;
-  primaryScale: number;
-  lineHeight: number;
-  baselineOffset: number;
-  yPad: number;
-  underlineOffsetPx: number;
-  underlineThicknessPx: number;
-  bgData: number[];
-  selectionData: number[];
-  underlineData: number[];
-  cursorData: number[];
-  fgRectData: number[];
-  overlayData: number[];
-  glyphDataByFont: Map<number, number[]>;
-  glyphQueueByFont: Map<number, any[]>;
-  overlayGlyphDataByFont: Map<number, number[]>;
-  overlayGlyphQueueByFont: Map<number, any[]>;
-  neededGlyphIdsByFont: Map<number, Set<number>>;
-  neededGlyphMetaByFont: Map<number, Map<number, GlyphConstraintMeta>>;
-  fgColorCache: Map<number, Color>;
-  bgColorCache: Map<number, Color>;
-  ulColorCache: Map<number, Color>;
-  scaleByFont: number[];
-  bitmapScaleByFont: number[];
-  baselineAdjustByFont: number[];
-  nerdMetrics: any;
-  getGlyphQueue: (fontIndex: number) => any[];
-  getOverlayGlyphQueue: (fontIndex: number) => any[];
-  getGlyphSet: (fontIndex: number) => Set<number>;
-  noteGlyphMeta: (fontIndex: number, glyphId: number, cp: number, constraintWidth: number) => void;
-  getGlyphData: (map: Map<number, number[]>, fontIndex: number) => number[];
-  compiledWebGLStages: any[];
-  stageTargets: any;
-  hasShaderStages: boolean;
-}
+export type { WebGLTickContext } from "./render-tick-webgl.types";
 
-export function buildWebGLTickContext(deps: any, state: WebGLState): WebGLTickContext | null {
+export function buildWebGLTickContext(deps: WebGLTickDeps, state: WebGLState): WebGLTickContext | null {
   const {
     isShaderStagesDirty,
     rebuildWebGLShaderStages,
@@ -242,9 +180,9 @@ export function buildWebGLTickContext(deps: any, state: WebGLState): WebGLTickCo
   const fgRectData: number[] = [];
   const overlayData: number[] = [];
   const glyphDataByFont = new Map<number, number[]>();
-  const glyphQueueByFont = new Map<number, any[]>();
+  const glyphQueueByFont = new Map<number, GlyphQueueItem[]>();
   const overlayGlyphDataByFont = new Map<number, number[]>();
-  const overlayGlyphQueueByFont = new Map<number, any[]>();
+  const overlayGlyphQueueByFont = new Map<number, GlyphQueueItem[]>();
   const neededGlyphIdsByFont = new Map<number, Set<number>>();
   const neededGlyphMetaByFont = new Map<number, Map<number, GlyphConstraintMeta>>();
   const fgColorCache = new Map<number, Color>();
@@ -351,12 +289,12 @@ export function buildWebGLTickContext(deps: any, state: WebGLState): WebGLTickCo
     state,
     rows,
     cols,
-    codepoints,
+    codepoints: codepoints as Uint32Array,
     contentTags,
     wide,
     styleFlags,
     linkIds,
-    fgBytes,
+    fgBytes: fgBytes as Uint8Array,
     bgBytes,
     ulBytes,
     ulStyle,

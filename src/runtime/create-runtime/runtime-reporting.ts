@@ -1,9 +1,10 @@
 import { selectionForRow as selectionRangeForRow, getSelectionText as extractSelectionText } from "../../selection";
 import type { CursorInfo, RenderState, ResttyWasm, ResttyWasmExports } from "../../wasm";
 import type { ResttyAppCallbacks } from "../types";
+import type { RuntimeSelectionState } from "./interaction-runtime/types";
 
 export type CreateRuntimeReportingOptions = {
-  selectionState: any;
+  selectionState: RuntimeSelectionState;
   getLastRenderState: () => RenderState | null;
   getWasmReady: () => boolean;
   getWasm: () => ResttyWasm | null;

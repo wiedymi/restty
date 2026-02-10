@@ -1,10 +1,16 @@
+import type { FontAtlasBitmap } from "../../fonts";
+
 export function bitmapBytesPerPixel(pixelMode: number): number {
   if (pixelMode === 2 || pixelMode === 3) return 3;
   if (pixelMode === 4) return 4;
   return 1;
 }
 
-export function createAtlasBitmap(width: number, height: number, pixelMode: number) {
+export function createAtlasBitmap(
+  width: number,
+  height: number,
+  pixelMode: FontAtlasBitmap["pixelMode"],
+): FontAtlasBitmap {
   const bytesPerPixel = bitmapBytesPerPixel(pixelMode);
   const pitch = Math.max(1, Math.ceil(width * bytesPerPixel));
   const size = pitch * height;
@@ -18,7 +24,10 @@ export function createAtlasBitmap(width: number, height: number, pixelMode: numb
   };
 }
 
-export function cloneBitmap(bitmap: any, defaultPixelMode = 1) {
+export function cloneBitmap(
+  bitmap: FontAtlasBitmap | null | undefined,
+  defaultPixelMode: FontAtlasBitmap["pixelMode"] = 1,
+): FontAtlasBitmap {
   const pitch = bitmap?.pitch ?? 0;
   const rows = bitmap?.rows ?? 0;
   const size = pitch * rows;
@@ -36,7 +45,12 @@ export function cloneBitmap(bitmap: any, defaultPixelMode = 1) {
   };
 }
 
-export function copyBitmapToAtlas(src: any, dst: any, dstX: number, dstY: number): void {
+export function copyBitmapToAtlas(
+  src: FontAtlasBitmap,
+  dst: FontAtlasBitmap,
+  dstX: number,
+  dstY: number,
+): void {
   const bytesPerPixel = bitmapBytesPerPixel(src.pixelMode ?? 1);
   const rowBytes = src.width * bytesPerPixel;
   for (let y = 0; y < src.rows; y += 1) {

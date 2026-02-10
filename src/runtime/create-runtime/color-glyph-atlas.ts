@@ -1,4 +1,9 @@
-import type { FontEntry } from "../../fonts";
+import type {
+  FontAtlas,
+  FontAtlasBitmap,
+  FontAtlasGlyphMetrics,
+  FontEntry,
+} from "../../fonts";
 import {
   createAtlasBitmap,
   copyBitmapToAtlas,
@@ -6,25 +11,18 @@ import {
 import { packGlyphs } from "../font-atlas-utils/packing-utils";
 import { resolveFontScaleForAtlas } from "../font-atlas-utils/nerd-metrics-utils";
 import { atlasBitmapToRGBA as atlasBitmapToRGBAFromBitmap } from "./atlas-debug-utils";
+import type {
+  BuildColorEmojiAtlasWithCanvas,
+  BuildColorEmojiAtlasWithCanvasOptions,
+} from "./font-runtime-helpers.types";
+import type { RasterizedGlyph } from "text-shaper";
 
 const COLOR_EMOJI_FONT_STACK =
   '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji","EmojiOne Color","Twemoji Mozilla",sans-serif';
 
-type BuildColorEmojiAtlasWithCanvasOptions = {
-  font: any;
-  fontEntry: FontEntry;
-  glyphIds: number[];
-  fontSize: number;
-  sizeMode: string;
-  padding: number;
-  maxWidth: number;
-  maxHeight: number;
-  pixelMode: number;
-};
-
 type CreateColorGlyphAtlasHelpersOptions = {
   pixelModeRgba: number;
-  atlasToRGBA: (atlas: any) => Uint8Array | null;
+  atlasToRGBA: (atlas: FontAtlas) => Uint8Array;
 };
 
 export function createColorGlyphAtlasHelpers(options: CreateColorGlyphAtlasHelpersOptions) {
@@ -32,7 +30,7 @@ export function createColorGlyphAtlasHelpers(options: CreateColorGlyphAtlasHelpe
   let colorGlyphCanvas: HTMLCanvasElement | null = null;
   let colorGlyphCtx: CanvasRenderingContext2D | null = null;
 
-  const atlasBitmapToRGBA = (atlas: any): Uint8Array | null =>
+  const atlasBitmapToRGBA = (atlas: FontAtlas): Uint8Array | null =>
     atlasBitmapToRGBAFromBitmap(atlas, pixelModeRgba, atlasToRGBA);
 
   function getColorGlyphContext(): CanvasRenderingContext2D | null {
@@ -60,7 +58,7 @@ export function createColorGlyphAtlasHelpers(options: CreateColorGlyphAtlasHelpe
     entry: FontEntry,
     text: string,
     fontSize: number,
-  ): { bitmap: any; bearingX: number; bearingY: number } | null {
+  ): RasterizedGlyph | null {
     if (!text) return null;
     const ctx = getColorGlyphContext();
     if (!ctx) return null;
@@ -110,7 +108,9 @@ export function createColorGlyphAtlasHelpers(options: CreateColorGlyphAtlasHelpe
     };
   }
 
-  function buildColorEmojiAtlasWithCanvas(options: BuildColorEmojiAtlasWithCanvasOptions) {
+  const buildColorEmojiAtlasWithCanvas: BuildColorEmojiAtlasWithCanvas = (
+    options: BuildColorEmojiAtlasWithCanvasOptions,
+  ) => {
     const {
       font,
       fontEntry,
@@ -128,7 +128,7 @@ export function createColorGlyphAtlasHelpers(options: CreateColorGlyphAtlasHelpe
     const scale = resolveFontScaleForAtlas(font, fontSize, sizeMode);
     const glyphData: Array<{
       glyphId: number;
-      bitmap: any;
+      bitmap: FontAtlasBitmap;
       bearingX: number;
       bearingY: number;
       advance: number;
@@ -165,7 +165,7 @@ export function createColorGlyphAtlasHelpers(options: CreateColorGlyphAtlasHelpe
       maxHeight,
     );
     const atlasBitmap = createAtlasBitmap(atlasWidth, atlasHeight, pixelModeRgba);
-    const glyphMetrics = new Map<number, any>();
+    const glyphMetrics = new Map<number, FontAtlasGlyphMetrics>();
 
     for (let i = 0; i < glyphData.length; i += 1) {
       const glyph = glyphData[i];
@@ -188,13 +188,13 @@ export function createColorGlyphAtlasHelpers(options: CreateColorGlyphAtlasHelpe
       atlas: {
         bitmap: atlasBitmap,
         glyphs: glyphMetrics,
-        glyphsByWidth: new Map<number, Map<number, any>>(),
+        glyphsByWidth: new Map<number, Map<number, FontAtlasGlyphMetrics>>(),
         fontSize,
         colorGlyphs: new Set<number>(glyphMetrics.keys()),
       },
       constrainedGlyphWidths: null,
     };
-  }
+  };
 
   return {
     atlasBitmapToRGBA,

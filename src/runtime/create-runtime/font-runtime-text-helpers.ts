@@ -3,6 +3,7 @@ import {
   isSymbolFont,
   isColorEmojiFont,
   isNerdSymbolFont,
+  type Font,
   type FontEntry,
   type FontManagerState,
 } from "../../fonts";
@@ -72,7 +73,7 @@ export function createFontRuntimeTextHelpers(options: CreateFontRuntimeTextHelpe
     entry.colorGlyphTexts.set(glyphId, text);
   }
 
-  function fontHasGlyph(font: any, ch: string): boolean {
+  function fontHasGlyph(font: Font, ch: string): boolean {
     const glyphId = font.glyphIdForChar(ch);
     return glyphId !== undefined && glyphId !== null && glyphId !== 0;
   }

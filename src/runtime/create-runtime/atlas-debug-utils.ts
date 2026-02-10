@@ -1,7 +1,7 @@
-import type { FontEntry } from "../../fonts";
+import type { FontAtlas, FontAtlasGlyphMetrics, FontEntry } from "../../fonts";
 
 export function atlasRegionToImageData(
-  atlas: any,
+  atlas: FontAtlas,
   x: number,
   y: number,
   width: number,
@@ -39,7 +39,7 @@ export function atlasRegionToImageData(
   return new ImageData(rgba, width, height);
 }
 
-export function padAtlasRGBA(rgba: Uint8Array, atlas: any, padding: number): Uint8Array {
+export function padAtlasRGBA(rgba: Uint8Array, atlas: FontAtlas, padding: number): Uint8Array {
   if (!padding || padding <= 0 || !atlas?.glyphs) return rgba;
   const width = atlas.bitmap?.width ?? 0;
   const height = atlas.bitmap?.rows ?? 0;
@@ -57,7 +57,7 @@ export function padAtlasRGBA(rgba: Uint8Array, atlas: any, padding: number): Uin
     out[dstIdx + 3] = out[srcIdx + 3];
   };
 
-  const padMetrics = (metrics: any) => {
+  const padMetrics = (metrics: FontAtlasGlyphMetrics) => {
     const x0 = metrics.atlasX;
     const y0 = metrics.atlasY;
     const x1 = metrics.atlasX + metrics.width - 1;
@@ -110,9 +110,9 @@ export function resolveGlyphPixelMode(
 }
 
 export function atlasBitmapToRGBA(
-  atlas: any,
+  atlas: FontAtlas,
   pixelModeRgba: number,
-  atlasToRGBA: (atlas: any) => Uint8Array,
+  atlasToRGBA: (atlas: FontAtlas) => Uint8Array,
 ): Uint8Array | null {
   const bitmap = atlas?.bitmap;
   if (!bitmap?.width || !bitmap?.rows) return null;

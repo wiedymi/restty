@@ -1,4 +1,6 @@
-export function augmentWebGPUFrameWithOverlaysAndAtlas(params: any) {
+import type { AugmentWebGPUFrameParams } from "./render-tick-webgpu.types";
+
+export function augmentWebGPUFrameWithOverlaysAndAtlas(params: AugmentWebGPUFrameParams) {
   const {
     deps,
     state,

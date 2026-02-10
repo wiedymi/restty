@@ -1,9 +1,32 @@
+import type {
+  Bitmap as TextShaperBitmap,
+  Font as TextShaperFont,
+  FontSizeMode as TextShaperFontSizeMode,
+  GlyphAtlas as TextShaperGlyphAtlas,
+  GlyphMetrics as TextShaperGlyphMetrics,
+} from "text-shaper";
+
+/** text-shaper Font used by runtime/font manager. */
+export type Font = TextShaperFont;
+/** text-shaper Bitmap used by atlas builders. */
+export type FontAtlasBitmap = TextShaperBitmap;
+/** text-shaper glyph metrics used inside atlases. */
+export type FontAtlasGlyphMetrics = TextShaperGlyphMetrics;
+/** text-shaper font size mode ("em" | "height"). */
+export type FontSizeMode = TextShaperFontSizeMode;
+/** Restty atlas extends text-shaper atlas with extra caches used internally. */
+export type FontAtlas = TextShaperGlyphAtlas & {
+  glyphsByWidth?: Map<number, Map<number, FontAtlasGlyphMetrics>>;
+  inset?: number;
+  colorGlyphs?: Set<number>;
+};
+
 /**
  * A loaded font with its associated caches and rendering metadata.
  */
 export type FontEntry = {
   /** text-shaper Font instance. */
-  font: any; // text-shaper Font instance
+  font: Font; // text-shaper Font instance
   /** Human-readable font name. */
   label: string;
   /** Cache of shaped glyph clusters keyed by input string. */
@@ -15,7 +38,7 @@ export type FontEntry = {
   /** Set of all glyph IDs available in this font. */
   glyphIds: Set<number>;
   /** GPU texture atlas for this font, or null if not yet built. */
-  atlas: any | null;
+  atlas: FontAtlas | null;
   /** Font size in CSS pixels. */
   fontSizePx: number;
   /** Scale factor applied when rasterizing to the atlas. */
@@ -57,18 +80,13 @@ export type ShapedGlyph = {
  */
 export type FontManagerState = {
   /** Primary text-shaper Font instance, or null before initialization. */
-  font: any | null;
+  font: Font | null;
   /** Loaded font entries in priority order (primary + fallbacks). */
   fonts: FontEntry[];
   /** Current font size in CSS pixels. */
   fontSizePx: number;
-  /**
-   * How font size maps to design units.
-   * - height: size equals cell height
-   * - width: size equals cell width
-   * - upem: size equals units-per-em
-   */
-  sizeMode: "height" | "width" | "upem";
+  /** How font size maps to design units ("em" | "height"). */
+  sizeMode: FontSizeMode;
   /** Cache mapping text strings to the index of the font chosen to render them. */
   fontPickCache: Map<string, number>;
 };

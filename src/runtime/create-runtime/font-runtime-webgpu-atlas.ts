@@ -14,7 +14,11 @@ import { buildGlyphAtlasWithConstraints } from "../font-atlas-utils/glyph-atlas-
 import { nerdConstraintSignature } from "../font-atlas-utils/nerd-metrics-utils";
 import type {
   AtlasBitmapToRGBA,
+  BuildAtlasFn,
   BuildColorEmojiAtlasWithCanvas,
+  PadAtlasRGBAFn,
+  RasterizeGlyphFn,
+  RasterizeGlyphWithTransformFn,
   ResolveGlyphPixelMode,
 } from "./font-runtime-helpers.types";
 
@@ -23,11 +27,11 @@ type CreateRuntimeWebGPUAtlasHelpersOptions = {
   fontScaleOverrides: Array<{ match: RegExp; scale: number }>;
   resolveGlyphPixelMode: ResolveGlyphPixelMode;
   atlasBitmapToRGBA: AtlasBitmapToRGBA;
-  padAtlasRGBA: (rgba: Uint8Array, atlas: any, padding: number) => Uint8Array;
-  buildAtlas: (font: any, glyphIds: number[], options: any) => any;
+  padAtlasRGBA: PadAtlasRGBAFn;
+  buildAtlas: BuildAtlasFn;
   buildColorEmojiAtlasWithCanvas: BuildColorEmojiAtlasWithCanvas;
-  rasterizeGlyph: any;
-  rasterizeGlyphWithTransform: any;
+  rasterizeGlyph: RasterizeGlyphFn;
+  rasterizeGlyphWithTransform: RasterizeGlyphWithTransformFn;
   pixelModeRgbaValue: number;
   atlasPadding: number;
   symbolAtlasPadding: number;

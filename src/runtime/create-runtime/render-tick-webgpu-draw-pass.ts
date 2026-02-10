@@ -1,28 +1,5 @@
 import { emitWebGPUQueuedGlyphs } from "./render-tick-webgpu-emit-glyphs";
-
-type DrawWebGPUFrameParams = {
-  deps: any;
-  state: any;
-  frame: any;
-  cursor: any;
-  cursorPos: { col: number; row: number; wideTail: boolean } | null;
-  cursorStyle: number | null;
-  rows: number;
-  cols: number;
-  cellW: number;
-  cellH: number;
-  yPad: number;
-  baselineOffset: number;
-  underlineOffsetPx: number;
-  underlineThicknessPx: number;
-  primaryScale: number;
-  useLinearBlending: boolean;
-  useLinearCorrection: boolean;
-  clearColor: [number, number, number, number];
-  hasShaderStages: boolean;
-  stageTargets: any;
-  compiledWebGPUStages: any[];
-};
+import type { DrawWebGPUFrameParams } from "./render-tick-webgpu.types";
 
 export function drawWebGPUFrame(params: DrawWebGPUFrameParams) {
   const {

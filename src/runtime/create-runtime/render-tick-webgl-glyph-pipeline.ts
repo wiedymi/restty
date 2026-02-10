@@ -1,4 +1,5 @@
-import type { WebGLTickContext } from "./render-tick-webgl-context";
+import type { GlyphQueueItem } from "./render-tick-webgpu.types";
+import type { WebGLTickContext } from "./render-tick-webgl.types";
 
 export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
   const {
@@ -176,7 +177,7 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
     state.glyphAtlases.set(fontIndex, atlasState);
   }
 
-  const emitGlyphs = (queueByFont: Map<number, any[]>, targetMap: Map<number, number[]>) => {
+  const emitGlyphs = (queueByFont: Map<number, GlyphQueueItem[]>, targetMap: Map<number, number[]>) => {
     for (const [fontIndex, queue] of queueByFont.entries()) {
       const entry = fontState.fonts[fontIndex];
       const atlasState = state.glyphAtlases?.get(fontIndex);

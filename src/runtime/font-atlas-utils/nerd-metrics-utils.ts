@@ -1,22 +1,23 @@
 import { clamp, fontHeightUnits } from "../../grid";
+import type { Font } from "../../fonts";
 import type { GlyphConstraintMeta, AtlasConstraintContext } from "../atlas-builder";
 
 const NERD_CELL_FIT_COVER_SCALE = 1.0;
 const NERD_ICON_FIT_COVER_SCALE = 2 / 3;
 
 export function resolveFontScaleForAtlas(
-  font: any,
+  font: Font | null | undefined,
   fontSize: number,
-  sizeMode?: string | null,
+  sizeMode?: "em" | "height" | null,
 ): number {
   if (font && typeof font.scaleForSize === "function") {
     return font.scaleForSize(fontSize, sizeMode ?? undefined);
   }
-  const upem = font?.unitsPerEm ?? font?.upem ?? 1000;
+  const upem = font?.unitsPerEm ?? 1000;
   return upem > 0 ? fontSize / upem : 1;
 }
 
-export function fontCapHeightUnits(font: any): number {
+export function fontCapHeightUnits(font: Font | null | undefined): number {
   if (!font) return 1;
 
   const capFromOs2 = font?.os2?.sCapHeight ?? font?._os2?.sCapHeight;
@@ -46,7 +47,7 @@ export function buildNerdMetrics(
   cellW: number,
   cellH: number,
   lineHeight: number,
-  primaryFont: any,
+  primaryFont: Font | null | undefined,
   primaryScale: number,
   iconScale: number,
 ) {
@@ -130,7 +131,7 @@ function scaleGlyphBoxAnchoredLeft(
 
 export function tightenNerdConstraintBox(
   box: { x: number; y: number; width: number; height: number },
-  constraint: any,
+  constraint: import("../../fonts").NerdConstraint | null,
 ) {
   if (!constraint) return box;
   if (constraint.size !== "fit_cover1") return box;

@@ -1,4 +1,11 @@
-export function collectWebGPUCellPass(params: any) {
+import type { Color } from "../../renderer";
+import type { GlyphConstraintMeta } from "../atlas-builder";
+import type {
+  CollectWebGPUCellPassParams,
+  GlyphQueueItem,
+} from "./render-tick-webgpu.types";
+
+export function collectWebGPUCellPass(params: CollectWebGPUCellPassParams) {
   const {
     deps,
     render,
@@ -95,15 +102,15 @@ export function collectWebGPUCellPass(params: any) {
   const overlayData: number[] = [];
   const glyphDataNearestByFont = new Map<number, number[]>();
   const glyphDataLinearByFont = new Map<number, number[]>();
-  const glyphQueueByFont = new Map<number, any[]>();
+  const glyphQueueByFont = new Map<number, GlyphQueueItem[]>();
   const overlayGlyphDataNearestByFont = new Map<number, number[]>();
   const overlayGlyphDataLinearByFont = new Map<number, number[]>();
-  const overlayGlyphQueueByFont = new Map<number, any[]>();
+  const overlayGlyphQueueByFont = new Map<number, GlyphQueueItem[]>();
   const neededGlyphIdsByFont = new Map<number, Set<number>>();
-  const neededGlyphMetaByFont = new Map<number, Map<number, any>>();
-  const fgColorCache = new Map<number, any>();
-  const bgColorCache = new Map<number, any>();
-  const ulColorCache = new Map<number, any>();
+  const neededGlyphMetaByFont = new Map<number, Map<number, GlyphConstraintMeta>>();
+  const fgColorCache = new Map<number, Color>();
+  const bgColorCache = new Map<number, Color>();
+  const ulColorCache = new Map<number, Color>();
 
   const primaryEntry = fontState.fonts[0];
   const baseScaleByFont = fontState.fonts.map((entry, idx) => {

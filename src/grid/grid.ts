@@ -5,7 +5,7 @@ import type { CellMetrics, GridConfig, GridState } from "./types";
  */
 export type FontMetricsProvider = {
   /** Return the scale factor for a given pixel size and sizing mode. */
-  scaleForSize(sizePx: number, sizeMode: string): number;
+  scaleForSize(sizePx: number, sizeMode?: "em" | "height"): number;
   /** Look up the glyph ID for a character, or null/undefined if missing. */
   glyphIdForChar(char: string): number | undefined | null;
   /** Return the advance width of a glyph in font units. */
@@ -17,7 +17,9 @@ export type FontMetricsProvider = {
   /** Explicit font height in font units, if available. */
   readonly height?: number;
   /** Units per em of the font. */
-  readonly upem: number;
+  readonly unitsPerEm: number;
+  /** Legacy alias accepted for compatibility with older font objects. */
+  readonly upem?: number;
 };
 
 /** Result of shaping a text cluster, containing its advance width. */
@@ -25,7 +27,7 @@ export type ShapeResult = {
   advance: number;
 };
 
-/** Resolve the font height in font units, falling back to ascender-descender or upem. */
+/** Resolve the font height in font units, falling back to ascender-descender or units-per-em. */
 export function fontHeightUnits(font: FontMetricsProvider): number {
   if (!font) return 0;
   const height = font.height;
@@ -34,7 +36,7 @@ export function fontHeightUnits(font: FontMetricsProvider): number {
   const desc = font.descender ?? 0;
   const fallback = asc - desc;
   if (Number.isFinite(fallback) && fallback > 0) return fallback;
-  return font.upem || 1000;
+  return font.unitsPerEm || font.upem || 1000;
 }
 
 /**

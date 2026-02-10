@@ -1,8 +1,24 @@
-import type { FontEntry, FontManagerState } from "../../fonts";
+import type {
+  Font,
+  FontAtlas,
+  FontEntry,
+  FontManagerState,
+  FontSizeMode,
+  ShapedGlyph,
+} from "../../fonts";
 import type { WebGLState, WebGPUState } from "../../renderer";
 import type { PtyTransport } from "../../pty";
 import type { ResttyWasm } from "../../wasm";
 import type { ResttyAppCallbacks } from "../types";
+import type {
+  AtlasOptions,
+  GlyphBuffer,
+  GlyphRasterizeOptions,
+  Matrix2D,
+  Matrix3x3,
+  RasterizedGlyph,
+  UnicodeBuffer,
+} from "text-shaper";
 
 export type GridStateRef = {
   cols: number;
@@ -24,22 +40,63 @@ export type ResizeStateRef = {
   lastAt: number;
 };
 
-export type ShapedGlyph = {
-  glyphId?: number;
-  xAdvance: number;
-};
-
 export type ShapeClusterResult = {
   glyphs: ShapedGlyph[];
   advance: number;
 };
 
-export type BuildColorEmojiAtlasWithCanvas = (options: any) => { atlas: any } | null;
-export type AtlasBitmapToRGBA = (atlas: any) => Uint8Array | null;
+export type AtlasBuilderOptions = Omit<AtlasOptions, "sizeMode"> & {
+  sizeMode?: FontSizeMode;
+};
+
+export type BuildColorEmojiAtlasWithCanvasOptions = {
+  font: Font;
+  fontEntry: FontEntry;
+  glyphIds: number[];
+  fontSize: number;
+  sizeMode: FontSizeMode;
+  padding: number;
+  maxWidth: number;
+  maxHeight: number;
+  pixelMode: number;
+};
+
+export type BuildColorEmojiAtlasWithCanvas = (
+  options: BuildColorEmojiAtlasWithCanvasOptions,
+) => { atlas: FontAtlas; constrainedGlyphWidths?: Map<number, number> | null } | null;
+export type AtlasBitmapToRGBA = (atlas: FontAtlas) => Uint8Array | null;
+export type PadAtlasRGBAFn = (rgba: Uint8Array, atlas: FontAtlas, padding: number) => Uint8Array;
+export type BuildAtlasFn = (
+  font: Font,
+  glyphIds: number[],
+  options: AtlasBuilderOptions,
+) => FontAtlas;
 export type ResolveGlyphPixelMode = (entry: FontEntry) => number;
-export type ShapeFn = (font: any, buffer: any) => any;
-export type GlyphBufferToShapedGlyphsFn = (glyphBuffer: any) => ShapedGlyph[];
-export type UnicodeBufferCtor = new () => { addStr: (text: string) => void };
+export type ShapeFn = (font: Font, buffer: UnicodeBuffer) => GlyphBuffer;
+export type GlyphBufferToShapedGlyphsFn = (glyphBuffer: GlyphBuffer) => ShapedGlyph[];
+export type UnicodeBufferCtor = new () => UnicodeBuffer;
+
+export type RasterizeGlyphFn = (
+  font: Font,
+  glyphId: number,
+  fontSize: number,
+  options?: GlyphRasterizeOptions,
+) => RasterizedGlyph | null;
+
+export type RasterizeGlyphTransformOptions = GlyphRasterizeOptions & {
+  offsetX26?: number;
+  offsetY26?: number;
+};
+
+export type GlyphTransformMatrix = Matrix2D | Matrix3x3;
+
+export type RasterizeGlyphWithTransformFn = (
+  font: Font,
+  glyphId: number,
+  fontSize: number,
+  matrix: GlyphTransformMatrix,
+  options?: RasterizeGlyphTransformOptions,
+) => RasterizedGlyph | null;
 
 export type CreateRuntimeFontRuntimeHelpersOptions = {
   fontState: FontManagerState;
@@ -63,11 +120,11 @@ export type CreateRuntimeFontRuntimeHelpersOptions = {
   fontScaleOverrides: Array<{ match: RegExp; scale: number }>;
   resolveGlyphPixelMode: ResolveGlyphPixelMode;
   atlasBitmapToRGBA: AtlasBitmapToRGBA;
-  padAtlasRGBA: (rgba: Uint8Array, atlas: any, padding: number) => Uint8Array;
-  buildAtlas: (font: any, glyphIds: number[], options: any) => any;
+  padAtlasRGBA: PadAtlasRGBAFn;
+  buildAtlas: BuildAtlasFn;
   buildColorEmojiAtlasWithCanvas: BuildColorEmojiAtlasWithCanvas;
-  rasterizeGlyph: any;
-  rasterizeGlyphWithTransform: any;
+  rasterizeGlyph: RasterizeGlyphFn;
+  rasterizeGlyphWithTransform: RasterizeGlyphWithTransformFn;
   pixelModeRgbaValue: number;
   atlasPadding: number;
   symbolAtlasPadding: number;

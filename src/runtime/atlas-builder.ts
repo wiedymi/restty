@@ -1,3 +1,12 @@
+import type { Font, FontAtlas, FontEntry, FontSizeMode } from "../fonts";
+import type {
+  AtlasOptions,
+  GlyphRasterizeOptions,
+  Matrix2D,
+  Matrix3x3,
+  RasterizedGlyph,
+} from "text-shaper";
+
 /**
  * Metadata for constrained glyph rendering.
  * - cp: Unicode code point
@@ -39,24 +48,82 @@ export type AtlasConstraintContext = {
     iconHeight: number;
     iconHeightSingle: number;
   };
-  fontEntry: any;
+  fontEntry: FontEntry;
+};
+
+type RasterizeGlyphTransformOptions = GlyphRasterizeOptions & {
+  offsetX26?: number;
+  offsetY26?: number;
+};
+
+type RasterizeGlyphFn = (
+  font: Font,
+  glyphId: number,
+  fontSize: number,
+  options?: GlyphRasterizeOptions,
+) => RasterizedGlyph | null;
+
+type RasterizeGlyphWithTransformFn = (
+  font: Font,
+  glyphId: number,
+  fontSize: number,
+  matrix: Matrix2D | Matrix3x3,
+  options?: RasterizeGlyphTransformOptions,
+) => RasterizedGlyph | null;
+
+type BuildGlyphAtlasWithConstraintsOptions = {
+  font: Font;
+  glyphIds: number[];
+  fontSize: number;
+  sizeMode: FontSizeMode;
+  padding: number;
+  maxWidth: number;
+  maxHeight: number;
+  pixelMode: number;
+  hinting: boolean;
+  rasterizeGlyph?: RasterizeGlyphFn;
+  rasterizeGlyphWithTransform?: RasterizeGlyphWithTransformFn;
+  glyphMeta?: Map<number, GlyphConstraintMeta>;
+  constraintContext?: AtlasConstraintContext;
+};
+
+type BuildGlyphAtlasWithConstraintsResult = {
+  atlas: FontAtlas | null;
+  constrainedGlyphWidths?: Map<number, number> | null;
+};
+
+type BuildColorEmojiAtlasWithCanvasOptions = {
+  font: Font;
+  fontEntry: FontEntry;
+  glyphIds: number[];
+  fontSize: number;
+  sizeMode: FontSizeMode;
+  padding: number;
+  maxWidth: number;
+  maxHeight: number;
+  pixelMode: number;
 };
 
 type BuildAtlasDeps = {
   fontScaleOverrides: Array<{ match: RegExp; scale: number }>;
-  sizeMode: string;
-  isSymbolFont: (entry: any) => boolean;
-  fontScaleOverride: (entry: any, overrides: Array<{ match: RegExp; scale: number }>) => number;
-  resolveGlyphPixelMode: (entry: any) => number;
-  atlasBitmapToRGBA: (atlas: any) => Uint8Array | null;
-  padAtlasRGBA: (rgba: Uint8Array, atlas: any, padding: number) => Uint8Array;
-  buildAtlas: (font: any, glyphIds: number[], options: any) => any;
+  sizeMode: FontSizeMode;
+  isSymbolFont: (entry: FontEntry | null | undefined) => boolean;
+  fontScaleOverride: (
+    entry: FontEntry | null | undefined,
+    overrides: Array<{ match: RegExp; scale: number }>,
+  ) => number;
+  resolveGlyphPixelMode: (entry: FontEntry) => number;
+  atlasBitmapToRGBA: (atlas: FontAtlas) => Uint8Array | null;
+  padAtlasRGBA: (rgba: Uint8Array, atlas: FontAtlas, padding: number) => Uint8Array;
+  buildAtlas: (font: Font, glyphIds: number[], options: AtlasOptions) => FontAtlas;
   buildGlyphAtlasWithConstraints: (
-    options: any,
-  ) => { atlas: any; constrainedGlyphWidths?: any } | null;
-  buildColorEmojiAtlasWithCanvas: (options: any) => { atlas: any } | null;
-  rasterizeGlyph?: any;
-  rasterizeGlyphWithTransform?: any;
+    options: BuildGlyphAtlasWithConstraintsOptions,
+  ) => BuildGlyphAtlasWithConstraintsResult | null;
+  buildColorEmojiAtlasWithCanvas: (
+    options: BuildColorEmojiAtlasWithCanvasOptions,
+  ) => { atlas: FontAtlas } | null;
+  rasterizeGlyph?: RasterizeGlyphFn;
+  rasterizeGlyphWithTransform?: RasterizeGlyphWithTransformFn;
   nerdConstraintSignature: (
     glyphMeta: Map<number, GlyphConstraintMeta> | undefined,
     constraintContext: AtlasConstraintContext | null | undefined,
@@ -87,7 +154,7 @@ type BuildAtlasDeps = {
  * - deps: external dependencies for atlas building
  */
 export type BuildFontAtlasParams = {
-  entry: any;
+  entry: FontEntry;
   neededGlyphIds: Set<number>;
   glyphMeta?: Map<number, GlyphConstraintMeta>;
   fontSizePx: number;
@@ -107,7 +174,7 @@ export type BuildFontAtlasParams = {
  */
 export type BuildFontAtlasResult = {
   rebuilt: boolean;
-  atlas: any | null;
+  atlas: FontAtlas | null;
   rgba: Uint8Array | null;
   colorGlyphs?: Set<number>;
   preferNearest: boolean;
@@ -220,7 +287,7 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
   const colorGlyphAtlas = glyphPixelMode === constants.pixelModeRgbaValue || glyphPixelMode === 4;
   const useCanvasColorAtlas = colorGlyphAtlas;
 
-  let atlas = null;
+  let atlas: FontAtlas | null = null;
   if (isSymbol && rasterizeGlyph && rasterizeGlyphWithTransform && constraintContext && glyphMeta) {
     const result = buildGlyphAtlasWithConstraints({
       font: entry.font,

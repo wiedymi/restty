@@ -1,4 +1,5 @@
 import type { ResttyDebugWindow } from "../../create-app-types";
+import type { FontAtlasGlyphMetrics } from "../../../fonts";
 import type { CreateRuntimeDebugToolsOptions } from "./types";
 import { createDumpGlyphRender } from "./create-dump-glyph-render";
 import { readTextureToImageData } from "./read-texture-to-image-data";
@@ -35,7 +36,7 @@ export function createSetupDebugExpose(
       const atlas = entry.atlas;
       const atlasW = atlas.bitmap.width;
       const atlasH = atlas.bitmap.rows;
-      const report = (label: string, metrics: any) => {
+      const report = (label: string, metrics: FontAtlasGlyphMetrics | undefined) => {
         if (!metrics) {
           console.log(`${label}: missing`);
           return;

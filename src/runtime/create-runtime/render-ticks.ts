@@ -1,9 +1,13 @@
-import type { WebGLState } from "../../renderer";
+import type { WebGLState, WebGPUState } from "../../renderer";
 import { tickWebGL as tickWebGLImpl } from "./render-tick-webgl";
 import { tickWebGPU as tickWebGPUImpl } from "./render-tick-webgpu";
+import type { WebGLTickDeps } from "./render-tick-webgl.types";
+import type { RuntimeTickDeps } from "./render-tick-webgpu.types";
 
-export function createRuntimeRenderTicks(deps: any) {
-  function tickWebGPU(state) {
+type RuntimeRenderTickDeps = RuntimeTickDeps & WebGLTickDeps;
+
+export function createRuntimeRenderTicks(deps: RuntimeRenderTickDeps) {
+  function tickWebGPU(state: WebGPUState) {
     return tickWebGPUImpl(deps, state);
   }
 

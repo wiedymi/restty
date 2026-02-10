@@ -1,8 +1,8 @@
 import { fontHeightUnits } from "../../grid/grid";
-import type { FontEntry, FontManagerState, ShapedCluster } from "../types";
+import type { Font, FontEntry, FontManagerState, ShapedCluster } from "../types";
 
 /** Create a new FontEntry with empty caches and default metadata. */
-export function createFontEntry(font: any, label: string): FontEntry {
+export function createFontEntry(font: Font, label: string): FontEntry {
   return {
     font,
     label,
@@ -43,7 +43,7 @@ export function createFontManagerState(): FontManagerState {
 }
 
 /** Check whether a font has a non-zero glyph ID for the given character. */
-export function fontHasGlyph(font: any, ch: string): boolean {
+export function fontHasGlyph(font: Font, ch: string): boolean {
   const glyphId = font.glyphIdForChar(ch);
   return glyphId !== undefined && glyphId !== null && glyphId !== 0;
 }
@@ -65,7 +65,7 @@ export function fontAdvanceUnits(
     advance = shapeClusterWithFont(entry, "M").advance;
   }
   if (!advance) {
-    advance = fontHeightUnits(entry.font) || entry.font.upem || 1000;
+    advance = fontHeightUnits(entry.font) || entry.font.unitsPerEm || 1000;
   }
   entry.advanceUnits = advance;
   return advance;

@@ -1,36 +1,68 @@
-import { getNerdConstraint, glyphWidthUnits } from "../../fonts";
+import {
+  getNerdConstraint,
+  glyphWidthUnits,
+  type Font,
+  type FontAtlas,
+  type FontAtlasBitmap,
+  type FontAtlasGlyphMetrics,
+  type FontSizeMode,
+} from "../../fonts";
 import { constrainGlyphBox } from "../../renderer";
 import type { GlyphConstraintMeta, AtlasConstraintContext } from "../atlas-builder";
+import type {
+  GlyphRasterizeOptions,
+  Matrix2D,
+  Matrix3x3,
+  RasterizedGlyph,
+} from "text-shaper";
 import { cloneBitmap, copyBitmapToAtlas, createAtlasBitmap } from "./bitmap-utils";
 import { packGlyphs } from "./packing-utils";
 import { resolveFontScaleForAtlas, tightenNerdConstraintBox } from "./nerd-metrics-utils";
 
-export function buildGlyphAtlasWithConstraints(options: {
-  font: any;
+export type RasterizeGlyphTransformOptions = GlyphRasterizeOptions & {
+  offsetX26?: number;
+  offsetY26?: number;
+};
+
+export type RasterizeGlyphFn = (
+  font: Font,
+  glyphId: number,
+  fontSize: number,
+  options?: GlyphRasterizeOptions,
+) => RasterizedGlyph | null;
+
+export type RasterizeGlyphWithTransformFn = (
+  font: Font,
+  glyphId: number,
+  fontSize: number,
+  matrix: Matrix2D | Matrix3x3,
+  options?: RasterizeGlyphTransformOptions,
+) => RasterizedGlyph | null;
+
+export type BuildGlyphAtlasWithConstraintsOptions = {
+  font: Font;
   glyphIds: number[];
   fontSize: number;
-  sizeMode: string;
+  sizeMode: FontSizeMode;
   padding: number;
   maxWidth: number;
   maxHeight: number;
   pixelMode: number;
   hinting: boolean;
-  rasterizeGlyph?: (
-    font: any,
-    glyphId: number,
-    fontSize: number,
-    options?: any,
-  ) => { bitmap: any; bearingX: number; bearingY: number } | null;
-  rasterizeGlyphWithTransform?: (
-    font: any,
-    glyphId: number,
-    fontSize: number,
-    matrix: number[] | number[][],
-    options?: any,
-  ) => { bitmap: any; bearingX: number; bearingY: number } | null;
+  rasterizeGlyph?: RasterizeGlyphFn;
+  rasterizeGlyphWithTransform?: RasterizeGlyphWithTransformFn;
   glyphMeta?: Map<number, GlyphConstraintMeta>;
   constraintContext?: AtlasConstraintContext;
-}) {
+};
+
+export type BuildGlyphAtlasWithConstraintsResult = {
+  atlas: FontAtlas | null;
+  constrainedGlyphWidths: Map<number, number> | null;
+};
+
+export function buildGlyphAtlasWithConstraints(
+  options: BuildGlyphAtlasWithConstraintsOptions,
+): BuildGlyphAtlasWithConstraintsResult {
   const {
     font,
     glyphIds,
@@ -50,7 +82,7 @@ export function buildGlyphAtlasWithConstraints(options: {
   const scale = resolveFontScaleForAtlas(font, fontSize, sizeMode);
   const glyphData: Array<{
     glyphId: number;
-    bitmap: any;
+    bitmap: FontAtlasBitmap;
     bearingX: number;
     bearingY: number;
     advance: number;
@@ -193,9 +225,9 @@ export function buildGlyphAtlasWithConstraints(options: {
   );
 
   const atlas = createAtlasBitmap(atlasWidth, atlasHeight, pixelMode);
-  const glyphMetrics = new Map();
+  const glyphMetrics = new Map<number, FontAtlasGlyphMetrics>();
 
-  const glyphMetricsByWidth = new Map<number, Map<number, any>>();
+  const glyphMetricsByWidth = new Map<number, Map<number, FontAtlasGlyphMetrics>>();
 
   for (let i = 0; i < glyphData.length; i += 1) {
     const glyph = glyphData[i];
@@ -216,7 +248,7 @@ export function buildGlyphAtlasWithConstraints(options: {
     if (widthKey > 0) {
       let widthMap = glyphMetricsByWidth.get(widthKey);
       if (!widthMap) {
-        widthMap = new Map();
+        widthMap = new Map<number, FontAtlasGlyphMetrics>();
         glyphMetricsByWidth.set(widthKey, widthMap);
       }
       widthMap.set(glyph.glyphId, metrics);

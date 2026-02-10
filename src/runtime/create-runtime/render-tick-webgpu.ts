@@ -1,8 +1,10 @@
+import type { WebGPUState } from "../../renderer";
 import { collectWebGPUCellPass } from "./render-tick-webgpu-cell-pass";
 import { drawWebGPUFrame } from "./render-tick-webgpu-draw-pass";
 import { augmentWebGPUFrameWithOverlaysAndAtlas } from "./render-tick-webgpu-overlays-atlas";
+import type { RuntimeTickDeps } from "./render-tick-webgpu.types";
 
-export function tickWebGPU(deps: any, state) {
+export function tickWebGPU(deps: RuntimeTickDeps, state: WebGPUState) {
   const {
     isShaderStagesDirty,
     rebuildWebGPUShaderStages,

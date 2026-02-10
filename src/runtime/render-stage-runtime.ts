@@ -27,7 +27,7 @@ export function compileShaderStageProgram(options: {
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-      const error = gl.getShaderInfoLog(shader) ?? "unknown compile error";
+      const error = gl.getShaderInfoLog(shader) ?? "compile error";
       reportError(stage, `GLSL compile failed: ${error}`);
       gl.deleteShader(shader);
       return null;
@@ -59,7 +59,7 @@ export function compileShaderStageProgram(options: {
   gl.deleteShader(vert);
   gl.deleteShader(frag);
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    const error = gl.getProgramInfoLog(program) ?? "unknown link error";
+    const error = gl.getProgramInfoLog(program) ?? "link error";
     reportError(stage, `GLSL link failed: ${error}`);
     gl.deleteProgram(program);
     return null;
@@ -170,6 +170,19 @@ export function compileShaderStagePipelineWebGPU(options: {
 }): CompiledWebGPUShaderStage | null {
   const { device, format, stage, reportError } = options;
   const shaderSource = `${FULLSCREEN_STAGE_SHADER_WGSL_PREFIX}${stage.shader.wgsl ?? ""}${FULLSCREEN_STAGE_SHADER_WGSL_SUFFIX}`;
+  const formatError = (
+    error:
+      | Error
+      | { message?: string }
+      | string
+      | number
+      | boolean
+      | null
+      | undefined,
+  ): string => {
+    if (error instanceof Error) return error.message;
+    return String(error);
+  };
   try {
     const module = device.createShaderModule({ code: shaderSource });
     const pipeline = device.createRenderPipeline({
@@ -210,8 +223,8 @@ export function compileShaderStagePipelineWebGPU(options: {
       bindGroupPing: null,
       bindGroupPong: null,
     };
-  } catch (error: any) {
-    reportError(stage, `WGSL compile failed: ${error?.message ?? error}`);
+  } catch (error) {
+    reportError(stage, `WGSL compile failed: ${formatError(error)}`);
     return null;
   }
 }

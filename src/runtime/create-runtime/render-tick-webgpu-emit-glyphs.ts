@@ -1,4 +1,6 @@
-export function emitWebGPUQueuedGlyphs(params: any) {
+import type { EmitWebGPUQueuedGlyphsParams } from "./render-tick-webgpu.types";
+
+export function emitWebGPUQueuedGlyphs(params: EmitWebGPUQueuedGlyphsParams) {
   const {
     deps,
     state,

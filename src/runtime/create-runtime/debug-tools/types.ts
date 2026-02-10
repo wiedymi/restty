@@ -4,6 +4,7 @@ import type {
   fontScaleOverride as fontScaleOverrideFn,
   FontEntry,
   FontManagerState,
+  NerdConstraint,
   isColorEmojiFont as isColorEmojiFontFn,
   isNerdSymbolCodepoint as isNerdSymbolCodepointFn,
   isSymbolFont as isSymbolFontFn,
@@ -11,6 +12,7 @@ import type {
 import type { clamp as clampFn, fontHeightUnits as fontHeightUnitsFn } from "../../../grid";
 import type { WebGLState, WebGPUState } from "../../../renderer";
 import type { GlyphConstraintMeta, AtlasConstraintContext } from "../../atlas-builder";
+import type { NerdMetrics } from "../render-tick-webgpu.types";
 
 export type GridState = {
   cols: number;
@@ -39,10 +41,10 @@ export type BuildNerdMetricsFn = (
   cellW: number,
   cellH: number,
   lineHeight: number,
-  font: any,
+  font: FontEntry["font"] | null | undefined,
   primaryScale: number,
   nerdIconScale: number,
-) => any;
+) => NerdMetrics;
 
 export type EnsureAtlasForFontFn = (
   device: GPUDevice,
@@ -72,9 +74,9 @@ export type CreateRuntimeDebugToolsOptions = {
   isSymbolFont: typeof isSymbolFontFn;
   isNerdSymbolCodepoint: typeof isNerdSymbolCodepointFn;
   isSymbolCp: (cp: number) => boolean;
-  fontHasGlyph: (font: any, ch: string) => boolean;
+  fontHasGlyph: (font: FontEntry["font"], ch: string) => boolean;
   shapeClusterWithFont: (entry: FontEntry, text: string) => ShapeClusterResult;
-  getNerdConstraint: (cp: number) => unknown;
+  getNerdConstraint: (cp: number) => NerdConstraint | null;
   fontHeightUnits: typeof fontHeightUnitsFn;
   fontScaleOverride: typeof fontScaleOverrideFn;
   fontScaleOverrides: Array<{ match: RegExp; scale: number }>;
