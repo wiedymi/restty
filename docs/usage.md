@@ -225,6 +225,18 @@ const logPlugin: ResttyPlugin = {
     const render = ctx.addRenderHook(({ phase, paneId, dropped }) => {
       console.log("render", phase, paneId, dropped);
     });
+    const stage = ctx.addRenderStage({
+      id: "example/log-pane-events/tint",
+      mode: "after-main",
+      uniforms: [0.05],
+      shader: {
+        wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  return vec4f(min(vec3f(1.0), color.rgb + vec3f(params0.x, 0.0, 0.0)), color.a);
+}
+`,
+      },
+    });
     return () => {
       created.dispose();
       active.dispose();
@@ -232,6 +244,7 @@ const logPlugin: ResttyPlugin = {
       incoming.dispose();
       lifecycle.dispose();
       render.dispose();
+      stage.dispose();
     };
   },
 };
@@ -250,7 +263,50 @@ await restty.loadPlugins(
 );
 ```
 
-## 10) xterm compatibility shim
+## 10) Shader stages
+
+Use shader stages when you want frame-level visual effects.
+
+```ts
+restty.setShaderStages([
+  {
+    id: "app/crt-lite",
+    mode: "after-main",
+    backend: "both",
+    uniforms: [0.24, 0.12],
+    shader: {
+      wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  let v = clamp(params0.x, 0.0, 0.8);
+  let centered = (uv - vec2f(0.5, 0.5)) * 2.0;
+  let vignette = max(0.0, 1.0 - v * dot(centered, centered));
+  return vec4f(color.rgb * vignette, color.a);
+}
+`,
+    },
+  },
+]);
+
+const stage = restty.addShaderStage({
+  id: "app/mono",
+  mode: "after-main",
+  uniforms: [1.0],
+  shader: {
+    wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  let l = dot(color.rgb, vec3f(0.2126, 0.7152, 0.0722));
+  return vec4f(l * 0.12, l * 0.95, l * 0.35, color.a);
+}
+`,
+  },
+});
+
+stage.setUniforms([0.9]);
+stage.setEnabled(true);
+stage.dispose();
+```
+
+## 11) xterm compatibility shim
 
 ```ts
 import { Terminal } from "restty/xterm";

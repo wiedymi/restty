@@ -6,7 +6,7 @@
 - High-quality text shaping and rasterization using text-shaper (TypeScript).
 - Ligatures on by default.
 - Bundle a common ligature font and optionally use local fonts via queryLocalFonts.
-- Custom API (not xterm-compatible).
+- Native Restty API first, with optional xterm compatibility shim (`restty/xterm`).
 
 ## Non-goals (for v1)
 - Full app UI (tabs, split panes, profile UI).
@@ -36,7 +36,7 @@
 - `src/input/` key/mouse encoding and output filtering.
 - `src/pty/` websocket PTY connection helpers.
 - `src/surface/` high-level orchestration and `Restty` API.
-- `src/runtime/` terminal runtime implementation (`createResttyApp`).
+- `src/runtime/` terminal runtime implementation (`create-runtime`).
 - `docs/internals/` internal architecture docs.
 
 ## Assumptions

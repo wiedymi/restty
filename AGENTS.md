@@ -2,7 +2,11 @@
 
 ## Project Structure & Module Organization
 - `src/` contains the TypeScript library code.
-- Major modules under `src/`: `app/` (public API + pane orchestration), `renderer/`, `input/`, `pty/`, `fonts/`, `theme/`, `wasm/`, and `selection/`.
+- Major modules under `src/`:
+- `surface/`: public `Restty` API, pane orchestration, plugin host, xterm compatibility wrapper.
+- `runtime/`: terminal runtime implementation (`create-runtime`), render loop, IME/input integration.
+- `renderer/`, `input/`, `pty/`, `fonts/`, `theme/`, `wasm/`, and `selection/`: lower-level subsystems.
+- `app/`: compatibility re-export layer for older internal import paths during refactors.
 - `tests/` contains Bun tests (`*.test.ts`).
 - `scripts/` contains build/dev helpers (library build, theme generation, playground bootstrapping).
 - `playground/` hosts the local demo app and static assets (`playground/public/`).

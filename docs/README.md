@@ -16,7 +16,7 @@ If you are integrating restty into an app, read in this order:
 - [`goals.md`](./goals.md): scope and project intent.
 - [`usage.md`](./usage.md): API-first integration guide.
 - [`xterm-compat.md`](./xterm-compat.md): xterm-style compatibility layer.
-- [`plugins.md`](./plugins.md): plugin authoring and compatibility.
+- [`plugins.md`](./plugins.md): plugin authoring, manifest loading, and shader render stages.
 - [`how-it-works.md`](./how-it-works.md): PTY/input/render data flow.
 
 ## Internal Docs

@@ -173,10 +173,23 @@ const metricsPlugin: ResttyPlugin = {
     const lifecycle = ctx.addLifecycleHook(({ phase, action }) => {
       console.log("lifecycle", phase, action);
     });
+    const stage = ctx.addRenderStage({
+      id: "metrics/tint",
+      mode: "after-main",
+      uniforms: [0.12],
+      shader: {
+        wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  return vec4f(min(vec3f(1.0), color.rgb + vec3f(params0.x, 0.0, 0.0)), color.a);
+}
+`,
+      },
+    });
     return () => {
       paneCreated.dispose();
       outgoing.dispose();
       lifecycle.dispose();
+      stage.dispose();
     };
   },
 };
@@ -198,6 +211,50 @@ await restty.loadPlugins(
 ```
 
 See `docs/plugins.md` for full plugin authoring details.
+
+### Shader stages
+
+Shader stages let you extend the final frame pipeline with WGSL/GLSL passes.
+
+Global stages:
+
+```ts
+restty.setShaderStages([
+  {
+    id: "app/crt-lite",
+    mode: "after-main",
+    backend: "both",
+    uniforms: [0.24, 0.12],
+    shader: {
+      wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  let v = clamp(params0.x, 0.0, 0.8);
+  let centered = (uv - vec2f(0.5, 0.5)) * 2.0;
+  let vignette = max(0.0, 1.0 - v * dot(centered, centered));
+  return vec4f(color.rgb * vignette, color.a);
+}
+`,
+    },
+  },
+]);
+
+const stage = restty.addShaderStage({
+  id: "app/mono",
+  mode: "after-main",
+  uniforms: [1.0],
+  shader: {
+    wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  let l = dot(color.rgb, vec3f(0.2126, 0.7152, 0.0722));
+  return vec4f(l * 0.12, l * 0.95, l * 0.35, color.a);
+}
+`,
+  },
+});
+
+stage.setEnabled(false);
+restty.removeShaderStage("app/mono");
+```
 
 ### xterm compatibility layer
 
@@ -260,7 +317,12 @@ Active-pane convenience:
 Plugin host:
 
 - `use(plugin, options?)` / `loadPlugins(manifest, registry)` / `unuse(pluginId)` / `plugins()` / `pluginInfo(pluginId?)`
-- plugin context supports `on(...)`, `addInputInterceptor(...)`, `addOutputInterceptor(...)`, `addLifecycleHook(...)`, `addRenderHook(...)`
+- plugin context supports `on(...)`, `addInputInterceptor(...)`, `addOutputInterceptor(...)`, `addLifecycleHook(...)`, `addRenderHook(...)`, `addRenderStage(...)`
+
+Shader stages:
+
+- `setShaderStages(stages)` / `getShaderStages()`
+- `addShaderStage(stage)` / `removeShaderStage(id)`
 
 ## Advanced / Internal Modules
 
@@ -280,6 +342,13 @@ bun run playground
 ```
 
 Open `http://localhost:5173`.
+
+## Code Layout
+
+- `src/surface/`: public API (`Restty`), pane manager orchestration, plugin host, xterm shim.
+- `src/runtime/`: terminal runtime/render loop implementation.
+- `src/renderer/`, `src/input/`, `src/pty/`, `src/fonts/`, `src/theme/`, `src/wasm/`, `src/selection/`: subsystem modules.
+- `src/app/`: compatibility re-export layer while internals are refactored.
 
 ## Repository Commands
 

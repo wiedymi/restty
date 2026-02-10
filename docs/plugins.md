@@ -31,6 +31,18 @@ export const examplePlugin: ResttyPlugin = {
     const render = ctx.addRenderHook(({ phase, paneId }) => {
       console.log(phase, paneId);
     });
+    const tintStage = ctx.addRenderStage({
+      id: "acme/tint",
+      mode: "after-main",
+      uniforms: [0.08],
+      shader: {
+        wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  return vec4f(min(vec3f(1.0), color.rgb + vec3f(params0.x, 0.0, 0.0)), color.a);
+}
+`,
+      },
+    });
 
     return () => {
       paneCreated.dispose();
@@ -38,6 +50,7 @@ export const examplePlugin: ResttyPlugin = {
       outputFilter.dispose();
       lifecycle.dispose();
       render.dispose();
+      tintStage.dispose();
     };
   },
 };
@@ -59,6 +72,7 @@ If compatibility checks fail, `restty.use(plugin)` throws and the failure appear
 - `restty.unuse(pluginId)`: deactivate plugin and run cleanup.
 - `restty.plugins()`: active plugin IDs.
 - `restty.pluginInfo(pluginId?)`: diagnostics snapshot (active state, errors, listener/interceptor/hook counts).
+- `pluginInfo(...).renderStages`: number of active shader stages owned by a plugin.
 
 Manifest/registry:
 
@@ -85,6 +99,22 @@ Ordering:
 - `addLifecycleHook`: observe high-level API lifecycle around pane operations (`create-initial-pane`, `split-*`, `close-pane`, `set-active-pane`, `mark-pane-focused`, `connect-pty`, `disconnect-pty`, `resize`, `focus`, `blur`).
 - `addRenderHook`: observe render pipeline phases around PTY output (`before`/`after`) with `dropped` state.
 - Hooks are observation points; use interceptors when you need to mutate/drop text.
+
+## Render stages (shader plugins)
+
+- `addRenderStage(stage)`: register a GPU frame stage owned by the plugin.
+- Returns `ResttyRenderStageHandle` with:
+- `setUniforms(number[])`: update stage uniforms (`params0`/`params1`, max 8 values).
+- `setEnabled(boolean)`: enable/disable without removing the stage.
+- `dispose()`: remove the stage.
+
+Stage notes:
+
+- `id` should be stable for updates.
+- `mode`: `before-main` | `after-main` | `replace-main`.
+- `backend`: `webgpu` | `webgl2` | `both`.
+- Provide `shader.wgsl`, `shader.glsl`, or both.
+- Use `onError(message)` to capture compile/runtime failures.
 
 ## Safety expectations
 

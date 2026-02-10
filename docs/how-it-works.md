@@ -10,6 +10,7 @@ restty has three main layers:
 - Renderer (`src/renderer/`): WebGPU first, WebGL2 fallback.
 
 `src/surface/` coordinates those layers and exposes the ergonomic `Restty` API.
+`src/runtime/` implements the per-pane terminal runtime (`create-runtime`) used by `surface`.
 
 ## Startup flow
 
@@ -47,6 +48,13 @@ restty drains that output (`wasm.drainOutput(...)`) and forwards it to the PTY t
 - Themes come from built-ins or Ghostty theme parsing (`src/theme/`).
 - Font loading is managed by `src/fonts/` and configured via `fontPreset` + `fontSources`.
 - App layer applies colors and font changes, then triggers redraw.
+
+## Plugin/shader flow
+
+1. Plugins are activated by `Restty` in `src/surface/` (`use`, `loadPlugins`).
+2. Plugin hooks/interceptors run around pane lifecycle and PTY text processing.
+3. Plugin render stages (`addRenderStage`) are merged into the shader-stage pipeline.
+4. Runtime render loop in `src/runtime/create-runtime.ts` executes stages for WebGPU/WebGL2.
 
 ## Local dev runtime
 

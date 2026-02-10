@@ -21,30 +21,20 @@ Primary exports:
 
 These are available for specialized integrations.
 
-- `restty/wasm`
-  - `loadResttyWasm`, `ResttyWasm`
-  - `RenderState`, `CursorInfo`, ABI types
-- `restty/pty`
-  - `createPtyConnection`, `connectPty`, `disconnectPty`, `createWebSocketPtyTransport`
-  - PTY transport/types
-- `restty/input`
-  - `createInputHandler`
-  - key/mouse/input-related types
-- `restty/theme`
-  - Ghostty theme parser and built-in theme catalog
-- `restty/app`
-  - `createResttyApp`, pane manager utilities, app/session types
-- `restty/fonts`, `restty/renderer`, `restty/grid`, `restty/selection`, `restty/ime`
-  - lower-level building blocks used by app/runtime code
 - `restty/internal`
-  - broad internal barrel exposing most implementation modules
+  - broad internal barrel exposing most implementation modules (surface/runtime/renderer/input/pty/etc.)
 - `restty/xterm`
   - xterm-style compatibility `Terminal` wrapper for migration
+
+Published package exports are currently:
+- `restty`
+- `restty/internal`
+- `restty/xterm`
 
 ## Compatibility expectations
 
 - `restty` (root entry) is the primary API and should change the slowest.
-- Subpath modules are for advanced users and may evolve faster.
+- `restty/xterm` is a migration-oriented compatibility shim.
 - `restty/internal` is intentionally internal and least stable.
 
 ## Design intent
