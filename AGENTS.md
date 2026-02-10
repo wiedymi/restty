@@ -11,7 +11,8 @@
 - `scripts/` contains build/dev helpers (library build, theme generation, playground bootstrapping).
 - `playground/` hosts the local demo app and static assets (`playground/public/`).
 - `wasm/` contains Zig sources/build config for the terminal core.
-- `docs/` holds usage and internals documentation. `reference/` is upstream/reference material; avoid routine edits there.
+- `docs/` holds usage and internals documentation.
+- `reference/` is upstream/reference material (including Ghostty source and text-shaper source code); check there when you need to inspect them, and avoid routine edits.
 
 ## Build, Test, and Development Commands
 Use Bun `>=1.2.0`.
