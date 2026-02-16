@@ -1299,6 +1299,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     resetTerminalResizeScheduler,
     getSelectionText,
     initialPreferredRenderer: options.renderer ?? "auto",
+    maxScrollback: options.maxScrollback,
   });
   return runtimeAppApi.createPublicApi({
     setFontSize: applyFontSize,

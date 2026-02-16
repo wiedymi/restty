@@ -90,6 +90,7 @@ type CreateRuntimeAppApiOptions = {
   runBeforeRenderOutputHook: (text: string, source: string) => string | null;
   getSelectionText: () => string;
   initialPreferredRenderer: PreferredRenderer;
+  maxScrollback?: number;
   CURSOR_BLINK_MS: number;
   RESIZE_ACTIVE_MS: number;
   TARGET_RENDER_FPS: number;
@@ -499,7 +500,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       updateGrid();
       const cols = gridState.cols || 80;
       const rows = gridState.rows || 24;
-      const maxScrollback = 2000;
+      const maxScrollback = options.maxScrollback ?? 2000;
       const wasmHandle = instance.create(cols, rows, maxScrollback);
       if (!wasmHandle) {
         throw new Error("restty create failed (restty_create returned 0)");
