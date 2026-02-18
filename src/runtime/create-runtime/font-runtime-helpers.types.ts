@@ -9,7 +9,7 @@ import type {
 import type { WebGLState, WebGPUState } from "../../renderer";
 import type { PtyTransport } from "../../pty";
 import type { ResttyWasm } from "../../wasm";
-import type { ResttyAppCallbacks } from "../types";
+import type { ResttyAppCallbacks, ResttyFontHintTarget } from "../types";
 import type {
   AtlasOptions,
   GlyphBuffer,
@@ -116,7 +116,8 @@ export type CreateRuntimeFontRuntimeHelpersOptions = {
   resizeState: ResizeStateRef;
   resizeActiveMs: number;
   resizeCommitDebounceMs: number;
-  onSyncKittyOverlaySize: () => void;
+  getFontHinting: () => boolean;
+  getFontHintTarget: () => ResttyFontHintTarget;
   fontScaleOverrides: Array<{ match: RegExp; scale: number }>;
   resolveGlyphPixelMode: ResolveGlyphPixelMode;
   atlasBitmapToRGBA: AtlasBitmapToRGBA;

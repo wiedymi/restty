@@ -37,6 +37,10 @@ const restty = new Restty({
   appOptions: {
     renderer: "auto", // "auto" | "webgpu" | "webgl2"
     fontSize: 16,
+    // Optional text-shaper hinting controls:
+    // hinting off by default for parity/thickness reasons.
+    fontHinting: false,
+    fontHintTarget: "auto", // "auto" | "light" | "normal"
     autoResize: true,
     // Touch behavior:
     // "long-press" (default) | "drag" | "off"

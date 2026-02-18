@@ -41,6 +41,8 @@ const themeSelect = document.getElementById("themeSelect") as HTMLSelectElement 
 const themeFileInput = document.getElementById("themeFile") as HTMLInputElement | null;
 const fontSizeInput = document.getElementById("fontSize") as HTMLInputElement | null;
 const fontFamilySelect = document.getElementById("fontFamily") as HTMLSelectElement | null;
+const fontHintingSelect = document.getElementById("fontHinting") as HTMLSelectElement | null;
+const fontHintTargetSelect = document.getElementById("fontHintTarget") as HTMLSelectElement | null;
 const fontFamilyLocalSelect = document.getElementById(
   "fontFamilyLocal",
 ) as HTMLSelectElement | null;
@@ -80,6 +82,7 @@ const FONT_URL_NOTO_CJK_SC =
 type RendererChoice = "auto" | "webgpu" | "webgl2";
 type ConnectionBackend = "ws" | "webcontainer";
 type ShaderPreset = "none" | "scanline" | "aurora" | "crt-lite" | "mono-green";
+type FontHintTarget = "auto" | "light" | "normal";
 
 type PaneUiState = {
   backend: string;
@@ -116,6 +119,16 @@ let selectedShaderPreset: ShaderPreset =
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
 let selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
 let selectedLocalFontMatcher = "";
+const searchParams =
+  typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+const fontHintingParam = searchParams?.get("hinting")?.toLowerCase() ?? "";
+let selectedFontHinting =
+  fontHintingParam === "1" || fontHintingParam === "true" || fontHintingParam === "on";
+const resolveFontHintTarget = (value: string | null | undefined): FontHintTarget => {
+  if (value === "light" || value === "normal" || value === "auto") return value;
+  return "auto";
+};
+let selectedFontHintTarget = resolveFontHintTarget(searchParams?.get("hintTarget"));
 
 function setText(el: HTMLElement | null, value: string) {
   if (el) el.textContent = value;
@@ -297,6 +310,16 @@ function syncFontFamilyControls() {
   }
 }
 
+function syncHintingControls() {
+  if (fontHintingSelect) {
+    fontHintingSelect.value = selectedFontHinting ? "on" : "off";
+  }
+  if (fontHintTargetSelect) {
+    fontHintTargetSelect.value = selectedFontHintTarget;
+    fontHintTargetSelect.disabled = !selectedFontHinting;
+  }
+}
+
 function shaderStagesForPreset(preset: ShaderPreset): ResttyShaderStage[] {
   if (preset === "scanline") {
     return [
@@ -468,6 +491,15 @@ async function applyFontSourcesToAllPanes() {
     await restty.setFontSources(getCurrentFontSources());
   } catch (err: any) {
     console.error("font source apply failed", err);
+  }
+}
+
+function applyHintingToAllPanes() {
+  const panes = restty.getPanes();
+  for (let i = 0; i < panes.length; i += 1) {
+    const pane = panes[i];
+    pane.app.setFontHintTarget(selectedFontHintTarget);
+    pane.app.setFontHinting(selectedFontHinting);
   }
 }
 
@@ -733,6 +765,7 @@ function renderActivePaneControls(pane: ResttyManagedAppPane, state: PaneState) 
   if (rendererSelect) rendererSelect.value = state.renderer;
   if (fontSizeInput) fontSizeInput.value = `${state.fontSize}`;
   syncFontFamilyControls();
+  syncHintingControls();
   state.mouseMode = pane.app.getMouseStatus().mode;
   if (mouseModeEl) {
     const hasOption = Array.from(mouseModeEl.options).some((option) => option.value === state.mouseMode);
@@ -882,6 +915,8 @@ restty = new Restty({
     return {
       renderer: paneState.renderer,
       fontSize: paneState.fontSize,
+      fontHinting: selectedFontHinting,
+      fontHintTarget: selectedFontHintTarget,
       // Ghostty parity: use EM sizing semantics and native alpha blending.
       fontSizeMode: "em",
       alphaBlending: "native",
@@ -1142,6 +1177,22 @@ if (fontSizeInput) {
   fontSizeInput.addEventListener("input", applyFontSize);
 }
 
+if (fontHintingSelect) {
+  fontHintingSelect.addEventListener("change", () => {
+    selectedFontHinting = fontHintingSelect.value === "on";
+    syncHintingControls();
+    applyHintingToAllPanes();
+  });
+}
+
+if (fontHintTargetSelect) {
+  fontHintTargetSelect.addEventListener("change", () => {
+    selectedFontHintTarget = resolveFontHintTarget(fontHintTargetSelect.value);
+    syncHintingControls();
+    applyHintingToAllPanes();
+  });
+}
+
 if (fontFamilySelect) {
   fontFamilySelect.addEventListener("change", () => {
     selectedFontFamily = fontFamilySelect.value || DEFAULT_FONT_FAMILY;
@@ -1174,6 +1225,7 @@ if (btnLoadLocalFonts) {
 
 syncConnectionUi();
 syncFontFamilyControls();
+syncHintingControls();
 if (supportsLocalFontPicker()) {
   setFontFamilyHint("Select a base font, then pick a local font from the local picker.");
 } else {

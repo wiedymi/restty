@@ -15,6 +15,8 @@ export function createFontEntry(font: Font, label: string): FontEntry {
     atlasScale: 1,
     advanceUnits: 0,
     constraintSignature: "",
+    atlasHinting: false,
+    atlasHintTarget: "auto",
   };
 }
 
@@ -29,6 +31,8 @@ export function resetFontEntry(entry: FontEntry): void {
   entry.atlasScale = 1;
   entry.advanceUnits = 0;
   entry.constraintSignature = "";
+  entry.atlasHinting = false;
+  entry.atlasHintTarget = "auto";
 }
 
 /** Create an empty FontManagerState for initialization. */

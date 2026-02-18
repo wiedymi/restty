@@ -44,6 +44,7 @@ export {
 export type { GhosttyTheme, ResttyBuiltinThemeName } from "./theme";
 
 export type {
+  ResttyFontHintTarget,
   ResttyFontSource,
   ResttyUrlFontSource,
   ResttyBufferFontSource,

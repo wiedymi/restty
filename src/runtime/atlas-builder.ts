@@ -81,6 +81,7 @@ type BuildGlyphAtlasWithConstraintsOptions = {
   maxHeight: number;
   pixelMode: number;
   hinting: boolean;
+  hintTarget?: AtlasOptions["hintTarget"];
   rasterizeGlyph?: RasterizeGlyphFn;
   rasterizeGlyphWithTransform?: RasterizeGlyphWithTransformFn;
   glyphMeta?: Map<number, GlyphConstraintMeta>;
@@ -124,6 +125,8 @@ type BuildAtlasDeps = {
   ) => { atlas: FontAtlas } | null;
   rasterizeGlyph?: RasterizeGlyphFn;
   rasterizeGlyphWithTransform?: RasterizeGlyphWithTransformFn;
+  hinting: boolean;
+  hintTarget?: AtlasOptions["hintTarget"];
   nerdConstraintSignature: (
     glyphMeta: Map<number, GlyphConstraintMeta> | undefined,
     constraintContext: AtlasConstraintContext | null | undefined,
@@ -210,10 +213,13 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
     buildColorEmojiAtlasWithCanvas,
     rasterizeGlyph,
     rasterizeGlyphWithTransform,
+    hinting,
+    hintTarget,
     nerdConstraintSignature,
     constants,
     resolvePreferNearest,
   } = deps;
+  const resolvedHintTarget = hintTarget ?? "auto";
 
   const scaleOverride = fontScaleOverride(entry, fontScaleOverrides);
   const effectiveFontSizePx = Math.max(
@@ -224,7 +230,9 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
   let needsRebuild =
     !entry.atlas ||
     entry.fontSizePx !== effectiveFontSizePx ||
-    entry.atlasScale !== (atlasScale || 1);
+    entry.atlasScale !== (atlasScale || 1) ||
+    entry.atlasHinting !== hinting ||
+    (entry.atlasHintTarget ?? "auto") !== resolvedHintTarget;
 
   const isSymbol = isSymbolFont(entry);
   const constraintSignature = isSymbol ? nerdConstraintSignature(glyphMeta, constraintContext) : "";
@@ -275,10 +283,7 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
     return { rebuilt: false, atlas: null, rgba: null, preferNearest: false };
   }
 
-  // Ghostty's visual consistency comes primarily from style/face selection.
-  // In this rasterizer, TT hinting tends to over-thicken terminal glyphs,
-  // so keep atlas glyphs unhinted for closer parity.
-  const useHinting = false;
+  const useHinting = hinting;
   const atlasPadding = isSymbol
     ? Math.max(constants.atlasPadding, constants.symbolAtlasPadding)
     : constants.atlasPadding;
@@ -297,6 +302,7 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
       padding: atlasPadding,
       pixelMode: glyphPixelMode,
       hinting: useHinting,
+      hintTarget: resolvedHintTarget,
       maxWidth: atlasMaxSize,
       maxHeight: atlasMaxSize,
       rasterizeGlyph,
@@ -331,6 +337,7 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
       padding: atlasPadding,
       pixelMode: glyphPixelMode,
       hinting: useHinting,
+      hintTarget: resolvedHintTarget,
       maxWidth: atlasMaxSize,
       maxHeight: atlasMaxSize,
       rasterizeGlyph,
@@ -346,6 +353,7 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
       padding: atlasPadding,
       pixelMode: glyphPixelMode,
       hinting: useHinting,
+      hintTarget: resolvedHintTarget,
       maxWidth: atlasMaxSize,
       maxHeight: atlasMaxSize,
     });
@@ -369,6 +377,8 @@ export function buildFontAtlasIfNeeded(params: BuildFontAtlasParams): BuildFontA
   entry.fontSizePx = effectiveFontSizePx;
   entry.atlasScale = atlasScale || 1;
   entry.constraintSignature = constraintSignature;
+  entry.atlasHinting = useHinting;
+  entry.atlasHintTarget = resolvedHintTarget;
 
   return {
     rebuilt: true,

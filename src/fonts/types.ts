@@ -47,6 +47,10 @@ export type FontEntry = {
   advanceUnits: number;
   /** Signature string used to detect constraint changes for atlas invalidation. */
   constraintSignature?: string;
+  /** Last atlas build hinting mode for invalidation checks. */
+  atlasHinting?: boolean;
+  /** Last atlas build hint target for invalidation checks. */
+  atlasHintTarget?: "auto" | "light" | "normal";
 };
 
 /**

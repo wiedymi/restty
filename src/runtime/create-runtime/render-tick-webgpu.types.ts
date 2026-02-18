@@ -4,6 +4,8 @@ import type { Color, WebGPUState } from "../../renderer";
 import type { CompiledWebGPUShaderStage, WebGPUStageTargets } from "../create-app-types";
 import type { GlyphConstraintMeta } from "../atlas-builder";
 import type { KittyPlacement, RenderState, ResttyWasm, ResttyWasmExports } from "../../wasm";
+import type { KittyDrawPlan, KittyDrawSlice } from "./kitty-render-runtime";
+import type { ResttyFontHintTarget } from "../types";
 
 export type CursorPosition = {
   col: number;
@@ -102,6 +104,8 @@ export type SharedTickDeps = {
     overrides: Array<{ match: RegExp; scale: number }>,
   ) => number;
   FONT_SCALE_OVERRIDES: Array<{ match: RegExp; scale: number }>;
+  getFontHinting: () => boolean;
+  getFontHintTarget: () => ResttyFontHintTarget;
   isSymbolFont: (entry: FontEntry) => boolean;
   isColorEmojiFont: (entry: FontEntry) => boolean;
   fontAdvanceUnits: (
@@ -276,7 +280,20 @@ export type SharedTickDeps = {
   ensureInstanceBuffer: (state: WebGPUState, kind: "rect" | "glyph", minBytes: number) => void;
   GLYPH_INSTANCE_FLOATS: number;
   wasm: ResttyWasm | null;
-  drawKittyOverlay: (placements: KittyPlacement[], cellW: number, cellH: number) => void;
+  collectKittyDrawPlan: (
+    placements: KittyPlacement[],
+    cellW: number,
+    cellH: number,
+  ) => KittyDrawPlan;
+  resolveKittyWebGLTexture: (
+    gl: WebGL2RenderingContext,
+    slice: KittyDrawSlice,
+  ) => WebGLTexture | null;
+  resolveKittyWebGPUBindGroup: (
+    state: WebGPUState,
+    slice: KittyDrawSlice,
+    nearest?: boolean,
+  ) => GPUBindGroup | null;
   isAppleSymbolsFont: (entry: FontEntry) => boolean;
   DEFAULT_APPLE_SYMBOLS_CONSTRAINT: NerdConstraint;
   DEFAULT_SYMBOL_CONSTRAINT: NerdConstraint;
@@ -310,7 +327,6 @@ export type RuntimeTickDeps = SharedTickDeps & {
   reportDebugText: (text: string) => void;
   updateGrid: () => void;
   getRenderState: () => RenderState | null;
-  clearKittyOverlay: () => void;
   resolveBlendFlags: (
     alphaMode: string,
     backend: "webgpu",

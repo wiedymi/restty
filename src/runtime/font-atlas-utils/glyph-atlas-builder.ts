@@ -44,6 +44,7 @@ export type BuildGlyphAtlasWithConstraintsOptions = {
   maxHeight: number;
   pixelMode: number;
   hinting: boolean;
+  hintTarget?: GlyphRasterizeOptions["hintTarget"];
   rasterizeGlyph?: RasterizeGlyphFn;
   rasterizeGlyphWithTransform?: RasterizeGlyphWithTransformFn;
   glyphMeta?: Map<number, GlyphConstraintMeta>;
@@ -68,6 +69,7 @@ export function buildGlyphAtlasWithConstraints(
     maxHeight,
     pixelMode,
     hinting,
+    hintTarget,
     rasterizeGlyph,
     rasterizeGlyphWithTransform,
     glyphMeta,
@@ -93,6 +95,7 @@ export function buildGlyphAtlasWithConstraints(
     pixelMode,
     sizeMode,
     hinting,
+    hintTarget,
   };
 
   for (let i = 0; i < glyphIds.length; i += 1) {

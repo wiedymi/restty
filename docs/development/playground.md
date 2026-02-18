@@ -17,6 +17,17 @@ Static-file-only option:
 - `bun run build:assets`
 - `bun run playground:static`
 
+Hinting experiments (playground URL params):
+
+- `?hinting=1&hintTarget=auto`
+- `?hinting=1&hintTarget=light`
+- `?hinting=1&hintTarget=normal`
+
+`hinting=0` (or omitted) keeps atlas hinting disabled.
+
+You can also toggle both settings live in the playground Settings panel
+(`Appearance` section) without reloading.
+
 WebContainer mode note:
 
 - In-browser WebContainer mode seeds `/demo.js`, `/test.js`, and related demo scripts automatically.

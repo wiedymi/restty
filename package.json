@@ -76,7 +76,7 @@
     "playground:static": "bun run playground/server.ts"
   },
   "dependencies": {
-    "text-shaper": "^0.1.17"
+    "text-shaper": "^0.1.18"
   },
   "devDependencies": {
     "@webcontainer/api": "^1.6.1",

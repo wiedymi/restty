@@ -24,7 +24,8 @@ export function createRuntimeFontRuntimeHelpers(options: CreateRuntimeFontRuntim
     resizeState,
     resizeActiveMs,
     resizeCommitDebounceMs,
-    onSyncKittyOverlaySize,
+    getFontHinting,
+    getFontHintTarget,
     fontScaleOverrides,
     resolveGlyphPixelMode,
     atlasBitmapToRGBA,
@@ -71,12 +72,13 @@ export function createRuntimeFontRuntimeHelpers(options: CreateRuntimeFontRuntim
     resizeState,
     resizeActiveMs,
     resizeCommitDebounceMs,
-    onSyncKittyOverlaySize,
     shapeClusterWithFont: textHelpers.shapeClusterWithFont,
   });
 
   const { ensureAtlasForFont } = createRuntimeWebGPUAtlasHelpers({
     fontState,
+    getFontHinting,
+    getFontHintTarget,
     fontScaleOverrides,
     resolveGlyphPixelMode,
     atlasBitmapToRGBA,

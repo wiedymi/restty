@@ -12,6 +12,7 @@ import {
 } from "../atlas-builder";
 import { buildGlyphAtlasWithConstraints } from "../font-atlas-utils/glyph-atlas-builder";
 import { nerdConstraintSignature } from "../font-atlas-utils/nerd-metrics-utils";
+import type { ResttyFontHintTarget } from "../types";
 import type {
   AtlasBitmapToRGBA,
   BuildAtlasFn,
@@ -24,6 +25,8 @@ import type {
 
 type CreateRuntimeWebGPUAtlasHelpersOptions = {
   fontState: FontManagerState;
+  getFontHinting: () => boolean;
+  getFontHintTarget: () => ResttyFontHintTarget;
   fontScaleOverrides: Array<{ match: RegExp; scale: number }>;
   resolveGlyphPixelMode: ResolveGlyphPixelMode;
   atlasBitmapToRGBA: AtlasBitmapToRGBA;
@@ -41,6 +44,8 @@ type CreateRuntimeWebGPUAtlasHelpersOptions = {
 export function createRuntimeWebGPUAtlasHelpers(options: CreateRuntimeWebGPUAtlasHelpersOptions) {
   const {
     fontState,
+    getFontHinting,
+    getFontHintTarget,
     fontScaleOverrides,
     resolveGlyphPixelMode,
     atlasBitmapToRGBA,
@@ -87,6 +92,8 @@ export function createRuntimeWebGPUAtlasHelpers(options: CreateRuntimeWebGPUAtla
         buildColorEmojiAtlasWithCanvas,
         rasterizeGlyph,
         rasterizeGlyphWithTransform,
+        hinting: getFontHinting(),
+        hintTarget: getFontHintTarget(),
         nerdConstraintSignature,
         constants: {
           atlasPadding,

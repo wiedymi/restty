@@ -55,7 +55,7 @@ import {
 import { buildFontAtlasIfNeeded } from "./atlas-builder";
 import { normalizeFontSources } from "./font-sources";
 import * as bundledTextShaper from "text-shaper";
-import type { ResttyFontSource, ResttyApp, ResttyAppOptions } from "./types";
+import type { ResttyFontHintTarget, ResttyFontSource, ResttyApp, ResttyAppOptions } from "./types";
 import { getDefaultResttyAppSession } from "./session";
 import { createPtyOutputBufferController } from "./pty-output-buffer";
 import {
@@ -106,6 +106,7 @@ import { createRuntimeDebugTools } from "./create-runtime/debug-tools";
 import { createRuntimeInputHooks } from "./create-runtime/input-hooks";
 import { createPtyInputRuntime } from "./create-runtime/pty-input-runtime";
 import { createRuntimeInteraction } from "./create-runtime/interaction-runtime";
+import { createKittyRenderRuntime } from "./create-runtime/kitty-render-runtime";
 import { createRuntimeLifecycleThemeSize } from "./create-runtime/lifecycle-theme-size";
 import { createRuntimeRenderTicks } from "./create-runtime/render-ticks";
 import { createRuntimeFontRuntimeHelpers } from "./create-runtime/font-runtime-helpers";
@@ -130,6 +131,7 @@ export type {
   ResttyAppElements,
   ResttyAppCallbacks,
   FontSource,
+  ResttyFontHintTarget,
   ResttyFontSource,
   ResttyTouchSelectionMode,
   ResttyUrlFontSource,
@@ -201,6 +203,12 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     1,
     64,
   );
+  const resolveFontHintTarget = (value: unknown): ResttyFontHintTarget => {
+    if (value === "light" || value === "normal" || value === "auto") return value;
+    return "auto";
+  };
+  let fontHinting = options.fontHinting ?? false;
+  let fontHintTarget = resolveFontHintTarget(options.fontHintTarget);
   const hasCoarsePointer =
     typeof window !== "undefined" &&
     typeof window.matchMedia === "function" &&
@@ -337,19 +345,6 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   const GLYPH_RENDER_MODE_MONO = 0;
   const GLYPH_RENDER_MODE_COLOR = 1;
   const KITTY_PLACEHOLDER_CP = 0x10eeee;
-  const KITTY_OVERLAY_DEBUG =
-    typeof window !== "undefined" &&
-    (() => {
-      try {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("kittyDebug") === "1") return true;
-        const value = window.localStorage?.getItem("restty.kittyDebug");
-        if (value != null) return value === "1";
-        return window.localStorage?.getItem("restty.kittyDebug") === "1";
-      } catch {
-        return false;
-      }
-    })();
   const KITTY_FLAG_REPORT_EVENTS = 1 << 1;
 
   const textEncoder = new TextEncoder();
@@ -394,7 +389,6 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     touchSelectionLongPressMs,
     touchSelectionMoveThresholdPx,
     showOverlayScrollbar,
-    kittyOverlayDebugEnabled: KITTY_OVERLAY_DEBUG,
     imeInput,
     cleanupCanvasFns,
     getCanvas: () => canvas,
@@ -416,17 +410,19 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     scrollbarState,
     imeState,
     updateCanvasCursor,
-    syncKittyOverlaySize,
-    clearKittyOverlay,
-    drawKittyOverlay,
     positionToCell,
     positionToPixel,
     clearSelection,
     updateImePosition,
     appendOverlayScrollbar,
     bindCanvasEvents: bindCanvasInteractionEvents,
-    detachKittyOverlayCanvas,
   } = runtimeInteraction;
+  const kittyRenderRuntime = createKittyRenderRuntime({
+    getWasm: () => wasm,
+    markNeedsRender: () => {
+      needsRender = true;
+    },
+  });
   const {
     selectionForRow,
     getSelectionText,
@@ -607,7 +603,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     resizeState,
     resizeActiveMs: RESIZE_ACTIVE_MS,
     resizeCommitDebounceMs: RESIZE_COMMIT_DEBOUNCE_MS,
-    onSyncKittyOverlaySize: syncKittyOverlaySize,
+    getFontHinting: () => fontHinting,
+    getFontHintTarget: () => fontHintTarget,
     fontScaleOverrides: FONT_SCALE_OVERRIDES,
     resolveGlyphPixelMode,
     atlasBitmapToRGBA,
@@ -705,13 +702,12 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     bindCanvasEvents,
     computeCellMetrics,
     updateGrid,
-    syncKittyOverlaySize,
+    clearKittyRenderCaches: kittyRenderRuntime.clearKittyRenderCaches,
     scheduleTerminalResizeCommit,
     sendKeyInput,
     clearWebGLShaderStages,
     destroyWebGLStageTargets,
     destroyWebGPUStageTargets,
-    detachKittyOverlayCanvas,
     setShaderStagesDirty,
     markNeedsRender: () => (needsRender = true),
     resetLastRenderTime: () => (lastRenderTime = 0),
@@ -982,6 +978,39 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     appendLog("[ui] font sources updated");
   }
 
+  function invalidateFontAtlasesForHinting() {
+    for (let i = 0; i < fontState.fonts.length; i += 1) {
+      const entry = fontState.fonts[i];
+      entry.atlas = null;
+      entry.glyphIds.clear();
+      entry.fontSizePx = 0;
+      entry.atlasScale = 1;
+      entry.constraintSignature = "";
+    }
+    if (activeState?.glyphAtlases) {
+      activeState.glyphAtlases = new Map();
+    }
+    needsRender = true;
+  }
+
+  function setFontHinting(value: boolean) {
+    const next = Boolean(value);
+    if (fontHinting === next) return;
+    fontHinting = next;
+    invalidateFontAtlasesForHinting();
+    appendLog(`[ui] font hinting ${next ? "on" : "off"}`);
+  }
+
+  function setFontHintTarget(value: ResttyFontHintTarget) {
+    const next = resolveFontHintTarget(value);
+    if (fontHintTarget === next) return;
+    fontHintTarget = next;
+    if (fontHinting) {
+      invalidateFontAtlasesForHinting();
+    }
+    appendLog(`[ui] font hint target ${next}`);
+  }
+
   async function ensureFont() {
     if (fontState.font || fontPromise) return fontPromise;
     fontPromise = (async () => {
@@ -1068,7 +1097,6 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     updateGrid,
     getRenderState,
     fontState,
-    clearKittyOverlay,
     resolveBlendFlags,
     alphaBlending,
     srgbToLinearColor,
@@ -1102,6 +1130,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     updateImePosition,
     fontScaleOverride,
     FONT_SCALE_OVERRIDES,
+    getFontHinting: () => fontHinting,
+    getFontHintTarget: () => fontHintTarget,
     isSymbolFont,
     isColorEmojiFont,
     fontAdvanceUnits,
@@ -1187,7 +1217,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     get wasm() {
       return wasm;
     },
-    drawKittyOverlay,
+    collectKittyDrawPlan: kittyRenderRuntime.collectKittyDrawPlan,
+    resolveKittyWebGLTexture: kittyRenderRuntime.resolveKittyWebGLTexture,
+    resolveKittyWebGPUBindGroup: kittyRenderRuntime.resolveKittyWebGPUBindGroup,
     buildFontAtlasIfNeeded,
     resolveGlyphPixelMode,
     atlasBitmapToRGBA,
@@ -1249,6 +1281,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
       lastKeydownSeqAt = lastKeydownSeqAt,
     } = patch);
   };
+  cleanupFns.push(() => {
+    kittyRenderRuntime.clearKittyRenderCaches();
+  });
   runtimeAppApi = createRuntimeAppApi({
     session,
     ptyTransport,
@@ -1304,6 +1339,8 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   });
   return runtimeAppApi.createPublicApi({
     setFontSize: applyFontSize,
+    setFontHinting,
+    setFontHintTarget,
     setFontSources,
     resetTheme,
     dumpAtlasForCodepoint,

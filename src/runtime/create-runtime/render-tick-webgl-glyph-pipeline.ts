@@ -42,6 +42,8 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
     FONT_SCALE_OVERRIDES,
     isSymbolFont,
     fontScaleOverride,
+    getFontHinting,
+    getFontHintTarget,
     resolveGlyphPixelMode,
     atlasBitmapToRGBA,
     padAtlasRGBA,
@@ -72,6 +74,10 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
     GLYPH_INSTANCE_FLOATS,
     clamp,
     canvas,
+    wasm,
+    wasmHandle,
+    collectKittyDrawPlan,
+    resolveKittyWebGLTexture,
   } = deps;
 
   const { gl } = state;
@@ -117,6 +123,8 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
         buildColorEmojiAtlasWithCanvas,
         rasterizeGlyph,
         rasterizeGlyphWithTransform,
+        hinting: getFontHinting(),
+        hintTarget: getFontHintTarget(),
         nerdConstraintSignature,
         constants: {
           atlasPadding: ATLAS_PADDING,
@@ -348,6 +356,9 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
   emitGlyphs(glyphQueueByFont, glyphDataByFont);
   emitGlyphs(overlayGlyphQueueByFont, overlayGlyphDataByFont);
 
+  const kittyPlacements = wasm && wasmHandle ? wasm.getKittyPlacements(wasmHandle) : [];
+  const kittyPlan = collectKittyDrawPlan(kittyPlacements, cellW, cellH);
+
   const drawRects = (data: number[]) => {
     if (!data.length) return;
     const rectArray = new Float32Array(data);
@@ -383,8 +394,71 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
     gl.bindVertexArray(null);
   };
 
+  const drawKittySlices = (slices: typeof kittyPlan.underlay) => {
+    if (!slices.length) return;
+    const flush = (texture: WebGLTexture, data: number[]) => {
+      if (!data.length) return;
+      const glyphArray = new Float32Array(data);
+      ensureGLInstanceBuffer(state, "glyph", glyphArray.byteLength);
+      gl.bindVertexArray(state.glyphVao);
+      gl.bindBuffer(gl.ARRAY_BUFFER, state.glyphInstanceBuffer);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, glyphArray);
+      gl.useProgram(state.glyphProgram);
+      gl.uniform2f(state.glyphResolutionLoc, canvas.width, canvas.height);
+      gl.uniform2f(state.glyphBlendLoc, useLinearBlending ? 1 : 0, useLinearCorrection ? 1 : 0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, texture);
+      gl.uniform1i(state.glyphAtlasLoc, 0);
+      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, data.length / GLYPH_INSTANCE_FLOATS);
+      gl.bindVertexArray(null);
+    };
+
+    let currentTexture: WebGLTexture | null = null;
+    let currentData: number[] = [];
+    for (const slice of slices) {
+      const texture = resolveKittyWebGLTexture(gl, slice);
+      if (!texture) continue;
+      if (currentTexture && texture !== currentTexture) {
+        flush(currentTexture, currentData);
+        currentData = [];
+      }
+      currentTexture = texture;
+      const invW = slice.imageWidth > 0 ? 1 / slice.imageWidth : 0;
+      const invH = slice.imageHeight > 0 ? 1 / slice.imageHeight : 0;
+      const u0 = slice.sx * invW;
+      const v0 = slice.sy * invH;
+      const u1 = (slice.sx + slice.sw) * invW;
+      const v1 = (slice.sy + slice.sh) * invH;
+      currentData.push(
+        slice.dx,
+        slice.dy,
+        slice.dw,
+        slice.dh,
+        u0,
+        v0,
+        u1,
+        v1,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        GLYPH_RENDER_MODE_COLOR,
+      );
+    }
+    if (currentTexture) {
+      flush(currentTexture, currentData);
+    }
+  };
+
   drawRects(bgData);
   drawRects(selectionData);
+  drawKittySlices(kittyPlan.underlay);
   drawRects(underlineData);
   drawRects(fgRectData);
 
@@ -392,6 +466,7 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
     drawGlyphs(fontIndex, glyphData);
   }
 
+  drawKittySlices(kittyPlan.overlay);
   drawRects(cursorData);
   drawRects(overlayData);
 

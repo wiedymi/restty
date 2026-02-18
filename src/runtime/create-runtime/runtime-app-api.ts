@@ -45,6 +45,8 @@ type RuntimeSendInput = (text: string, source?: string, options?: { skipHooks?: 
 
 type RuntimePublicApiOptions = {
   setFontSize: ResttyApp["setFontSize"];
+  setFontHinting: ResttyApp["setFontHinting"];
+  setFontHintTarget: ResttyApp["setFontHintTarget"];
   setFontSources: ResttyApp["setFontSources"];
   resetTheme: ResttyApp["resetTheme"];
   dumpAtlasForCodepoint: ResttyApp["dumpAtlasForCodepoint"];
@@ -309,6 +311,8 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       interaction.clearSelection();
     }
     if (source === "pty" && interaction.linkState.hoverId) interaction.updateLinkHover(null);
+    const canvas = getCanvas();
+    shared.wasm.setPixelSize(shared.wasmHandle, canvas.width, canvas.height);
     writeToWasm(shared.wasmHandle, normalized);
     flushWasmOutputToPty();
     if (source === "pty" && inputHandler.isSynchronizedOutput?.()) {
@@ -636,8 +640,6 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     cleanupCanvasFns.length = 0;
     for (const cleanup of cleanupFns) cleanup();
     cleanupFns.length = 0;
-    interaction.clearKittyImageCache();
-    interaction.detachKittyOverlayCanvas();
   }
 
   function setRenderer(value: "auto" | "webgpu" | "webgl2") {
@@ -674,6 +676,8 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       setPaused,
       togglePause,
       setFontSize: publicApiOptions.setFontSize,
+      setFontHinting: publicApiOptions.setFontHinting,
+      setFontHintTarget: publicApiOptions.setFontHintTarget,
       setFontSources: publicApiOptions.setFontSources,
       applyTheme,
       resetTheme: publicApiOptions.resetTheme,

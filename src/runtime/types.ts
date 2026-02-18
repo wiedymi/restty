@@ -147,6 +147,8 @@ export type ResttyFontPreset = "default-cdn" | "none";
  * - off: disable touch selection entirely
  */
 export type ResttyTouchSelectionMode = "drag" | "long-press" | "off";
+/** Hinting target mode used when TrueType hinting is enabled. */
+export type ResttyFontHintTarget = "auto" | "light" | "normal";
 
 /** Input payload passed to ResttyApp before-input hooks. */
 export type ResttyAppInputPayload = {
@@ -203,6 +205,15 @@ export type ResttyAppOptions = {
   renderer?: "auto" | "webgpu" | "webgl2";
   /** Font size in CSS pixels. */
   fontSize?: number;
+  /** Enable TrueType hinting during atlas rasterization (default false). */
+  fontHinting?: boolean;
+  /**
+   * Hinting target mode passed to text-shaper when hinting is enabled.
+   * - auto: infer from pixel mode
+   * - light: prefer light/subpixel-like vertical hinting
+   * - normal: prefer full hinting
+   */
+  fontHintTarget?: ResttyFontHintTarget;
   /**
    * Font sizing mode used by text-shaper scale resolution.
    * - em: interpret fontSize as EM size
@@ -293,6 +304,10 @@ export type ResttyApp = {
   togglePause: () => void;
   /** Update the terminal font size in CSS pixels. */
   setFontSize: (value: number) => void;
+  /** Enable or disable TrueType hinting for atlas glyph rasterization. */
+  setFontHinting: (value: boolean) => void;
+  /** Update hinting target mode used when hinting is enabled. */
+  setFontHintTarget: (value: ResttyFontHintTarget) => void;
   /** Replace the active font sources and reload fonts. */
   setFontSources: (sources: ResttyFontSource[]) => Promise<void>;
   /** Apply a Ghostty color theme. */

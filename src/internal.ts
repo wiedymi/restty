@@ -206,6 +206,7 @@ export type {
   ResttyPaneAppOptionsInput,
 } from "./surface/pane-app-manager";
 export type {
+  ResttyFontHintTarget,
   ResttyFontSource,
   ResttyUrlFontSource,
   ResttyBufferFontSource,
