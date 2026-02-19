@@ -9,6 +9,113 @@ import {
 import { handleOscSequence } from "./osc";
 import { createPromptState, isPromptClickEventsEnabled, observeOscPromptState } from "./prompt";
 
+function normalizeCursorPosition(value: CursorPosition | null | undefined): CursorPosition | null {
+  if (!value) return null;
+  const row = Number(value.row);
+  const col = Number(value.col);
+  if (!Number.isFinite(row) || !Number.isFinite(col)) return null;
+  return {
+    row: Math.max(1, Math.floor(row)),
+    col: Math.max(1, Math.floor(col)),
+  };
+}
+
+function resolveCursorStepParam(raw: string | undefined): number {
+  if (!raw) return 1;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) return 1;
+  return Math.floor(parsed);
+}
+
+function resolveCursorSetParam(raw: string | undefined): number {
+  if (!raw) return 1;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) return 1;
+  return Math.max(1, Math.floor(parsed));
+}
+
+function applyTextToCursorHint(cursor: CursorPosition, text: string, cols: number): void {
+  for (const ch of text) {
+    const code = ch.charCodeAt(0);
+    if (code === 0x0d) {
+      cursor.col = 1;
+      continue;
+    }
+    if (code === 0x0a) {
+      cursor.row += 1;
+      continue;
+    }
+    if (code === 0x08) {
+      cursor.col = Math.max(1, cursor.col - 1);
+      continue;
+    }
+    if (code === 0x09) {
+      const nextTabCol = Math.floor((cursor.col - 1) / 8) * 8 + 9;
+      cursor.col = cols > 0 ? Math.min(cols, nextTabCol) : nextTabCol;
+      continue;
+    }
+    if (code < 0x20 || code === 0x7f) continue;
+    cursor.col += 1;
+    if (cols > 0 && cursor.col > cols) {
+      cursor.col = 1;
+      cursor.row += 1;
+    }
+  }
+}
+
+function applyCsiToCursorHint(cursor: CursorPosition, seq: string, cols: number): void {
+  if (!seq.startsWith("\x1b[") || seq.length < 3) return;
+  const final = seq[seq.length - 1];
+  const body = seq.slice(2, -1);
+  if (!/^[0-9;]*$/.test(body)) return;
+  const parts = body.length ? body.split(";") : [];
+  switch (final) {
+    case "A": {
+      cursor.row = Math.max(1, cursor.row - resolveCursorStepParam(parts[0]));
+      return;
+    }
+    case "B": {
+      cursor.row += resolveCursorStepParam(parts[0]);
+      return;
+    }
+    case "C": {
+      const next = cursor.col + resolveCursorStepParam(parts[0]);
+      cursor.col = cols > 0 ? Math.min(cols, next) : next;
+      return;
+    }
+    case "D": {
+      cursor.col = Math.max(1, cursor.col - resolveCursorStepParam(parts[0]));
+      return;
+    }
+    case "E": {
+      cursor.row += resolveCursorStepParam(parts[0]);
+      cursor.col = 1;
+      return;
+    }
+    case "F": {
+      cursor.row = Math.max(1, cursor.row - resolveCursorStepParam(parts[0]));
+      cursor.col = 1;
+      return;
+    }
+    case "G": {
+      const next = resolveCursorSetParam(parts[0]);
+      cursor.col = cols > 0 ? Math.min(cols, next) : next;
+      return;
+    }
+    case "H":
+    case "f": {
+      cursor.row = resolveCursorSetParam(parts[0]);
+      const next = resolveCursorSetParam(parts[1]);
+      cursor.col = cols > 0 ? Math.min(cols, next) : next;
+      return;
+    }
+    case "d": {
+      cursor.row = resolveCursorSetParam(parts[0]);
+      return;
+    }
+  }
+}
+
 /**
  * Construction options for OutputFilter.
  */
@@ -75,6 +182,7 @@ export class OutputFilter {
   };
   private desktopNotificationHandler?: (notification: DesktopNotification) => void;
   private promptState = createPromptState();
+  private cursorHint: CursorPosition | null = null;
 
   constructor(options: OutputFilterOptions) {
     this.getCursorPosition = options.getCursorPosition;
@@ -90,6 +198,7 @@ export class OutputFilter {
 
   setCursorProvider(fn: () => CursorPosition) {
     this.getCursorPosition = fn;
+    this.cursorHint = null;
   }
 
   setReplySink(fn: (data: string) => void) {
@@ -166,6 +275,11 @@ export class OutputFilter {
     if (!output) return output;
     let data = this.remainder + output;
     this.remainder = "";
+    const metricCols = this.getWindowMetrics?.()?.cols;
+    const colsHint =
+      Number.isFinite(metricCols) && Number(metricCols) > 1 ? Math.floor(Number(metricCols)) : 0;
+    let trackedCursor = this.cursorHint ?? normalizeCursorPosition(this.getCursorPosition()) ?? { row: 1, col: 1 };
+    const getReplyCursor = (): CursorPosition => trackedCursor;
     let result = "";
     let i = 0;
 
@@ -173,6 +287,7 @@ export class OutputFilter {
       const ch = data[i];
       if (ch !== "\x1b") {
         result += ch;
+        applyTextToCursorHint(trackedCursor, ch, colsHint);
         i += 1;
         continue;
       }
@@ -240,13 +355,15 @@ export class OutputFilter {
       if (
         !handleCoreCsiSequence(seq, {
           sendReply: this.sendReply,
-          getCursorPosition: this.getCursorPosition,
+          getCursorPosition: getReplyCursor,
         })
       ) {
         result += seq;
+        applyCsiToCursorHint(trackedCursor, seq, colsHint);
       }
       i = j + 1;
     }
+    this.cursorHint = { ...trackedCursor };
     return result;
   }
 }

@@ -85,3 +85,19 @@ test("resolveCursorPosition keeps last visible cursor when current cursor is hid
   });
   expect(hidden).toEqual({ col: 9, row: 4, wideTail: false });
 });
+
+test("resolveCursorPosition bootstraps hidden cursor from debug cursor", () => {
+  const reporting = createReporting({ debugCursor: { col: 12, row: 7 } });
+
+  const hidden = reporting.resolveCursorPosition({
+    row: 0,
+    col: 0,
+    visible: 0,
+    style: 0,
+    blinking: 0,
+    wideTail: 0,
+    color: 0,
+  });
+
+  expect(hidden).toEqual({ col: 12, row: 7, wideTail: false });
+});

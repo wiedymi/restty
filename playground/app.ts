@@ -701,6 +701,12 @@ function createDefaultPaneUi(): PaneUiState {
   };
 }
 
+function waitForAnimationFrame(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => resolve());
+  });
+}
+
 function createPaneState(id: number, sourcePane: ResttyManagedAppPane | null): PaneState {
   const sourceState = sourcePane ? paneStates.get(sourcePane.id) : null;
   return {
@@ -801,7 +807,11 @@ function setPanePaused(id: number, value: boolean) {
 function connectPaneIfNeeded(pane: ResttyManagedAppPane) {
   if (getConnectionBackend() !== "webcontainer") return;
   if (pane.app.isPtyConnected()) return;
+  pane.app.updateSize(true);
   pane.app.connectPty(getConnectUrl());
+  requestAnimationFrame(() => {
+    pane.app.updateSize(true);
+  });
 }
 
 function applySavedThemeForPane(pane: ResttyManagedAppPane, state: PaneState) {
@@ -822,6 +832,8 @@ function applySavedThemeForPane(pane: ResttyManagedAppPane, state: PaneState) {
 async function initPaneApp(pane: ResttyManagedAppPane, state: PaneState) {
   await pane.app.init();
   applySavedThemeForPane(pane, state);
+  await waitForAnimationFrame();
+  pane.app.updateSize(true);
   connectPaneIfNeeded(pane);
   pane.canvas.focus({ preventScroll: true });
 }

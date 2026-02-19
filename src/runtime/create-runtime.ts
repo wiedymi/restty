@@ -323,6 +323,30 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
     onFlush: (output) => sendInput(output, "pty"),
   });
   let lastCursorForCpr = { row: 1, col: 1 };
+  function resolveCursorForCpr() {
+    if (wasmHandle && wasmExports?.restty_active_cursor_x && wasmExports?.restty_active_cursor_y) {
+      const activeCol = wasmExports.restty_active_cursor_x(wasmHandle);
+      const activeRow = wasmExports.restty_active_cursor_y(wasmHandle);
+      const cols = lastRenderState?.cols ?? 0;
+      const rows = lastRenderState?.rows ?? 0;
+      const inBounds =
+        cols > 0 &&
+        rows > 0 &&
+        Number.isFinite(activeCol) &&
+        Number.isFinite(activeRow) &&
+        activeCol >= 0 &&
+        activeRow >= 0 &&
+        activeCol < cols &&
+        activeRow < rows;
+      if (inBounds) {
+        lastCursorForCpr = {
+          row: Math.floor(activeRow) + 1,
+          col: Math.floor(activeCol) + 1,
+        };
+      }
+    }
+    return lastCursorForCpr;
+  }
   let inputHandler: InputHandler | null = null;
   let activeTheme: GhosttyTheme | null = null;
   const webgpuUniforms = new Float32Array(8);
@@ -466,7 +490,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   });
 
   inputHandler = createInputHandler({
-    getCursorPosition: () => lastCursorForCpr,
+    getCursorPosition: resolveCursorForCpr,
     sendReply: (data) => {
       ptyTransport.sendInput(data);
     },
@@ -525,7 +549,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
         cellH: gridState.cellH,
       };
     },
-    getCursorForCpr: () => lastCursorForCpr,
+    getCursorForCpr: resolveCursorForCpr,
     sendInput,
     runBeforeInputHook,
     shouldClearSelection: () => selectionState.active || selectionState.dragging,

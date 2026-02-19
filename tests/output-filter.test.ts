@@ -17,6 +17,49 @@ test("output filter replies to XTVERSION query (CSI > q)", () => {
   expect(replies[0]).toContain("P>|ghostty");
 });
 
+test("output filter CPR uses streamed cursor hint in same chunk", () => {
+  const replies: string[] = [];
+  const filter = new OutputFilter({
+    getCursorPosition: () => ({ row: 1, col: 1 }),
+    sendReply: (data) => replies.push(data),
+    mouse: {
+      handleModeSeq: () => false,
+    } as any,
+  });
+
+  expect(filter.filter("abc\x1b[6n")).toBe("abc");
+  expect(replies).toEqual(["\x1b[1;4R"]);
+});
+
+test("output filter CPR keeps streamed cursor hint across chunks", () => {
+  const replies: string[] = [];
+  const filter = new OutputFilter({
+    getCursorPosition: () => ({ row: 1, col: 1 }),
+    sendReply: (data) => replies.push(data),
+    mouse: {
+      handleModeSeq: () => false,
+    } as any,
+  });
+
+  expect(filter.filter("abc")).toBe("abc");
+  expect(filter.filter("\x1b[6n")).toBe("");
+  expect(replies).toEqual(["\x1b[1;4R"]);
+});
+
+test("output filter CPR applies forwarded cursor movement CSI before query", () => {
+  const replies: string[] = [];
+  const filter = new OutputFilter({
+    getCursorPosition: () => ({ row: 1, col: 1 }),
+    sendReply: (data) => replies.push(data),
+    mouse: {
+      handleModeSeq: () => false,
+    } as any,
+  });
+
+  expect(filter.filter("\x1b[2;5H\x1b[6n")).toBe("\x1b[2;5H");
+  expect(replies).toEqual(["\x1b[2;5R"]);
+});
+
 test("output filter replies to XTWINOPS size queries", () => {
   const replies: string[] = [];
   const filter = new OutputFilter({

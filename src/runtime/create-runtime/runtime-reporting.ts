@@ -70,7 +70,7 @@ export function createRuntimeReporting(options: CreateRuntimeReportingOptions) {
 
   function resolveCursorPosition(cursor: CursorInfo | null) {
     if (!cursor) return lastResolvedCursor;
-    if (cursor.visible === 0) {
+    if (cursor.visible === 0 && lastResolvedCursor) {
       return lastResolvedCursor;
     }
     let col = Number(cursor.col);
@@ -87,18 +87,34 @@ export function createRuntimeReporting(options: CreateRuntimeReportingOptions) {
     };
     const wasmExports = options.getWasmExports();
     const wasmHandle = options.getWasmHandle();
-    if (
-      !inBounds(col, row) &&
-      wasmExports?.restty_active_cursor_x &&
-      wasmExports?.restty_active_cursor_y &&
-      wasmHandle
-    ) {
+    const getActiveCursor = (): { col: number; row: number } | null => {
+      if (
+        !wasmExports?.restty_active_cursor_x ||
+        !wasmExports?.restty_active_cursor_y ||
+        !wasmHandle
+      ) {
+        return null;
+      }
       const activeCol = wasmExports.restty_active_cursor_x(wasmHandle);
       const activeRow = wasmExports.restty_active_cursor_y(wasmHandle);
-      if (inBounds(activeCol, activeRow)) {
-        col = activeCol;
-        row = activeRow;
+      if (!inBounds(activeCol, activeRow)) return null;
+      return { col: activeCol, row: activeRow };
+    };
+    if (cursor.visible === 0 && !lastResolvedCursor) {
+      const active = getActiveCursor();
+      if (active) {
+        lastResolvedCursor = {
+          col: active.col,
+          row: active.row,
+          wideTail: cursor.wideTail === 1,
+        };
+        return lastResolvedCursor;
       }
+    }
+    const activeFallback = !inBounds(col, row) ? getActiveCursor() : null;
+    if (activeFallback) {
+      col = activeFallback.col;
+      row = activeFallback.row;
     }
     if (cols > 0 && rows > 0) {
       col = Math.max(0, Math.min(cols - 1, Math.floor(col)));
