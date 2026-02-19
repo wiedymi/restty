@@ -50,6 +50,60 @@ test("updateImePosition anchors IME input using rendered cell metrics", () => {
   expect(imeInput.style.top).toBe("300px");
 });
 
+test("positionToCell uses canvas-to-css scale when DPR differs from rendered scale", () => {
+  const canvas = new FakeCanvas();
+
+  const interaction = createRuntimeInteraction({
+    attachCanvasEvents: false,
+    touchSelectionMode: "off",
+    touchSelectionLongPressMs: 450,
+    touchSelectionMoveThresholdPx: 10,
+    showOverlayScrollbar: false,
+    imeInput: null,
+    cleanupCanvasFns: [],
+    getCanvas: () => canvas as unknown as HTMLCanvasElement,
+    getCurrentDpr: () => 1,
+    getGridState: () => ({ cols: 3, rows: 3, cellW: 200, cellH: 200 }),
+    getLastRenderState: () => null,
+    getWasmReady: () => false,
+    getWasm: () => null,
+    getWasmHandle: () => 0,
+    getWasmExports: () => null,
+    updateLinkHover: () => {},
+    markNeedsRender: () => {},
+  });
+
+  const cell = interaction.positionToCell({ clientX: 210, clientY: 320 });
+  expect(cell).toEqual({ row: 2, col: 1 });
+});
+
+test("positionToPixel uses canvas-to-css scale when DPR differs from rendered scale", () => {
+  const canvas = new FakeCanvas();
+
+  const interaction = createRuntimeInteraction({
+    attachCanvasEvents: false,
+    touchSelectionMode: "off",
+    touchSelectionLongPressMs: 450,
+    touchSelectionMoveThresholdPx: 10,
+    showOverlayScrollbar: false,
+    imeInput: null,
+    cleanupCanvasFns: [],
+    getCanvas: () => canvas as unknown as HTMLCanvasElement,
+    getCurrentDpr: () => 1,
+    getGridState: () => ({ cols: 3, rows: 3, cellW: 200, cellH: 200 }),
+    getLastRenderState: () => null,
+    getWasmReady: () => false,
+    getWasm: () => null,
+    getWasmHandle: () => 0,
+    getWasmExports: () => null,
+    updateLinkHover: () => {},
+    markNeedsRender: () => {},
+  });
+
+  const pixel = interaction.positionToPixel({ clientX: 210, clientY: 320 });
+  expect(pixel).toEqual({ x: 221, y: 241 });
+});
+
 test("updateCanvasCursor uses pointer while hovering link without active selection", () => {
   const canvas = new FakeCanvas();
 
