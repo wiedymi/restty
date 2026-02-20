@@ -177,14 +177,19 @@ export function createRuntimeInteraction(
       cellH || 1,
       cols || 1,
       rows || 1,
+      canvas.width,
+      canvas.height,
     );
   };
 
   const positionToPixel = (event: { clientX: number; clientY: number }) => {
     const canvas = getCanvas();
     const rect = canvas.getBoundingClientRect();
-    const x = (event.clientX - rect.left) * getCurrentDpr();
-    const y = (event.clientY - rect.top) * getCurrentDpr();
+    const fallbackScale = getCurrentDpr() || 1;
+    const scaleX = rect.width > 0 ? canvas.width / rect.width : fallbackScale;
+    const scaleY = rect.height > 0 ? canvas.height / rect.height : fallbackScale;
+    const x = (event.clientX - rect.left) * scaleX;
+    const y = (event.clientY - rect.top) * scaleY;
     return {
       x: Math.max(1, Math.round(x + 1)),
       y: Math.max(1, Math.round(y + 1)),

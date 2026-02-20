@@ -133,10 +133,25 @@ export function positionToCell(
   cellH: number,
   cols: number,
   rows: number,
+  canvasWidth?: number,
+  canvasHeight?: number,
 ): CellPosition {
-  const x = (clientX - canvasRect.left) * dpr;
-  const y = (clientY - canvasRect.top) * dpr;
-  const col = clamp(Math.floor(x / (cellW || 1)), 0, (cols || 1) - 1);
-  const row = clamp(Math.floor(y / (cellH || 1)), 0, (rows || 1) - 1);
+  const safeDpr = dpr || 1;
+  const safeCols = cols || 1;
+  const safeRows = rows || 1;
+  const safeCellW = cellW || 1;
+  const safeCellH = cellH || 1;
+  const scaleX =
+    canvasRect.width > 0
+      ? (canvasWidth && canvasWidth > 0 ? canvasWidth : safeDpr) / canvasRect.width
+      : safeDpr;
+  const scaleY =
+    canvasRect.height > 0
+      ? (canvasHeight && canvasHeight > 0 ? canvasHeight : safeDpr) / canvasRect.height
+      : safeDpr;
+  const x = (clientX - canvasRect.left) * scaleX;
+  const y = (clientY - canvasRect.top) * scaleY;
+  const col = clamp(Math.floor(x / safeCellW), 0, safeCols - 1);
+  const row = clamp(Math.floor(y / safeCellH), 0, safeRows - 1);
   return { row, col };
 }
