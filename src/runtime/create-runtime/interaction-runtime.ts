@@ -177,6 +177,8 @@ export function createRuntimeInteraction(
       cellH || 1,
       cols || 1,
       rows || 1,
+      canvas.width,
+      canvas.height,
     );
   };
 
