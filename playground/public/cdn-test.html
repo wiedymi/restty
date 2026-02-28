@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>restty CDN Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui; }
+    h1 { padding: 16px; font-size: 18px; color: #7fdbca; }
+    p { padding: 0 16px 16px; font-size: 14px; color: #999; }
+    #terminal { width: 800px; height: 500px; margin: 0 16px; border: 1px solid #333; }
+    .info { padding: 16px; font-size: 13px; color: #666; }
+    code { background: #2a2a3e; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <h1>restty CDN bundle test</h1>
+  <p>This page loads restty from a single ESM file with zero build tools.</p>
+  <div id="terminal"></div>
+  <div class="info" id="status">Loading...</div>
+
+  <!--
+    No-build usage: load restty directly from a single .js file.
+
+    In production, use one of:
+      https://unpkg.com/restty/dist/cdn/restty.esm.js
+      https://cdn.jsdelivr.net/npm/restty/dist/cdn/restty.esm.js
+
+    Or serve the file yourself.
+  -->
+  <script type="module">
+    // For this test we load from the local build output.
+    // Replace this path with a CDN URL for production use.
+    import { Restty, createRestty, listBuiltinThemeNames } from "../../dist/cdn/restty.esm.js";
+
+    const status = document.getElementById("status");
+
+    try {
+      // Verify exports are present
+      const themes = listBuiltinThemeNames();
+      status.textContent = `Module loaded. ${themes.length} built-in themes available. Restty class: ${typeof Restty}. createRestty: ${typeof createRestty}.`;
+
+      // Create a terminal instance
+      const restty = new Restty({
+        root: document.getElementById("terminal"),
+        theme: "Dracula",
+        fonts: {
+          regular: "monospace",
+        },
+      });
+
+      status.textContent += " Terminal created.";
+    } catch (err) {
+      status.textContent = `Error: ${err.message}`;
+      console.error(err);
+    }
+  </script>
+</body>
+</html>

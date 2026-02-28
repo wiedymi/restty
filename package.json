@@ -51,7 +51,10 @@
       "types": "./dist/xterm.d.ts",
       "import": "./dist/xterm.js",
       "default": "./dist/xterm.js"
-    }
+    },
+    "./cdn": "./dist/cdn/restty.esm.js",
+    "./cdn/internal": "./dist/cdn/internal.esm.js",
+    "./cdn/xterm": "./dist/cdn/xterm.esm.js"
   },
   "scripts": {
     "setup:wgpu-polyfill": "bun run scripts/setup-wgpu-polyfill.ts",
@@ -59,8 +62,9 @@
     "build:themes": "bun run scripts/generate-builtin-themes.ts",
     "build:wasm": "bun run scripts/build-wasm.ts",
     "build:lib": "bun run scripts/build-lib.ts",
+    "build:cdn": "bun run scripts/build-cdn.ts",
     "build:types": "tsc -p tsconfig.build.json",
-    "build": "bun run build:themes && bun run clean:dist && bun run build:lib && bun run build:types",
+    "build": "bun run build:themes && bun run clean:dist && bun run build:lib && bun run build:cdn && bun run build:types",
     "build:playground-app": "bun run playground/build-playground-app.ts",
     "build:assets": "bun run build:playground-app",
     "check:themes": "bun run build:themes && git diff --exit-code -- src/theme/builtin-themes.ts",
