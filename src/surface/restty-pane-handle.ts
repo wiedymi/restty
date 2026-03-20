@@ -43,6 +43,7 @@ export type ResttyPaneApi = {
   getMouseStatus: () => ReturnType<InputHandler["getMouseStatus"]>;
   copySelectionToClipboard: () => Promise<boolean>;
   pasteFromClipboard: () => Promise<boolean>;
+  selectWordAtClientPoint: (clientX: number, clientY: number) => boolean;
   setSearchQuery: (query: string) => void;
   clearSearch: () => void;
   searchNext: () => void;
@@ -145,6 +146,10 @@ export class ResttyPaneHandle implements ResttyPaneApi {
 
   pasteFromClipboard(): Promise<boolean> {
     return this.resolvePane().app.pasteFromClipboard();
+  }
+
+  selectWordAtClientPoint(clientX: number, clientY: number): boolean {
+    return this.resolvePane().app.selectWordAtClientPoint(clientX, clientY);
   }
 
   setSearchQuery(query: string): void {

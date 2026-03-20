@@ -26,6 +26,8 @@ export type BindPointerEventsOptions = {
   clearPendingDesktopSelection: () => void;
   tryActivatePendingTouchSelection: (pointerId: number) => boolean;
   beginSelectionDrag: (cell: RuntimeCell, pointerId: number) => void;
+  selectWordAtCell?: (cell: RuntimeCell) => boolean;
+  selectLineAtCell?: (cell: RuntimeCell) => boolean;
   scrollViewportByWheel?: (event: WheelEvent) => void;
   normalizeSelectionCell: (cell: RuntimeCell) => RuntimeCell;
   positionToCell: (event: { clientX: number; clientY: number }) => RuntimeCell;
@@ -56,6 +58,8 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
     clearPendingDesktopSelection,
     tryActivatePendingTouchSelection,
     beginSelectionDrag,
+    selectWordAtCell = () => false,
+    selectLineAtCell = () => false,
     scrollViewportByWheel = () => {},
     normalizeSelectionCell,
     positionToCell,
@@ -223,6 +227,8 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
     clearPendingDesktopSelection,
     desktopSelectionState,
     clearSelection,
+    selectWordAtCell,
+    selectLineAtCell,
     updateCanvasCursor,
     markNeedsRender,
     shouldRoutePointerToAppMouse,

@@ -3,6 +3,7 @@ import {
   normalizeSelectionCell as normalizeGridSelectionCell,
   positionToCell as mapClientPositionToCell,
 } from "../../selection";
+import { resolveDesktopWordSelectionRange } from "./interaction-runtime/desktop-word-selection";
 import { bindImeEvents } from "./interaction-runtime/bind-ime-events";
 import { bindPointerEvents } from "./interaction-runtime/bind-pointer-events";
 import { createScrollbarRuntime } from "./interaction-runtime/scrollbar-runtime";
@@ -66,6 +67,9 @@ export function createRuntimeInteraction(
     pendingPointerId: null,
     pendingCell: null,
     startedWithActiveSelection: false,
+    lastPrimaryClickAt: 0,
+    lastPrimaryClickCell: null,
+    lastPrimaryClickCount: 0,
   };
 
   const linkState: RuntimeLinkState = {
@@ -192,8 +196,18 @@ export function createRuntimeInteraction(
     };
   };
 
+  const getCurrentRenderState = () => {
+    const lastRenderState = getLastRenderState();
+    if (lastRenderState) return lastRenderState;
+    if (!getWasmReady()) return null;
+    const wasm = getWasm();
+    const wasmHandle = getWasmHandle();
+    if (!wasm || !wasmHandle) return null;
+    return wasm.getRenderState(wasmHandle);
+  };
+
   const normalizeSelectionCell = (cell: RuntimeCell) => {
-    const renderState = getLastRenderState();
+    const renderState = getCurrentRenderState();
     const { rows, cols } = getGridState();
     return normalizeGridSelectionCell(
       cell,
@@ -212,6 +226,44 @@ export function createRuntimeInteraction(
     touchSelectionState.activePointerId = null;
     updateCanvasCursor();
     markNeedsRender();
+  };
+
+  const selectWordAtCell = (cell: RuntimeCell): boolean => {
+    const renderState = getCurrentRenderState();
+    const range = resolveDesktopWordSelectionRange(renderState, cell);
+    if (!range || range.end <= range.start) return false;
+
+    clearPendingDesktopSelection();
+    selectionState.active = true;
+    selectionState.dragging = false;
+    selectionState.anchor = { row: cell.row, col: range.start };
+    selectionState.focus = { row: cell.row, col: range.end - 1 };
+    updateLinkHover(null);
+    updateCanvasCursor();
+    markNeedsRender();
+    return true;
+  };
+
+  const selectLineAtCell = (cell: RuntimeCell): boolean => {
+    const renderState = getCurrentRenderState();
+    if (!renderState) return false;
+    const { rows, cols } = renderState;
+    if (cell.row < 0 || cell.row >= rows) return false;
+
+    clearPendingDesktopSelection();
+    selectionState.active = true;
+    selectionState.dragging = false;
+    selectionState.anchor = { row: cell.row, col: 0 };
+    selectionState.focus = { row: cell.row, col: cols - 1 };
+    updateLinkHover(null);
+    updateCanvasCursor();
+    markNeedsRender();
+    return true;
+  };
+
+  const selectWordAtClientPoint = (clientX: number, clientY: number): boolean => {
+    const cell = normalizeSelectionCell(positionToCell({ clientX, clientY }));
+    return selectWordAtCell(cell);
   };
 
   const setPreedit = (text: string, updateInput = false) => {
@@ -271,6 +323,8 @@ export function createRuntimeInteraction(
       clearPendingDesktopSelection,
       tryActivatePendingTouchSelection,
       beginSelectionDrag,
+      selectWordAtCell,
+      selectLineAtCell,
       scrollViewportByWheel: scrollbarRuntime.scrollViewportByWheel,
       normalizeSelectionCell,
       positionToCell,
@@ -307,6 +361,7 @@ export function createRuntimeInteraction(
     updateLinkHover,
     positionToCell,
     positionToPixel,
+    selectWordAtClientPoint,
     clearSelection,
     updateImePosition,
     syncScrollbar: scrollbarRuntime.syncScrollbar,

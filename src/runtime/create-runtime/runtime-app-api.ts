@@ -686,6 +686,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       getMouseStatus,
       copySelectionToClipboard,
       pasteFromClipboard,
+      selectWordAtClientPoint: interaction.selectWordAtClientPoint,
       setSearchQuery: publicApiOptions.setSearchQuery,
       clearSearch: publicApiOptions.clearSearch,
       searchNext: publicApiOptions.searchNext,

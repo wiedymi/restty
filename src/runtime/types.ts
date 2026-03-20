@@ -373,6 +373,8 @@ export type ResttyApp = {
   copySelectionToClipboard: () => Promise<boolean>;
   /** Paste clipboard contents into the terminal. */
   pasteFromClipboard: () => Promise<boolean>;
+  /** Select the word at a viewport client coordinate. */
+  selectWordAtClientPoint: (clientX: number, clientY: number) => boolean;
   /** Update the active terminal search query. */
   setSearchQuery: (query: string) => void;
   /** Clear terminal search state and visible highlights. */

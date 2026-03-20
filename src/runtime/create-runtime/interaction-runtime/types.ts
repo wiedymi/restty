@@ -37,6 +37,9 @@ export type RuntimeDesktopSelectionState = {
   pendingPointerId: number | null;
   pendingCell: RuntimeCell | null;
   startedWithActiveSelection: boolean;
+  lastPrimaryClickAt: number;
+  lastPrimaryClickCell: RuntimeCell | null;
+  lastPrimaryClickCount: number;
 };
 
 export type RuntimeLinkState = {
@@ -93,6 +96,7 @@ export type RuntimeInteraction = {
   updateLinkHover: (cell: RuntimeCell | null) => void;
   positionToCell: (event: { clientX: number; clientY: number }) => RuntimeCell;
   positionToPixel: (event: { clientX: number; clientY: number }) => { x: number; y: number };
+  selectWordAtClientPoint: (clientX: number, clientY: number) => boolean;
   clearSelection: () => void;
   updateImePosition: (
     cursor: { row: number; col: number } | null | undefined,
