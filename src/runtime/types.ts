@@ -280,6 +280,8 @@ export type ResttyAppOptions = {
   nerdIconScale?: number;
   /** Automatically resize the terminal on container/window changes (default true). */
   autoResize?: boolean;
+  /** Show the centered `cols x rows` badge while the terminal is resizing (default true). */
+  showResizeOverlay?: boolean;
   /** Attach resize/focus listeners to the window object. */
   attachWindowEvents?: boolean;
   /** Attach pointer/keyboard listeners to the canvas. */

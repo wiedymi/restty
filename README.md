@@ -169,6 +169,7 @@ On touch devices, restty defaults to pan-first scrolling with long-press selecti
 const restty = new Restty({
   root: document.getElementById("terminal") as HTMLElement,
   appOptions: {
+    showResizeOverlay: false,
     // "long-press" (default) | "drag" | "off"
     touchSelectionMode: "long-press",
     // Optional tuning knobs:

@@ -316,8 +316,9 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   let wasmHandle = 0;
   let wasmReady = false;
   let activeState: WebGPUState | WebGLState | null = null;
-  const RESIZE_OVERLAY_HOLD_MS = 500;
-  const RESIZE_OVERLAY_FADE_MS = 400;
+  const showResizeOverlay = options.showResizeOverlay ?? true;
+  const RESIZE_OVERLAY_HOLD_MS = showResizeOverlay ? 500 : 0;
+  const RESIZE_OVERLAY_FADE_MS = showResizeOverlay ? 400 : 0;
   const RESIZE_ACTIVE_MS = 180;
   const resizeState = {
     active: false,

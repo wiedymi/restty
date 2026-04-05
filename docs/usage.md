@@ -38,6 +38,7 @@ const restty = new Restty({
     renderer: "auto", // "auto" | "webgpu" | "webgl2"
     fontSize: 16,
     ligatures: true,
+    showResizeOverlay: true,
     // Optional text-shaper hinting controls:
     // hinting off by default for parity/thickness reasons.
     fontHinting: false,
