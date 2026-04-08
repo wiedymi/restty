@@ -306,6 +306,14 @@ export type ResttyAppOptions = {
   /** PTY transport layer for terminal I/O. */
   ptyTransport?: PtyTransport;
   /**
+   * Forward terminal-generated reply bytes (for example DSR/DA responses)
+   * back to the PTY transport. Enabled by default.
+   *
+   * Set this to false when another terminal instance is the authoritative
+   * server-side emulator and the frontend should behave as a passive renderer.
+   */
+  forwardTerminalReplies?: boolean;
+  /**
    * Optional hook to transform or suppress terminal/program input
    * before it is written to the terminal core.
    */

@@ -76,6 +76,7 @@ type LifecycleThemeRuntime = {
 type CreateRuntimeAppApiOptions = {
   session: ResttyAppSession;
   ptyTransport: PtyTransport;
+  forwardTerminalReplies?: boolean;
   inputHandler: InputHandler;
   ptyInputRuntime: PtyInputRuntime;
   interaction: RuntimeInteraction;
@@ -131,6 +132,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
   const {
     session,
     ptyTransport,
+    forwardTerminalReplies = true,
     inputHandler,
     ptyInputRuntime,
     interaction,
@@ -270,6 +272,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
   function flushWasmOutputToPty() {
     const shared = readState();
     if (!shared.wasm || !shared.wasmHandle) return;
+    if (!forwardTerminalReplies) return;
     if (!ptyTransport.isConnected()) return;
 
     let iterations = 0;

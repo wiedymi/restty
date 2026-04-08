@@ -5,6 +5,8 @@ const entrypoints = [
   "./src/index.ts",
   "./src/internal.ts",
   "./src/xterm.ts",
+  "./src/headless.ts",
+  "./src/serialize.ts",
 ];
 
 const result = await Bun.build({

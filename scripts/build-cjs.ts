@@ -7,11 +7,11 @@ type BundleEntry = {
 };
 
 const entries: BundleEntry[] = [
-  { input: "./src/index.ts", outputName: "restty.esm.js" },
-  { input: "./src/internal.ts", outputName: "internal.esm.js" },
-  { input: "./src/xterm.ts", outputName: "xterm.esm.js" },
-  { input: "./src/headless.ts", outputName: "headless.esm.js" },
-  { input: "./src/serialize.ts", outputName: "serialize.esm.js" },
+  { input: "./src/index.ts", outputName: "restty.cjs" },
+  { input: "./src/internal.ts", outputName: "internal.cjs" },
+  { input: "./src/xterm.ts", outputName: "xterm.cjs" },
+  { input: "./src/headless.ts", outputName: "headless.cjs" },
+  { input: "./src/serialize.ts", outputName: "serialize.cjs" },
 ];
 
 const distDir = resolve("dist");
@@ -22,7 +22,7 @@ const formatBytes = (value: number) => {
   return `${(value / (1024 * 1024)).toFixed(2)} MB`;
 };
 
-console.log("Building standalone ESM bundles...\n");
+console.log("Building standalone CJS bundles...\n");
 
 let hasErrors = false;
 
@@ -30,10 +30,10 @@ for (const entry of entries) {
   const result = await Bun.build({
     entrypoints: [entry.input],
     outdir: distDir,
-    target: "browser",
-    format: "esm",
+    target: "node",
+    format: "cjs",
     splitting: false,
-    minify: true,
+    minify: false,
     naming: entry.outputName,
   });
 
@@ -57,4 +57,4 @@ if (hasErrors) {
   process.exit(1);
 }
 
-console.log("\nStandalone ESM bundles ready in dist/");
+console.log("\nStandalone CJS bundles ready in dist/");

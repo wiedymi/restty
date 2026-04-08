@@ -33,24 +33,39 @@
     "LICENSE"
   ],
   "type": "module",
-  "main": "./dist/restty.js",
+  "main": "./dist/restty.cjs",
   "module": "./dist/restty.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/restty.js",
+      "require": "./dist/restty.cjs",
       "default": "./dist/restty.js"
     },
     "./internal": {
       "types": "./dist/internal.d.ts",
       "import": "./dist/internal.js",
+      "require": "./dist/internal.cjs",
       "default": "./dist/internal.js"
     },
     "./xterm": {
       "types": "./dist/xterm.d.ts",
       "import": "./dist/xterm.js",
+      "require": "./dist/xterm.cjs",
       "default": "./dist/xterm.js"
+    },
+    "./headless": {
+      "types": "./dist/headless.d.ts",
+      "import": "./dist/headless.js",
+      "require": "./dist/headless.cjs",
+      "default": "./dist/headless.js"
+    },
+    "./serialize": {
+      "types": "./dist/serialize.d.ts",
+      "import": "./dist/serialize.js",
+      "require": "./dist/serialize.cjs",
+      "default": "./dist/serialize.js"
     },
     "./esm": {
       "types": "./dist/index.d.ts",
@@ -66,6 +81,16 @@
       "types": "./dist/xterm.d.ts",
       "import": "./dist/xterm.esm.js",
       "default": "./dist/xterm.esm.js"
+    },
+    "./esm/headless": {
+      "types": "./dist/headless.d.ts",
+      "import": "./dist/headless.esm.js",
+      "default": "./dist/headless.esm.js"
+    },
+    "./esm/serialize": {
+      "types": "./dist/serialize.d.ts",
+      "import": "./dist/serialize.esm.js",
+      "default": "./dist/serialize.esm.js"
     }
   },
   "scripts": {
@@ -74,9 +99,10 @@
     "build:themes": "bun run scripts/generate-builtin-themes.ts",
     "build:wasm": "bun run scripts/build-wasm.ts",
     "build:lib": "bun run scripts/build-lib.ts",
+    "build:cjs": "bun run scripts/build-cjs.ts",
     "build:esm": "bun run scripts/build-esm.ts",
     "build:types": "tsc -p tsconfig.build.json",
-    "build": "bun run build:themes && bun run clean:dist && bun run build:lib && bun run build:esm && bun run build:types",
+    "build": "bun run build:themes && bun run clean:dist && bun run build:lib && bun run build:cjs && bun run build:esm && bun run build:types",
     "build:playground-app": "bun run playground/build-playground-app.ts",
     "build:assets": "bun run build:playground-app",
     "check:themes": "bun run build:themes && git diff --exit-code -- src/theme/builtin-themes.ts",

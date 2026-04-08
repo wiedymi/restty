@@ -1226,6 +1226,7 @@ export function createResttyApp(options: ResttyAppOptions): ResttyApp {
   runtimeAppApi = createRuntimeAppApi({
     session,
     ptyTransport,
+    forwardTerminalReplies: options.forwardTerminalReplies,
     inputHandler: inputHandler!,
     ptyInputRuntime,
     interaction: runtimeInteraction,
