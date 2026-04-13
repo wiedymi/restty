@@ -57,8 +57,6 @@ export type ResttyAppElements = {
   gridEl?: HTMLElement | null;
   /** Cell pixel dimensions display. */
   cellEl?: HTMLElement | null;
-  /** Terminal size (cols x rows) display. */
-  termSizeEl?: HTMLElement | null;
   /** Cursor position display. */
   cursorPosEl?: HTMLElement | null;
   /** Mouse mode/status display. */
@@ -77,8 +75,6 @@ export type ResttyAppCallbacks = {
   onGridSize?: (cols: number, rows: number) => void;
   /** Cell pixel dimensions changed. */
   onCellSize?: (cellW: number, cellH: number) => void;
-  /** Terminal size (cols x rows) changed. */
-  onTermSize?: (cols: number, rows: number) => void;
   /** Cursor position changed. */
   onCursor?: (col: number, row: number) => void;
   /** Mouse mode/status changed. */

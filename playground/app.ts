@@ -1017,6 +1017,12 @@ restty = new Restty({
             updatePaneUi(pane.id, (next) => {
               next.ui.ptyStatus = event.status;
             });
+            return;
+          }
+          if (event.type === "term-size") {
+            updatePaneUi(pane.id, (next) => {
+              next.ui.termSize = `${event.cols}x${event.rows}`;
+            });
           }
         });
         pane.app.interaction.setMouseMode(state.mouseMode);
@@ -1067,13 +1073,7 @@ restty = new Restty({
   },
   services: ({ id }) => ({
     ptyTransport: createAdaptivePtyTransport(),
-    callbacks: {
-      onTermSize: (cols, rows) => {
-        updatePaneUi(id, (state) => {
-          state.ui.termSize = `${cols}x${rows}`;
-        });
-      },
-    },
+    callbacks: {},
   }),
 });
 applyShaderPreset();

@@ -127,8 +127,7 @@ export function createRuntimeReporting(options: RuntimeReportingOptions) {
     if (cols === lastReportedTermCols && rows === lastReportedTermRows) return;
     lastReportedTermCols = cols;
     lastReportedTermRows = rows;
-    if (options.termSizeEl) options.termSizeEl.textContent = `${cols}x${rows}`;
-    options.callbacks?.onTermSize?.(cols, rows);
+    options.emitRuntimeEvent?.({ type: "term-size", cols, rows });
   }
 
   function reportCursor(cursorPos: { col: number; row: number } | null): void {

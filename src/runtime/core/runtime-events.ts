@@ -14,6 +14,11 @@ export type ResttyRuntimeEvent =
       backend: string;
     }
   | {
+      type: "term-size";
+      cols: number;
+      rows: number;
+    }
+  | {
       type: "pty-status";
       status: string;
     }

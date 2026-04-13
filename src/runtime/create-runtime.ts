@@ -241,7 +241,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const sizeEl = elements?.sizeEl ?? null;
   const gridEl = elements?.gridEl ?? null;
   const cellEl = elements?.cellEl ?? null;
-  const termSizeEl = elements?.termSizeEl ?? null;
   const cursorPosEl = elements?.cursorPosEl ?? null;
   const mouseStatusEl = elements?.mouseStatusEl ?? null;
 
@@ -498,7 +497,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     getWasmHandle: () => wasmHandle,
     getWasmExports: () => wasmExports,
     callbacks,
-    termSizeEl,
+    emitRuntimeEvent: runtimeEvents.emit,
     cursorPosEl,
     setCursorForCpr: (value) => {
       lastCursorForCpr = value;
