@@ -503,6 +503,13 @@ test("playground source does not import src/internal.ts", () => {
   ).toEqual([]);
 });
 
+test("playground app entrypoint delegates restty construction to the surface bootstrap", () => {
+  const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+
+  expect(appSource).toContain('./lib/surface-bootstrap.ts"');
+  expect(appSource).not.toContain("new Restty(");
+});
+
 test("playground no longer ships legacy runtime status or log widgets", () => {
   const playgroundApp = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
   const playgroundIndex = readFileSync(resolve(playgroundPublicRoot, "index.html"), "utf8");

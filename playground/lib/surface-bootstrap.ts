@@ -23,6 +23,9 @@ type BootstrapPlaygroundSurfaceOptions = {
   paneLifecycle: ReturnType<typeof createPaneLifecycleController>;
   paneShellSync: ReturnType<typeof createPaneShellSync>;
   onDesktopNotification: (notification: PlaygroundDesktopNotification) => void;
+  createRestty?: (config: ConstructorParameters<typeof Restty>[0]) => Restty;
+  createPtyTransport?: typeof createAdaptivePtyTransport;
+  createDemoController?: typeof createDemoController;
 };
 
 export function bootstrapPlaygroundSurface({
@@ -38,6 +41,9 @@ export function bootstrapPlaygroundSurface({
   paneLifecycle,
   paneShellSync,
   onDesktopNotification,
+  createRestty = (config) => new Restty(config),
+  createPtyTransport = createAdaptivePtyTransport,
+  createDemoController: createDemoControllerForPane = createDemoController,
 }: BootstrapPlaygroundSurfaceOptions) {
   let resizeRaf = 0;
   let restty!: Restty;
@@ -52,7 +58,7 @@ export function bootstrapPlaygroundSurface({
     });
   };
 
-  restty = new Restty({
+  restty = createRestty({
     root,
     surface: {
       createInitialPane: false,
@@ -82,7 +88,7 @@ export function bootstrapPlaygroundSurface({
             paneLifecycle.setPanePaused(pane.id, value);
           };
 
-          state.demos = createDemoController(pane.runtime);
+          state.demos = createDemoControllerForPane(pane.runtime);
           pane.runtime.interaction.setMouseMode(state.mouseMode);
           void paneLifecycle.initPane(pane, state);
         },
@@ -139,7 +145,7 @@ export function bootstrapPlaygroundSurface({
       };
     },
     services: () => ({
-      ptyTransport: createAdaptivePtyTransport({
+      ptyTransport: createPtyTransport({
         getConnectionBackend: () => connectionController.getBackend(),
         getPtyUrl: () => connectionController.getConnectUrl(),
         getWebContainerCommand: () => connectionController.getWebContainerCommand(),
