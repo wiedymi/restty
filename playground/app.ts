@@ -27,8 +27,9 @@ import {
 } from "./lib/font-controls.ts";
 import {
   createAdaptivePtyTransport,
-  getConnectUrl,
   getConnectionBackend,
+  getConnectionBackendForValue,
+  getConnectUrlForState,
   syncConnectionUi,
 } from "./lib/pty-connection.ts";
 import {
@@ -52,6 +53,7 @@ import {
   withPanePaused,
 } from "./lib/pane-state.ts";
 import {
+  CONNECTION_BACKEND_CHANGE_EVENT,
   FONT_FAMILY_LOCAL_CHANGE_EVENT,
   FONT_FAMILY_CHANGE_EVENT,
   FONT_FAMILY_STATE_EVENT,
@@ -65,6 +67,7 @@ import {
   MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_EVENT,
   PTY_BUTTON_STATE_EVENT,
+  PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
@@ -79,6 +82,8 @@ import {
   THEME_FILE_RESET_EVENT,
   THEME_SELECT_CHANGE_EVENT,
   THEME_SELECT_STATE_EVENT,
+  WC_COMMAND_CHANGE_EVENT,
+  WC_CWD_CHANGE_EVENT,
   type DemoRunDetail,
   type FontRenderingStateDetail,
   type LocalFontStateDetail,
@@ -148,6 +153,10 @@ const usesSvelteShell = document.documentElement.dataset.playgroundShell === "sv
 let selectedShaderPreset = usesSvelteShell
   ? "none"
   : ((shaderPresetEl?.value as ShaderPreset | undefined) ?? "none");
+let selectedConnectionBackend = getConnectionBackend(connectionBackendEl);
+let selectedPtyUrl = ptyUrlInput?.value ?? "ws://localhost:8787/pty";
+let selectedWebContainerCommand = wcCommandInput?.value?.trim() || "jsh";
+let selectedWebContainerCwd = wcCwdInput?.value?.trim() || "/";
 
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
 let selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
@@ -272,7 +281,7 @@ function syncPtyButton(pane: ManagedPane) {
   if (usesSvelteShell) {
     const label = pane.runtime.io.isPtyConnected()
       ? "Disconnect"
-      : getConnectionBackend(connectionBackendEl) === "webcontainer"
+      : selectedConnectionBackend === "webcontainer"
         ? "Start WebContainer"
         : "Connect PTY";
     window.dispatchEvent(
@@ -288,9 +297,7 @@ function syncPtyButton(pane: ManagedPane) {
     return;
   }
   ptyBtn.textContent =
-    getConnectionBackend(connectionBackendEl) === "webcontainer"
-      ? "Start WebContainer"
-      : "Connect PTY";
+    selectedConnectionBackend === "webcontainer" ? "Start WebContainer" : "Connect PTY";
 }
 
 function syncThemeSelectValue(value: string) {
@@ -393,10 +400,10 @@ function setPanePaused(id: number, value: boolean) {
 }
 
 function connectPaneIfNeeded(pane: ManagedPane) {
-  if (getConnectionBackend(connectionBackendEl) !== "webcontainer") return;
+  if (selectedConnectionBackend !== "webcontainer") return;
   if (pane.runtime.io.isPtyConnected()) return;
   pane.runtime.interaction.updateSize(true);
-  pane.runtime.io.connectPty(getConnectUrl(connectionBackendEl, ptyUrlInput));
+  pane.runtime.io.connectPty(getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl));
   requestAnimationFrame(() => {
     pane.runtime.interaction.updateSize(true);
   });
@@ -487,7 +494,7 @@ restty = new Restty({
     },
     defaultContextMenu: {
       canOpen: () => !isSettingsDialogOpen(),
-      getPtyUrl: () => getConnectUrl(connectionBackendEl, ptyUrlInput),
+      getPtyUrl: () => getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl),
     },
     shortcuts: {
       enabled: true,
@@ -521,10 +528,10 @@ restty = new Restty({
   },
   services: ({ id }) => ({
     ptyTransport: createAdaptivePtyTransport({
-      getConnectionBackend: () => getConnectionBackend(connectionBackendEl),
-      getPtyUrl: () => getConnectUrl(connectionBackendEl, ptyUrlInput),
-      getWebContainerCommand: () => wcCommandInput?.value?.trim() || "jsh",
-      getWebContainerCwd: () => wcCwdInput?.value?.trim() || "/",
+      getConnectionBackend: () => selectedConnectionBackend,
+      getPtyUrl: () => getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl),
+      getWebContainerCommand: () => selectedWebContainerCommand,
+      getWebContainerCwd: () => selectedWebContainerCwd,
     }),
     callbacks: {},
   }),
@@ -573,7 +580,8 @@ window.addEventListener("resize", () => {
   queueResizeAllPanes();
 });
 
-connectionBackendEl?.addEventListener("change", () => {
+function applyConnectionBackend(value: string | null | undefined) {
+  selectedConnectionBackend = getConnectionBackendForValue(value);
   if (!usesSvelteShell) {
     syncConnectionUi({
       connectionBackendEl,
@@ -588,7 +596,7 @@ connectionBackendEl?.addEventListener("change", () => {
       pane.runtime.io.disconnectPty();
     }
   }
-  if (getConnectionBackend(connectionBackendEl) === "webcontainer") {
+  if (selectedConnectionBackend === "webcontainer") {
     for (const pane of restty.getPanes()) {
       connectPaneIfNeeded(pane);
     }
@@ -598,7 +606,47 @@ connectionBackendEl?.addEventListener("change", () => {
   if (activePane) {
     syncPtyButton(activePane);
   }
-});
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(CONNECTION_BACKEND_CHANGE_EVENT, (event) => {
+    applyConnectionBackend((event as FontControlChangeEvent).detail?.value);
+  });
+  window.addEventListener(PTY_URL_CHANGE_EVENT, (event) => {
+    selectedPtyUrl = (event as FontControlChangeEvent).detail?.value ?? selectedPtyUrl;
+  });
+  window.addEventListener(WC_COMMAND_CHANGE_EVENT, (event) => {
+    selectedWebContainerCommand = (event as FontControlChangeEvent).detail?.value?.trim() || "jsh";
+  });
+  window.addEventListener(WC_CWD_CHANGE_EVENT, (event) => {
+    selectedWebContainerCwd = (event as FontControlChangeEvent).detail?.value?.trim() || "/";
+  });
+} else {
+  connectionBackendEl?.addEventListener("change", () => {
+    selectedPtyUrl = ptyUrlInput?.value ?? selectedPtyUrl;
+    selectedWebContainerCommand = wcCommandInput?.value?.trim() || "jsh";
+    selectedWebContainerCwd = wcCwdInput?.value?.trim() || "/";
+    applyConnectionBackend(connectionBackendEl?.value);
+  });
+  ptyUrlInput?.addEventListener("input", () => {
+    selectedPtyUrl = ptyUrlInput.value;
+  });
+  ptyUrlInput?.addEventListener("change", () => {
+    selectedPtyUrl = ptyUrlInput.value;
+  });
+  wcCommandInput?.addEventListener("input", () => {
+    selectedWebContainerCommand = wcCommandInput.value.trim() || "jsh";
+  });
+  wcCommandInput?.addEventListener("change", () => {
+    selectedWebContainerCommand = wcCommandInput.value.trim() || "jsh";
+  });
+  wcCwdInput?.addEventListener("input", () => {
+    selectedWebContainerCwd = wcCwdInput.value.trim() || "/";
+  });
+  wcCwdInput?.addEventListener("change", () => {
+    selectedWebContainerCwd = wcCwdInput.value.trim() || "/";
+  });
+}
 
 function handleTerminalInit() {
   const pane = getActivePane();
@@ -659,7 +707,7 @@ function handlePtyButtonClick() {
   if (pane.runtime.io.isPtyConnected()) {
     pane.runtime.io.disconnectPty();
   } else {
-    pane.runtime.io.connectPty(getConnectUrl(connectionBackendEl, ptyUrlInput));
+    pane.runtime.io.connectPty(getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl));
   }
   syncPtyButton(pane);
 }

@@ -5,6 +5,7 @@ import type { ShaderPreset } from "./shader-presets.ts";
 
 export const SETTINGS_OPEN_EVENT = "restty:playground-settings-open";
 export const SETTINGS_CLOSE_EVENT = "restty:playground-settings-close";
+export const CONNECTION_BACKEND_CHANGE_EVENT = "restty:playground-connection-backend-change";
 export const RUN_DEMO_EVENT = "restty:playground-demo-run";
 export const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
 export const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
@@ -15,12 +16,15 @@ export const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change"
 export const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
 export const FONT_RENDERING_STATE_EVENT = "restty:playground-font-rendering-state";
 export const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
+export const PTY_URL_CHANGE_EVENT = "restty:playground-pty-url-change";
 export const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
 export const THEME_FILE_RESET_EVENT = "restty:playground-theme-file-reset";
 export const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
 export const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
 export const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
 export const THEME_SELECT_STATE_EVENT = "restty:playground-theme-select-state";
+export const WC_COMMAND_CHANGE_EVENT = "restty:playground-webcontainer-command-change";
+export const WC_CWD_CHANGE_EVENT = "restty:playground-webcontainer-cwd-change";
 export const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 export const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
 export const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";

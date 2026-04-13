@@ -3,7 +3,9 @@ import type { PtyConnectOptions, PtyResizeMeta, PtyTransport } from "../src/inde
 import {
   createAdaptivePtyTransport,
   getConnectUrl,
+  getConnectUrlForState,
   getConnectionBackend,
+  getConnectionBackendForValue,
   getConnectionUiState,
   syncConnectionUi,
 } from "../playground/lib/pty-connection.ts";
@@ -46,11 +48,23 @@ test("getConnectionBackend resolves webcontainer and defaults to ws", () => {
   expect(getConnectionBackend(null)).toBe("ws");
 });
 
+test("getConnectionBackendForValue resolves webcontainer and defaults to ws", () => {
+  expect(getConnectionBackendForValue("webcontainer")).toBe("webcontainer");
+  expect(getConnectionBackendForValue("ws")).toBe("ws");
+  expect(getConnectionBackendForValue("other")).toBe("ws");
+  expect(getConnectionBackendForValue(null)).toBe("ws");
+});
+
 test("getConnectUrl returns blank for webcontainer and trims ws urls", () => {
   expect(getConnectUrl({ value: "webcontainer" }, { value: " ws://localhost:8787/pty " })).toBe("");
   expect(getConnectUrl({ value: "ws" }, { value: " ws://localhost:8787/pty " })).toBe(
     "ws://localhost:8787/pty",
   );
+});
+
+test("getConnectUrlForState returns blank for webcontainer and trims ws urls", () => {
+  expect(getConnectUrlForState("webcontainer", " ws://localhost:8787/pty ")).toBe("");
+  expect(getConnectUrlForState("ws", " ws://localhost:8787/pty ")).toBe("ws://localhost:8787/pty");
 });
 
 test("syncConnectionUi toggles inputs and hint text", () => {

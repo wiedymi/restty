@@ -31,18 +31,29 @@ export type ConnectionUiElements = {
   connectionHintEl: ConnectionUiElement | null;
 };
 
+export function getConnectionBackendForValue(value: string | null | undefined): ConnectionBackend {
+  return value === "webcontainer" ? "webcontainer" : "ws";
+}
+
 export function getConnectionBackend(
   connectionBackendEl: ConnectionBackendElement | null,
 ): ConnectionBackend {
-  return connectionBackendEl?.value === "webcontainer" ? "webcontainer" : "ws";
+  return getConnectionBackendForValue(connectionBackendEl?.value);
+}
+
+export function getConnectUrlForState(
+  backend: ConnectionBackend,
+  ptyUrl: string | null | undefined,
+): string {
+  if (backend === "webcontainer") return "";
+  return ptyUrl?.trim?.() ?? "";
 }
 
 export function getConnectUrl(
   connectionBackendEl: ConnectionBackendElement | null,
   ptyUrlInput: ConnectionUiElement | null,
 ): string {
-  if (getConnectionBackend(connectionBackendEl) === "webcontainer") return "";
-  return ptyUrlInput?.value?.trim?.() ?? "";
+  return getConnectUrlForState(getConnectionBackend(connectionBackendEl), ptyUrlInput?.value);
 }
 
 export function getConnectionUiState(backend: ConnectionBackend): ConnectionUiState {

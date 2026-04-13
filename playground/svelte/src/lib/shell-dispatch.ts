@@ -1,6 +1,7 @@
 import type { PlaygroundDemoKind } from "../../../lib/demos.ts";
 import type { ShaderPreset } from "../../../lib/shader-presets.ts";
 import {
+  CONNECTION_BACKEND_CHANGE_EVENT,
   FONT_FAMILY_LOCAL_CHANGE_EVENT,
   FONT_FAMILY_CHANGE_EVENT,
   FONT_HINT_TARGET_CHANGE_EVENT,
@@ -9,6 +10,7 @@ import {
   LOAD_LOCAL_FONTS_EVENT,
   MOUSE_MODE_CHANGE_EVENT,
   PTY_BUTTON_EVENT,
+  PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
@@ -20,6 +22,8 @@ import {
   TERMINAL_RENDERER_EVENT,
   THEME_FILE_CHANGE_EVENT,
   THEME_SELECT_CHANGE_EVENT,
+  WC_COMMAND_CHANGE_EVENT,
+  WC_CWD_CHANGE_EVENT,
 } from "../../../lib/shell-events.ts";
 
 function dispatchShellEvent<T>(type: string, detail?: T, target: EventTarget = window) {
@@ -38,6 +42,10 @@ export function dispatchSettingsClose(target: EventTarget = window) {
 
 export function dispatchDemoRun(kind: PlaygroundDemoKind | string, target: EventTarget = window) {
   dispatchShellEvent(RUN_DEMO_EVENT, { kind }, target);
+}
+
+export function dispatchConnectionBackendChange(value: string, target: EventTarget = window) {
+  dispatchShellEvent(CONNECTION_BACKEND_CHANGE_EVENT, { value }, target);
 }
 
 export function dispatchTerminalInit(target: EventTarget = window) {
@@ -62,6 +70,10 @@ export function dispatchTerminalRendererChange(value: string, target: EventTarge
 
 export function dispatchPtyButton(target: EventTarget = window) {
   dispatchShellEvent(PTY_BUTTON_EVENT, undefined, target);
+}
+
+export function dispatchPtyUrlChange(value: string, target: EventTarget = window) {
+  dispatchShellEvent(PTY_URL_CHANGE_EVENT, { value }, target);
 }
 
 export function dispatchFontFamilyChange(value: string, target: EventTarget = window) {
@@ -98,6 +110,14 @@ export function dispatchThemeSelectChange(value: string, target: EventTarget = w
 
 export function dispatchThemeFileChange(file: File | null, target: EventTarget = window) {
   dispatchShellEvent(THEME_FILE_CHANGE_EVENT, { file }, target);
+}
+
+export function dispatchWebContainerCommandChange(value: string, target: EventTarget = window) {
+  dispatchShellEvent(WC_COMMAND_CHANGE_EVENT, { value }, target);
+}
+
+export function dispatchWebContainerCwdChange(value: string, target: EventTarget = window) {
+  dispatchShellEvent(WC_CWD_CHANGE_EVENT, { value }, target);
 }
 
 export function dispatchShaderPresetChange(
