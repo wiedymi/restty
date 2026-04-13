@@ -1,6 +1,6 @@
 import { type ResttyPaneManager } from "./panes-types";
 import { createResttyPaneManager } from "./panes/manager";
-import { createManagedPane } from "./panes/managed-pane-factory";
+import { createManagedPane } from "./panes/managed-pane-create";
 import {
   resolveManagedPaneContextMenu,
   resolveManagedPaneShortcuts,
