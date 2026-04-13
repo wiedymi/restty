@@ -13,10 +13,14 @@ import type { ResttyRuntime } from "../core/api";
 import type {
   RuntimeController,
   RuntimeControllerOptions,
+  RuntimeControllerPublicOptions,
+} from "./runtime-controller.api.types";
+import type {
   RuntimeControllerSharedState,
   RuntimeControllerInternalState,
-  RuntimeControllerPublicOptions,
-} from "./runtime-controller.types";
+} from "./runtime-controller.state.types";
+
+export type { RuntimeControllerSharedState } from "./runtime-controller.state.types";
 
 export function createRuntimeController(options: RuntimeControllerOptions): RuntimeController {
   const {

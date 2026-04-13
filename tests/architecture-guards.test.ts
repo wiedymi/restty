@@ -147,8 +147,8 @@ test("legacy mixed interaction-runtime types barrel is removed", () => {
 });
 
 test("runtime controller and reporting point at split interaction contracts", () => {
-  const controllerTypes = readFileSync(
-    resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"),
+  const controllerApiTypes = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.api.types.ts"),
     "utf8",
   );
   const reportingTypes = readFileSync(
@@ -156,8 +156,12 @@ test("runtime controller and reporting point at split interaction contracts", ()
     "utf8",
   );
 
-  expect(controllerTypes).toContain("./interaction-runtime/runtime.types");
+  expect(controllerApiTypes).toContain("./interaction-runtime/runtime.types");
   expect(reportingTypes).toContain("./interaction-runtime/state.types");
+});
+
+test("legacy combined runtime controller types file is removed", () => {
+  expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });
 
 test("scrollbar runtime contract is split from generic interaction state", () => {

@@ -124,10 +124,8 @@ import { createRuntimeReporting } from "./create-runtime/runtime-reporting";
 import { createResttyFontResourceStore } from "./fonts/font-resource-store";
 import type { RuntimeTerminalColor } from "./create-runtime/highlight-terminal-color-utils.types";
 import { createRuntimeController } from "./create-runtime/runtime-controller";
-import type {
-  RuntimeController,
-  RuntimeControllerSharedState,
-} from "./create-runtime/runtime-controller.types";
+import type { RuntimeController } from "./create-runtime/runtime-controller.api.types";
+import type { RuntimeControllerSharedState } from "./create-runtime/runtime-controller.state.types";
 export { createResttyRuntimeSession, getDefaultResttyRuntimeSession } from "./core/session";
 export type { ResttyRuntime } from "./core/api";
 export type { ResttyRuntimeConfig } from "./core/config";

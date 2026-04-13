@@ -2,7 +2,6 @@ import type { InputHandler } from "../../input";
 import type { PtyTransport } from "../../pty";
 import type { WebGPUState, WebGLState } from "../../renderer";
 import type { GhosttyTheme } from "../../theme";
-import type { ResttyWasm, ResttyWasmExports } from "../../wasm";
 import type {
   ResttyRuntime,
   ResttyRuntimeInteractionApi,
@@ -14,31 +13,10 @@ import type { ResttyRuntimeEventHub } from "../core/runtime-events";
 import type { ResttyRuntimeSession } from "../core/resources";
 import type { RuntimeInteraction } from "./interaction-runtime/runtime.types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
-
-export type RuntimeControllerSharedState = {
-  wasm: ResttyWasm | null;
-  wasmExports: ResttyWasmExports | null;
-  wasmHandle: number;
-  wasmReady: boolean;
-  activeState: WebGPUState | WebGLState | null;
-  needsRender: boolean;
-  lastRenderTime: number;
-  currentContextType: "webgpu" | "webgl2" | null;
-  isFocused: boolean;
-  lastKeydownSeq: string;
-  lastKeydownSeqAt: number;
-};
-
-export type RuntimeBackend = "none" | "webgpu" | "webgl2";
-export type PreferredRenderer = "auto" | "webgpu" | "webgl2";
-
-export type RuntimeControllerInternalState = {
-  paused: boolean;
-  backend: RuntimeBackend;
-  preferredRenderer: PreferredRenderer;
-  rafId: number;
-  nextBlinkTime: number;
-};
+import type {
+  PreferredRenderer,
+  RuntimeControllerSharedState,
+} from "./runtime-controller.state.types";
 
 export type RuntimeSendInput = (
   text: string,
