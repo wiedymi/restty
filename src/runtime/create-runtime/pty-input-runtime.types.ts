@@ -1,7 +1,7 @@
 import type { InputHandler } from "../../input";
 import type { PtyResizeMeta, PtyTransport } from "../../pty";
 import type { ResttyRuntimeEvent } from "../core/runtime-events";
-import type { PtyOutputBufferController } from "./pty-output-buffer";
+import type { PtyOutputBufferController } from "./pty-output-buffer.types";
 
 export type CursorPosition = {
   row: number;
