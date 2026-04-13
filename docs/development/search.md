@@ -52,7 +52,7 @@ Restty already has most of the rendering seams needed for search highlights:
   - `src/runtime/create-runtime/render-tick-webgpu-draw-pass.ts`
   - `src/runtime/create-runtime/render-tick-webgl-glyph-pipeline.ts`
 - Interaction state already owns transient UI/runtime state in:
-  - `src/runtime/create-runtime/interaction-runtime.ts`
+  - `src/runtime/create-runtime/interaction-runtime/index.ts`
 - The public runtime API is assembled in:
   - `src/runtime/create-runtime/runtime-api.ts`
 

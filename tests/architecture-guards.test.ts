@@ -129,12 +129,12 @@ test("runtime internals do not import src/runtime/types.ts", () => {
   ).toEqual([]);
 });
 
-test("runtime internals do not use interaction-runtime.ts as a type barrel", () => {
+test("runtime internals do not use interaction-runtime/index.ts as a type barrel", () => {
   const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
-    return file !== resolve(runtimeCreateRuntimeRoot, "interaction-runtime.ts");
+    return file !== resolve(runtimeCreateRuntimeRoot, "interaction-runtime/index.ts");
   });
   const offenders = collectResolvedImports(runtimeFiles).filter(({ resolved }) => {
-    return resolved === resolve(runtimeCreateRuntimeRoot, "interaction-runtime.ts");
+    return resolved === resolve(runtimeCreateRuntimeRoot, "interaction-runtime/index.ts");
   });
 
   expect(

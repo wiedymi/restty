@@ -520,7 +520,7 @@ src/
       shader-stage-runtime.ts
       kitty-render-runtime.ts
     interaction/
-      interaction-runtime.ts
+      interaction-runtime/index.ts
       bind-ime-events.ts
       bind-pointer-events.ts
       scrollbar-runtime.ts

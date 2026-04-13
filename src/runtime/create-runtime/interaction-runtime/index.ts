@@ -2,11 +2,11 @@ import {
   createSelectionState,
   normalizeSelectionCell as normalizeGridSelectionCell,
   positionToCell as mapClientPositionToCell,
-} from "../../selection";
-import { resolveDesktopWordSelectionRange } from "./interaction-runtime/desktop-word-selection";
-import { bindImeEvents } from "./interaction-runtime/bind-ime-events";
-import { bindPointerEvents } from "./interaction-runtime/bind-pointer-events";
-import { createScrollbarRuntime } from "./interaction-runtime/scrollbar-runtime";
+} from "../../../selection";
+import { resolveDesktopWordSelectionRange } from "./desktop-word-selection";
+import { bindImeEvents } from "./bind-ime-events";
+import { bindPointerEvents } from "./bind-pointer-events";
+import { createScrollbarRuntime } from "./scrollbar-runtime";
 import type {
   BindCanvasEventsOptions,
   CreateRuntimeInteractionOptions,
@@ -17,14 +17,14 @@ import type {
   RuntimeLinkState,
   RuntimeScrollbarState,
   RuntimeTouchSelectionState,
-} from "./interaction-runtime/types";
+} from "./types";
 
 export type {
   BindCanvasEventsOptions,
   CreateRuntimeInteractionOptions,
   RuntimeCell,
   RuntimeInteraction,
-} from "./interaction-runtime/types";
+} from "./types";
 
 export function createRuntimeInteraction(
   options: CreateRuntimeInteractionOptions,
