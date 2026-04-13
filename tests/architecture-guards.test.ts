@@ -125,6 +125,21 @@ test("surface source does not import runtime create-runtime internals", () => {
   ).toEqual([]);
 });
 
+test("surface pane runtime helpers do not depend on manager option indexed access types", () => {
+  const paneHelperFiles = [
+    resolve(surfaceRoot, "panes/managed-pane-create.ts"),
+    resolve(surfaceRoot, "panes/managed-pane-runtime.ts"),
+    resolve(surfaceRoot, "panes/managed-pane-runtime-config.ts"),
+  ];
+  const offenders = paneHelperFiles.flatMap((file) => {
+    const source = readFileSync(file, "utf8");
+    const matches = source.match(/CreateResttyAppPaneManagerOptions\["(?:terminal|services)"\]/g);
+    return matches ? [`${relative(repoRoot, file)} -> ${matches[0]}`] : [];
+  });
+
+  expect(offenders).toEqual([]);
+});
+
 test("playground source does not import src/internal.ts", () => {
   const playgroundFiles = listTsFiles(playgroundRoot, {
     exclude: [playgroundPublicRoot, playgroundDistRoot],
