@@ -22,7 +22,7 @@ This spec does not propose a renderer rewrite, a WASM rewrite, or a behavior cha
 
 - Preserve `runtime` and `surface` as the architectural names.
 - Make the public API feel intentionally designed rather than inherited from internal manager/runtime types.
-- Separate terminal behavior config from mount, services, and debug wiring without inventing a second config vocabulary.
+- Separate terminal behavior config from mount and services without inventing a second config vocabulary.
 - Reduce the amount of unstable API that leaks through `restty/internal`.
 - Make the playground consume the same public API that users consume.
 - Move the playground to a component-based UI architecture.
@@ -44,7 +44,7 @@ The current `ResttyOptions` is effectively a modified pane-manager config instea
 
 ### 2. Runtime options are too broad
 
-The current runtime config mixes mount requirements, rendering options, fonts, PTY transport, interaction settings, callbacks, hooks, debug DOM elements, and scrollback tuning in one flat shape. This makes the type harder to read, harder to document, and easier to misuse.
+The current runtime config mixes mount requirements, rendering options, fonts, PTY transport, interaction settings, callbacks, hooks, optional status DOM elements, and scrollback tuning in one flat shape. This makes the type harder to read, harder to document, and easier to misuse.
 
 ### 3. Naming is too generic
 
@@ -249,9 +249,6 @@ export type ResttyRuntimeConfig = {
   mount: ResttyRuntimeMountConfig;
   terminal: ResttyTerminalConfig;
   services?: ResttyRuntimeServicesConfig;
-  interaction?: ResttyRuntimeInteractionConfig;
-  hooks?: ResttyRuntimeHookConfig;
-  debug?: ResttyRuntimeDebugConfig;
 };
 ```
 
@@ -267,30 +264,8 @@ export type ResttyRuntimeMountConfig = {
 export type ResttyRuntimeServicesConfig = {
   ptyTransport?: PtyTransport;
   callbacks?: ResttyAppCallbacks;
-};
-```
-
-```ts
-export type ResttyRuntimeInteractionConfig = {
-  autoResize?: boolean;
-  attachWindowEvents?: boolean;
-  attachCanvasEvents?: boolean;
-  touchSelectionMode?: ResttyTouchSelectionMode;
-  touchSelectionLongPressMs?: number;
-  touchSelectionMoveThresholdPx?: number;
-};
-```
-
-```ts
-export type ResttyRuntimeHookConfig = {
   beforeInput?: (payload: ResttyAppInputPayload) => string | null | void;
   beforeRenderOutput?: (payload: ResttyAppInputPayload) => string | null | void;
-};
-```
-
-```ts
-export type ResttyRuntimeDebugConfig = {
-  exposeToWindow?: boolean;
 };
 ```
 
@@ -491,7 +466,6 @@ Preferred unstable subpaths:
 - `restty/internal/runtime`
 - `restty/internal/surface`
 - `restty/internal/plugins`
-- `restty/internal/debug`
 
 Preferred `internal` exports for power users:
 
@@ -503,7 +477,6 @@ Preferred `internal` exports for power users:
 - session and shared resource primitives
 - surface building blocks for custom shells
 - plugin host/runtime primitives
-- dedicated debug helpers
 
 ## Module Layout
 
@@ -564,9 +537,8 @@ src/
     search/
       search-runtime.ts
       search-highlight-utils.ts
-    debug/
+    telemetry/
       runtime-reporting.ts
-      debug-tools/
 ```
 
 Notes:
@@ -648,14 +620,6 @@ The following files are the clearest candidates for relocation or splitting base
   - `create-runtime.ts` should only compose subsystems and expose the runtime API
   - implementation helpers should live in subfolders
 
-- `src/runtime/create-app-types.ts`
-  Split immediately.
-  This file currently combines local-font-access types, debug window exposure types, and compiled shader-stage types.
-  Target:
-  - `runtime/fonts/local-font-access.ts`
-  - `runtime/debug/debug-window.ts`
-  - `runtime/render/stages/compiled-stage-types.ts`
-
 - `src/runtime/create-app-symbols.ts`
   Split immediately.
   This file currently mixes symbol-constraint policy with touch-selection config behavior.
@@ -709,7 +673,7 @@ The following files are the clearest candidates for relocation or splitting base
 
 - `src/runtime/types.ts`
   Split over time.
-  It currently holds session, debug elements, callbacks, font-source types, shader-stage types, runtime config, and runtime API.
+  It currently holds session, status elements, callbacks, font-source types, shader-stage types, runtime config, and runtime API.
   Target:
   - `runtime/core/types.ts`
   - `runtime/core/config.ts`
@@ -755,7 +719,7 @@ This does not require a complex state machine framework. It does require a first
 Spec direction:
 
 - keep `ResttyTerminalConfig` focused on behavior such as renderer selection, font behavior, shader stages, and scrollback policy
-- move `ptyTransport`, callbacks, debug DOM, session, canvas, and IME into service or mount concerns
+- move `ptyTransport`, callbacks, optional status DOM, session, canvas, and IME into service or mount concerns
 - keep service types small and explicit rather than letting them grow into another generic options bag
 
 This is the main guardrail that prevents the new naming from collapsing back into another broad catch-all config type.
@@ -798,12 +762,12 @@ This complements the runtime lifecycle work and should reduce hidden ordering as
 
 ### 6. Move DOM-specific concerns out of runtime core
 
-Runtime should understand mount requirements, but shell DOM and debug DOM should not shape its core contract.
+Runtime should understand mount requirements, but shell DOM and optional status DOM should not shape its core contract.
 
 Spec direction:
 
 - keep `mount` limited to the DOM that is required to host one runtime, such as canvas and IME input
-- move debug panels, shell overlays, and other optional DOM concerns into adapters owned by `surface`, playground, or dedicated debug modules
+- move status panels, shell overlays, and other optional DOM concerns into adapters owned by `surface` or playground code
 - keep runtime core testable without requiring the full playground shell DOM structure
 
 ### 7. Make plugin ownership clearer
@@ -986,7 +950,7 @@ Exit criteria:
 - move cross-cutting logic into clearly owned modules
 - split `Restty` internals into smaller coordinators
 - split runtime internals by capability instead of growing one wide runtime API
-- move DOM-specific debug and shell concerns out of runtime core
+- move DOM-specific status and shell concerns out of runtime core
 - consolidate plugin ownership under one `surface/plugins/` area
 - narrow `restty/internal`
 
