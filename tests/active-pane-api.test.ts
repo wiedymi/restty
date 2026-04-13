@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { ResttySearchState } from "../src/runtime/types";
-import { ResttyPaneHandle } from "../src/surface/restty-pane-handle";
+import { ResttyPaneHandle } from "../src/surface/restty/pane-handle";
 import { ResttyActivePaneApi } from "../src/surface/restty/active-pane-api";
 
 class TestActivePaneApi extends ResttyActivePaneApi {

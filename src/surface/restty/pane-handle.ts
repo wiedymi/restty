@@ -1,16 +1,16 @@
-import type { InputHandler, MouseMode } from "../input";
-import type { GhosttyTheme } from "../theme";
+import type { InputHandler, MouseMode } from "../../input";
+import type { GhosttyTheme } from "../../theme";
 import type {
   ResttyManagedPane,
   ResttyManagedPaneSearchUiStyleOptions,
-} from "./panes/managed-pane-types";
+} from "../panes/managed-pane-types";
 import type {
   ResttyFontHintTarget,
   ResttyFontSource,
   ResttySearchState,
   ResttyShaderStage,
-} from "../runtime/core/models";
-import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "./search-ui";
+} from "../../runtime/core/models";
+import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "../search-ui";
 
 type PaneSearchUiHandleOps = {
   open: (paneId: number, options?: ResttyPaneSearchUiOpenOptions) => void;

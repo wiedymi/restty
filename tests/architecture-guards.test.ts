@@ -214,7 +214,7 @@ test("surface config helpers do not depend on manager option indexed access type
 
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
-    resolve(surfaceRoot, "restty-pane-handle.ts"),
+    resolve(surfaceRoot, "restty/pane-handle.ts"),
     resolve(surfaceRoot, "restty/active-pane-api.ts"),
     resolve(surfaceRoot, "restty/config.ts"),
     resolve(surfaceRoot, "restty/events.ts"),

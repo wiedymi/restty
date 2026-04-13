@@ -23,7 +23,7 @@ import {
 } from "./runtime";
 import { normalizeShaderStage } from "../../runtime/shader-stages";
 import type { ResttyShaderStage } from "../../runtime/core/models";
-import type { ResttyPaneHandle } from "../restty-pane-handle";
+import type { ResttyPaneHandle } from "../restty/pane-handle";
 import type { Restty } from "../restty";
 
 export type ResttyPluginHostDeps = {

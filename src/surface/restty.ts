@@ -6,7 +6,7 @@ import type {
   ResttyManagedPaneSearchUiStyleOptions,
   ResttyManagedPaneStyleOptions,
 } from "./panes/managed-pane-types";
-import { ResttyPaneHandle } from "./restty-pane-handle";
+import { ResttyPaneHandle } from "./restty/pane-handle";
 import { ResttyActivePaneApi } from "./restty/active-pane-api";
 import {
   createMergedPaneServicesConfig,
@@ -44,8 +44,8 @@ import type { ResttyConfig } from "./restty/config";
 import * as paneOps from "./restty/pane-ops";
 import { ResttyShaderOps } from "./restty/shader-ops";
 
-export { ResttyPaneHandle } from "./restty-pane-handle";
-export type { ResttyPaneApi } from "./restty-pane-handle";
+export { ResttyPaneHandle } from "./restty/pane-handle";
+export type { ResttyPaneApi } from "./restty/pane-handle";
 export { RESTTY_PLUGIN_API_VERSION } from "./plugins/types";
 export type {
   ResttyPluginApiRange,

@@ -5,7 +5,7 @@ import type {
   ResttyFontSource,
   ResttySearchState,
 } from "../../runtime/core/models";
-import type { ResttyPaneHandle } from "../restty-pane-handle";
+import type { ResttyPaneHandle } from "./pane-handle";
 import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "../search-ui";
 import type { ResttyManagedPaneSearchUiStyleOptions } from "../panes/managed-pane-types";
 
