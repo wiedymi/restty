@@ -109,7 +109,7 @@ import {
 import {
   padAtlasRGBA,
   resolveGlyphPixelMode as resolveGlyphPixelModeFromEntry,
-} from "./create-runtime/atlas-debug-utils";
+} from "./create-runtime/atlas-bitmap-utils";
 import { formatCodepoint } from "./create-runtime/format-utils";
 import { createShaderStageRuntime } from "./create-runtime/shader-stage-runtime";
 import { createColorGlyphAtlasHelpers } from "./create-runtime/color-glyph-atlas";
