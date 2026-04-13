@@ -4,7 +4,7 @@ import type {
   CompiledWebGPUShaderStage,
   WebGLStageTargets,
   WebGPUStageTargets,
-} from "./create-app-types";
+} from "./render-stage-runtime.types";
 import type { ResttyShaderStage } from "../core/models";
 
 export type ShaderStageRuntimeOptions = {

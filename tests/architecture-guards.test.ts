@@ -158,6 +158,16 @@ test("runtime internals do not use render-tick-webgl-context.ts as a type barrel
   ).toEqual([]);
 });
 
+test("shader stage runtime contracts do not import render stage types through create-app-types", () => {
+  const source = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "shader-stage-runtime.types.ts"),
+    "utf8",
+  );
+
+  expect(source).not.toContain("./create-app-types");
+  expect(source).toContain("./render-stage-runtime.types");
+});
+
 test("surface source does not import runtime create-runtime internals", () => {
   const surfaceFiles = listTsFiles(surfaceRoot);
   const offenders = collectResolvedImports(surfaceFiles).filter(({ resolved }) => {
