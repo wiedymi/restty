@@ -32,6 +32,7 @@ If you are integrating restty into an app, read in this order:
 
 ## Development Docs
 
+- [`development/runtime-surface-refactor-spec.md`](./development/runtime-surface-refactor-spec.md)
 - [`development/playground.md`](./development/playground.md)
 - [`development/roadmap.md`](./development/roadmap.md)
 - [`development/search.md`](./development/search.md)
