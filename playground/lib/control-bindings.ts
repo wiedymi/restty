@@ -10,6 +10,8 @@ import {
   PTY_BUTTON_EVENT,
   PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
+  SETTINGS_CLOSE_EVENT,
+  SETTINGS_OPEN_EVENT,
   SHADER_PRESET_CHANGE_EVENT,
   TERMINAL_CLEAR_EVENT,
   TERMINAL_FONT_SIZE_EVENT,
@@ -276,6 +278,51 @@ export function bindAppearanceControls(options: {
       listen(options.btnLoadLocalFonts, "click", () => {
         void options.onLoadLocalFonts();
       }),
+    );
+  }
+
+  return () => {
+    for (const dispose of disposers) dispose();
+  };
+}
+
+export function bindSettingsControls(options: {
+  usesSvelteShell: boolean;
+  target: Window & TargetLike;
+  settingsDialog: (HTMLDialogElement & TargetLike) | null;
+  settingsFab: NullableTarget;
+  settingsClose: NullableTarget;
+  onOpen: () => void;
+  onClose: () => void;
+}): Disposer {
+  const disposers: Disposer[] = [];
+
+  if (options.usesSvelteShell) {
+    disposers.push(
+      listen(options.target, SETTINGS_OPEN_EVENT, options.onOpen),
+      listen(options.target, SETTINGS_CLOSE_EVENT, options.onClose),
+    );
+  } else {
+    disposers.push(
+      listen(options.settingsFab, "click", options.onOpen),
+      listen(options.settingsClose, "click", options.onClose),
+      listen(options.settingsDialog, "click", (event) => {
+        if (event.target !== options.settingsDialog) return;
+        options.onClose();
+      }),
+      listen(options.settingsDialog, "cancel", (event) => {
+        event.preventDefault();
+        options.onClose();
+      }),
+      listen(
+        options.target,
+        "keydown",
+        (event) => {
+          if (event.key !== "Escape") return;
+          options.onClose();
+        },
+        { capture: true },
+      ),
     );
   }
 

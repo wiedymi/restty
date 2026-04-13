@@ -4,6 +4,7 @@ import { createConnectionController } from "./lib/connection-controller.ts";
 import {
   bindAppearanceControls,
   bindConnectionControls,
+  bindSettingsControls,
   bindTerminalControls,
 } from "./lib/control-bindings.ts";
 import {
@@ -415,43 +416,28 @@ restty = new Restty({
 });
 appearanceController.applyCurrentShaderPreset();
 
-if (usesSvelteShell) {
-  window.addEventListener(SETTINGS_OPEN_EVENT, () => {
-    restty.hideContextMenu();
-  });
-  window.addEventListener(SETTINGS_CLOSE_EVENT, () => {
-    restoreTerminalFocus(restty);
-  });
-} else {
-  settingsFab?.addEventListener("click", () => {
+bindSettingsControls({
+  usesSvelteShell,
+  target: window,
+  settingsDialog,
+  settingsFab,
+  settingsClose,
+  onOpen: () => {
+    if (usesSvelteShell) {
+      restty.hideContextMenu();
+      return;
+    }
     openSettingsDialog({ host: restty, settingsDialog });
-  });
-
-  settingsClose?.addEventListener("click", () => {
+  },
+  onClose: () => {
+    if (usesSvelteShell) {
+      restoreTerminalFocus(restty);
+      return;
+    }
+    if (!isSettingsDialogOpen(settingsDialog)) return;
     closeSettingsDialog({ host: restty, settingsDialog });
-  });
-
-  settingsDialog?.addEventListener("click", (event) => {
-    if (event.target !== settingsDialog) return;
-    closeSettingsDialog({ host: restty, settingsDialog });
-  });
-
-  settingsDialog?.addEventListener("cancel", (event) => {
-    event.preventDefault();
-    closeSettingsDialog({ host: restty, settingsDialog });
-  });
-
-  window.addEventListener(
-    "keydown",
-    (event) => {
-      if (isSettingsDialogOpen(settingsDialog) && event.key === "Escape") {
-        event.preventDefault();
-        closeSettingsDialog({ host: restty, settingsDialog });
-      }
-    },
-    { capture: true },
-  );
-}
+  },
+});
 
 window.addEventListener("resize", () => {
   queueResizeAllPanes();

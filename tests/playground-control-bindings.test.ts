@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import {
   bindAppearanceControls,
   bindConnectionControls,
+  bindSettingsControls,
   bindTerminalControls,
 } from "../playground/lib/control-bindings.ts";
 import {
@@ -10,6 +11,8 @@ import {
   FONT_HINTING_CHANGE_EVENT,
   PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
+  SETTINGS_CLOSE_EVENT,
+  SETTINGS_OPEN_EVENT,
   TERMINAL_CLEAR_EVENT,
   TERMINAL_FONT_SIZE_EVENT,
   TERMINAL_INIT_EVENT,
@@ -215,4 +218,47 @@ test("control bindings read legacy control values", () => {
     ["font-family", "jetbrains"],
     ["font-hinting", "on"],
   ]);
+});
+
+test("settings bindings wire svelte and legacy controls", () => {
+  const svelteCalls: string[] = [];
+  const svelteTarget = new EventTarget();
+
+  bindSettingsControls({
+    usesSvelteShell: true,
+    target: svelteTarget as Window & EventTarget,
+    settingsDialog: null,
+    settingsFab: null,
+    settingsClose: null,
+    onOpen: () => svelteCalls.push("open"),
+    onClose: () => svelteCalls.push("close"),
+  });
+
+  svelteTarget.dispatchEvent(new CustomEvent(SETTINGS_OPEN_EVENT));
+  svelteTarget.dispatchEvent(new CustomEvent(SETTINGS_CLOSE_EVENT));
+
+  expect(svelteCalls).toEqual(["open", "close"]);
+
+  const legacyCalls: string[] = [];
+  const legacyTarget = new EventTarget();
+  const settingsFab = createMutableTarget({});
+  const settingsClose = createMutableTarget({});
+  const settingsDialog = createMutableTarget({ open: true }) as HTMLDialogElement & EventTarget;
+
+  bindSettingsControls({
+    usesSvelteShell: false,
+    target: legacyTarget as Window & EventTarget,
+    settingsDialog,
+    settingsFab,
+    settingsClose,
+    onOpen: () => legacyCalls.push("open"),
+    onClose: () => legacyCalls.push("close"),
+  });
+
+  settingsFab.dispatchEvent(new Event("click"));
+  settingsClose.dispatchEvent(new Event("click"));
+  settingsDialog.dispatchEvent(new Event("cancel", { cancelable: true }));
+  legacyTarget.dispatchEvent(Object.assign(new Event("keydown"), { key: "Escape" }));
+
+  expect(legacyCalls).toEqual(["open", "close", "close", "close"]);
 });
