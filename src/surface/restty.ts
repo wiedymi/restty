@@ -6,7 +6,6 @@ import {
   type ResttyManagedAppPane,
   type ResttyManagedPaneStyleOptions,
   type ResttyManagedPaneSearchUiStyleOptions,
-  type ResttyTerminalConfig,
 } from "./pane-app-manager";
 import type { ResttyPaneSplitDirection } from "./panes-types";
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/types";
@@ -112,10 +111,6 @@ export type ResttyConfig = {
   surface?: ResttySurfaceConfig;
   /** Per-pane terminal config, static or factory. */
   terminal?: CreateResttyAppPaneManagerOptions["appOptions"];
-  /** Font sources applied to every pane. */
-  fontSources?: ResttyTerminalConfig["fontSources"];
-  /** Global shader stages synchronized to all panes. */
-  shaderStages?: ResttyShaderStage[];
 };
 
 /**
@@ -131,7 +126,7 @@ export class Restty extends ResttyActivePaneApi {
 
   constructor(options: ResttyConfig) {
     super();
-    const { root, session, surface, terminal, fontSources, shaderStages } = options;
+    const { root, session, surface, terminal } = options;
     const { createInitialPane = true, events, ...paneManagerOptions } = surface ?? {};
     const {
       onPaneCreated,
@@ -142,14 +137,11 @@ export class Restty extends ResttyActivePaneApi {
       onDesktopNotification,
     } = events ?? {};
 
-    this.fontSources = fontSources ? [...fontSources] : undefined;
-    this.shaderOps = new ResttyShaderOps(
-      {
-        getPanes: () => this.paneManager.getPanes(),
-        getPaneById: (id) => this.paneManager.getPaneById(id),
-      },
-      shaderStages,
-    );
+    this.fontSources = undefined;
+    this.shaderOps = new ResttyShaderOps({
+      getPanes: () => this.paneManager.getPanes(),
+      getPaneById: (id) => this.paneManager.getPaneById(id),
+    });
     this.pluginOps = new ResttyPluginOps({
       restty: this,
       panes: () => this.panes(),
