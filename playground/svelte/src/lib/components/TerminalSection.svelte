@@ -4,6 +4,17 @@
   const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
   const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
   const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
+  const TERMINAL_STATE_EVENT = "restty:playground-terminal-state";
+
+  type TerminalStateDetail = {
+    pauseLabel?: string;
+    renderer?: string;
+    fontSize?: number | string;
+  };
+
+  let pauseLabel = "Pause";
+  let renderer = "auto";
+  let fontSize = "18";
 
   function dispatchTerminalEvent(type: string) {
     window.dispatchEvent(new CustomEvent(type));
@@ -28,7 +39,23 @@
       }),
     );
   }
+
+  function handleWindowTerminalState(event: Event) {
+    const detail = (event as CustomEvent<TerminalStateDetail>).detail;
+    if (!detail) return;
+    if (typeof detail.pauseLabel === "string") {
+      pauseLabel = detail.pauseLabel;
+    }
+    if (typeof detail.renderer === "string") {
+      renderer = detail.renderer;
+    }
+    if (detail.fontSize !== undefined && detail.fontSize !== null) {
+      fontSize = String(detail.fontSize);
+    }
+  }
 </script>
+
+<svelte:window on:restty:playground-terminal-state={handleWindowTerminalState} />
 
 <section class="section">
   <div class="section-title">Terminal</div>
@@ -41,7 +68,7 @@
       type="button"
       onclick={() => dispatchTerminalEvent(TERMINAL_PAUSE_EVENT)}
     >
-      Pause
+      {pauseLabel}
     </button>
     <button
       id="btnClear"
@@ -54,7 +81,7 @@
   <div class="field-row">
     <label>
       <span>Renderer</span>
-      <select id="rendererSelect" onchange={handleRendererEvent}>
+      <select id="rendererSelect" bind:value={renderer} onchange={handleRendererEvent}>
         <option value="auto">Auto</option>
         <option value="webgpu">WebGPU</option>
         <option value="webgl2">WebGL2</option>
@@ -68,7 +95,7 @@
         min="10"
         max="64"
         step="1"
-        value="18"
+        bind:value={fontSize}
         oninput={handleFontSizeEvent}
         onchange={handleFontSizeEvent}
       />

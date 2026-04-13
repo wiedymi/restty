@@ -102,6 +102,7 @@ const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
 const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
 const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
 const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
+const TERMINAL_STATE_EVENT = "restty:playground-terminal-state";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
@@ -211,7 +212,34 @@ function getActivePane(): ManagedPane | null {
 }
 
 function syncPauseButton(state: PaneState) {
+  if (usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(TERMINAL_STATE_EVENT, {
+        detail: {
+          pauseLabel: state.paused ? "Resume" : "Pause",
+        },
+      }),
+    );
+    return;
+  }
   if (btnPause) btnPause.textContent = state.paused ? "Resume" : "Pause";
+}
+
+function syncTerminalControlValues(state: PaneState) {
+  if (usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(TERMINAL_STATE_EVENT, {
+        detail: {
+          pauseLabel: state.paused ? "Resume" : "Pause",
+          renderer: state.renderer,
+          fontSize: state.fontSize,
+        },
+      }),
+    );
+    return;
+  }
+  if (rendererSelect) rendererSelect.value = state.renderer;
+  if (fontSizeInput) fontSizeInput.value = `${state.fontSize}`;
 }
 
 function syncPtyButton(pane: ManagedPane) {
@@ -227,9 +255,7 @@ function syncPtyButton(pane: ManagedPane) {
 }
 
 function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
-  syncPauseButton(state);
-  if (rendererSelect) rendererSelect.value = state.renderer;
-  if (fontSizeInput) fontSizeInput.value = `${state.fontSize}`;
+  syncTerminalControlValues(state);
   syncFontFamilyControls({
     fontFamilySelect,
     fontFamilyLocalSelect,
