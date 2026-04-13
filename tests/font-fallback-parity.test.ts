@@ -5,7 +5,7 @@ import {
   isSymbolFont,
   pickFontIndexForText,
 } from "../src/fonts";
-import { DEFAULT_FONT_SOURCES } from "../src/runtime/font-sources";
+import { DEFAULT_FONT_SOURCES } from "../src/runtime/fonts/font-sources";
 
 function makeFont(codepoints: number[]) {
   const glyphSet = new Set(codepoints);
@@ -95,11 +95,19 @@ test("non-nerd symbols prefer first matching fallback in order", () => {
 });
 
 test("default font sources prioritize Noto symbols before Symbola fallback", () => {
-  const urls = DEFAULT_FONT_SOURCES.filter((source) => source.type === "url").map((source) => source.url);
-  const primaryIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-Regular.ttf"));
+  const urls = DEFAULT_FONT_SOURCES.filter((source) => source.type === "url").map(
+    (source) => source.url,
+  );
+  const primaryIndex = urls.findIndex((url) =>
+    url.includes("JetBrainsMonoNLNerdFontMono-Regular.ttf"),
+  );
   const boldIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-Bold.ttf"));
-  const italicIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-Italic.ttf"));
-  const boldItalicIndex = urls.findIndex((url) => url.includes("JetBrainsMonoNLNerdFontMono-BoldItalic.ttf"));
+  const italicIndex = urls.findIndex((url) =>
+    url.includes("JetBrainsMonoNLNerdFontMono-Italic.ttf"),
+  );
+  const boldItalicIndex = urls.findIndex((url) =>
+    url.includes("JetBrainsMonoNLNerdFontMono-BoldItalic.ttf"),
+  );
   const symbolaIndex = urls.findIndex((url) => url.includes("ttf-symbola"));
   const notoSymbolsIndex = urls.findIndex((url) => url.includes("NotoSansSymbols2-Regular.ttf"));
   expect(primaryIndex).toBe(0);
@@ -128,8 +136,7 @@ test("default font sources prefer local JetBrains and Nerd symbols before CDN fa
       source.matchers.some((matcher) => matcher.includes("symbols nerd font")),
   );
   const nerdSymbolsUrlIndex = DEFAULT_FONT_SOURCES.findIndex(
-    (source) =>
-      source.type === "url" && source.url.includes("SymbolsNerdFontMono-Regular.ttf"),
+    (source) => source.type === "url" && source.url.includes("SymbolsNerdFontMono-Regular.ttf"),
   );
 
   expect(jetbrainsLocalIndex).toBeGreaterThanOrEqual(0);

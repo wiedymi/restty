@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createResttyFontResourceStore } from "../src/runtime/font-resource-store";
+import { createResttyFontResourceStore } from "../src/runtime/fonts/font-resource-store";
 import type { ResttyFontSource } from "../src/runtime/types";
 
 function wait(ms: number) {

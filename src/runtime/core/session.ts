@@ -1,6 +1,6 @@
 import { initWebGPUCore, type WebGPUCoreState } from "../../renderer";
 import { loadResttyWasm, type ResttyWasm } from "../../wasm";
-import { createResttyFontResourceStore } from "../font-resource-store";
+import { createResttyFontResourceStore } from "../fonts/font-resource-store";
 import type { ResttyAppSession, ResttyWasmLogListener } from "../types";
 
 /**

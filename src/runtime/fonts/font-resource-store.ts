@@ -1,16 +1,16 @@
 import * as bundledTextShaper from "text-shaper";
-import { sourceBufferFromView, sourceLabelFromUrl } from "./create-app-io-utils";
+import { sourceBufferFromView, sourceLabelFromUrl } from "../create-app-io-utils";
 import type {
   GlobalWithLocalFontAccess,
   LocalFontFaceData,
   NavigatorWithLocalFontAccess,
-} from "./create-app-types";
+} from "../create-app-types";
 import type {
   ResttyFontResourceFace,
   ResttyFontResourceLease,
   ResttyFontResourceStore,
   ResttyFontSource,
-} from "./types";
+} from "../types";
 
 type ParsedFontFace = {
   font: ResttyFontResourceFace["font"];

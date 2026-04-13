@@ -52,7 +52,7 @@ import {
   pasteFromClipboard as readClipboardText,
 } from "../selection";
 import { buildFontAtlasIfNeeded } from "./atlas-builder";
-import { normalizeFontSources } from "./font-sources";
+import { normalizeFontSources } from "./fonts/font-sources";
 import * as bundledTextShaper from "text-shaper";
 import type {
   ResttyFontHintTarget,
@@ -112,7 +112,7 @@ import { createRuntimeSearch } from "./create-runtime/search-runtime";
 import { createRuntimeRenderTicks } from "./create-runtime/render-ticks";
 import { createRuntimeFontRuntimeHelpers } from "./create-runtime/font-runtime-helpers";
 import { createRuntimeReporting } from "./create-runtime/runtime-reporting";
-import { createResttyFontResourceStore } from "./font-resource-store";
+import { createResttyFontResourceStore } from "./fonts/font-resource-store";
 import type { RuntimeTerminalColor } from "./create-runtime/highlight-terminal-color-utils";
 import {
   createRuntimeAppApi,
