@@ -401,7 +401,6 @@ function setupController() {
 
   const controller = createPaneSearchUiController({
     root: root as unknown as HTMLElement,
-    getPaneById: () => pane,
     getActivePane: () => pane,
     getFocusedPane: () => pane,
   });

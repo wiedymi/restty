@@ -92,7 +92,6 @@ export type CreatePaneSearchUiControllerOptions = {
   statusFormatter?: (state: ResttySearchState) => string;
   shortcut?: boolean | ResttyPaneSearchUiShortcutOptions;
   styles?: ResttyPaneSearchUiStyleOptions;
-  getPaneById: (paneId: number) => ResttyPaneSearchUiPane | null;
   getActivePane: () => ResttyPaneSearchUiPane | null;
   getFocusedPane: () => ResttyPaneSearchUiPane | null;
 };

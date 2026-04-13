@@ -251,7 +251,6 @@ export function createResttyAppPaneManager(
     statusFormatter: searchUiConfig?.statusFormatter,
     shortcut: searchUiConfig?.shortcut,
     styles: searchUiConfig?.styles,
-    getPaneById: (paneId) => manager.getPaneById(paneId),
     getActivePane: () => manager.getActivePane(),
     getFocusedPane: () => manager.getFocusedPane(),
   });
