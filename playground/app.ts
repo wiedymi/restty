@@ -30,13 +30,9 @@ import {
   getConnectUrlForState,
   syncConnectionUi,
 } from "./lib/pty-connection.ts";
+import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
 import { createPaneShellSync } from "./lib/pane-shell-sync.ts";
-import {
-  applyBuiltinThemeToPane,
-  applySavedThemeForPane,
-  applyThemeToPane,
-  resetThemeForPane,
-} from "./lib/pane-theme.ts";
+import { applyBuiltinThemeToPane, applyThemeToPane, resetThemeForPane } from "./lib/pane-theme.ts";
 import { shaderStagesForPreset, type ShaderPreset } from "./lib/shader-presets.ts";
 import {
   closeSettingsDialog,
@@ -49,7 +45,6 @@ import {
   getActivePaneState,
   type PaneState,
   type RendererChoice,
-  withPanePaused,
 } from "./lib/pane-state.ts";
 import {
   CONNECTION_BACKEND_CHANGE_EVENT,
@@ -273,46 +268,25 @@ const paneShellSync = createPaneShellSync({
   },
 });
 
-function setPanePaused(id: number, value: boolean) {
-  const pane = restty.getPaneById(id);
-  const state = paneStates.get(id);
-  if (!pane || !state) return;
-  const nextState = withPanePaused(state, value);
-  paneStates.set(id, nextState);
-  pane.paused = nextState.paused;
-  pane.runtime.terminal.setPaused(nextState.paused);
-  if (id === activePaneId) {
-    paneShellSync.syncPauseButton(nextState);
-  }
-}
-
-function connectPaneIfNeeded(pane: ManagedPane) {
-  if (selectedConnectionBackend !== "webcontainer") return;
-  if (pane.runtime.io.isPtyConnected()) return;
-  pane.runtime.interaction.updateSize(true);
-  pane.runtime.io.connectPty(getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl));
-  requestAnimationFrame(() => {
-    pane.runtime.interaction.updateSize(true);
-  });
-}
-
-async function initPaneApp(pane: ManagedPane, state: PaneState) {
-  await pane.runtime.lifecycle.init();
-  paneStates.set(
-    pane.id,
-    applySavedThemeForPane({
-      pane,
-      state,
-    }),
-  );
-  await waitForAnimationFrame();
-  pane.runtime.interaction.updateSize(true);
-  connectPaneIfNeeded(pane);
-  if (pane.id === activePaneId) {
+const paneLifecycle = createPaneLifecycleController({
+  getPaneById: (id) => restty.getPaneById(id),
+  getActivePane: () => getActivePane(),
+  getPaneState: (id) => paneStates.get(id),
+  setPaneState: (id, state) => {
+    paneStates.set(id, state);
+  },
+  getActivePaneId: () => activePaneId,
+  getSelectedConnectionBackend: () => selectedConnectionBackend,
+  getSelectedPtyUrl: () => selectedPtyUrl,
+  syncPauseButton: (state) => {
+    paneShellSync.syncPauseButton(state);
+  },
+  syncPtyButton: (pane) => {
     paneShellSync.syncPtyButton(pane);
-  }
-  pane.canvas.focus({ preventScroll: true });
-}
+  },
+  waitForAnimationFrame,
+  requestAnimationFrame,
+});
 
 function queueResizeAllPanes() {
   if (resizeRaf) return;
@@ -354,12 +328,12 @@ restty = new Restty({
 
         pane.paused = state.paused;
         pane.setPaused = (value: boolean) => {
-          setPanePaused(pane.id, value);
+          paneLifecycle.setPanePaused(pane.id, value);
         };
 
         state.demos = createDemoController(pane.runtime);
         pane.runtime.interaction.setMouseMode(state.mouseMode);
-        void initPaneApp(pane, state);
+        void paneLifecycle.initPane(pane, state);
       },
       onPaneClosed: (pane) => {
         const state = paneStates.get(pane.id);
@@ -486,7 +460,7 @@ function applyConnectionBackend(value: string | null | undefined) {
   }
   if (selectedConnectionBackend === "webcontainer") {
     for (const pane of restty.getPanes()) {
-      connectPaneIfNeeded(pane);
+      paneLifecycle.connectPaneIfNeeded(pane);
     }
   }
 
@@ -537,30 +511,15 @@ if (usesSvelteShell) {
 }
 
 function handleTerminalInit() {
-  const pane = getActivePane();
-  if (!pane) return;
-  const state = getActivePaneState(paneStates, activePaneId);
-  if (!state) return;
-  setPanePaused(pane.id, false);
-  state.demos?.stop();
-  void initPaneApp(pane, state);
+  paneLifecycle.handleTerminalInit();
 }
 
 function handleTerminalPauseToggle() {
-  const pane = getActivePane();
-  if (!pane) return;
-  const state = getActivePaneState(paneStates, activePaneId);
-  if (!state) return;
-  setPanePaused(pane.id, !state.paused);
+  paneLifecycle.handleTerminalPauseToggle();
 }
 
 function handleTerminalClear() {
-  const pane = getActivePane();
-  if (!pane) return;
-  const state = getActivePaneState(paneStates, activePaneId);
-  if (!state) return;
-  state.demos?.stop();
-  pane.runtime.terminal.clearScreen();
+  paneLifecycle.handleTerminalClear();
 }
 
 if (usesSvelteShell) {
@@ -590,14 +549,7 @@ if (usesSvelteShell) {
 }
 
 function handlePtyButtonClick() {
-  const pane = getActivePane();
-  if (!pane) return;
-  if (pane.runtime.io.isPtyConnected()) {
-    pane.runtime.io.disconnectPty();
-  } else {
-    pane.runtime.io.connectPty(getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl));
-  }
-  paneShellSync.syncPtyButton(pane);
+  paneLifecycle.handlePtyButtonClick();
 }
 
 if (usesSvelteShell) {
