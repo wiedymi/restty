@@ -1,5 +1,6 @@
 import type { WebGPUState } from "../../renderer";
-import type { KittyPlacement, ResttyWasm } from "../../wasm";
+import type { KittyPlacement } from "../../wasm";
+import type { CreateKittyImageCacheOptions } from "./interaction-runtime/kitty-image-cache.types";
 
 export type KittyDrawSlice = {
   imageId: number;
@@ -24,10 +25,7 @@ export type KittyDrawPlan = {
   overlay: KittyDrawSlice[];
 };
 
-export type KittyRenderRuntimeOptions = {
-  getWasm: () => ResttyWasm | null;
-  markNeedsRender: () => void;
-};
+export type KittyRenderRuntimeOptions = CreateKittyImageCacheOptions;
 
 export type KittyRenderRuntime = {
   collectKittyDrawPlan: (

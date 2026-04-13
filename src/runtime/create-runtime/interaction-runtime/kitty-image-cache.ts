@@ -1,4 +1,9 @@
-import type { KittyPlacement, ResttyWasm } from "../../../wasm";
+import type { KittyPlacement } from "../../../wasm";
+import type {
+  CreateKittyImageCacheOptions,
+  KittyDecodedImage,
+  KittyImageCache,
+} from "./kitty-image-cache.types";
 
 const KITTY_FMT_GRAY = 1;
 const KITTY_FMT_GRAY_ALPHA = 2;
@@ -6,24 +11,11 @@ const KITTY_FMT_RGB = 3;
 const KITTY_FMT_RGBA = 4;
 const KITTY_FMT_PNG = 100;
 
-export type KittyDecodedImage = {
-  key: string;
-  width: number;
-  height: number;
-  source: CanvasImageSource;
-  pixels?: Uint8Array;
-};
-
-export type KittyImageCache = {
-  resolveKittyImage: (placement: KittyPlacement) => KittyDecodedImage | null;
-  clearKittyImageCache: () => void;
-  pruneInactiveImages: (activeImageIds: Set<number>) => boolean;
-};
-
-export type CreateKittyImageCacheOptions = {
-  getWasm: () => ResttyWasm | null;
-  markNeedsRender: () => void;
-};
+export type {
+  CreateKittyImageCacheOptions,
+  KittyDecodedImage,
+  KittyImageCache,
+} from "./kitty-image-cache.types";
 
 export function createKittyImageCache(options: CreateKittyImageCacheOptions): KittyImageCache {
   const { getWasm, markNeedsRender } = options;

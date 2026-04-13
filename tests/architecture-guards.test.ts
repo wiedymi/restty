@@ -209,6 +209,16 @@ test("font runtime text helper contract is split from implementation", () => {
   expect(textHelpers).toContain("./text.types");
 });
 
+test("kitty image cache contract is split from implementation", () => {
+  const kittyImageCache = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "interaction-runtime/kitty-image-cache.ts"),
+    "utf8",
+  );
+
+  expect(kittyImageCache).not.toContain("type CreateKittyImageCacheOptions =");
+  expect(kittyImageCache).toContain("./kitty-image-cache.types");
+});
+
 test("runtime internals do not use render-tick-webgl-context.ts as a type barrel", () => {
   const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
     return (
