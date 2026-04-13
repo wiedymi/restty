@@ -84,19 +84,16 @@ function createShellSyncCalls() {
   };
 }
 
-test("appearance controller updates renderer, font, mouse, shader, and local font state", async () => {
+test("appearance controller updates renderer and mouse defaults", async () => {
   const { pane, calls: paneCalls } = createPane(9);
   const paneStates = new Map<number, PaneState>([[9, createState({ id: 9 })]]);
   const { calls: syncCalls, shellSync } = createShellSyncCalls();
   const shaderStages: string[] = [];
-  const fontSourceLabels: string[][] = [];
 
   const controller = createPaneAppearanceController({
     host: {
       getPanes: () => [pane],
-      setFontSources: async (sources) => {
-        fontSourceLabels.push(sources.map((source) => source.label));
-      },
+      setFontSources: async () => {},
       setShaderStages: () => {
         shaderStages.push("set");
       },
@@ -123,63 +120,22 @@ test("appearance controller updates renderer, font, mouse, shader, and local fon
       shaderPreset: "none",
     },
     detectLocalFontState: async () => ({
-      detectedOptions: [{ value: "local:fira%20code", label: "Local Font: Fira Code" }],
-      hintText: "Detected 1 local font families.",
+      detectedOptions: [],
+      hintText: "hint",
     }),
   });
 
   controller.applyRendererChoice("webgpu");
-  controller.applyFontSizeValue("24");
   controller.applyMouseMode("drag");
-  controller.applyFontHintingChange("on");
-  controller.applyLigaturesChange("off");
-  controller.applyFontHintTargetChange("light");
-  await controller.applyFontFamilySelection("jetbrains");
-  await controller.applyLocalFontSelection("local:fira%20code");
-  await controller.loadLocalFonts();
 
   expect(controller.getRendererDefault()).toBe("webgpu");
-  expect(controller.getFontSizeDefault()).toBe(24);
   expect(controller.getMouseModeDefault()).toBe("drag");
-  expect(controller.getFontFamily()).toBe("jetbrains");
-  expect(controller.getLocalFontMatcher()).toBe("fira code");
-  expect(controller.getLigatures()).toBe(false);
-  expect(controller.getFontHinting()).toBe(true);
-  expect(controller.getFontHintTarget()).toBe("light");
   expect(controller.getShaderPreset()).toBe("none");
-  expect(controller.getLocalFontHintText()).toBe("Detected 1 local font families.");
-  expect(controller.getDetectedLocalFontOptions()).toEqual([
-    { value: "local:fira%20code", label: "Local Font: Fira Code" },
-  ]);
   expect(shaderStages).toEqual([]);
-  expect(fontSourceLabels.length).toBe(2);
-  expect(syncCalls).toEqual([
-    "sync-mouse:drag",
-    "sync-font-rendering",
-    "sync-font-rendering",
-    "sync-font-rendering",
-    "sync-font-family",
-    "sync-local-fonts",
-    "sync-local-fonts",
-    "sync-local-fonts",
-  ]);
+  expect(syncCalls).toEqual(["sync-mouse:drag"]);
   expect(paneStates.get(9)).toMatchObject({
     renderer: "webgpu",
-    fontSize: 24,
     mouseMode: "drag",
   });
-  expect(paneCalls).toEqual([
-    "renderer:webgpu",
-    "font-size:24",
-    "mouse:drag",
-    "ligatures:true",
-    "hint-target:auto",
-    "hinting:true",
-    "ligatures:false",
-    "hint-target:auto",
-    "hinting:true",
-    "ligatures:false",
-    "hint-target:light",
-    "hinting:true",
-  ]);
+  expect(paneCalls).toEqual(["renderer:webgpu", "mouse:drag"]);
 });

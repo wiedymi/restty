@@ -568,6 +568,21 @@ test("appearance controller delegates theme and shader policy", () => {
   expect(themeController).toContain("parseGhosttyTheme");
 });
 
+test("appearance controller delegates font policy", () => {
+  const appearanceController = readFileSync(
+    resolve(playgroundRoot, "lib/appearance-controller.ts"),
+    "utf8",
+  );
+  const fontController = readFileSync(resolve(playgroundRoot, "lib/font-controller.ts"), "utf8");
+
+  expect(appearanceController).toContain('./font-controller.ts"');
+  expect(appearanceController).not.toContain("applyFontSourcesToAllPanes(");
+  expect(appearanceController).not.toContain("applyFontRenderingOptionsToAllPanes(");
+  expect(fontController).toContain("applyFontSourcesToAllPanes(");
+  expect(fontController).toContain("applyFontRenderingOptionsToAllPanes(");
+  expect(fontController).toContain("detectLocalFontState");
+});
+
 test("src/internal.ts does not import runtime or surface modules directly", () => {
   const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
     return (
