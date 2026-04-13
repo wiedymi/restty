@@ -124,13 +124,17 @@ export type ResttyConfig = {
 ```
 
 ```ts
+export type ResttySurfacePane = ResttyPaneWithRuntime;
+```
+
+```ts
 export type ResttySurfaceConfig = {
   createInitialPane?: boolean | { focus?: boolean };
   minPaneSize?: number;
   paneStyles?: boolean | ResttyManagedPaneStylesOptions;
   searchUi?: boolean | ResttyManagedPaneSearchUiOptions;
   shortcuts?: boolean | ResttyPaneShortcutsOptions;
-  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedPane> | null;
+  contextMenu?: ResttyPaneContextMenuOptions<ResttySurfacePane> | null;
   defaultContextMenu?: boolean | ResttyDefaultPaneContextMenuOptions;
   events?: ResttySurfaceEvents;
   plugins?: ResttyPluginConfig;
@@ -160,14 +164,14 @@ export type ResttyServicesConfig = {
 
 ```ts
 export type ResttySurfaceEvents = {
-  onPaneCreated?: (pane: ResttyManagedPane) => void;
-  onPaneClosed?: (pane: ResttyManagedPane) => void;
+  onPaneCreated?: (pane: ResttySurfacePane) => void;
+  onPaneClosed?: (pane: ResttySurfacePane) => void;
   onPaneSplit?: (
-    sourcePane: ResttyManagedPane,
-    createdPane: ResttyManagedPane,
+    sourcePane: ResttySurfacePane,
+    createdPane: ResttySurfacePane,
     direction: "vertical" | "horizontal",
   ) => void;
-  onActivePaneChange?: (pane: ResttyManagedPane | null) => void;
+  onActivePaneChange?: (pane: ResttySurfacePane | null) => void;
   onLayoutChanged?: () => void;
   onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
 };
