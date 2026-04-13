@@ -1,10 +1,10 @@
 import * as bundledTextShaper from "text-shaper";
-import { sourceBufferFromView, sourceLabelFromUrl } from "../create-runtime/create-app-io-utils";
 import type {
   GlobalWithLocalFontAccess,
   LocalFontFaceData,
   NavigatorWithLocalFontAccess,
-} from "../create-runtime/create-app-types";
+} from "../../fonts/local-font-access.types";
+import { sourceBufferFromView, sourceLabelFromUrl } from "../create-runtime/create-app-io-utils";
 import type { ResttyFontSource } from "../core/models";
 import type {
   ResttyFontResourceFace,

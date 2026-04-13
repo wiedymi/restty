@@ -168,6 +168,21 @@ test("shader stage runtime contracts do not import render stage types through cr
   expect(source).toContain("./render-stage-runtime.types");
 });
 
+test("create-app-types is only used by debug-tool setup", () => {
+  const appTypesEntry = resolve(runtimeCreateRuntimeRoot, "create-app-types.ts");
+  const runtimeFiles = listTsFiles(runtimeRoot).filter((file) => file !== appTypesEntry);
+  const offenders = collectResolvedImports(runtimeFiles).filter(({ resolved, file }) => {
+    return (
+      resolved === appTypesEntry &&
+      file !== resolve(runtimeCreateRuntimeRoot, "debug-tools/setup-debug-expose.ts")
+    );
+  });
+
+  expect(
+    offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
+  ).toEqual([]);
+});
+
 test("surface source does not import runtime create-runtime internals", () => {
   const surfaceFiles = listTsFiles(surfaceRoot);
   const offenders = collectResolvedImports(surfaceFiles).filter(({ resolved }) => {

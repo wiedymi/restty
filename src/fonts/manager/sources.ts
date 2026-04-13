@@ -1,22 +1,8 @@
 import type { FallbackFontSource } from "../types";
-
-type LocalFontsPermissionDescriptor = PermissionDescriptor & { name: "local-fonts" };
-type LocalFontFaceData = {
-  family?: string;
-  fullName?: string;
-  postscriptName?: string;
-  blob: () => Promise<Blob>;
-};
-type NavigatorWithLocalFontAccess = Navigator & {
-  queryLocalFonts?: () => Promise<LocalFontFaceData[]>;
-  permissions?: {
-    query?: (permissionDesc: LocalFontsPermissionDescriptor) => Promise<PermissionStatus>;
-  };
-};
-type GlobalWithLocalFontAccess = typeof globalThis & {
-  queryLocalFonts?: () => Promise<LocalFontFaceData[]>;
-  navigator?: NavigatorWithLocalFontAccess;
-};
+import type {
+  GlobalWithLocalFontAccess,
+  NavigatorWithLocalFontAccess,
+} from "../local-font-access.types";
 
 /** Fetch a font file from a URL and return its ArrayBuffer, or null on failure. */
 export async function tryFetchFontBuffer(url: string): Promise<ArrayBuffer | null> {
