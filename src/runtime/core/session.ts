@@ -1,7 +1,7 @@
-import { initWebGPUCore, type WebGPUCoreState } from "../renderer";
-import { loadResttyWasm, type ResttyWasm } from "../wasm";
-import { createResttyFontResourceStore } from "./font-resource-store";
-import type { ResttyAppSession, ResttyWasmLogListener } from "./types";
+import { initWebGPUCore, type WebGPUCoreState } from "../../renderer";
+import { loadResttyWasm, type ResttyWasm } from "../../wasm";
+import { createResttyFontResourceStore } from "../font-resource-store";
+import type { ResttyAppSession, ResttyWasmLogListener } from "../types";
 
 /**
  * Create a new app session that lazily loads the WASM module and

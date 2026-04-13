@@ -61,7 +61,7 @@ import type {
   ResttyRuntimeConfig,
   ResttyFontResourceLease,
 } from "./types";
-import { getDefaultResttyAppSession } from "./session";
+import { getDefaultResttyAppSession } from "./core/session";
 import { createPtyOutputBufferController } from "./pty-output-buffer";
 import { fitTextTailToWidth, openLink } from "./create-app-io-utils";
 import { drawUnderlineStyle, drawStrikethrough, drawOverline } from "./text-decoration";
@@ -119,7 +119,7 @@ import {
   type RuntimeAppApiRuntime,
   type RuntimeAppApiSharedState,
 } from "./create-runtime/runtime-app-api";
-export { createResttyAppSession, getDefaultResttyAppSession } from "./session";
+export { createResttyAppSession, getDefaultResttyAppSession } from "./core/session";
 export type {
   ResttyAppElements,
   ResttyAppCallbacks,

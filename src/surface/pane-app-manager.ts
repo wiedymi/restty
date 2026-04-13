@@ -5,7 +5,7 @@ import {
   resolveManagedPaneContextMenu,
   resolveManagedPaneShortcuts,
 } from "./panes/managed-pane-options";
-import { getDefaultResttyAppSession } from "../runtime/session";
+import { getDefaultResttyAppSession } from "../runtime/core/session";
 import type { PaneSearchUiController } from "./pane-search-ui";
 import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
 import type {
