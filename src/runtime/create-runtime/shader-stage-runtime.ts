@@ -18,7 +18,7 @@ import {
   createWebGLStageTargets,
   createWebGPUStageTargets,
   rebuildWebGPUStageBindGroups,
-} from "../render-stage-runtime";
+} from "./render-stage-runtime";
 
 type ShaderBackend = "webgpu" | "webgl2";
 

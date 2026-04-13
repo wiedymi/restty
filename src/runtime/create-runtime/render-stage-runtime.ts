@@ -3,9 +3,9 @@ import type {
   WebGPUStageTargets,
   CompiledWebGLShaderStage,
   WebGLStageTargets,
-} from "./create-runtime/create-app-types";
-import type { ResttyShaderStage } from "./types";
-import { packShaderStageUniforms } from "./shader-stages";
+} from "./create-app-types";
+import type { ResttyShaderStage } from "../types";
+import { packShaderStageUniforms } from "../shader-stages";
 import {
   STAGE_UNIFORM_BUFFER_FLOATS,
   FULLSCREEN_STAGE_VERTEX_SHADER_GL,
