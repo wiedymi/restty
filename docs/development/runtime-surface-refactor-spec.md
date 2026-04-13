@@ -182,7 +182,7 @@ export type ResttyPluginConfig = {
 
 Notes:
 
-- `terminal` replaces `appOptions` in the high-level public API
+- `terminal` replaces the old runtime-options bucket in the high-level public API
 - the top-level constructor should describe user intent, not runtime internals
 - `surface` owns shell behavior, plugin wiring, and surface-level events
 - `services` is an advanced escape hatch for external runtime dependencies
@@ -278,7 +278,7 @@ Implementation rule:
 
 ### 7. Runtime boundary must be explicit
 
-`surface` should not depend on the current broad `ResttyApp` shape directly. It should depend on a narrower, capability-grouped runtime contract.
+`surface` should not depend on a broad monolithic runtime implementation shape directly. It should depend on a narrower, capability-grouped runtime contract.
 
 Preferred runtime lifecycle:
 
@@ -564,10 +564,10 @@ The following files are the clearest candidates for relocation or splitting base
 
 - `src/surface/managed-pane-manager.ts`
   Keep the concept, but split the file.
-  Current file owns types, DOM element creation, context-menu defaults, search UI wiring, pane-manager composition, and app creation.
-  It should also stop defining the public/internal bridge through `Omit<ResttyAppOptions, ...>`.
+  Current file owns types, DOM element creation, context-menu defaults, search UI wiring, pane-manager composition, and runtime creation.
+  It should also avoid defining the public/internal bridge through omission-based config derivation.
   Target:
-  - `surface/panes/app-pane-manager.ts`
+  - `surface/panes/managed-pane-manager.ts`
   - `surface/panes/managed-pane-dom.ts`
   - `surface/panes/managed-pane-types.ts`
   - `surface/panes/terminal-config.ts`

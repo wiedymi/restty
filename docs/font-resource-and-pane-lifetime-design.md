@@ -125,7 +125,7 @@ Use layered caches so fonts are not fetched repeatedly.
 
 ### 2) Minimal Capture Pane Callback Wrappers
 
-In merged pane app options, capture only primitives that are needed by runtime wrappers:
+In merged pane runtime config wrappers, capture only primitives that are needed by runtime wiring:
 
 - `paneId` (number)
 
@@ -135,7 +135,7 @@ Do not capture the whole `context` object in long-lived closures.
 
 - `beforeInput` / `beforeRenderOutput` wrappers must use `paneId` only.
 - Desktop notification wrapper uses `paneId` only.
-- `sourcePane` remains available to user `appOptions` execution at creation time, but internal wrappers never retain it.
+- `sourcePane` remains available to user terminal/services factory execution at creation time, but internal wrappers never retain it.
 
 ### 3) Runtime Destroy Hard Cleanup
 
@@ -200,7 +200,7 @@ Notes:
 
 ### Phase 1: Leak-safe wrappers
 
-1. Refactor merged pane app option wrappers to capture only `paneId`.
+1. Refactor merged pane runtime config wrappers to capture only `paneId`.
 2. Add focused regression tests around wrapper behavior and `paneId` correctness.
 
 ### Phase 2: Shared font store
