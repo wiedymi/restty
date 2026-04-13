@@ -510,6 +510,13 @@ test("playground app entrypoint delegates restty construction to the surface boo
   expect(appSource).not.toContain("new Restty(");
 });
 
+test("playground app entrypoint delegates shell element lookup", () => {
+  const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+
+  expect(appSource).toContain('./lib/elements.ts"');
+  expect(appSource).not.toContain("document.getElementById(");
+});
+
 test("playground no longer ships legacy runtime status or log widgets", () => {
   const playgroundApp = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
   const playgroundIndex = readFileSync(resolve(playgroundPublicRoot, "index.html"), "utf8");

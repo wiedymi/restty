@@ -8,6 +8,7 @@ import {
   bindTerminalControls,
 } from "./lib/control-bindings.ts";
 import { createDesktopNotificationHandler } from "./lib/desktop-notifications.ts";
+import { queryPlaygroundElements } from "./lib/elements.ts";
 import { createPaneAppearanceController } from "./lib/appearance-controller.ts";
 import { getConnectionBackend } from "./lib/pty-connection.ts";
 import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
@@ -18,42 +19,36 @@ import { SETTINGS_CLOSE_EVENT, SETTINGS_OPEN_EVENT } from "./lib/shell-events.ts
 import { resolvePlaygroundStartupDefaults } from "./lib/startup-defaults.ts";
 import { bootstrapPlaygroundSurface } from "./lib/surface-bootstrap.ts";
 
-const paneRoot = document.getElementById("paneRoot") as HTMLElement | null;
-if (!paneRoot) {
-  throw new Error("missing #paneRoot element");
-}
-
-const btnInit = document.getElementById("btnInit");
-const btnPause = document.getElementById("btnPause");
-const btnClear = document.getElementById("btnClear");
-const rendererSelect = document.getElementById("rendererSelect") as HTMLSelectElement | null;
-const demoSelect = document.getElementById("demoSelect") as HTMLSelectElement | null;
-const btnRunDemo = document.getElementById("btnRunDemo");
-const connectionBackendEl = document.getElementById(
-  "connectionBackend",
-) as HTMLSelectElement | null;
-const ptyUrlInput = document.getElementById("ptyUrl") as HTMLInputElement | null;
-const wcCommandInput = document.getElementById("wcCommand") as HTMLInputElement | null;
-const wcCwdInput = document.getElementById("wcCwd") as HTMLInputElement | null;
-const connectionHintEl = document.getElementById("connectionHint") as HTMLElement | null;
-const ptyBtn = document.getElementById("btnPty");
-const themeSelect = document.getElementById("themeSelect") as HTMLSelectElement | null;
-const themeFileInput = document.getElementById("themeFile") as HTMLInputElement | null;
-const fontSizeInput = document.getElementById("fontSize") as HTMLInputElement | null;
-const fontFamilySelect = document.getElementById("fontFamily") as HTMLSelectElement | null;
-const ligaturesSelect = document.getElementById("ligatures") as HTMLSelectElement | null;
-const fontHintingSelect = document.getElementById("fontHinting") as HTMLSelectElement | null;
-const fontHintTargetSelect = document.getElementById("fontHintTarget") as HTMLSelectElement | null;
-const fontFamilyLocalSelect = document.getElementById(
-  "fontFamilyLocal",
-) as HTMLSelectElement | null;
-const btnLoadLocalFonts = document.getElementById("btnLoadLocalFonts") as HTMLButtonElement | null;
-const fontFamilyHintEl = document.getElementById("fontFamilyHint");
-const mouseModeEl = document.getElementById("mouseMode") as HTMLSelectElement | null;
-const shaderPresetEl = document.getElementById("shaderPreset") as HTMLSelectElement | null;
-const settingsFab = document.getElementById("settingsFab") as HTMLButtonElement | null;
-const settingsDialog = document.getElementById("settingsDialog") as HTMLDialogElement | null;
-const settingsClose = document.getElementById("settingsClose") as HTMLButtonElement | null;
+const {
+  paneRoot,
+  btnInit,
+  btnPause,
+  btnClear,
+  rendererSelect,
+  demoSelect,
+  btnRunDemo,
+  connectionBackendEl,
+  ptyUrlInput,
+  wcCommandInput,
+  wcCwdInput,
+  connectionHintEl,
+  ptyBtn,
+  themeSelect,
+  themeFileInput,
+  fontSizeInput,
+  fontFamilySelect,
+  ligaturesSelect,
+  fontHintingSelect,
+  fontHintTargetSelect,
+  fontFamilyLocalSelect,
+  btnLoadLocalFonts,
+  fontFamilyHintEl,
+  mouseModeEl,
+  shaderPresetEl,
+  settingsFab,
+  settingsDialog,
+  settingsClose,
+} = queryPlaygroundElements(document);
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 
