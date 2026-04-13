@@ -1,4 +1,4 @@
-import type { ResttyApp } from "../runtime/types";
+import type { ResttyRuntime } from "../runtime/types";
 
 /**
  * Direction for splitting a pane.
@@ -161,11 +161,11 @@ export type ResttyPaneManager<TPane extends ResttyPaneDefinition> = {
 };
 
 /**
- * Pane definition extended with a ResttyApp instance and pause control.
+ * Pane definition extended with a ResttyRuntime instance and pause control.
  */
 export type ResttyPaneWithApp = ResttyPaneDefinition & {
-  /** The terminal app running inside this pane. */
-  app: ResttyApp;
+  /** The terminal runtime running inside this pane. */
+  app: ResttyRuntime;
   /** Whether the pane's renderer is currently paused. */
   paused?: boolean;
   /** Pause or resume this pane's renderer. */

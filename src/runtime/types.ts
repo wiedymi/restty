@@ -189,7 +189,7 @@ export type ResttyTouchSelectionMode = "drag" | "long-press" | "off";
 /** Hinting target mode used when TrueType hinting is enabled. */
 export type ResttyFontHintTarget = "auto" | "light" | "normal";
 
-/** Input payload passed to ResttyApp before-input hooks. */
+/** Input payload passed to runtime before-input hooks. */
 export type ResttyAppInputPayload = {
   text: string;
   source: string;
@@ -330,9 +330,9 @@ export type ResttyRuntimeConfig = {
 };
 
 /**
- * Public API for a terminal app instance.
+ * Public API for a single terminal runtime instance.
  */
-export type ResttyApp = {
+export type ResttyRuntime = {
   /** Initialize the renderer, fonts, and terminal state. */
   init: () => Promise<void>;
   /** Tear down all resources and event listeners. */

@@ -9,7 +9,7 @@ import {
 import { createDefaultResttyPaneContextMenuItems } from "./panes/default-context-menu-items";
 import { createResttyPaneManager } from "./panes/manager";
 import { getDefaultResttyAppSession } from "../runtime/session";
-import { createResttyApp } from "./app-factory";
+import { createResttyRuntime } from "./app-factory";
 import type { ResttyAppCallbacks, ResttyRuntimeConfig, ResttyAppSession } from "../runtime/types";
 import {
   createPaneSearchUiController,
@@ -279,7 +279,7 @@ export function createResttyAppPaneManager(
         },
       };
 
-      const app = createResttyApp({
+      const app = createResttyRuntime({
         ...baseOptions,
         canvas,
         imeInput,

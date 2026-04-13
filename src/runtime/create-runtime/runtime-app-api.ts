@@ -9,7 +9,7 @@ import {
 import type { ResttyWasm, ResttyWasmExports } from "../../wasm";
 import { normalizeNewlines } from "../create-app-io-utils";
 import { resolveMaxScrollbackBytes } from "../max-scrollback";
-import type { ResttyApp, ResttyAppCallbacks, ResttyAppSession } from "../types";
+import type { ResttyRuntime, ResttyAppCallbacks, ResttyAppSession } from "../types";
 import type { PtyInputRuntime } from "./pty-input-runtime";
 import type { RuntimeInteraction } from "./interaction-runtime";
 
@@ -43,29 +43,29 @@ type RuntimeInternalState = {
 type RuntimeSendInput = (text: string, source?: string, options?: { skipHooks?: boolean }) => void;
 
 type RuntimePublicApiOptions = {
-  setFontSize: ResttyApp["setFontSize"];
-  setLigatures: ResttyApp["setLigatures"];
-  setFontHinting: ResttyApp["setFontHinting"];
-  setFontHintTarget: ResttyApp["setFontHintTarget"];
-  setFontSources: ResttyApp["setFontSources"];
-  resetTheme: ResttyApp["resetTheme"];
-  setSearchQuery: ResttyApp["setSearchQuery"];
-  clearSearch: ResttyApp["clearSearch"];
-  searchNext: ResttyApp["searchNext"];
-  searchPrevious: ResttyApp["searchPrevious"];
-  getSearchState: ResttyApp["getSearchState"];
-  dumpAtlasForCodepoint: ResttyApp["dumpAtlasForCodepoint"];
-  resize: ResttyApp["resize"];
-  focus: ResttyApp["focus"];
-  blur: ResttyApp["blur"];
-  updateSize: ResttyApp["updateSize"];
-  setShaderStages: ResttyApp["setShaderStages"];
-  getShaderStages: ResttyApp["getShaderStages"];
+  setFontSize: ResttyRuntime["setFontSize"];
+  setLigatures: ResttyRuntime["setLigatures"];
+  setFontHinting: ResttyRuntime["setFontHinting"];
+  setFontHintTarget: ResttyRuntime["setFontHintTarget"];
+  setFontSources: ResttyRuntime["setFontSources"];
+  resetTheme: ResttyRuntime["resetTheme"];
+  setSearchQuery: ResttyRuntime["setSearchQuery"];
+  clearSearch: ResttyRuntime["clearSearch"];
+  searchNext: ResttyRuntime["searchNext"];
+  searchPrevious: ResttyRuntime["searchPrevious"];
+  getSearchState: ResttyRuntime["getSearchState"];
+  dumpAtlasForCodepoint: ResttyRuntime["dumpAtlasForCodepoint"];
+  resize: ResttyRuntime["resize"];
+  focus: ResttyRuntime["focus"];
+  blur: ResttyRuntime["blur"];
+  updateSize: ResttyRuntime["updateSize"];
+  setShaderStages: ResttyRuntime["setShaderStages"];
+  getShaderStages: ResttyRuntime["getShaderStages"];
 };
 
 export type RuntimeAppApiRuntime = {
   sendInput: RuntimeSendInput;
-  createPublicApi: (options: RuntimePublicApiOptions) => ResttyApp;
+  createPublicApi: (options: RuntimePublicApiOptions) => ResttyRuntime;
 };
 
 type LifecycleThemeRuntime = {
@@ -111,9 +111,9 @@ type CreateRuntimeAppApiOptions = {
   updateGrid: () => void;
   gridState: { cols: number; rows: number };
   getCanvas: () => HTMLCanvasElement;
-  applyTheme: ResttyApp["applyTheme"];
+  applyTheme: ResttyRuntime["applyTheme"];
   ensureFont: () => Promise<void>;
-  updateSize: ResttyApp["updateSize"];
+  updateSize: ResttyRuntime["updateSize"];
   log: (line: string) => void;
   replaceCanvas: () => void;
   rebuildWebGPUShaderStages: (state: WebGPUState) => void;
@@ -669,7 +669,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     return inputHandler.getMouseStatus();
   }
 
-  function createPublicApi(publicApiOptions: RuntimePublicApiOptions): ResttyApp {
+  function createPublicApi(publicApiOptions: RuntimePublicApiOptions): ResttyRuntime {
     ptyInputRuntime.setPtyStatus("disconnected");
     ptyInputRuntime.updateMouseStatus();
 

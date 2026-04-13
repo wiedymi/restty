@@ -57,7 +57,7 @@ import * as bundledTextShaper from "text-shaper";
 import type {
   ResttyFontHintTarget,
   ResttyFontSource,
-  ResttyApp,
+  ResttyRuntime,
   ResttyRuntimeConfig,
   ResttyFontResourceLease,
 } from "./types";
@@ -143,7 +143,7 @@ export type {
   ResttyShaderStageBackend,
   ResttyShaderStageSource,
   ResttyRuntimeConfig,
-  ResttyApp,
+  ResttyRuntime,
 } from "./types";
 export type {
   ResttyPaneSplitDirection,
@@ -181,7 +181,7 @@ const FALLBACK_LOCAL_FONT_SOURCES: ResttyFontSource[] = [
   },
 ];
 
-export function createResttyApp(options: ResttyRuntimeConfig): ResttyApp {
+export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime {
   const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
   const beforeInputHook = options.beforeInput;
   const beforeRenderOutputHook = options.beforeRenderOutput;
@@ -193,7 +193,7 @@ export function createResttyApp(options: ResttyRuntimeConfig): ResttyApp {
   const fontResourceStore = session.getFontResourceStore?.() ?? createResttyFontResourceStore();
   const textShaper = bundledTextShaper;
   if (!canvasInput) {
-    throw new Error("createResttyApp requires a canvas element");
+    throw new Error("createResttyRuntime requires a canvas element");
   }
   const {
     UnicodeBuffer,
