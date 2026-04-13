@@ -120,11 +120,6 @@ import {
   type RuntimeAppApiSharedState,
 } from "./create-runtime/runtime-app-api";
 export { createResttyAppSession, getDefaultResttyAppSession } from "./session";
-export { createResttyPaneManager } from "../surface/panes/manager";
-export {
-  createDefaultResttyPaneContextMenuItems,
-  getResttyShortcutModifierLabel,
-} from "../surface/panes/default-context-menu-items";
 export type {
   ResttyAppElements,
   ResttyAppCallbacks,
@@ -146,19 +141,6 @@ export type {
   ResttyRuntimeConfig,
   ResttyRuntime,
 } from "./types";
-export type {
-  ResttyPaneSplitDirection,
-  ResttyPaneContextMenuItem,
-  ResttyPaneDefinition,
-  ResttyPaneStyleOptions,
-  ResttyPaneStylesOptions,
-  ResttyPaneShortcutsOptions,
-  ResttyPaneContextMenuOptions,
-  CreateResttyPaneManagerOptions,
-  ResttyPaneManager,
-  ResttyPaneWithApp,
-  CreateDefaultResttyPaneContextMenuItemsOptions,
-} from "../surface/panes-types";
 
 const FALLBACK_LOCAL_FONT_SOURCES: ResttyFontSource[] = [
   {

@@ -200,10 +200,12 @@ export {
   createResttyRuntime,
   createResttyAppSession,
   getDefaultResttyAppSession,
-  createResttyPaneManager,
+} from "./runtime/create-runtime";
+export { createResttyPaneManager } from "./surface/panes/manager";
+export {
   createDefaultResttyPaneContextMenuItems,
   getResttyShortcutModifierLabel,
-} from "./runtime/create-runtime";
+} from "./surface/panes/default-context-menu-items";
 export type {
   ResttyAppElements,
   ResttyAppCallbacks,
@@ -220,6 +222,8 @@ export type {
   ResttyRuntimeLifecycleState,
   ResttyRuntimeConfig,
   ResttyRuntime,
+} from "./runtime/create-runtime";
+export type {
   ResttyPaneSplitDirection,
   ResttyPaneContextMenuItem,
   ResttyPaneDefinition,
@@ -231,7 +235,7 @@ export type {
   ResttyPaneManager,
   ResttyPaneWithApp,
   CreateDefaultResttyPaneContextMenuItemsOptions,
-} from "./runtime/create-runtime";
+} from "./surface/panes-types";
 export { createResttyAppPaneManager } from "./surface/pane-app-manager";
 export type {
   CreateResttyAppPaneManagerOptions,
