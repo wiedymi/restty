@@ -73,7 +73,7 @@ import {
   clampFiniteNumber,
   isRenderSymbolLike,
   resolveSymbolConstraint,
-} from "./create-app-symbols";
+} from "./create-runtime/create-app-symbols";
 import { decodePackedRGBA, decodeRGBAWithCache, brighten, fade } from "./render-color-utils";
 import {
   shouldMergeTrailingClusterCodepoint,
