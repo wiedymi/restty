@@ -84,7 +84,7 @@ function createShellSyncCalls() {
   };
 }
 
-test("appearance controller updates renderer and mouse defaults", async () => {
+test("appearance controller composes theme, font, and terminal controllers", async () => {
   const { pane, calls: paneCalls } = createPane(9);
   const paneStates = new Map<number, PaneState>([[9, createState({ id: 9 })]]);
   const { calls: syncCalls, shellSync } = createShellSyncCalls();
@@ -127,12 +127,20 @@ test("appearance controller updates renderer and mouse defaults", async () => {
 
   controller.applyRendererChoice("webgpu");
   controller.applyMouseMode("drag");
+  controller.applySelectedShaderPreset("aurora");
+  await controller.applyFontFamilySelection("jetbrains");
 
   expect(controller.getRendererDefault()).toBe("webgpu");
   expect(controller.getMouseModeDefault()).toBe("drag");
-  expect(controller.getShaderPreset()).toBe("none");
-  expect(shaderStages).toEqual([]);
-  expect(syncCalls).toEqual(["sync-mouse:drag"]);
+  expect(controller.getShaderPreset()).toBe("aurora");
+  expect(controller.getFontFamily()).toBe("jetbrains");
+  expect(shaderStages).toEqual(["set"]);
+  expect(syncCalls).toEqual([
+    "sync-mouse:drag",
+    "sync-shader:aurora",
+    "sync-font-family",
+    "sync-local-fonts",
+  ]);
   expect(paneStates.get(9)).toMatchObject({
     renderer: "webgpu",
     mouseMode: "drag",

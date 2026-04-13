@@ -583,6 +583,25 @@ test("appearance controller delegates font policy", () => {
   expect(fontController).toContain("detectLocalFontState");
 });
 
+test("appearance controller delegates terminal policy", () => {
+  const appearanceController = readFileSync(
+    resolve(playgroundRoot, "lib/appearance-controller.ts"),
+    "utf8",
+  );
+  const terminalController = readFileSync(
+    resolve(playgroundRoot, "lib/terminal-controller.ts"),
+    "utf8",
+  );
+
+  expect(appearanceController).toContain('./terminal-controller.ts"');
+  expect(appearanceController).not.toContain("setRenderer(value)");
+  expect(appearanceController).not.toContain("setMouseMode(selectedMouseModeDefault)");
+  expect(appearanceController).not.toContain("getMouseStatus()");
+  expect(terminalController).toContain("setRenderer(value)");
+  expect(terminalController).toContain("setMouseMode(selectedMouseModeDefault)");
+  expect(terminalController).toContain("getMouseStatus()");
+});
+
 test("src/internal.ts does not import runtime or surface modules directly", () => {
   const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
     return (

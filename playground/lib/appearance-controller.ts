@@ -4,20 +4,18 @@ import { createPaneFontController, type FontControllerPane } from "./font-contro
 import type { PaneState, RendererChoice } from "./pane-state.ts";
 import { type PaneThemeTarget } from "./pane-theme.ts";
 import { type ShaderPreset } from "./shader-presets.ts";
+import {
+  createPaneTerminalController,
+  type TerminalControllerPane,
+} from "./terminal-controller.ts";
 import { createPaneThemeController } from "./theme-controller.ts";
 
 export type AppearanceControllerPane = PaneThemeTarget & {
   runtime: PaneThemeTarget["runtime"] & {
     terminal: FontControllerPane["runtime"]["terminal"] &
-      PaneThemeTarget["runtime"]["terminal"] & {
-        setRenderer: (value: RendererChoice) => void;
-      };
-    interaction: {
-      getMouseStatus: () => {
-        mode: string;
-      };
-      setMouseMode: (value: string) => void;
-    };
+      PaneThemeTarget["runtime"]["terminal"] &
+      TerminalControllerPane["runtime"]["terminal"];
+    interaction: TerminalControllerPane["runtime"]["interaction"];
   };
 };
 
@@ -55,8 +53,6 @@ type CreatePaneAppearanceControllerOptions = {
 };
 
 export function createPaneAppearanceController(options: CreatePaneAppearanceControllerOptions) {
-  let selectedMouseModeDefault = options.initialState.mouseModeDefault;
-  let selectedRendererDefault = options.initialState.rendererDefault;
   const fontController = createPaneFontController({
     host: options.host,
     getActivePane: options.getActivePane,
@@ -78,6 +74,18 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     },
     detectLocalFontState: options.detectLocalFontState,
   });
+  const terminalController = createPaneTerminalController({
+    getActivePane: options.getActivePane,
+    getActivePaneState: options.getActivePaneState,
+    getActivePaneId: options.getActivePaneId,
+    shellSync: {
+      syncMouseModeValue: options.shellSync.syncMouseModeValue,
+    },
+    initialState: {
+      mouseModeDefault: options.initialState.mouseModeDefault,
+      rendererDefault: options.initialState.rendererDefault,
+    },
+  });
   const themeController = createPaneThemeController({
     host: options.host,
     getActivePane: options.getActivePane,
@@ -92,37 +100,9 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     initialShaderPreset: options.initialState.shaderPreset,
   });
 
-  function getActiveContext() {
-    const pane = options.getActivePane();
-    const state = options.getActivePaneState();
-    if (!pane || !state) return null;
-    return { pane, state };
-  }
-
   function syncTerminalDefaultsFromState(state: PaneState) {
-    selectedRendererDefault = state.renderer;
+    terminalController.syncTerminalDefaultsFromState(state);
     fontController.syncFontSizeDefaultFromState(state);
-    selectedMouseModeDefault = state.mouseMode;
-  }
-
-  function applyRendererChoice(value: string | null | undefined) {
-    const active = getActiveContext();
-    if (!active) return;
-    if (value !== "auto" && value !== "webgpu" && value !== "webgl2") return;
-    selectedRendererDefault = value;
-    active.state.renderer = value;
-    active.pane.runtime.terminal.setRenderer(value);
-  }
-
-  function applyMouseMode(value: string | null | undefined) {
-    const active = getActiveContext();
-    if (!active) return;
-    selectedMouseModeDefault = value ?? "auto";
-    active.pane.runtime.interaction.setMouseMode(selectedMouseModeDefault);
-    active.state.mouseMode = active.pane.runtime.interaction.getMouseStatus().mode;
-    if (active.pane.id === options.getActivePaneId()) {
-      options.shellSync.syncMouseModeValue(active.state.mouseMode);
-    }
   }
 
   return {
@@ -134,8 +114,8 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     applyFontSizeValue: fontController.applyFontSizeValue,
     applyLigaturesChange: fontController.applyLigaturesChange,
     applyLocalFontSelection: fontController.applyLocalFontSelection,
-    applyMouseMode,
-    applyRendererChoice,
+    applyMouseMode: terminalController.applyMouseMode,
+    applyRendererChoice: terminalController.applyRendererChoice,
     applySelectedShaderPreset: themeController.applySelectedShaderPreset,
     applyThemeSelection: themeController.applyThemeSelection,
     applyUploadedThemeFile: themeController.applyUploadedThemeFile,
@@ -148,8 +128,8 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     getLigatures: fontController.getLigatures,
     getLocalFontHintText: fontController.getLocalFontHintText,
     getLocalFontMatcher: fontController.getLocalFontMatcher,
-    getMouseModeDefault: () => selectedMouseModeDefault,
-    getRendererDefault: () => selectedRendererDefault,
+    getMouseModeDefault: terminalController.getMouseModeDefault,
+    getRendererDefault: terminalController.getRendererDefault,
     getShaderPreset: themeController.getShaderPreset,
     loadLocalFonts: fontController.loadLocalFonts,
     syncTerminalDefaultsFromState,
