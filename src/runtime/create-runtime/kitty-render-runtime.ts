@@ -1,35 +1,13 @@
 import type { WebGPUState } from "../../renderer";
-import type { KittyPlacement, ResttyWasm } from "../../wasm";
+import type { KittyPlacement } from "../../wasm";
 import { toKittySlice } from "./kitty-overlay-utils";
 import { createKittyImageCache } from "./interaction-runtime/kitty-image-cache";
-
-export type KittyDrawSlice = {
-  imageId: number;
-  key: string;
-  source: CanvasImageSource;
-  pixels?: Uint8Array;
-  imageWidth: number;
-  imageHeight: number;
-  sx: number;
-  sy: number;
-  sw: number;
-  sh: number;
-  dx: number;
-  dy: number;
-  dw: number;
-  dh: number;
-  z: number;
-};
-
-export type KittyDrawPlan = {
-  underlay: KittyDrawSlice[];
-  overlay: KittyDrawSlice[];
-};
-
-type CreateKittyRenderRuntimeOptions = {
-  getWasm: () => ResttyWasm | null;
-  markNeedsRender: () => void;
-};
+import type {
+  KittyDrawPlan,
+  KittyDrawSlice,
+  KittyRenderRuntime,
+  KittyRenderRuntimeOptions,
+} from "./kitty-render-runtime.types";
 
 type KittyWebGLTextureEntry = {
   gl: WebGL2RenderingContext;
@@ -47,7 +25,7 @@ type KittyWebGPUTextureEntry = {
 
 const GPU_TEXTURE_USAGE = 0x0004 | 0x0002; // TEXTURE_BINDING | COPY_DST
 
-export function createKittyRenderRuntime(options: CreateKittyRenderRuntimeOptions) {
+export function createKittyRenderRuntime(options: KittyRenderRuntimeOptions): KittyRenderRuntime {
   const kittyImageCache = createKittyImageCache(options);
   const webglTextures = new Map<number, KittyWebGLTextureEntry>();
   const webgpuTextures = new Map<number, KittyWebGPUTextureEntry>();

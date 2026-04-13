@@ -11,7 +11,7 @@ import type {
   ResttyWasmExports,
   SearchViewportMatch,
 } from "../../wasm";
-import type { KittyDrawPlan, KittyDrawSlice } from "./kitty-render-runtime";
+import type { KittyDrawPlan, KittyDrawSlice } from "./kitty-render-runtime.types";
 import type { ResttyFontHintTarget } from "../core/models";
 
 export type CursorPosition = {
