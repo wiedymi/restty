@@ -91,10 +91,12 @@ const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
 const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
 const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
+const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
 type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
+type FontSizeChangeEvent = CustomEvent<{ value?: string }>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
@@ -652,15 +654,23 @@ if (usesSvelteShell) {
   });
 }
 
-if (fontSizeInput) {
+function applyFontSizeValue(value: string | null | undefined) {
+  const pane = getActivePane();
+  const state = getActivePaneState(paneStates, activePaneId);
+  if (!pane || !state) return;
+  const nextValue = Number(value);
+  if (!Number.isFinite(nextValue)) return;
+  state.fontSize = nextValue;
+  pane.runtime.terminal.setFontSize(nextValue);
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(TERMINAL_FONT_SIZE_EVENT, (event) => {
+    applyFontSizeValue((event as FontSizeChangeEvent).detail?.value);
+  });
+} else if (fontSizeInput) {
   const applyFontSize = () => {
-    const pane = getActivePane();
-    const state = getActivePaneState(paneStates, activePaneId);
-    if (!pane || !state) return;
-    const value = Number(fontSizeInput.value);
-    if (!Number.isFinite(value)) return;
-    state.fontSize = value;
-    pane.runtime.terminal.setFontSize(value);
+    applyFontSizeValue(fontSizeInput.value);
   };
 
   fontSizeInput.addEventListener("change", applyFontSize);

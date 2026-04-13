@@ -2,9 +2,20 @@
   const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
   const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
   const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
+  const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
 
   function dispatchTerminalEvent(type: string) {
     window.dispatchEvent(new CustomEvent(type));
+  }
+
+  function handleFontSizeEvent(event: Event) {
+    const input = event.currentTarget;
+    if (!(input instanceof HTMLInputElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(TERMINAL_FONT_SIZE_EVENT, {
+        detail: { value: input.value },
+      }),
+    );
   }
 </script>
 
@@ -40,7 +51,16 @@
     </label>
     <label>
       <span>Font</span>
-      <input id="fontSize" type="number" min="10" max="64" step="1" value="18" />
+      <input
+        id="fontSize"
+        type="number"
+        min="10"
+        max="64"
+        step="1"
+        value="18"
+        oninput={handleFontSizeEvent}
+        onchange={handleFontSizeEvent}
+      />
     </label>
   </div>
 </section>
