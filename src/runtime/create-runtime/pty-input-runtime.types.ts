@@ -18,10 +18,8 @@ export type PtyInputRuntimeOptions = {
   ptyTransport: PtyTransport;
   ptyOutputBuffer: PtyOutputBufferController;
   inputHandler: InputHandler;
-  ptyStatusEl?: HTMLElement | null;
   mouseStatusEl?: HTMLElement | null;
   emitRuntimeEvent?: (event: Extract<ResttyRuntimeEvent, { type: "pty-status" }>) => void;
-  onPtyStatus?: ((status: string) => void) | null;
   onMouseStatus?: ((status: string) => void) | null;
   getGridSize: () => { cols: number; rows: number };
   getResizeMeta?: () => PtyResizeMeta | null;

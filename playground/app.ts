@@ -1009,8 +1009,15 @@ restty = new Restty({
 
         state.demos = createDemoController(pane.app);
         state.disposeRuntimeEvents = pane.app.events.subscribe((event) => {
-          if (event.type !== "backend") return;
-          updatePaneUi(pane.id, () => undefined);
+          if (event.type === "backend") {
+            updatePaneUi(pane.id, () => undefined);
+            return;
+          }
+          if (event.type === "pty-status") {
+            updatePaneUi(pane.id, (next) => {
+              next.ui.ptyStatus = event.status;
+            });
+          }
         });
         pane.app.interaction.setMouseMode(state.mouseMode);
         void initPaneApp(pane, state);
@@ -1064,11 +1071,6 @@ restty = new Restty({
       onTermSize: (cols, rows) => {
         updatePaneUi(id, (state) => {
           state.ui.termSize = `${cols}x${rows}`;
-        });
-      },
-      onPtyStatus: (status) => {
-        updatePaneUi(id, (state) => {
-          state.ui.ptyStatus = status;
         });
       },
     },

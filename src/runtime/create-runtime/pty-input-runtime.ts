@@ -11,9 +11,7 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
     ptyTransport,
     ptyOutputBuffer,
     inputHandler,
-    ptyStatusEl,
     mouseStatusEl,
-    onPtyStatus,
     onMouseStatus,
     getGridSize,
     getResizeMeta,
@@ -32,8 +30,6 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
   function setPtyStatus(text: string): void {
     if (text === lastReportedPtyStatus) return;
     lastReportedPtyStatus = text;
-    if (ptyStatusEl) ptyStatusEl.textContent = text;
-    onPtyStatus?.(text);
     options.emitRuntimeEvent?.({ type: "pty-status", status: text });
   }
 

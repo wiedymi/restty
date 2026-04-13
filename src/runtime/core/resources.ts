@@ -61,8 +61,6 @@ export type ResttyAppElements = {
   termSizeEl?: HTMLElement | null;
   /** Cursor position display. */
   cursorPosEl?: HTMLElement | null;
-  /** PTY connection status display. */
-  ptyStatusEl?: HTMLElement | null;
   /** Mouse mode/status display. */
   mouseStatusEl?: HTMLElement | null;
 };
@@ -83,8 +81,6 @@ export type ResttyAppCallbacks = {
   onTermSize?: (cols: number, rows: number) => void;
   /** Cursor position changed. */
   onCursor?: (col: number, row: number) => void;
-  /** PTY connection status changed. */
-  onPtyStatus?: (status: string) => void;
   /** Mouse mode/status changed. */
   onMouseStatus?: (status: string) => void;
   /** Terminal requested a desktop notification via OSC 9 / OSC 777. */
