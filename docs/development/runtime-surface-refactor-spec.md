@@ -586,8 +586,8 @@ The following files are the clearest candidates for relocation or splitting base
   - `surface/plugins/dispatcher.ts`
   - `surface/plugins/host.ts`
 
-- `src/surface/panes-context-menu.ts`
-- `src/surface/panes-styles.ts`
+- `src/surface/panes/context-menu.ts`
+- `src/surface/panes/styles.ts`
   Move under `surface/panes/`.
   These are pane-system concerns and should live next to `manager.ts`, `layout.ts`, and `pane-interactions.ts`.
   Target:

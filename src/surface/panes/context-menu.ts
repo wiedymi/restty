@@ -3,7 +3,7 @@ import type {
   ResttyPaneContextMenuOptions,
   ResttyPaneDefinition,
   ResttyPaneManager,
-} from "./panes-types";
+} from "./types";
 
 /**
  * Context menu controller for pane right-click interactions.

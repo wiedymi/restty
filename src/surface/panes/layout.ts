@@ -1,4 +1,4 @@
-import type { ResttyPaneDefinition, ResttyPaneSplitDirection } from "../panes-types";
+import type { ResttyPaneDefinition, ResttyPaneSplitDirection } from "./types";
 
 type SplitResizeState = {
   pointerId: number;

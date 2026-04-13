@@ -1,4 +1,4 @@
-import type { ResttyPaneContextMenuOptions, ResttyPaneShortcutsOptions } from "../panes-types";
+import type { ResttyPaneContextMenuOptions, ResttyPaneShortcutsOptions } from "./types";
 import { createDefaultResttyPaneContextMenuItems } from "./default-context-menu-items";
 import type {
   CreateResttyManagedPaneManagerOptions,

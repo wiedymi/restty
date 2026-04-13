@@ -4,7 +4,7 @@ import type {
   ResttyPaneContextMenuOptions,
   ResttyPaneDefinition,
   ResttyPaneManager,
-} from "../src/surface/panes-types";
+} from "../src/surface/panes/types";
 
 type Listener = EventListenerOrEventListenerObject;
 

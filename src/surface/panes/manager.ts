@@ -1,11 +1,11 @@
-import { createPaneContextMenuController } from "../panes-context-menu";
+import { createPaneContextMenuController } from "./context-menu";
 import {
   DEFAULT_RESTTY_PANE_STYLE_OPTIONS,
   applyPaneStyleOptionsToRoot,
   clearPaneStyleOptionsFromRoot,
   ensureResttyPaneStylesDocument,
   normalizePaneStyleOptions,
-} from "../panes-styles";
+} from "./styles";
 import type {
   CreateResttyPaneManagerOptions,
   ResttyPaneDefinition,
@@ -13,7 +13,7 @@ import type {
   ResttyPaneShortcutsOptions,
   ResttyPaneStyleOptions,
   ResttyPaneSplitDirection,
-} from "../panes-types";
+} from "./types";
 import { collapseSplitAncestors, createSplitDividerFactory, findClosestPaneToRect } from "./layout";
 import { createPaneInteractions } from "./pane-interactions";
 import { attachPaneManagerWindowEvents } from "./window-events";

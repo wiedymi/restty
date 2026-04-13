@@ -15,7 +15,7 @@ export type {
   ResttyPaneManager,
   ResttyPaneWithRuntime,
   CreateDefaultResttyPaneContextMenuItemsOptions,
-} from "../surface/panes-types";
+} from "../surface/panes/types";
 
 export { createResttyManagedPaneManager } from "../surface/panes/managed-pane-manager";
 export type {

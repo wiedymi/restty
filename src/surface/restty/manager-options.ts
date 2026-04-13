@@ -7,7 +7,7 @@ import type {
 import type { ResttyPluginEvents, ResttyRenderHookPayload } from "../plugins/types";
 import type { ResttyFontSource } from "../../runtime/core/models";
 import type { ResttyPluginHost } from "../plugins/host";
-import type { ResttyPaneSplitDirection } from "../panes-types";
+import type { ResttyPaneSplitDirection } from "../panes/types";
 import type { ResttyShaderOps } from "./shader-ops";
 
 type PaneManagerEventHandlers = {

@@ -1,4 +1,4 @@
-import type { ResttyPaneShortcutsOptions, ResttyPaneSplitDirection } from "../panes-types";
+import type { ResttyPaneShortcutsOptions, ResttyPaneSplitDirection } from "./types";
 
 export function attachPaneManagerWindowEvents(options: {
   contextMenuController?: {

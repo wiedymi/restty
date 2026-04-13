@@ -4,7 +4,7 @@ import type {
   ResttyManagedPaneStyleOptions,
   ResttyManagedPaneSearchUiStyleOptions,
 } from "../panes/managed-pane-types";
-import type { ResttyPaneManager, ResttyPaneSplitDirection } from "../panes-types";
+import type { ResttyPaneManager, ResttyPaneSplitDirection } from "../panes/types";
 import { ResttyPaneHandle } from "../restty-pane-handle";
 import type { ResttyLifecycleHookPayload, ResttyPluginEvents } from "../plugins/types";
 import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "../search-ui";

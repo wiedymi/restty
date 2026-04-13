@@ -1,9 +1,9 @@
-import type { PaneContextMenuController } from "../panes-context-menu";
+import type { PaneContextMenuController } from "./context-menu";
 import type {
   ResttyPaneContextMenuOptions,
   ResttyPaneDefinition,
   ResttyPaneManager,
-} from "../panes-types";
+} from "./types";
 
 export function createPaneInteractions<TPane extends ResttyPaneDefinition>(options: {
   contextMenu: ResttyPaneContextMenuOptions<TPane> | null | undefined;

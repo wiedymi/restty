@@ -2,7 +2,7 @@ import type {
   CreateDefaultResttyPaneContextMenuItemsOptions,
   ResttyPaneContextMenuItem,
   ResttyPaneWithRuntime,
-} from "../panes-types";
+} from "./types";
 
 /** Return the platform-appropriate shortcut modifier label ("Cmd" on macOS, "Ctrl" elsewhere). */
 export function getResttyShortcutModifierLabel(): "Cmd" | "Ctrl" {

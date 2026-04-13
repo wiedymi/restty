@@ -1,4 +1,4 @@
-import type { ResttyPaneStyleOptions } from "./panes-types";
+import type { ResttyPaneStyleOptions } from "./types";
 
 const RESTTY_PANE_ROOT_CLASS = "restty-pane-root";
 const RESTTY_PANE_STYLE_MARKER = "data-restty-pane-styles";
