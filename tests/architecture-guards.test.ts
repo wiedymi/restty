@@ -184,6 +184,19 @@ test("surface restty facade imports pane-app-manager for factory only", () => {
   );
 });
 
+test("surface public entrypoints do not use pane-app-manager as a type barrel", () => {
+  const indexSource = readFileSync(resolve(repoRoot, "src/index.ts"), "utf8");
+  const internalSurfaceSource = readFileSync(resolve(internalRoot, "surface.ts"), "utf8");
+
+  expect(indexSource).not.toContain("./surface/pane-app-manager");
+  expect(internalSurfaceSource).not.toMatch(
+    /export\s+type\s*\{[^}]+\}\s+from\s+"..\/surface\/pane-app-manager"/s,
+  );
+  expect(internalSurfaceSource).toContain(
+    'createResttyAppPaneManager } from "../surface/pane-app-manager"',
+  );
+});
+
 test("playground source does not import src/internal.ts", () => {
   const playgroundFiles = listTsFiles(playgroundRoot, {
     exclude: [playgroundPublicRoot, playgroundDistRoot],

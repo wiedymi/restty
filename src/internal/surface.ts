@@ -31,7 +31,7 @@ export type {
   ResttyPaneRuntimeContext,
   ResttyTerminalConfigInput,
   ResttyRuntimeServicesConfigInput,
-} from "../surface/pane-app-manager";
+} from "../surface/panes/managed-pane-types";
 
 export type {
   ResttyPaneSearchUiOpenOptions,

@@ -39,7 +39,7 @@ export type {
 export type {
   ResttyManagedPaneSearchUiOptions,
   ResttyManagedPaneSearchUiStyleOptions,
-} from "./surface/pane-app-manager";
+} from "./surface/panes/managed-pane-types";
 export type {
   ResttyPaneSearchUiOpenOptions,
   ResttyPaneSearchUiCloseOptions,

@@ -14,21 +14,6 @@ import type {
   ResttyManagedAppPane,
 } from "./panes/managed-pane-types";
 
-export type {
-  CreateResttyAppPaneManagerOptions,
-  ResttyAppPaneManager,
-  ResttyDefaultPaneContextMenuOptions,
-  ResttyManagedAppPane,
-  ResttyManagedPaneSearchUiOptions,
-  ResttyManagedPaneSearchUiStyleOptions,
-  ResttyManagedPaneStyleOptions,
-  ResttyManagedPaneStylesOptions,
-  ResttyPaneDomDefaults,
-  ResttyPaneRuntimeContext,
-  ResttyRuntimeServicesConfigInput,
-  ResttyTerminalConfigInput,
-} from "./panes/managed-pane-types";
-
 /**
  * Create an app-aware pane manager that automatically constructs
  * canvas, IME input, and terminal app instances for each pane.
