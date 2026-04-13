@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
 import {
+  syncFontFamilyControls,
+  syncHintingControls,
+} from "../playground/lib/font-control-sync.ts";
+import {
   DENIED_LOCAL_FONT_HINT,
   DEFAULT_LOCAL_FONT_HINT,
   FONT_FAMILY_LOCAL_PREFIX,
@@ -11,8 +15,6 @@ import {
   buildFontSourcesForSelection,
   resolveFontHintTarget,
   supportsLocalFontPicker,
-  syncFontFamilyControls,
-  syncHintingControls,
 } from "../playground/lib/font-controls.ts";
 
 test("buildFontSourcesForSelection keeps local matcher first and preset sources ahead of fallbacks", () => {

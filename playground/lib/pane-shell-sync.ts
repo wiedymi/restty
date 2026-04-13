@@ -1,11 +1,10 @@
 import {
   getLocalFontSelectValue,
   supportsLocalFontPicker,
-  syncFontFamilyControls,
-  syncHintingControls,
   type FontHintTarget,
   type LocalFontOption,
 } from "./font-controls.ts";
+import { syncFontFamilyControls, syncHintingControls } from "./font-control-sync.ts";
 import type { PaneState } from "./pane-state.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
 import {
