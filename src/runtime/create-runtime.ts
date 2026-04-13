@@ -1151,7 +1151,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     applyTheme,
     ensureFont,
     updateSize,
-    log,
     replaceCanvas,
     rebuildWebGPUShaderStages,
     rebuildWebGLShaderStages,
