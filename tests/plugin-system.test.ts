@@ -24,7 +24,6 @@ type FakePane = {
     getMouseStatus: () => { mode: string; active: boolean; detail: string; enabled: boolean };
     copySelectionToClipboard: () => Promise<boolean>;
     pasteFromClipboard: () => Promise<boolean>;
-    dumpAtlasForCodepoint: () => void;
     resize: (cols: number, rows: number) => void;
     focus: () => void;
     blur: () => void;
@@ -148,7 +147,6 @@ function createFakeManager(options: any): FakeManager {
       getMouseStatus: () => ({ mode: "auto", active: false, detail: "sgr", enabled: true }),
       copySelectionToClipboard: async () => true,
       pasteFromClipboard: async () => true,
-      dumpAtlasForCodepoint: () => {},
       resize: (_cols: number, _rows: number) => {},
       focus: () => {},
       blur: () => {},

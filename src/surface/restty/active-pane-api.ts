@@ -151,10 +151,6 @@ export abstract class ResttyActivePaneApi {
     return this.requireActivePaneHandle().getShaderStages();
   }
 
-  dumpAtlasForCodepoint(cp: number): void {
-    this.requireActivePaneHandle().dumpAtlasForCodepoint(cp);
-  }
-
   updateSize(force?: boolean): void {
     this.requireActivePaneHandle().updateSize(force);
   }

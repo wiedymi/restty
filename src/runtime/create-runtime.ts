@@ -709,7 +709,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     glyphBufferToShapedGlyphs,
   });
 
-  const { dumpAtlasForCodepoint, setupDebugExpose } = createRuntimeDebugTools({
+  const { setupDebugExpose } = createRuntimeDebugTools({
     debugExpose,
     getWindow: () => (typeof window !== "undefined" ? window : undefined),
     getActiveState: () => activeState,
@@ -1292,7 +1292,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     searchNext: searchRuntime.next,
     searchPrevious: searchRuntime.previous,
     getSearchState: searchRuntime.getState,
-    dumpAtlasForCodepoint,
     resize,
     focus,
     blur,

@@ -54,7 +54,6 @@ type RuntimePublicApiOptions = {
   searchNext: ResttyRuntime["searchNext"];
   searchPrevious: ResttyRuntime["searchPrevious"];
   getSearchState: ResttyRuntime["getSearchState"];
-  dumpAtlasForCodepoint: ResttyRuntime["dumpAtlasForCodepoint"];
   resize: ResttyRuntime["resize"];
   focus: ResttyRuntime["focus"];
   blur: ResttyRuntime["blur"];
@@ -702,7 +701,6 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       searchNext: publicApiOptions.searchNext,
       searchPrevious: publicApiOptions.searchPrevious,
       getSearchState: publicApiOptions.getSearchState,
-      dumpAtlasForCodepoint: publicApiOptions.dumpAtlasForCodepoint,
       resize: publicApiOptions.resize,
       focus: publicApiOptions.focus,
       blur: publicApiOptions.blur,

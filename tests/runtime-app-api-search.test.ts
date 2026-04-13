@@ -131,7 +131,6 @@ test("runtime app api exposes search controls on the public Restty app", () => {
       calls.push("prev");
     },
     getSearchState: () => expectedState,
-    dumpAtlasForCodepoint: () => undefined,
     resize: () => undefined,
     focus: () => undefined,
     blur: () => undefined,

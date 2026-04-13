@@ -62,7 +62,6 @@ export type ResttyPaneApi = {
   closeSearch: (options?: ResttyPaneSearchUiCloseOptions) => void;
   toggleSearch: (options?: ResttyPaneSearchUiOpenOptions & ResttyPaneSearchUiCloseOptions) => void;
   isSearchOpen: () => boolean;
-  dumpAtlasForCodepoint: (cp: number) => void;
   resize: (cols: number, rows: number) => void;
   focus: () => void;
   blur: () => void;
@@ -211,10 +210,6 @@ export class ResttyPaneHandle implements ResttyPaneApi {
 
   isSearchOpen(): boolean {
     return this.searchUiOps.isOpen(this.id);
-  }
-
-  dumpAtlasForCodepoint(cp: number): void {
-    this.resolvePane().app.dumpAtlasForCodepoint(cp);
   }
 
   resize(cols: number, rows: number): void {
