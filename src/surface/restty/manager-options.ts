@@ -3,12 +3,20 @@ import type { CreateResttyAppPaneManagerOptions, ResttyManagedAppPane } from "..
 import type { ResttyPluginEvents, ResttyRenderHookPayload } from "../plugins/types";
 import type { ResttyFontSource } from "../../runtime/types";
 import type { ResttyPluginHost } from "../plugins/host";
+import type { ResttyPaneSplitDirection } from "../panes-types";
 import type { ResttyShaderOps } from "./shader-ops";
 
-type PaneManagerEventHandlers = Pick<
-  CreateResttyAppPaneManagerOptions,
-  "onPaneCreated" | "onPaneClosed" | "onPaneSplit" | "onActivePaneChange" | "onLayoutChanged"
->;
+type PaneManagerEventHandlers = {
+  onPaneCreated?: (pane: ResttyManagedAppPane) => void;
+  onPaneClosed?: (pane: ResttyManagedAppPane) => void;
+  onPaneSplit?: (
+    sourcePane: ResttyManagedAppPane,
+    createdPane: ResttyManagedAppPane,
+    direction: ResttyPaneSplitDirection,
+  ) => void;
+  onActivePaneChange?: (pane: ResttyManagedAppPane | null) => void;
+  onLayoutChanged?: () => void;
+};
 
 type MergedPaneTerminalConfigDeps = {
   terminal: CreateResttyAppPaneManagerOptions["terminal"] | undefined;
