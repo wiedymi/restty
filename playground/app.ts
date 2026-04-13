@@ -88,6 +88,9 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const RUN_DEMO_EVENT = "restty:playground-demo-run";
 const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
+const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
+const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
+const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
@@ -474,7 +477,7 @@ connectionBackendEl?.addEventListener("change", () => {
   }
 });
 
-btnInit?.addEventListener("click", () => {
+function handleTerminalInit() {
   const pane = getActivePane();
   if (!pane) return;
   const state = getActivePaneState(paneStates, activePaneId);
@@ -482,24 +485,34 @@ btnInit?.addEventListener("click", () => {
   setPanePaused(pane.id, false);
   state.demos?.stop();
   void initPaneApp(pane, state);
-});
+}
 
-btnPause?.addEventListener("click", () => {
+function handleTerminalPauseToggle() {
   const pane = getActivePane();
   if (!pane) return;
   const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
   setPanePaused(pane.id, !state.paused);
-});
+}
 
-btnClear?.addEventListener("click", () => {
+function handleTerminalClear() {
   const pane = getActivePane();
   if (!pane) return;
   const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
   state.demos?.stop();
   pane.runtime.terminal.clearScreen();
-});
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(TERMINAL_INIT_EVENT, handleTerminalInit);
+  window.addEventListener(TERMINAL_PAUSE_EVENT, handleTerminalPauseToggle);
+  window.addEventListener(TERMINAL_CLEAR_EVENT, handleTerminalClear);
+} else {
+  btnInit?.addEventListener("click", handleTerminalInit);
+  btnPause?.addEventListener("click", handleTerminalPauseToggle);
+  btnClear?.addEventListener("click", handleTerminalClear);
+}
 
 function runSelectedDemo(kind: PlaygroundDemoKind | string | null | undefined) {
   const state = getActivePaneState(paneStates, activePaneId);

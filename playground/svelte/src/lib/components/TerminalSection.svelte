@@ -1,9 +1,33 @@
+<script lang="ts">
+  const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
+  const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
+  const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
+
+  function dispatchTerminalEvent(type: string) {
+    window.dispatchEvent(new CustomEvent(type));
+  }
+</script>
+
 <section class="section">
   <div class="section-title">Terminal</div>
   <div class="btn-row">
-    <button id="btnInit">Init</button>
-    <button id="btnPause">Pause</button>
-    <button id="btnClear">Clear</button>
+    <button id="btnInit" type="button" onclick={() => dispatchTerminalEvent(TERMINAL_INIT_EVENT)}>
+      Init
+    </button>
+    <button
+      id="btnPause"
+      type="button"
+      onclick={() => dispatchTerminalEvent(TERMINAL_PAUSE_EVENT)}
+    >
+      Pause
+    </button>
+    <button
+      id="btnClear"
+      type="button"
+      onclick={() => dispatchTerminalEvent(TERMINAL_CLEAR_EVENT)}
+    >
+      Clear
+    </button>
   </div>
   <div class="field-row">
     <label>
