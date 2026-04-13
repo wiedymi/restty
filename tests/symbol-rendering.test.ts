@@ -145,23 +145,15 @@ test("fallback font scaling uses Ghostty-style metric adjustment with wide-font 
     join(process.cwd(), "src/runtime/create-runtime/render-tick-webgl-context.ts"),
     "utf8",
   );
-  const debugSource = readFileSync(
-    join(process.cwd(), "src/runtime/create-runtime/debug-tools/create-dump-glyph-render.ts"),
-    "utf8",
-  );
   const metricOrderPattern = /"ic_width",\s+"ex_height",\s+"cap_height",\s+"line_height"/g;
   expect((webgpuSource.match(metricOrderPattern) ?? []).length).toBeGreaterThanOrEqual(1);
   expect((webglSource.match(metricOrderPattern) ?? []).length).toBeGreaterThanOrEqual(1);
-  expect((debugSource.match(metricOrderPattern) ?? []).length).toBeGreaterThanOrEqual(1);
   const upscaleOnlyPattern = /clamp\(fallbackScaleAdjustment\(primaryEntry, entry\), 1, 2\)/g;
   expect((webgpuSource.match(upscaleOnlyPattern) ?? []).length).toBe(1);
   expect((webglSource.match(upscaleOnlyPattern) ?? []).length).toBe(1);
-  const debugUpscaleOnlyPattern = /metricAdjust = clamp\(metricAdjust, 1, 2\);/g;
-  expect((debugSource.match(debugUpscaleOnlyPattern) ?? []).length).toBe(1);
   const wideOnlyPattern = /if \(maxSpan > 1\) \{/g;
   expect((webgpuSource.match(wideOnlyPattern) ?? []).length).toBe(1);
   expect((webglSource.match(wideOnlyPattern) ?? []).length).toBe(1);
-  expect((debugSource.match(wideOnlyPattern) ?? []).length).toBe(1);
 });
 
 test("fallback glyph clamp avoids width bbox shrinking in emit paths", () => {

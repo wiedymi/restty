@@ -31,8 +31,6 @@ export type ResttyRuntimeServicesConfig = {
   callbacks?: ResttyAppCallbacks;
   /** PTY transport layer for terminal I/O. */
   ptyTransport?: PtyTransport;
-  /** Expose internal state on the window object for debugging. */
-  debugExpose?: boolean;
   /**
    * Optional hook to transform or suppress terminal/program input
    * before it is written to the terminal core.

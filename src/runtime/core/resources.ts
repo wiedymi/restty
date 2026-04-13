@@ -77,10 +77,6 @@ export type ResttyAppElements = {
   termDebugEl?: HTMLElement | null;
   /** Scrollable log output display. */
   logEl?: HTMLElement | null;
-  /** Glyph atlas info display. */
-  atlasInfoEl?: HTMLElement | null;
-  /** Canvas element for atlas visualization. */
-  atlasCanvas?: HTMLCanvasElement | null;
 };
 
 /**

@@ -171,14 +171,11 @@ test("shader stage runtime contracts point directly at render-stage-runtime type
   expect(source).toContain("./render-stage-runtime.types");
 });
 
-test("debug-tool setup uses debug-tools/types for debug window contract", () => {
-  const source = readFileSync(
-    resolve(runtimeCreateRuntimeRoot, "debug-tools/setup-debug-expose.ts"),
-    "utf8",
+test("legacy runtime debug-tools directory is removed", () => {
+  expect(existsSync(resolve(runtimeCreateRuntimeRoot, "debug-tools.ts"))).toBe(false);
+  expect(existsSync(resolve(runtimeCreateRuntimeRoot, "debug-tools/setup-debug-expose.ts"))).toBe(
+    false,
   );
-
-  expect(source).toContain("./types");
-  expect(source).not.toContain("../create-app-types");
 });
 
 test("surface source does not import runtime create-runtime internals", () => {

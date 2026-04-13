@@ -114,7 +114,6 @@ import { formatCodepoint } from "./create-runtime/format-utils";
 import { createRuntimeLogger } from "./create-runtime/runtime-logger";
 import { createShaderStageRuntime } from "./create-runtime/shader-stage-runtime";
 import { createColorGlyphAtlasHelpers } from "./create-runtime/color-glyph-atlas";
-import { createRuntimeDebugTools } from "./create-runtime/debug-tools";
 import { createRuntimeInputHooks } from "./create-runtime/input-hooks";
 import { createPtyInputRuntime } from "./create-runtime/pty-input-runtime";
 import { createRuntimeInteraction } from "./create-runtime/interaction-runtime";
@@ -208,7 +207,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const attachWindowEvents = terminal.attachWindowEvents ?? true;
   const attachCanvasEvents = terminal.attachCanvasEvents ?? true;
   const autoResize = terminal.autoResize ?? true;
-  const debugExpose = services.debugExpose ?? false;
   const touchSelectionMode = normalizeTouchSelectionMode(terminal.touchSelectionMode);
   const touchSelectionLongPressMs = clampFiniteNumber(
     terminal.touchSelectionLongPressMs,
@@ -253,8 +251,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const ptyStatusEl = elements?.ptyStatusEl ?? null;
   const mouseStatusEl = elements?.mouseStatusEl ?? null;
   const termDebug = elements?.termDebugEl ?? null;
-  const atlasInfoEl = elements?.atlasInfoEl ?? null;
-  const atlasCanvas = elements?.atlasCanvas ?? null;
   const logEl = elements?.logEl ?? null;
 
   const DEFAULT_BG_BASE: Color = [0.08, 0.09, 0.1, 1.0];
@@ -711,41 +707,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     shape,
     glyphBufferToShapedGlyphs,
   });
-
-  const { setupDebugExpose } = createRuntimeDebugTools({
-    debugExpose,
-    getWindow: () => (typeof window !== "undefined" ? window : undefined),
-    getActiveState: () => activeState,
-    getCanvas: () => canvas,
-    atlasCanvas,
-    atlasInfoEl,
-    fontState,
-    gridState,
-    fontConfig,
-    pickFontIndexForText,
-    ensureAtlasForFont,
-    formatCodepoint,
-    isSymbolFont,
-    isNerdSymbolCodepoint,
-    isSymbolCp,
-    fontHasGlyph,
-    shapeClusterWithFont,
-    getNerdConstraint,
-    fontHeightUnits,
-    fontScaleOverride,
-    fontScaleOverrides: FONT_SCALE_OVERRIDES,
-    fontAdvanceUnits,
-    fontMaxCellSpan,
-    clamp,
-    buildNerdMetrics,
-    nerdIconScale,
-    isColorEmojiFont,
-    atlasPadding: ATLAS_PADDING,
-    symbolAtlasPadding: SYMBOL_ATLAS_PADDING,
-    pixelModeGray: PixelMode.Gray,
-    pixelModeRgba: PixelMode.RGBA ?? 4,
-  });
-  setupDebugExpose();
 
   let fontPromise: Promise<void> | null = null;
   let fontError: Error | null = null;
