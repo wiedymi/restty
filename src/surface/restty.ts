@@ -23,28 +23,24 @@ import {
   type ResttyPluginRegistry,
   type ResttyPluginLoadStatus,
   type ResttyPluginLoadResult,
-  type ResttyPluginEvents,
 } from "./plugins/types";
 import type {
   ResttyPluginDisposable,
   ResttyPluginCleanup,
-  ResttyPluginHostApi,
   ResttyInputInterceptorPayload,
   ResttyOutputInterceptorPayload,
   ResttyInputInterceptor,
   ResttyOutputInterceptor,
-  ResttyLifecycleHookPayload,
   ResttyLifecycleHook,
-  ResttyRenderHookPayload,
   ResttyRenderHook,
   ResttyInterceptorOptions,
   ResttyRenderStageHandle,
   ResttyPluginContext,
   ResttyPlugin,
 } from "./plugins/context.types";
-import { ResttyPluginHost } from "./plugins/host";
 import type { ResttyConfig } from "./restty/config";
 import type { ResttySurfacePane } from "./restty/events";
+import { ResttyController, createResttyPluginSurfaceApi } from "./restty/controller";
 import * as paneOps from "./restty/pane-ops";
 import { ResttyShaderOps } from "./restty/shader-ops";
 
@@ -94,8 +90,7 @@ export class Restty extends ResttyActivePaneApi {
   readonly paneManager: ResttyManagedPaneManager;
   private fontSources: ResttyFontSource[] | undefined;
   private readonly shaderOps: ResttyShaderOps;
-  private readonly pluginHost: ResttyPluginHost;
-  private readonly pluginSurfaceApi: ResttyPluginHostApi;
+  private readonly controller: ResttyController;
 
   constructor(options: ResttyConfig) {
     super();
@@ -122,13 +117,72 @@ export class Restty extends ResttyActivePaneApi {
     } = events ?? {};
 
     this.fontSources = undefined;
-    this.pluginSurfaceApi = this.createPluginSurfaceApi();
     this.shaderOps = new ResttyShaderOps({
       getPanes: () => this.paneManager.getPanes(),
       getPaneById: (id) => this.paneManager.getPaneById(id),
     });
-    this.pluginHost = new ResttyPluginHost({
-      restty: this.pluginSurfaceApi,
+    const pluginSurfaceApi = createResttyPluginSurfaceApi({
+      panes: () => this.panes(),
+      pane: (id) => this.pane(id),
+      activePane: () => this.activePane(),
+      focusedPane: () => this.focusedPane(),
+      forEachPane: (visitor) => {
+        this.forEachPane(visitor);
+      },
+      isPtyConnected: () => this.isPtyConnected(),
+      setRenderer: (value) => this.setRenderer(value),
+      setPaused: (value) => this.setPaused(value),
+      togglePause: () => this.togglePause(),
+      setFontSize: (value) => this.setFontSize(value),
+      setLigatures: (value) => this.setLigatures(value),
+      setFontHinting: (value) => this.setFontHinting(value),
+      setFontHintTarget: (value) => this.setFontHintTarget(value),
+      setFontSources: (sources) => this.setFontSources(sources),
+      applyTheme: (theme, sourceLabel) => this.applyTheme(theme, sourceLabel),
+      resetTheme: () => this.resetTheme(),
+      sendInput: (text, source) => this.sendInput(text, source),
+      sendKeyInput: (text, source) => this.sendKeyInput(text, source),
+      clearScreen: () => this.clearScreen(),
+      connectPty: (url) => this.connectPty(url),
+      disconnectPty: () => this.disconnectPty(),
+      setMouseMode: (value) => this.setMouseMode(value),
+      getMouseStatus: () => this.getMouseStatus(),
+      copySelectionToClipboard: () => this.copySelectionToClipboard(),
+      pasteFromClipboard: () => this.pasteFromClipboard(),
+      selectWordAtClientPoint: (clientX, clientY) => this.selectWordAtClientPoint(clientX, clientY),
+      setSearchQuery: (query) => this.setSearchQuery(query),
+      clearSearch: () => this.clearSearch(),
+      searchNext: () => this.searchNext(),
+      searchPrevious: () => this.searchPrevious(),
+      getSearchState: () => this.getSearchState(),
+      openSearch: (options) => this.openSearch(options),
+      closeSearch: (options) => this.closeSearch(options),
+      toggleSearch: (options) => this.toggleSearch(options),
+      isSearchOpen: () => this.isSearchOpen(),
+      resize: (cols, rows) => this.resize(cols, rows),
+      focus: () => this.focus(),
+      blur: () => this.blur(),
+      updateSize: (force) => this.updateSize(force),
+      getBackend: () => this.getBackend(),
+      setShaderStages: (stages) => this.setShaderStages(stages),
+      getShaderStages: () => this.getShaderStages(),
+      addShaderStage: (stage) => this.addShaderStage(stage),
+      removeShaderStage: (id) => this.removeShaderStage(id),
+      createInitialPaneSurface: (createOptions) => this.createInitialPane(createOptions),
+      splitActivePaneSurface: (direction) => this.splitActivePane(direction),
+      splitPaneSurface: (id, direction) => this.splitPane(id, direction),
+      closePane: (id) => this.closePane(id),
+      getPaneStyleOptions: () => this.getPaneStyleOptions(),
+      setPaneStyleOptions: (options) => this.setPaneStyleOptions(options),
+      getSearchUiStyleOptions: () => this.getSearchUiStyleOptions(),
+      setSearchUiStyleOptions: (options) => this.setSearchUiStyleOptions(options),
+      setActivePane: (id, activeOptions) => this.setActivePane(id, activeOptions),
+      markPaneFocused: (id, focusOptions) => this.markPaneFocused(id, focusOptions),
+      requestLayoutSync: () => this.requestLayoutSync(),
+      hideContextMenu: () => this.hideContextMenu(),
+    });
+    this.controller = new ResttyController({
+      restty: pluginSurfaceApi,
       panes: () => this.panes(),
       pane: (id) => this.pane(id),
       activePane: () => this.activePane(),
@@ -145,13 +199,13 @@ export class Restty extends ResttyActivePaneApi {
     const mergedServicesConfig = createMergedPaneServicesConfig({
       services,
       onDesktopNotification,
-      pluginHost: this.pluginHost,
-      runRenderHooks: (payload) => this.runRenderHooks(payload),
+      pluginHost: this.controller,
+      runRenderHooks: (payload) => this.controller.runRenderHooks(payload),
     });
 
     const paneManagerEventHandlers = createPaneManagerEventHandlers({
       shaderOps: this.shaderOps,
-      emitPluginEvent: (event, payload) => this.emitPluginEvent(event, payload),
+      emitPluginEvent: (event, payload) => this.controller.emitPluginEvent(event, payload),
       onPaneCreated,
       onPaneClosed,
       onPaneSplit,
@@ -245,24 +299,24 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   createInitialPane(options?: { focus?: boolean }): ResttySurfacePane {
-    return paneOps.createInitialPane(this.paneManager, this.lifecycleHooks(), options);
+    return paneOps.createInitialPane(this.paneManager, this.controller.lifecycleHooks(), options);
   }
 
   splitActivePane(direction: ResttyPaneSplitDirection): ResttySurfacePane | null {
     return paneOps.splitActivePane(
       this.paneManager,
       this.paneLookup(),
-      this.lifecycleHooks(),
+      this.controller.lifecycleHooks(),
       direction,
     );
   }
 
   splitPane(id: number, direction: ResttyPaneSplitDirection): ResttySurfacePane | null {
-    return paneOps.splitPane(this.paneManager, this.lifecycleHooks(), id, direction);
+    return paneOps.splitPane(this.paneManager, this.controller.lifecycleHooks(), id, direction);
   }
 
   closePane(id: number): boolean {
-    return paneOps.closePane(this.paneManager, this.lifecycleHooks(), id);
+    return paneOps.closePane(this.paneManager, this.controller.lifecycleHooks(), id);
   }
 
   getPaneStyleOptions(): Readonly<Required<ResttyManagedPaneStyleOptions>> {
@@ -282,14 +336,20 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   setActivePane(id: number, options?: { focus?: boolean }): void {
-    paneOps.setActivePane(this.paneManager, this.paneLookup(), this.lifecycleHooks(), id, options);
+    paneOps.setActivePane(
+      this.paneManager,
+      this.paneLookup(),
+      this.controller.lifecycleHooks(),
+      id,
+      options,
+    );
   }
 
   markPaneFocused(id: number, options?: { focus?: boolean }): void {
     paneOps.markPaneFocused(
       this.paneManager,
       this.paneLookup(),
-      this.lifecycleHooks(),
+      this.controller.lifecycleHooks(),
       id,
       options,
     );
@@ -304,135 +364,55 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   async use(plugin: ResttyPlugin, options?: unknown): Promise<void> {
-    await this.pluginHost.use(plugin, options);
+    await this.controller.use(plugin, options);
   }
 
   async loadPlugins(
     manifest: ReadonlyArray<ResttyPluginManifestEntry>,
     registry: ResttyPluginRegistry,
   ): Promise<ResttyPluginLoadResult[]> {
-    return this.pluginHost.loadPlugins(manifest, registry);
+    return this.controller.loadPlugins(manifest, registry);
   }
 
   unuse(pluginId: string): boolean {
-    return this.pluginHost.unuse(pluginId);
+    return this.controller.unuse(pluginId);
   }
 
   plugins(): string[] {
-    return this.pluginHost.plugins();
+    return this.controller.plugins();
   }
 
   pluginInfo(pluginId: string): ResttyPluginInfo | null;
   pluginInfo(): ResttyPluginInfo[];
   pluginInfo(pluginId?: string): ResttyPluginInfo | ResttyPluginInfo[] | null {
-    if (typeof pluginId === "string") return this.pluginHost.pluginInfo(pluginId);
-    return this.pluginHost.pluginInfo();
+    if (typeof pluginId === "string") return this.controller.pluginInfo(pluginId);
+    return this.controller.pluginInfo();
   }
 
   destroy(): void {
-    this.pluginHost.destroy();
+    this.controller.destroy();
     this.shaderOps.clear();
     this.paneManager.destroy();
   }
 
   connectPty(url = ""): void {
-    paneOps.connectPty(this.paneLookup(), this.lifecycleHooks(), url);
+    paneOps.connectPty(this.paneLookup(), this.controller.lifecycleHooks(), url);
   }
 
   disconnectPty(): void {
-    paneOps.disconnectPty(this.paneLookup(), this.lifecycleHooks());
+    paneOps.disconnectPty(this.paneLookup(), this.controller.lifecycleHooks());
   }
 
   resize(cols: number, rows: number): void {
-    paneOps.resize(this.paneLookup(), this.lifecycleAndPluginHooks(), cols, rows);
+    paneOps.resize(this.paneLookup(), this.controller.lifecycleAndPluginHooks(), cols, rows);
   }
 
   focus(): void {
-    paneOps.focus(this.paneLookup(), this.lifecycleAndPluginHooks());
+    paneOps.focus(this.paneLookup(), this.controller.lifecycleAndPluginHooks());
   }
 
   blur(): void {
-    paneOps.blur(this.paneLookup(), this.lifecycleAndPluginHooks());
-  }
-
-  private createPluginSurfaceApi(): ResttyPluginHostApi {
-    const requirePaneHandle = (id: number): ResttyPaneHandle => {
-      const handle = this.pane(id);
-      if (!handle) {
-        throw new Error(`Restty plugin surface could not resolve pane ${id}`);
-      }
-      return handle;
-    };
-
-    return {
-      panes: () => this.panes(),
-      pane: (id) => this.pane(id),
-      activePane: () => this.activePane(),
-      focusedPane: () => this.focusedPane(),
-      forEachPane: (visitor) => {
-        this.forEachPane(visitor);
-      },
-      isPtyConnected: () => this.isPtyConnected(),
-      setRenderer: (value) => this.setRenderer(value),
-      setPaused: (value) => this.setPaused(value),
-      togglePause: () => this.togglePause(),
-      setFontSize: (value) => this.setFontSize(value),
-      setLigatures: (value) => this.setLigatures(value),
-      setFontHinting: (value) => this.setFontHinting(value),
-      setFontHintTarget: (value) => this.setFontHintTarget(value),
-      setFontSources: (sources) => this.setFontSources(sources),
-      applyTheme: (theme, sourceLabel) => this.applyTheme(theme, sourceLabel),
-      resetTheme: () => this.resetTheme(),
-      sendInput: (text, source) => this.sendInput(text, source),
-      sendKeyInput: (text, source) => this.sendKeyInput(text, source),
-      clearScreen: () => this.clearScreen(),
-      connectPty: (url) => this.connectPty(url),
-      disconnectPty: () => this.disconnectPty(),
-      setMouseMode: (value) => this.setMouseMode(value),
-      getMouseStatus: () => this.getMouseStatus(),
-      copySelectionToClipboard: () => this.copySelectionToClipboard(),
-      pasteFromClipboard: () => this.pasteFromClipboard(),
-      selectWordAtClientPoint: (clientX, clientY) => this.selectWordAtClientPoint(clientX, clientY),
-      setSearchQuery: (query) => this.setSearchQuery(query),
-      clearSearch: () => this.clearSearch(),
-      searchNext: () => this.searchNext(),
-      searchPrevious: () => this.searchPrevious(),
-      getSearchState: () => this.getSearchState(),
-      openSearch: (options) => this.openSearch(options),
-      closeSearch: (options) => this.closeSearch(options),
-      toggleSearch: (options) => this.toggleSearch(options),
-      isSearchOpen: () => this.isSearchOpen(),
-      resize: (cols, rows) => this.resize(cols, rows),
-      focus: () => this.focus(),
-      blur: () => this.blur(),
-      updateSize: (force) => this.updateSize(force),
-      getBackend: () => this.getBackend(),
-      setShaderStages: (stages) => this.setShaderStages(stages),
-      getShaderStages: () => this.getShaderStages(),
-      addShaderStage: (stage) => this.addShaderStage(stage),
-      removeShaderStage: (id) => this.removeShaderStage(id),
-      createInitialPane: (options) => {
-        const pane = this.createInitialPane(options);
-        return requirePaneHandle(pane.id);
-      },
-      splitActivePane: (direction) => {
-        const pane = this.splitActivePane(direction);
-        return pane ? requirePaneHandle(pane.id) : null;
-      },
-      splitPane: (id, direction) => {
-        const pane = this.splitPane(id, direction);
-        return pane ? requirePaneHandle(pane.id) : null;
-      },
-      closePane: (id) => this.closePane(id),
-      getPaneStyleOptions: () => this.getPaneStyleOptions(),
-      setPaneStyleOptions: (options) => this.setPaneStyleOptions(options),
-      getSearchUiStyleOptions: () => this.getSearchUiStyleOptions(),
-      setSearchUiStyleOptions: (options) => this.setSearchUiStyleOptions(options),
-      setActivePane: (id, options) => this.setActivePane(id, options),
-      markPaneFocused: (id, options) => this.markPaneFocused(id, options),
-      requestLayoutSync: () => this.requestLayoutSync(),
-      hideContextMenu: () => this.hideContextMenu(),
-    };
+    paneOps.blur(this.paneLookup(), this.controller.lifecycleAndPluginHooks());
   }
 
   private paneLookup(): {
@@ -470,44 +450,8 @@ export class Restty extends ResttyActivePaneApi {
     };
   }
 
-  private lifecycleHooks(): {
-    runLifecycleHooks: (payload: ResttyLifecycleHookPayload) => void;
-  } {
-    return {
-      runLifecycleHooks: (payload) => this.runLifecycleHooks(payload),
-    };
-  }
-
-  private lifecycleAndPluginHooks(): {
-    runLifecycleHooks: (payload: ResttyLifecycleHookPayload) => void;
-    emitPluginEvent: <E extends keyof ResttyPluginEvents>(
-      event: E,
-      payload: ResttyPluginEvents[E],
-    ) => void;
-  } {
-    return {
-      runLifecycleHooks: (payload) => this.runLifecycleHooks(payload),
-      emitPluginEvent: (event, payload) => this.emitPluginEvent(event, payload),
-    };
-  }
-
   protected requireActivePaneHandle(): ResttyPaneHandle {
     return paneOps.requireActivePaneHandle(this.paneLookup());
-  }
-
-  private runLifecycleHooks(payload: ResttyLifecycleHookPayload): void {
-    this.pluginHost.runLifecycleHooks(payload);
-  }
-
-  private runRenderHooks(payload: ResttyRenderHookPayload): void {
-    this.pluginHost.runRenderHooks(payload);
-  }
-
-  private emitPluginEvent<E extends keyof ResttyPluginEvents>(
-    event: E,
-    payload: ResttyPluginEvents[E],
-  ): void {
-    this.pluginHost.emitPluginEvent(event, payload);
   }
 }
 

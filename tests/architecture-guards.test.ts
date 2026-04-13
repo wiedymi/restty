@@ -402,6 +402,20 @@ test("surface plugin context depends on a plugin host api instead of the full Re
   expect(pluginDispatcherDeps).toContain('from "./context.types"');
 });
 
+test("surface restty delegates plugin bridge wiring to the restty controller", () => {
+  const resttySource = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
+  const resttyController = readFileSync(resolve(surfaceRoot, "restty/controller.ts"), "utf8");
+
+  expect(resttySource).toContain(
+    'import { ResttyController, createResttyPluginSurfaceApi } from "./restty/controller"',
+  );
+  expect(resttySource).not.toContain('from "./plugins/host"');
+  expect(resttySource).not.toContain("private createPluginSurfaceApi()");
+
+  expect(resttyController).toContain("export function createResttyPluginSurfaceApi");
+  expect(resttyController).toContain("new ResttyPluginHost(deps)");
+});
+
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty/pane-handle.ts"),
