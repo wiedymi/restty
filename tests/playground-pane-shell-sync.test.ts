@@ -7,6 +7,7 @@ import {
   LOCAL_FONT_STATE_EVENT,
   MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_STATE_EVENT,
+  SHADER_PRESET_STATE_EVENT,
   TERMINAL_STATE_EVENT,
   THEME_SELECT_STATE_EVENT,
 } from "../playground/lib/shell-events.ts";
@@ -55,6 +56,7 @@ test("pane shell sync dispatches active pane state through shell events", () => 
   target.addEventListener(LOCAL_FONT_STATE_EVENT, record(LOCAL_FONT_STATE_EVENT));
   target.addEventListener(FONT_RENDERING_STATE_EVENT, record(FONT_RENDERING_STATE_EVENT));
   target.addEventListener(MOUSE_MODE_STATE_EVENT, record(MOUSE_MODE_STATE_EVENT));
+  target.addEventListener(SHADER_PRESET_STATE_EVENT, record(SHADER_PRESET_STATE_EVENT));
   target.addEventListener(THEME_SELECT_STATE_EVENT, record(THEME_SELECT_STATE_EVENT));
   target.addEventListener(PTY_BUTTON_STATE_EVENT, record(PTY_BUTTON_STATE_EVENT));
 
@@ -76,6 +78,7 @@ test("pane shell sync dispatches active pane state through shell events", () => 
       fontHintingSelect: null,
       fontHintTargetSelect: null,
       mouseModeEl: null,
+      shaderPresetEl: null,
     },
     getSelectedConnectionBackend: () => "webcontainer",
     getSelectedFontFamily: () => "jetbrains",
@@ -87,6 +90,7 @@ test("pane shell sync dispatches active pane state through shell events", () => 
     getSelectedLigatures: () => false,
     getSelectedFontHinting: () => true,
     getSelectedFontHintTarget: () => "light",
+    getSelectedShaderPreset: () => "aurora",
     syncSelectedDefaults: (state) => {
       syncedStates.push(state);
     },
@@ -130,6 +134,10 @@ test("pane shell sync dispatches active pane state through shell events", () => 
       detail: { value: "drag" },
     },
     {
+      type: SHADER_PRESET_STATE_EVENT,
+      detail: { value: "aurora" },
+    },
+    {
       type: THEME_SELECT_STATE_EVENT,
       detail: { value: "Aizen Dark" },
     },
@@ -146,6 +154,7 @@ test("pane shell sync updates legacy controls directly", () => {
   const fontSizeInput = { value: "" };
   const ptyBtn = { textContent: "" };
   const themeSelect = { value: "" };
+  const shaderPresetEl = { value: "" };
   const mouseModeEl = {
     value: "",
     options: [{ value: "auto" }, { value: "on" }],
@@ -167,6 +176,7 @@ test("pane shell sync updates legacy controls directly", () => {
       fontHintingSelect: null,
       fontHintTargetSelect: null,
       mouseModeEl: mouseModeEl as HTMLSelectElement,
+      shaderPresetEl: shaderPresetEl as HTMLSelectElement,
     },
     getSelectedConnectionBackend: () => "ws",
     getSelectedFontFamily: () => "fira-code",
@@ -176,6 +186,7 @@ test("pane shell sync updates legacy controls directly", () => {
     getSelectedLigatures: () => true,
     getSelectedFontHinting: () => false,
     getSelectedFontHintTarget: () => "auto",
+    getSelectedShaderPreset: () => "scanline",
     syncSelectedDefaults: () => {},
   });
 
@@ -198,6 +209,7 @@ test("pane shell sync updates legacy controls directly", () => {
   expect(rendererSelect.value).toBe("webgl2");
   expect(fontSizeInput.value).toBe("18");
   expect(mouseModeEl.value).toBe("on");
+  expect(shaderPresetEl.value).toBe("scanline");
   expect(themeSelect.value).toBe("theme-file");
   expect(ptyBtn.textContent).toBe("Disconnect");
 });

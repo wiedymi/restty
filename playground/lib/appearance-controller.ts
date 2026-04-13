@@ -41,6 +41,7 @@ type PaneAppearanceShellSync = {
   syncFontRenderingControls: () => void;
   syncLocalFontControls: () => void;
   syncMouseModeValue: (value: string) => void;
+  syncShaderPresetValue: (value: ShaderPreset) => void;
   syncThemeSelectValue: (value: string) => void;
 };
 
@@ -96,6 +97,7 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
   }
 
   function applyCurrentShaderPreset() {
+    options.shellSync.syncShaderPresetValue(selectedShaderPreset);
     options.host.setShaderStages(shaderStagesForPreset(selectedShaderPreset));
   }
 
@@ -289,6 +291,7 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     getLocalFontMatcher: () => selectedLocalFontMatcher,
     getMouseModeDefault: () => selectedMouseModeDefault,
     getRendererDefault: () => selectedRendererDefault,
+    getShaderPreset: () => selectedShaderPreset,
     loadLocalFonts,
     syncTerminalDefaultsFromState,
   };

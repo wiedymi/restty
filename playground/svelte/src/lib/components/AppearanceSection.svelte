@@ -1,9 +1,6 @@
 <script lang="ts">
   import { listBuiltinThemeNames } from "../../../../../src/index.ts";
-  import {
-    THEME_FILE_RESET_EVENT,
-  } from "../../../../lib/shell-events.ts";
-  import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
+  import { THEME_FILE_RESET_EVENT } from "../../../../lib/shell-events.ts";
   import {
     dispatchFontFamilyChange,
     dispatchHintingChange,
@@ -20,11 +17,12 @@
 
   const builtinThemeNames = listBuiltinThemeNames();
 
-  let shaderPreset: ShaderPreset = "none";
   let themeFileInput: HTMLInputElement | null = null;
 
-  function handleShaderPresetChange() {
-    dispatchShaderPresetChange(shaderPreset);
+  function handleShaderPresetChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    dispatchShaderPresetChange(select.value);
   }
 
   function handleMouseModeChange(event: Event) {
@@ -177,7 +175,11 @@
     </select>
   </div>
   <div class="field-row">
-    <select id="shaderPreset" bind:value={shaderPreset} onchange={handleShaderPresetChange}>
+    <select
+      id="shaderPreset"
+      value={$appearanceShellState.shaderPreset}
+      onchange={handleShaderPresetChange}
+    >
       <option value="none">Shader: None</option>
       <option value="scanline">Shader: Scanline</option>
       <option value="aurora">Shader: Aurora</option>

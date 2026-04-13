@@ -25,6 +25,7 @@ export const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
 export const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
 export const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
 export const THEME_SELECT_STATE_EVENT = "restty:playground-theme-select-state";
+export const SHADER_PRESET_STATE_EVENT = "restty:playground-shader-preset-state";
 export const WC_COMMAND_CHANGE_EVENT = "restty:playground-webcontainer-command-change";
 export const WC_CWD_CHANGE_EVENT = "restty:playground-webcontainer-cwd-change";
 export const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";

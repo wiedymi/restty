@@ -8,6 +8,7 @@ import {
   LOCAL_FONT_STATE_EVENT,
   MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_STATE_EVENT,
+  SHADER_PRESET_STATE_EVENT,
   TERMINAL_STATE_EVENT,
   THEME_SELECT_STATE_EVENT,
   type ConnectionStateDetail,
@@ -43,6 +44,7 @@ type AppearanceShellState = {
   ligatures: string;
   fontHinting: string;
   fontHintTarget: string;
+  shaderPreset: string;
   themeSelectValue: string;
 };
 
@@ -71,6 +73,7 @@ const initialAppearanceShellState: AppearanceShellState = {
   ligatures: "on",
   fontHinting: "off",
   fontHintTarget: "auto",
+  shaderPreset: "none",
   themeSelectValue: "",
 };
 
@@ -170,6 +173,7 @@ export function startShellStateBridge(target: EventTarget = window) {
   };
 
   const handleMouseModeState = handleStringValue("mouseMode");
+  const handleShaderPresetState = handleStringValue("shaderPreset");
   const handleThemeSelectState = handleStringValue("themeSelectValue");
   const handleFontFamilyState = handleStringValue("fontFamily");
 
@@ -178,6 +182,7 @@ export function startShellStateBridge(target: EventTarget = window) {
   target.addEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
   target.addEventListener(FONT_RENDERING_STATE_EVENT, handleFontRenderingState);
   target.addEventListener(MOUSE_MODE_STATE_EVENT, handleMouseModeState);
+  target.addEventListener(SHADER_PRESET_STATE_EVENT, handleShaderPresetState);
   target.addEventListener(THEME_SELECT_STATE_EVENT, handleThemeSelectState);
   target.addEventListener(FONT_FAMILY_STATE_EVENT, handleFontFamilyState);
   target.addEventListener(LOCAL_FONT_STATE_EVENT, handleLocalFontState);
@@ -188,6 +193,7 @@ export function startShellStateBridge(target: EventTarget = window) {
     target.removeEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
     target.removeEventListener(FONT_RENDERING_STATE_EVENT, handleFontRenderingState);
     target.removeEventListener(MOUSE_MODE_STATE_EVENT, handleMouseModeState);
+    target.removeEventListener(SHADER_PRESET_STATE_EVENT, handleShaderPresetState);
     target.removeEventListener(THEME_SELECT_STATE_EVENT, handleThemeSelectState);
     target.removeEventListener(FONT_FAMILY_STATE_EVENT, handleFontFamilyState);
     target.removeEventListener(LOCAL_FONT_STATE_EVENT, handleLocalFontState);

@@ -14,10 +14,12 @@ import {
   LOCAL_FONT_STATE_EVENT,
   MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_STATE_EVENT,
+  SHADER_PRESET_STATE_EVENT,
   TERMINAL_STATE_EVENT,
   THEME_SELECT_STATE_EVENT,
   type LocalFontStateDetail,
 } from "./shell-events.ts";
+import type { ShaderPreset } from "./shader-presets.ts";
 
 export type PaneShellSyncPane = {
   runtime: {
@@ -61,6 +63,7 @@ type PaneShellSyncElements = {
   fontHintingSelect: HTMLSelectElement | null;
   fontHintTargetSelect: HTMLSelectElement | null;
   mouseModeEl: HTMLSelectElement | null;
+  shaderPresetEl: HTMLSelectElement | null;
 };
 
 type CreatePaneShellSyncOptions = {
@@ -75,6 +78,7 @@ type CreatePaneShellSyncOptions = {
   getSelectedLigatures: () => boolean;
   getSelectedFontHinting: () => boolean;
   getSelectedFontHintTarget: () => FontHintTarget;
+  getSelectedShaderPreset: () => ShaderPreset;
   syncSelectedDefaults: (state: PaneState) => void;
 };
 
@@ -140,6 +144,16 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
     }
     if (options.elements.themeSelect) {
       options.elements.themeSelect.value = value;
+    }
+  }
+
+  function syncShaderPresetValue(value = options.getSelectedShaderPreset()) {
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, SHADER_PRESET_STATE_EVENT, { value });
+      return;
+    }
+    if (options.elements.shaderPresetEl) {
+      options.elements.shaderPresetEl.value = value;
     }
   }
 
@@ -230,6 +244,7 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
     syncFontRenderingControls();
     state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
     syncMouseModeValue(state.mouseMode);
+    syncShaderPresetValue();
     syncThemeSelectValue(state.theme.selectValue);
   }
 
@@ -241,6 +256,7 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
     syncMouseModeValue,
     syncPauseButton,
     syncPtyButton,
+    syncShaderPresetValue,
     syncTerminalControlValues,
     syncThemeSelectValue,
   };

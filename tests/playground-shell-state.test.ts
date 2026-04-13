@@ -8,6 +8,7 @@ import {
   LOCAL_FONT_STATE_EVENT,
   MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_STATE_EVENT,
+  SHADER_PRESET_STATE_EVENT,
   TERMINAL_STATE_EVENT,
   THEME_SELECT_STATE_EVENT,
 } from "../playground/lib/shell-events.ts";
@@ -98,6 +99,11 @@ test("startShellStateBridge syncs appearance state from shell events", () => {
     }),
   );
   target.dispatchEvent(
+    new CustomEvent(SHADER_PRESET_STATE_EVENT, {
+      detail: { value: "aurora" },
+    }),
+  );
+  target.dispatchEvent(
     new CustomEvent(FONT_FAMILY_STATE_EVENT, {
       detail: { value: "jetbrains" },
     }),
@@ -125,6 +131,7 @@ test("startShellStateBridge syncs appearance state from shell events", () => {
     ligatures: "off",
     fontHinting: "on",
     fontHintTarget: "light",
+    shaderPreset: "aurora",
     themeSelectValue: "Aizen Dark",
   });
 

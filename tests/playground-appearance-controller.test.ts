@@ -74,6 +74,9 @@ function createShellSyncCalls() {
       syncMouseModeValue: (value: string) => {
         calls.push(`sync-mouse:${value}`);
       },
+      syncShaderPresetValue: (value: string) => {
+        calls.push(`sync-shader:${value}`);
+      },
       syncThemeSelectValue: (value: string) => {
         calls.push(`sync-theme:${value}`);
       },
@@ -208,6 +211,7 @@ test("appearance controller updates renderer, font, mouse, shader, and local fon
   expect(fontSourceLabels.length).toBe(2);
   expect(syncCalls).toEqual([
     "sync-mouse:drag",
+    "sync-shader:aurora",
     "sync-font-rendering",
     "sync-font-rendering",
     "sync-font-rendering",

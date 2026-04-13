@@ -160,6 +160,7 @@ const paneShellSync = createPaneShellSync({
     fontHintingSelect,
     fontHintTargetSelect,
     mouseModeEl,
+    shaderPresetEl,
   },
   getSelectedConnectionBackend: () => connectionController.getBackend(),
   getSelectedFontFamily: () => appearanceController.getFontFamily(),
@@ -169,6 +170,7 @@ const paneShellSync = createPaneShellSync({
   getSelectedLigatures: () => appearanceController.getLigatures(),
   getSelectedFontHinting: () => appearanceController.getFontHinting(),
   getSelectedFontHintTarget: () => appearanceController.getFontHintTarget(),
+  getSelectedShaderPreset: () => appearanceController.getShaderPreset(),
   syncSelectedDefaults: (state) => {
     appearanceController.syncTerminalDefaultsFromState(state);
   },
@@ -225,6 +227,7 @@ appearanceController = createPaneAppearanceController({
     syncFontRenderingControls: () => paneShellSync.syncFontRenderingControls(),
     syncLocalFontControls: () => paneShellSync.syncLocalFontControls(),
     syncMouseModeValue: (value) => paneShellSync.syncMouseModeValue(value),
+    syncShaderPresetValue: (value) => paneShellSync.syncShaderPresetValue(value),
     syncThemeSelectValue: (value) => paneShellSync.syncThemeSelectValue(value),
   },
   onThemeFileReset: shellAdapter.resetThemeFileInput,
