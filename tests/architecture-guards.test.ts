@@ -317,6 +317,18 @@ test("surface managed pane creation and runtime contracts are split from impleme
   expect(managedPaneRuntime).toContain("./managed-pane-runtime.types");
 });
 
+test("surface managed pane runtime config contract is split from implementation", () => {
+  const managedPaneRuntimeConfig = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-runtime-config.ts"),
+    "utf8",
+  );
+
+  expect(managedPaneRuntimeConfig).not.toContain(
+    "export type CreateManagedPaneRuntimeConfigOptions =",
+  );
+  expect(managedPaneRuntimeConfig).toContain("./managed-pane-runtime-config.types");
+});
+
 test("surface plugin runtime and dispatcher contracts are split from implementation", () => {
   const pluginRuntime = readFileSync(resolve(surfaceRoot, "plugins/runtime.ts"), "utf8");
   const pluginDispatcher = readFileSync(resolve(surfaceRoot, "plugins/dispatcher.ts"), "utf8");
