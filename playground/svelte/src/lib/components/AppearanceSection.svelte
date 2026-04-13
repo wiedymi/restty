@@ -7,6 +7,7 @@
     FONT_HINTING_CHANGE_EVENT,
     FONT_LIGATURES_CHANGE_EVENT,
     FONT_RENDERING_STATE_EVENT,
+    LOCAL_FONT_STATE_EVENT,
     LOAD_LOCAL_FONTS_EVENT,
     MOUSE_MODE_CHANGE_EVENT,
     MOUSE_MODE_STATE_EVENT,
@@ -15,13 +16,20 @@
     THEME_SELECT_CHANGE_EVENT,
     THEME_SELECT_STATE_EVENT,
     type FontRenderingStateDetail,
+    type LocalFontStateDetail,
     type ShellStringValueDetail,
   } from "../../../../lib/shell-events.ts";
+  import type { LocalFontOption } from "../../../../lib/font-controls.ts";
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
 
   let mouseMode = "auto";
   let ligatures = "on";
   let fontFamily = "fira-code";
+  let localFontHintText = "Main font family for all panes. Use Detect Local to add system fonts.";
+  let localFontOptions: LocalFontOption[] = [{ value: "", label: "Local Font: None" }];
+  let localFontSelectDisabled = false;
+  let localFontValue = "";
+  let loadLocalFontsDisabled = false;
   let fontHinting = "off";
   let fontHintTarget = "auto";
   let shaderPreset: ShaderPreset = "none";
@@ -56,6 +64,26 @@
     const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
     if (typeof detail?.value === "string") {
       themeSelectValue = detail.value;
+    }
+  }
+
+  function handleWindowLocalFontState(event: Event) {
+    const detail = (event as CustomEvent<LocalFontStateDetail>).detail;
+    if (!detail) return;
+    if (typeof detail.value === "string") {
+      localFontValue = detail.value;
+    }
+    if (typeof detail.hintText === "string") {
+      localFontHintText = detail.hintText;
+    }
+    if (typeof detail.selectDisabled === "boolean") {
+      localFontSelectDisabled = detail.selectDisabled;
+    }
+    if (typeof detail.loadDisabled === "boolean") {
+      loadLocalFontsDisabled = detail.loadDisabled;
+    }
+    if (Array.isArray(detail.options)) {
+      localFontOptions = detail.options;
     }
   }
 
@@ -158,6 +186,7 @@
 <svelte:window
   on:restty:playground-font-family-state={handleWindowFontFamilyState}
   on:restty:playground-font-rendering-state={handleWindowFontRenderingState}
+  on:restty:playground-local-font-state={handleWindowLocalFontState}
   on:restty:playground-mouse-mode-state={handleWindowMouseModeState}
   on:restty:playground-theme-select-state={handleWindowThemeSelectState}
 />
@@ -189,16 +218,26 @@
     Bundled Fira Code is available in the playground for ligatures and fallback checks.
   </div>
   <div class="field-row">
-    <select id="fontFamilyLocal" onchange={handleLocalFontFamilyChange}>
-      <option value="">Local Font: None</option>
+    <select
+      id="fontFamilyLocal"
+      bind:value={localFontValue}
+      disabled={localFontSelectDisabled}
+      onchange={handleLocalFontFamilyChange}
+    >
+      {#each localFontOptions as option}
+        <option value={option.value}>{option.label}</option>
+      {/each}
     </select>
-    <button id="btnLoadLocalFonts" type="button" onclick={handleLoadLocalFonts}>
+    <button
+      id="btnLoadLocalFonts"
+      type="button"
+      disabled={loadLocalFontsDisabled}
+      onclick={handleLoadLocalFonts}
+    >
       Detect Local
     </button>
   </div>
-  <div id="fontFamilyHint" class="hint">
-    Main font family for all panes. Use Detect Local to add system fonts.
-  </div>
+  <div id="fontFamilyHint" class="hint">{localFontHintText}</div>
   <div class="field-row">
     <select id="themeSelect" bind:value={themeSelectValue} onchange={handleThemeSelectChange}>
       <option value="">Default Theme</option>

@@ -13,13 +13,17 @@ import {
 import {
   DEFAULT_FONT_FAMILY,
   FONT_FAMILY_LOCAL_PREFIX,
+  detectLocalFontState,
   detectLocalFonts,
+  getDefaultLocalFontHintText,
   getCurrentFontSources,
+  getLocalFontSelectValue,
   resolveFontHintTarget,
   supportsLocalFontPicker,
   syncFontFamilyControls,
   syncHintingControls,
   type FontHintTarget,
+  type LocalFontOption,
 } from "./lib/font-controls.ts";
 import {
   createAdaptivePtyTransport,
@@ -55,6 +59,7 @@ import {
   FONT_HINTING_CHANGE_EVENT,
   FONT_LIGATURES_CHANGE_EVENT,
   FONT_RENDERING_STATE_EVENT,
+  LOCAL_FONT_STATE_EVENT,
   LOAD_LOCAL_FONTS_EVENT,
   MOUSE_MODE_CHANGE_EVENT,
   MOUSE_MODE_STATE_EVENT,
@@ -75,6 +80,7 @@ import {
   THEME_SELECT_STATE_EVENT,
   type DemoRunDetail,
   type FontRenderingStateDetail,
+  type LocalFontStateDetail,
   type PtyButtonStateDetail,
   type RendererChangeDetail,
   type ShaderPresetChangeDetail,
@@ -145,6 +151,8 @@ let selectedShaderPreset = usesSvelteShell
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
 let selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
 let selectedLocalFontMatcher = "";
+let detectedLocalFontOptions: LocalFontOption[] = [];
+let localFontHintText = getDefaultLocalFontHintText(supportsLocalFontPicker());
 const searchParams =
   typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
 function isTruthyQueryParam(value: string | null | undefined) {
@@ -298,17 +306,47 @@ function syncThemeSelectValue(value: string) {
   }
 }
 
+function syncLocalFontControls() {
+  const supportsPicker = supportsLocalFontPicker();
+  if (usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(LOCAL_FONT_STATE_EVENT, {
+        detail: {
+          value: getLocalFontSelectValue(selectedLocalFontMatcher),
+          hintText: localFontHintText,
+          loadDisabled: !supportsPicker,
+          selectDisabled: !supportsPicker,
+          options: [{ value: "", label: "Local Font: None" }, ...detectedLocalFontOptions],
+        } satisfies LocalFontStateDetail,
+      }),
+    );
+    return;
+  }
+  syncFontFamilyControls({
+    fontFamilySelect: null,
+    fontFamilyLocalSelect,
+    btnLoadLocalFonts,
+    selectedFontFamily,
+    selectedLocalFontMatcher,
+    supportsLocalFontPicker: supportsPicker,
+  });
+  if (fontFamilyHintEl) {
+    fontFamilyHintEl.textContent = localFontHintText;
+  }
+}
+
 function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
   syncTerminalControlValues(state);
   syncFontFamilyValue();
   syncFontFamilyControls({
     fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
-    fontFamilyLocalSelect,
-    btnLoadLocalFonts,
+    fontFamilyLocalSelect: usesSvelteShell ? null : fontFamilyLocalSelect,
+    btnLoadLocalFonts: usesSvelteShell ? null : btnLoadLocalFonts,
     selectedFontFamily,
     selectedLocalFontMatcher,
     supportsLocalFontPicker: supportsLocalFontPicker(),
   });
+  syncLocalFontControls();
   syncFontRenderingControls();
   state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
   if (usesSvelteShell) {
@@ -897,12 +935,13 @@ if (fontFamilySelect) {
     syncFontFamilyValue();
     syncFontFamilyControls({
       fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
-      fontFamilyLocalSelect,
-      btnLoadLocalFonts,
+      fontFamilyLocalSelect: usesSvelteShell ? null : fontFamilyLocalSelect,
+      btnLoadLocalFonts: usesSvelteShell ? null : btnLoadLocalFonts,
       selectedFontFamily,
       selectedLocalFontMatcher,
       supportsLocalFontPicker: supportsLocalFontPicker(),
     });
+    syncLocalFontControls();
     void applyFontSourcesToAllPanes({
       host: restty,
       selectedFontFamily,
@@ -934,13 +973,14 @@ function applyLocalFontSelection(value: string | null | undefined) {
     selectedLocalFontMatcher = "";
   }
   syncFontFamilyControls({
-    fontFamilySelect,
-    fontFamilyLocalSelect,
-    btnLoadLocalFonts,
+    fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
+    fontFamilyLocalSelect: usesSvelteShell ? null : fontFamilyLocalSelect,
+    btnLoadLocalFonts: usesSvelteShell ? null : btnLoadLocalFonts,
     selectedFontFamily,
     selectedLocalFontMatcher,
     supportsLocalFontPicker: supportsLocalFontPicker(),
   });
+  syncLocalFontControls();
   void applyFontSourcesToAllPanes({
     host: restty,
     selectedFontFamily,
@@ -956,9 +996,10 @@ if (usesSvelteShell) {
     applyLocalFontSelection((event as LocalFontControlChangeEvent).detail?.value);
   });
   window.addEventListener(LOAD_LOCAL_FONTS_EVENT, () => {
-    void detectLocalFonts({
-      fontFamilyLocalSelect,
-      fontFamilyHintEl,
+    void detectLocalFontState().then((state) => {
+      detectedLocalFontOptions = state.detectedOptions;
+      localFontHintText = state.hintText;
+      syncLocalFontControls();
     });
   });
 } else {
@@ -989,13 +1030,14 @@ if (!usesSvelteShell) {
 }
 syncFontFamilyControls({
   fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
-  fontFamilyLocalSelect,
-  btnLoadLocalFonts,
+  fontFamilyLocalSelect: usesSvelteShell ? null : fontFamilyLocalSelect,
+  btnLoadLocalFonts: usesSvelteShell ? null : btnLoadLocalFonts,
   selectedFontFamily,
   selectedLocalFontMatcher,
   supportsLocalFontPicker: supportsLocalFontPicker(),
 });
 syncFontFamilyValue();
+syncLocalFontControls();
 syncHintingControls({
   ligaturesSelect,
   fontHintingSelect,
@@ -1004,17 +1046,6 @@ syncHintingControls({
   selectedFontHinting,
   selectedFontHintTarget,
 });
-if (supportsLocalFontPicker()) {
-  if (fontFamilyHintEl) {
-    fontFamilyHintEl.textContent =
-      "Select a base font, then pick a local font from the local picker.";
-  }
-} else {
-  if (fontFamilyHintEl) {
-    fontFamilyHintEl.textContent = "Local font picker is not supported in this browser.";
-  }
-}
-
 const firstPane = restty.createInitialPane({ focus: true });
 activePaneId = firstPane.id;
 const firstState = paneStates.get(firstPane.id);

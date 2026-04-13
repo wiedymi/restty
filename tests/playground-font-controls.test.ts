@@ -1,5 +1,13 @@
 import { expect, test } from "bun:test";
 import {
+  DENIED_LOCAL_FONT_HINT,
+  DEFAULT_LOCAL_FONT_HINT,
+  FONT_FAMILY_LOCAL_PREFIX,
+  UNSUPPORTED_LOCAL_FONT_HINT,
+  buildDetectedLocalFontOptions,
+  detectLocalFontState,
+  getDefaultLocalFontHintText,
+  getLocalFontSelectValue,
   buildFontSourcesForSelection,
   resolveFontHintTarget,
   supportsLocalFontPicker,
@@ -47,6 +55,73 @@ test("supportsLocalFontPicker only returns true when queryLocalFonts exists", ()
   expect(supportsLocalFontPicker({ queryLocalFonts() {} })).toBe(true);
   expect(supportsLocalFontPicker({})).toBe(false);
   expect(supportsLocalFontPicker(null)).toBe(false);
+});
+
+test("getLocalFontSelectValue encodes the selected matcher", () => {
+  expect(getLocalFontSelectValue("")).toBe("");
+  expect(getLocalFontSelectValue("my font")).toBe(`${FONT_FAMILY_LOCAL_PREFIX}my%20font`);
+});
+
+test("getDefaultLocalFontHintText follows picker support", () => {
+  expect(getDefaultLocalFontHintText(true)).toBe(DEFAULT_LOCAL_FONT_HINT);
+  expect(getDefaultLocalFontHintText(false)).toBe(UNSUPPORTED_LOCAL_FONT_HINT);
+});
+
+test("buildDetectedLocalFontOptions deduplicates and normalizes values", () => {
+  expect(
+    buildDetectedLocalFontOptions([
+      { family: "  Fira Code  " },
+      { family: "fira code" },
+      { family: "" },
+      { family: "JetBrains Mono" },
+    ]),
+  ).toEqual([
+    { value: `${FONT_FAMILY_LOCAL_PREFIX}fira%20code`, label: "Local Font: Fira Code" },
+    {
+      value: `${FONT_FAMILY_LOCAL_PREFIX}jetbrains%20mono`,
+      label: "Local Font: JetBrains Mono",
+    },
+  ]);
+});
+
+test("detectLocalFontState returns detected options and success hint", async () => {
+  await expect(
+    detectLocalFontState({
+      queryLocalFonts: async () => [{ family: "Fira Code" }, { family: "JetBrains Mono" }],
+    }),
+  ).resolves.toEqual({
+    detectedOptions: [
+      { value: `${FONT_FAMILY_LOCAL_PREFIX}fira%20code`, label: "Local Font: Fira Code" },
+      {
+        value: `${FONT_FAMILY_LOCAL_PREFIX}jetbrains%20mono`,
+        label: "Local Font: JetBrains Mono",
+      },
+    ],
+    hintText: "Detected 2 local font families.",
+  });
+});
+
+test("detectLocalFontState reports unsupported and denied cases", async () => {
+  await expect(
+    detectLocalFontState({
+      browserWindow: {},
+      queryLocalFonts: null,
+    }),
+  ).resolves.toEqual({
+    detectedOptions: [],
+    hintText: UNSUPPORTED_LOCAL_FONT_HINT,
+  });
+
+  await expect(
+    detectLocalFontState({
+      queryLocalFonts: async () => {
+        throw new Error("denied");
+      },
+    }),
+  ).resolves.toEqual({
+    detectedOptions: [],
+    hintText: DENIED_LOCAL_FONT_HINT,
+  });
 });
 
 test("syncFontFamilyControls updates selected values and disabled state", () => {

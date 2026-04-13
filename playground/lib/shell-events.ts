@@ -1,4 +1,5 @@
 import type { PlaygroundDemoKind } from "./demos.ts";
+import type { LocalFontOption } from "./font-controls.ts";
 import type { RendererChoice } from "./pane-state.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 
@@ -8,6 +9,7 @@ export const RUN_DEMO_EVENT = "restty:playground-demo-run";
 export const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
 export const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
 export const FONT_FAMILY_STATE_EVENT = "restty:playground-font-family-state";
+export const LOCAL_FONT_STATE_EVENT = "restty:playground-local-font-state";
 export const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
 export const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
 export const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
@@ -40,6 +42,14 @@ export type FontRenderingStateDetail = {
   ligatures?: string;
   fontHinting?: string;
   fontHintTarget?: string;
+};
+
+export type LocalFontStateDetail = {
+  value?: string;
+  hintText?: string;
+  selectDisabled?: boolean;
+  loadDisabled?: boolean;
+  options?: LocalFontOption[];
 };
 
 export type PtyButtonStateDetail = {

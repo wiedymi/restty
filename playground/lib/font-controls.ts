@@ -25,8 +25,16 @@ const FONT_URL_NOTO_CJK_SC =
 
 export const DEFAULT_FONT_FAMILY = "fira-code";
 export const FONT_FAMILY_LOCAL_PREFIX = "local:";
+export const DEFAULT_LOCAL_FONT_HINT =
+  "Select a base font, then pick a local font from the local picker.";
+export const UNSUPPORTED_LOCAL_FONT_HINT = "Local font picker is not supported in this browser.";
+export const DENIED_LOCAL_FONT_HINT = "Local font access denied or unavailable.";
 
 export type FontHintTarget = "auto" | "light" | "normal";
+export type LocalFontOption = {
+  value: string;
+  label: string;
+};
 type FontPresetKey = "fira-code" | "jetbrains";
 type LocalFontVariant = {
   suffix: string;
@@ -62,6 +70,11 @@ type SyncHintingControlsOptions = {
 type DetectLocalFontsOptions = {
   fontFamilyLocalSelect: HTMLSelectElement | null;
   fontFamilyHintEl: HTMLElement | null;
+  queryLocalFonts?: (() => Promise<QueryLocalFontsResult>) | null;
+};
+
+type DetectLocalFontStateOptions = {
+  browserWindow?: unknown;
   queryLocalFonts?: (() => Promise<QueryLocalFontsResult>) | null;
 };
 
@@ -137,6 +150,16 @@ export function supportsLocalFontPicker(browserWindow: unknown = globalThis.wind
 
 export function setFontFamilyHint(fontFamilyHintEl: HTMLElement | null, text: string) {
   if (fontFamilyHintEl) fontFamilyHintEl.textContent = text;
+}
+
+export function getLocalFontSelectValue(selectedLocalFontMatcher: string) {
+  return selectedLocalFontMatcher
+    ? `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(selectedLocalFontMatcher)}`
+    : "";
+}
+
+export function getDefaultLocalFontHintText(isSupported: boolean) {
+  return isSupported ? DEFAULT_LOCAL_FONT_HINT : UNSUPPORTED_LOCAL_FONT_HINT;
 }
 
 function createLocalFontSource(baseLabel: string, variant: LocalFontVariant): ResttyFontSource {
@@ -270,9 +293,7 @@ export function syncFontFamilyControls(options: SyncFontFamilyControlsOptions) {
     options.fontFamilySelect.value = options.selectedFontFamily;
   }
   if (options.fontFamilyLocalSelect) {
-    options.fontFamilyLocalSelect.value = options.selectedLocalFontMatcher
-      ? `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(options.selectedLocalFontMatcher)}`
-      : "";
+    options.fontFamilyLocalSelect.value = getLocalFontSelectValue(options.selectedLocalFontMatcher);
   }
   if (!options.supportsLocalFontPicker && options.btnLoadLocalFonts) {
     options.btnLoadLocalFonts.disabled = true;
@@ -295,64 +316,96 @@ export function syncHintingControls(options: SyncHintingControlsOptions) {
   }
 }
 
+function buildDetectedLocalFontOption(family: string): LocalFontOption | null {
+  const matcher = family.trim().toLowerCase();
+  if (!matcher) return null;
+  return {
+    value: `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(matcher)}`,
+    label: `Local Font: ${family}`,
+  };
+}
+
+export function buildDetectedLocalFontOptions(fonts: QueryLocalFontsResult): LocalFontOption[] {
+  const seen = new Set<string>();
+  const options: LocalFontOption[] = [];
+  for (let i = 0; i < fonts.length; i += 1) {
+    const family = String(fonts[i]?.family ?? "").trim();
+    if (!family) continue;
+    const key = family.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const option = buildDetectedLocalFontOption(family);
+    if (option) {
+      options.push(option);
+    }
+  }
+  return options;
+}
+
 function upsertDetectedLocalFontOption(
   fontFamilyLocalSelect: HTMLSelectElement | null,
-  family: string,
+  localOption: LocalFontOption,
 ) {
   if (!fontFamilyLocalSelect) return;
-  const matcher = family.trim().toLowerCase();
-  if (!matcher) return;
-  const value = `${FONT_FAMILY_LOCAL_PREFIX}${encodeURIComponent(matcher)}`;
   for (let i = fontFamilyLocalSelect.options.length - 1; i >= 0; i -= 1) {
-    if (fontFamilyLocalSelect.options[i]?.value === value) return;
+    if (fontFamilyLocalSelect.options[i]?.value === localOption.value) return;
   }
   const option = document.createElement("option");
-  option.value = value;
-  option.textContent = `Local Font: ${family}`;
+  option.value = localOption.value;
+  option.textContent = localOption.label;
   option.dataset.localDetected = "1";
   fontFamilyLocalSelect.appendChild(option);
 }
 
-export async function detectLocalFonts(options: DetectLocalFontsOptions) {
+export async function detectLocalFontState(options: DetectLocalFontStateOptions = {}) {
   const queryLocalFonts =
     options.queryLocalFonts ??
-    ((supportsLocalFontPicker() ? (globalThis.window as any).queryLocalFonts : null) as
-      | (() => Promise<QueryLocalFontsResult>)
-      | null);
+    ((supportsLocalFontPicker(options.browserWindow ?? globalThis.window)
+      ? (globalThis.window as any).queryLocalFonts
+      : null) as (() => Promise<QueryLocalFontsResult>) | null);
 
   if (!queryLocalFonts) {
-    setFontFamilyHint(
-      options.fontFamilyHintEl,
-      "Local font picker is not supported in this browser.",
-    );
-    return;
+    return {
+      detectedOptions: [] as LocalFontOption[],
+      hintText: UNSUPPORTED_LOCAL_FONT_HINT,
+    };
   }
 
   try {
-    if (options.fontFamilyLocalSelect) {
-      for (let i = options.fontFamilyLocalSelect.options.length - 1; i >= 0; i -= 1) {
-        if (options.fontFamilyLocalSelect.options[i]?.dataset.localDetected === "1") {
-          options.fontFamilyLocalSelect.remove(i);
-        }
+    const fonts = await queryLocalFonts();
+    const detectedOptions = buildDetectedLocalFontOptions(fonts);
+    return {
+      detectedOptions,
+      hintText: `Detected ${detectedOptions.length} local font families.`,
+    };
+  } catch {
+    return {
+      detectedOptions: [] as LocalFontOption[],
+      hintText: DENIED_LOCAL_FONT_HINT,
+    };
+  }
+}
+
+export async function detectLocalFonts(options: DetectLocalFontsOptions) {
+  const state = await detectLocalFontState({
+    queryLocalFonts: options.queryLocalFonts,
+  });
+  if (state.hintText === UNSUPPORTED_LOCAL_FONT_HINT) {
+    setFontFamilyHint(options.fontFamilyHintEl, state.hintText);
+    return;
+  }
+  if (options.fontFamilyLocalSelect) {
+    for (let i = options.fontFamilyLocalSelect.options.length - 1; i >= 0; i -= 1) {
+      if (options.fontFamilyLocalSelect.options[i]?.dataset.localDetected === "1") {
+        options.fontFamilyLocalSelect.remove(i);
       }
     }
-    const fonts = await queryLocalFonts();
-    const seen = new Set<string>();
-    let added = 0;
-    for (let i = 0; i < fonts.length; i += 1) {
-      const family = String(fonts[i]?.family ?? "").trim();
-      if (!family) continue;
-      const key = family.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      upsertDetectedLocalFontOption(options.fontFamilyLocalSelect, family);
-      added += 1;
-    }
-    if (options.fontFamilyLocalSelect) {
-      options.fontFamilyLocalSelect.disabled = false;
-    }
-    setFontFamilyHint(options.fontFamilyHintEl, `Detected ${added} local font families.`);
-  } catch {
-    setFontFamilyHint(options.fontFamilyHintEl, "Local font access denied or unavailable.");
   }
+  for (let i = 0; i < state.detectedOptions.length; i += 1) {
+    upsertDetectedLocalFontOption(options.fontFamilyLocalSelect, state.detectedOptions[i]!);
+  }
+  if (options.fontFamilyLocalSelect && state.hintText !== UNSUPPORTED_LOCAL_FONT_HINT) {
+    options.fontFamilyLocalSelect.disabled = false;
+  }
+  setFontFamilyHint(options.fontFamilyHintEl, state.hintText);
 }
