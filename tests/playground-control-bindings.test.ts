@@ -1,0 +1,218 @@
+import { expect, test } from "bun:test";
+import {
+  bindAppearanceControls,
+  bindConnectionControls,
+  bindTerminalControls,
+} from "../playground/lib/control-bindings.ts";
+import {
+  CONNECTION_BACKEND_CHANGE_EVENT,
+  FONT_FAMILY_CHANGE_EVENT,
+  FONT_HINTING_CHANGE_EVENT,
+  PTY_URL_CHANGE_EVENT,
+  RUN_DEMO_EVENT,
+  TERMINAL_CLEAR_EVENT,
+  TERMINAL_FONT_SIZE_EVENT,
+  TERMINAL_INIT_EVENT,
+  TERMINAL_PAUSE_EVENT,
+  TERMINAL_RENDERER_EVENT,
+  THEME_SELECT_CHANGE_EVENT,
+  WC_COMMAND_CHANGE_EVENT,
+  WC_CWD_CHANGE_EVENT,
+} from "../playground/lib/shell-events.ts";
+
+function createMutableTarget<T extends object>(initial: T): EventTarget & T {
+  return Object.assign(new EventTarget(), initial);
+}
+
+test("control bindings forward svelte shell events", () => {
+  const target = new EventTarget();
+  const calls: Array<[string, unknown]> = [];
+
+  bindConnectionControls({
+    usesSvelteShell: true,
+    target,
+    connectionBackendEl: null,
+    ptyUrlInput: null,
+    wcCommandInput: null,
+    wcCwdInput: null,
+    onBackendChange: (value) => calls.push(["backend", value]),
+    onPtyUrlChange: (value) => calls.push(["pty-url", value]),
+    onWebContainerCommandChange: (value) => calls.push(["wc-command", value]),
+    onWebContainerCwdChange: (value) => calls.push(["wc-cwd", value]),
+  });
+
+  bindTerminalControls({
+    usesSvelteShell: true,
+    target,
+    btnClear: null,
+    btnInit: null,
+    btnPause: null,
+    btnPty: null,
+    btnRunDemo: null,
+    demoSelect: null,
+    fontSizeInput: null,
+    rendererSelect: null,
+    onClear: () => calls.push(["clear", null]),
+    onDemoRun: (kind) => calls.push(["demo", kind]),
+    onFontSizeChange: (value) => calls.push(["font-size", value]),
+    onInit: () => calls.push(["init", null]),
+    onPauseToggle: () => calls.push(["pause", null]),
+    onPtyButton: () => calls.push(["pty-button", null]),
+    onRendererChange: (value) => calls.push(["renderer", value]),
+  });
+
+  bindAppearanceControls({
+    usesSvelteShell: true,
+    target,
+    btnLoadLocalFonts: null,
+    fontFamilyLocalSelect: null,
+    fontFamilySelect: null,
+    fontHintTargetSelect: null,
+    fontHintingSelect: null,
+    ligaturesSelect: null,
+    mouseModeEl: null,
+    shaderPresetEl: null,
+    themeFileInput: null,
+    themeSelect: null,
+    onFontFamilyChange: (value) => calls.push(["font-family", value]),
+    onFontFamilyLocalChange: (value) => calls.push(["font-family-local", value]),
+    onFontHintTargetChange: (value) => calls.push(["font-hint-target", value]),
+    onFontHintingChange: (value) => calls.push(["font-hinting", value]),
+    onLigaturesChange: (value) => calls.push(["ligatures", value]),
+    onLoadLocalFonts: () => calls.push(["load-local-fonts", null]),
+    onMouseModeChange: (value) => calls.push(["mouse-mode", value]),
+    onShaderPresetChange: (value) => calls.push(["shader", value]),
+    onThemeFileChange: () => calls.push(["theme-file", null]),
+    onThemeSelectChange: (value) => calls.push(["theme-select", value]),
+  });
+
+  target.dispatchEvent(
+    new CustomEvent(CONNECTION_BACKEND_CHANGE_EVENT, { detail: { value: "webcontainer" } }),
+  );
+  target.dispatchEvent(new CustomEvent(PTY_URL_CHANGE_EVENT, { detail: { value: "ws://x" } }));
+  target.dispatchEvent(new CustomEvent(WC_COMMAND_CHANGE_EVENT, { detail: { value: "bash" } }));
+  target.dispatchEvent(new CustomEvent(WC_CWD_CHANGE_EVENT, { detail: { value: "/tmp" } }));
+  target.dispatchEvent(new CustomEvent(TERMINAL_INIT_EVENT));
+  target.dispatchEvent(new CustomEvent(TERMINAL_PAUSE_EVENT));
+  target.dispatchEvent(new CustomEvent(TERMINAL_CLEAR_EVENT));
+  target.dispatchEvent(new CustomEvent(RUN_DEMO_EVENT, { detail: { kind: "unicode" } }));
+  target.dispatchEvent(new CustomEvent(TERMINAL_RENDERER_EVENT, { detail: { value: "webgpu" } }));
+  target.dispatchEvent(new CustomEvent(TERMINAL_FONT_SIZE_EVENT, { detail: { value: "24" } }));
+  target.dispatchEvent(
+    new CustomEvent(THEME_SELECT_CHANGE_EVENT, { detail: { value: "Aizen Dark" } }),
+  );
+  target.dispatchEvent(
+    new CustomEvent(FONT_FAMILY_CHANGE_EVENT, { detail: { value: "jetbrains" } }),
+  );
+  target.dispatchEvent(new CustomEvent(FONT_HINTING_CHANGE_EVENT, { detail: { value: "on" } }));
+
+  expect(calls).toEqual([
+    ["backend", "webcontainer"],
+    ["pty-url", "ws://x"],
+    ["wc-command", "bash"],
+    ["wc-cwd", "/tmp"],
+    ["init", null],
+    ["pause", null],
+    ["clear", null],
+    ["demo", "unicode"],
+    ["renderer", "webgpu"],
+    ["font-size", "24"],
+    ["theme-select", "Aizen Dark"],
+    ["font-family", "jetbrains"],
+    ["font-hinting", "on"],
+  ]);
+});
+
+test("control bindings read legacy control values", () => {
+  const calls: Array<[string, unknown]> = [];
+  const connectionBackendEl = createMutableTarget({ value: "webcontainer" });
+  const ptyUrlInput = createMutableTarget({ value: "ws://legacy" });
+  const wcCommandInput = createMutableTarget({ value: "bash" });
+  const wcCwdInput = createMutableTarget({ value: "/tmp" });
+  const rendererSelect = createMutableTarget({ value: "webgl2" });
+  const fontSizeInput = createMutableTarget({ value: "22" });
+  const demoSelect = createMutableTarget({ value: "unicode" });
+  const btnRunDemo = createMutableTarget({});
+  const themeSelect = createMutableTarget({ value: "Aizen Dark" });
+  const fontFamilySelect = createMutableTarget({ value: "jetbrains" });
+  const fontHintingSelect = createMutableTarget({ value: "on" });
+
+  bindConnectionControls({
+    usesSvelteShell: false,
+    target: new EventTarget(),
+    connectionBackendEl,
+    ptyUrlInput,
+    wcCommandInput,
+    wcCwdInput,
+    onBackendChange: (value) => calls.push(["backend", value]),
+    onPtyUrlChange: (value) => calls.push(["pty-url", value]),
+    onWebContainerCommandChange: (value) => calls.push(["wc-command", value]),
+    onWebContainerCwdChange: (value) => calls.push(["wc-cwd", value]),
+  });
+
+  bindTerminalControls({
+    usesSvelteShell: false,
+    target: new EventTarget(),
+    btnClear: createMutableTarget({}),
+    btnInit: createMutableTarget({}),
+    btnPause: createMutableTarget({}),
+    btnPty: createMutableTarget({}),
+    btnRunDemo,
+    demoSelect,
+    fontSizeInput,
+    rendererSelect,
+    onClear: () => {},
+    onDemoRun: (kind) => calls.push(["demo", kind]),
+    onFontSizeChange: (value) => calls.push(["font-size", value]),
+    onInit: () => {},
+    onPauseToggle: () => {},
+    onPtyButton: () => {},
+    onRendererChange: (value) => calls.push(["renderer", value]),
+  });
+
+  bindAppearanceControls({
+    usesSvelteShell: false,
+    target: new EventTarget(),
+    btnLoadLocalFonts: createMutableTarget({}),
+    fontFamilyLocalSelect: createMutableTarget({ value: "local:fira%20code" }),
+    fontFamilySelect,
+    fontHintTargetSelect: createMutableTarget({ value: "light" }),
+    fontHintingSelect,
+    ligaturesSelect: createMutableTarget({ value: "off" }),
+    mouseModeEl: createMutableTarget({ value: "drag" }),
+    shaderPresetEl: createMutableTarget({ value: "aurora" }),
+    themeFileInput: createMutableTarget({ files: [{ name: "theme.conf" }] }),
+    themeSelect,
+    onFontFamilyChange: (value) => calls.push(["font-family", value]),
+    onFontFamilyLocalChange: (value) => calls.push(["font-family-local", value]),
+    onFontHintTargetChange: (value) => calls.push(["font-hint-target", value]),
+    onFontHintingChange: (value) => calls.push(["font-hinting", value]),
+    onLigaturesChange: (value) => calls.push(["ligatures", value]),
+    onLoadLocalFonts: () => calls.push(["load-local-fonts", null]),
+    onMouseModeChange: (value) => calls.push(["mouse-mode", value]),
+    onShaderPresetChange: (value) => calls.push(["shader", value]),
+    onThemeFileChange: (file) => calls.push(["theme-file", (file as File | undefined)?.name]),
+    onThemeSelectChange: (value) => calls.push(["theme-select", value]),
+  });
+
+  connectionBackendEl.dispatchEvent(new Event("change"));
+  rendererSelect.dispatchEvent(new Event("change"));
+  fontSizeInput.dispatchEvent(new Event("input"));
+  btnRunDemo.dispatchEvent(new Event("click"));
+  themeSelect.dispatchEvent(new Event("change"));
+  fontFamilySelect.dispatchEvent(new Event("change"));
+  fontHintingSelect.dispatchEvent(new Event("change"));
+
+  expect(calls).toEqual([
+    ["pty-url", "ws://legacy"],
+    ["wc-command", "bash"],
+    ["wc-cwd", "/tmp"],
+    ["backend", "webcontainer"],
+    ["renderer", "webgl2"],
+    ["font-size", "22"],
+    ["demo", "unicode"],
+    ["theme-select", "Aizen Dark"],
+    ["font-family", "jetbrains"],
+    ["font-hinting", "on"],
+  ]);
+});

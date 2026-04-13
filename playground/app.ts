@@ -2,6 +2,11 @@ import { Restty, listBuiltinThemeNames } from "../src/index.ts";
 import { createDemoController, type PlaygroundDemoKind } from "./lib/demos.ts";
 import { createConnectionController } from "./lib/connection-controller.ts";
 import {
+  bindAppearanceControls,
+  bindConnectionControls,
+  bindTerminalControls,
+} from "./lib/control-bindings.ts";
+import {
   DEFAULT_FONT_FAMILY,
   getDefaultLocalFontHintText,
   supportsLocalFontPicker,
@@ -28,35 +33,9 @@ import {
   type RendererChoice,
 } from "./lib/pane-state.ts";
 import {
-  CONNECTION_BACKEND_CHANGE_EVENT,
-  FONT_FAMILY_LOCAL_CHANGE_EVENT,
-  FONT_FAMILY_CHANGE_EVENT,
-  FONT_HINT_TARGET_CHANGE_EVENT,
-  FONT_HINTING_CHANGE_EVENT,
-  FONT_LIGATURES_CHANGE_EVENT,
-  LOAD_LOCAL_FONTS_EVENT,
-  MOUSE_MODE_CHANGE_EVENT,
-  PTY_BUTTON_EVENT,
-  PTY_URL_CHANGE_EVENT,
-  RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
-  SHADER_PRESET_CHANGE_EVENT,
-  TERMINAL_CLEAR_EVENT,
-  TERMINAL_FONT_SIZE_EVENT,
-  TERMINAL_INIT_EVENT,
-  TERMINAL_PAUSE_EVENT,
-  TERMINAL_RENDERER_EVENT,
-  THEME_FILE_CHANGE_EVENT,
   THEME_FILE_RESET_EVENT,
-  THEME_SELECT_CHANGE_EVENT,
-  WC_COMMAND_CHANGE_EVENT,
-  WC_CWD_CHANGE_EVENT,
-  type DemoRunDetail,
-  type RendererChangeDetail,
-  type ShaderPresetChangeDetail,
-  type ShellStringValueDetail,
-  type ThemeFileChangeDetail,
 } from "./lib/shell-events.ts";
 
 const paneRoot = document.getElementById("paneRoot") as HTMLElement | null;
@@ -98,15 +77,6 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
-type DemoRunEvent = CustomEvent<DemoRunDetail>;
-type FontControlChangeEvent = CustomEvent<ShellStringValueDetail>;
-type LocalFontControlChangeEvent = CustomEvent<ShellStringValueDetail>;
-type MouseModeChangeEvent = CustomEvent<ShellStringValueDetail>;
-type ThemeFileChangeEvent = CustomEvent<ThemeFileChangeDetail>;
-type ThemeSelectChangeEvent = CustomEvent<ShellStringValueDetail>;
-type ShaderPresetChangeEvent = CustomEvent<ShaderPresetChangeDetail>;
-type FontSizeChangeEvent = CustomEvent<ShellStringValueDetail>;
-type RendererChangeEvent = CustomEvent<RendererChangeDetail>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
@@ -487,46 +457,6 @@ window.addEventListener("resize", () => {
   queueResizeAllPanes();
 });
 
-if (usesSvelteShell) {
-  window.addEventListener(CONNECTION_BACKEND_CHANGE_EVENT, (event) => {
-    connectionController.applyConnectionBackend((event as FontControlChangeEvent).detail?.value);
-  });
-  window.addEventListener(PTY_URL_CHANGE_EVENT, (event) => {
-    connectionController.setPtyUrl((event as FontControlChangeEvent).detail?.value);
-  });
-  window.addEventListener(WC_COMMAND_CHANGE_EVENT, (event) => {
-    connectionController.setWebContainerCommand((event as FontControlChangeEvent).detail?.value);
-  });
-  window.addEventListener(WC_CWD_CHANGE_EVENT, (event) => {
-    connectionController.setWebContainerCwd((event as FontControlChangeEvent).detail?.value);
-  });
-} else {
-  connectionBackendEl?.addEventListener("change", () => {
-    connectionController.setPtyUrl(ptyUrlInput?.value);
-    connectionController.setWebContainerCommand(wcCommandInput?.value);
-    connectionController.setWebContainerCwd(wcCwdInput?.value);
-    connectionController.applyConnectionBackend(connectionBackendEl?.value);
-  });
-  ptyUrlInput?.addEventListener("input", () => {
-    connectionController.setPtyUrl(ptyUrlInput.value);
-  });
-  ptyUrlInput?.addEventListener("change", () => {
-    connectionController.setPtyUrl(ptyUrlInput.value);
-  });
-  wcCommandInput?.addEventListener("input", () => {
-    connectionController.setWebContainerCommand(wcCommandInput.value);
-  });
-  wcCommandInput?.addEventListener("change", () => {
-    connectionController.setWebContainerCommand(wcCommandInput.value);
-  });
-  wcCwdInput?.addEventListener("input", () => {
-    connectionController.setWebContainerCwd(wcCwdInput.value);
-  });
-  wcCwdInput?.addEventListener("change", () => {
-    connectionController.setWebContainerCwd(wcCwdInput.value);
-  });
-}
-
 function handleTerminalInit() {
   paneLifecycle.handleTerminalInit();
 }
@@ -539,173 +469,99 @@ function handleTerminalClear() {
   paneLifecycle.handleTerminalClear();
 }
 
-if (usesSvelteShell) {
-  window.addEventListener(TERMINAL_INIT_EVENT, handleTerminalInit);
-  window.addEventListener(TERMINAL_PAUSE_EVENT, handleTerminalPauseToggle);
-  window.addEventListener(TERMINAL_CLEAR_EVENT, handleTerminalClear);
-} else {
-  btnInit?.addEventListener("click", handleTerminalInit);
-  btnPause?.addEventListener("click", handleTerminalPauseToggle);
-  btnClear?.addEventListener("click", handleTerminalClear);
-}
-
 function runSelectedDemo(kind: PlaygroundDemoKind | string | null | undefined) {
   const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
   state.demos?.run(kind ?? "basic");
 }
 
-if (usesSvelteShell) {
-  window.addEventListener(RUN_DEMO_EVENT, (event) => {
-    runSelectedDemo((event as DemoRunEvent).detail?.kind);
-  });
-} else {
-  btnRunDemo?.addEventListener("click", () => {
-    runSelectedDemo(demoSelect?.value);
-  });
-}
-
 function handlePtyButtonClick() {
   paneLifecycle.handlePtyButtonClick();
 }
 
-if (usesSvelteShell) {
-  window.addEventListener(PTY_BUTTON_EVENT, handlePtyButtonClick);
-} else {
-  ptyBtn?.addEventListener("click", handlePtyButtonClick);
-}
+bindConnectionControls({
+  usesSvelteShell,
+  target: window,
+  connectionBackendEl,
+  ptyUrlInput,
+  wcCommandInput,
+  wcCwdInput,
+  onBackendChange: (value) => {
+    connectionController.applyConnectionBackend(value);
+  },
+  onPtyUrlChange: (value) => {
+    connectionController.setPtyUrl(value);
+  },
+  onWebContainerCommandChange: (value) => {
+    connectionController.setWebContainerCommand(value);
+  },
+  onWebContainerCwdChange: (value) => {
+    connectionController.setWebContainerCwd(value);
+  },
+});
 
-if (usesSvelteShell) {
-  window.addEventListener(TERMINAL_RENDERER_EVENT, (event) => {
-    appearanceController.applyRendererChoice((event as RendererChangeEvent).detail?.value);
-  });
-} else {
-  rendererSelect?.addEventListener("change", () => {
-    appearanceController.applyRendererChoice(rendererSelect.value);
-  });
-}
+bindTerminalControls({
+  usesSvelteShell,
+  target: window,
+  btnClear,
+  btnInit,
+  btnPause,
+  btnPty: ptyBtn,
+  btnRunDemo,
+  demoSelect,
+  fontSizeInput,
+  rendererSelect,
+  onClear: handleTerminalClear,
+  onDemoRun: (kind) => {
+    runSelectedDemo(kind);
+  },
+  onFontSizeChange: (value) => {
+    appearanceController.applyFontSizeValue(value);
+  },
+  onInit: handleTerminalInit,
+  onPauseToggle: handleTerminalPauseToggle,
+  onPtyButton: handlePtyButtonClick,
+  onRendererChange: (value) => {
+    appearanceController.applyRendererChoice(value);
+  },
+});
 
-if (usesSvelteShell) {
-  window.addEventListener(THEME_FILE_CHANGE_EVENT, (event) => {
-    void appearanceController.applyUploadedThemeFile((event as ThemeFileChangeEvent).detail?.file);
-  });
-} else if (themeFileInput) {
-  themeFileInput.addEventListener("change", () => {
-    void appearanceController.applyUploadedThemeFile(themeFileInput.files?.[0]);
-  });
-}
-
-if (usesSvelteShell) {
-  window.addEventListener(THEME_SELECT_CHANGE_EVENT, (event) => {
-    appearanceController.applyThemeSelection((event as ThemeSelectChangeEvent).detail?.value);
-  });
-} else if (themeSelect) {
-  themeSelect.addEventListener("change", () => {
-    appearanceController.applyThemeSelection(themeSelect.value);
-  });
-}
-
-if (usesSvelteShell) {
-  window.addEventListener(MOUSE_MODE_CHANGE_EVENT, (event) => {
-    appearanceController.applyMouseMode((event as MouseModeChangeEvent).detail?.value);
-  });
-} else if (mouseModeEl) {
-  mouseModeEl.addEventListener("change", () => {
-    appearanceController.applyMouseMode(mouseModeEl.value);
-  });
-}
-
-if (usesSvelteShell) {
-  window.addEventListener(SHADER_PRESET_CHANGE_EVENT, (event) => {
-    appearanceController.applySelectedShaderPreset(
-      (event as ShaderPresetChangeEvent).detail?.value,
-    );
-  });
-} else if (shaderPresetEl) {
-  shaderPresetEl.addEventListener("change", () => {
-    appearanceController.applySelectedShaderPreset(shaderPresetEl.value);
-  });
-}
-
-if (usesSvelteShell) {
-  window.addEventListener(TERMINAL_FONT_SIZE_EVENT, (event) => {
-    appearanceController.applyFontSizeValue((event as FontSizeChangeEvent).detail?.value);
-  });
-} else if (fontSizeInput) {
-  const applyFontSize = () => {
-    appearanceController.applyFontSizeValue(fontSizeInput.value);
-  };
-
-  fontSizeInput.addEventListener("change", applyFontSize);
-  fontSizeInput.addEventListener("input", applyFontSize);
-}
-
-if (usesSvelteShell) {
-  window.addEventListener(FONT_HINTING_CHANGE_EVENT, (event) => {
-    appearanceController.applyFontHintingChange((event as FontControlChangeEvent).detail?.value);
-  });
-  window.addEventListener(FONT_LIGATURES_CHANGE_EVENT, (event) => {
-    appearanceController.applyLigaturesChange((event as FontControlChangeEvent).detail?.value);
-  });
-  window.addEventListener(FONT_HINT_TARGET_CHANGE_EVENT, (event) => {
-    appearanceController.applyFontHintTargetChange((event as FontControlChangeEvent).detail?.value);
-  });
-} else {
-  if (fontHintingSelect) {
-    fontHintingSelect.addEventListener("change", () => {
-      appearanceController.applyFontHintingChange(fontHintingSelect.value);
-    });
-  }
-
-  if (ligaturesSelect) {
-    ligaturesSelect.addEventListener("change", () => {
-      appearanceController.applyLigaturesChange(ligaturesSelect.value);
-    });
-  }
-
-  if (fontHintTargetSelect) {
-    fontHintTargetSelect.addEventListener("change", () => {
-      appearanceController.applyFontHintTargetChange(fontHintTargetSelect.value);
-    });
-  }
-}
-
-if (fontFamilySelect) {
-  if (usesSvelteShell) {
-    window.addEventListener(FONT_FAMILY_CHANGE_EVENT, (event) => {
-      void appearanceController.applyFontFamilySelection(
-        (event as FontControlChangeEvent).detail?.value,
-      );
-    });
-  } else {
-    fontFamilySelect.addEventListener("change", () => {
-      void appearanceController.applyFontFamilySelection(fontFamilySelect.value);
-    });
-  }
-}
-
-if (usesSvelteShell) {
-  window.addEventListener(FONT_FAMILY_LOCAL_CHANGE_EVENT, (event) => {
-    void appearanceController.applyLocalFontSelection(
-      (event as LocalFontControlChangeEvent).detail?.value,
-    );
-  });
-  window.addEventListener(LOAD_LOCAL_FONTS_EVENT, () => {
-    void appearanceController.loadLocalFonts();
-  });
-} else {
-  if (fontFamilyLocalSelect) {
-    fontFamilyLocalSelect.addEventListener("change", () => {
-      void appearanceController.applyLocalFontSelection(fontFamilyLocalSelect.value);
-    });
-  }
-
-  if (btnLoadLocalFonts) {
-    btnLoadLocalFonts.addEventListener("click", () => {
-      void appearanceController.loadLocalFonts();
-    });
-  }
-}
+bindAppearanceControls({
+  usesSvelteShell,
+  target: window,
+  btnLoadLocalFonts,
+  fontFamilyLocalSelect,
+  fontFamilySelect,
+  fontHintTargetSelect,
+  fontHintingSelect,
+  ligaturesSelect,
+  mouseModeEl,
+  shaderPresetEl,
+  themeFileInput,
+  themeSelect,
+  onFontFamilyChange: (value) => appearanceController.applyFontFamilySelection(value),
+  onFontFamilyLocalChange: (value) => appearanceController.applyLocalFontSelection(value),
+  onFontHintTargetChange: (value) => {
+    appearanceController.applyFontHintTargetChange(value);
+  },
+  onFontHintingChange: (value) => {
+    appearanceController.applyFontHintingChange(value);
+  },
+  onLigaturesChange: (value) => {
+    appearanceController.applyLigaturesChange(value);
+  },
+  onLoadLocalFonts: () => appearanceController.loadLocalFonts(),
+  onMouseModeChange: (value) => {
+    appearanceController.applyMouseMode(value);
+  },
+  onShaderPresetChange: (value) => {
+    appearanceController.applySelectedShaderPreset(value);
+  },
+  onThemeFileChange: (file) => appearanceController.applyUploadedThemeFile(file),
+  onThemeSelectChange: (value) => {
+    appearanceController.applyThemeSelection(value);
+  },
+});
 
 if (!usesSvelteShell) {
   syncConnectionUi({
