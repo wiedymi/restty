@@ -11,7 +11,15 @@ import { normalizeNewlines } from "./create-app-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
 import type { ResttyRuntimeEvent, ResttyRuntimeEventHub } from "../core/runtime-events";
-import type { ResttyRuntime, ResttyAppCallbacks, ResttyAppSession } from "../types";
+import type {
+  ResttyRuntime,
+  ResttyRuntimeTerminalApi,
+  ResttyRuntimeSearchApi,
+  ResttyRuntimeInteractionApi,
+  ResttyRuntimeRenderApi,
+  ResttyAppCallbacks,
+  ResttyAppSession,
+} from "../types";
 import type { PtyInputRuntime } from "./pty-input-runtime";
 import type { RuntimeInteraction } from "./interaction-runtime";
 
@@ -45,23 +53,23 @@ type RuntimeInternalState = {
 type RuntimeSendInput = (text: string, source?: string, options?: { skipHooks?: boolean }) => void;
 
 type RuntimePublicApiOptions = {
-  setFontSize: ResttyRuntime["setFontSize"];
-  setLigatures: ResttyRuntime["setLigatures"];
-  setFontHinting: ResttyRuntime["setFontHinting"];
-  setFontHintTarget: ResttyRuntime["setFontHintTarget"];
-  setFontSources: ResttyRuntime["setFontSources"];
-  resetTheme: ResttyRuntime["resetTheme"];
-  setSearchQuery: ResttyRuntime["setSearchQuery"];
-  clearSearch: ResttyRuntime["clearSearch"];
-  searchNext: ResttyRuntime["searchNext"];
-  searchPrevious: ResttyRuntime["searchPrevious"];
-  getSearchState: ResttyRuntime["getSearchState"];
-  resize: ResttyRuntime["resize"];
-  focus: ResttyRuntime["focus"];
-  blur: ResttyRuntime["blur"];
-  updateSize: ResttyRuntime["updateSize"];
-  setShaderStages: ResttyRuntime["setShaderStages"];
-  getShaderStages: ResttyRuntime["getShaderStages"];
+  setFontSize: ResttyRuntimeTerminalApi["setFontSize"];
+  setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
+  setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
+  setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
+  setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
+  resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
+  setSearchQuery: ResttyRuntimeSearchApi["setSearchQuery"];
+  clearSearch: ResttyRuntimeSearchApi["clearSearch"];
+  searchNext: ResttyRuntimeSearchApi["searchNext"];
+  searchPrevious: ResttyRuntimeSearchApi["searchPrevious"];
+  getSearchState: ResttyRuntimeSearchApi["getSearchState"];
+  resize: ResttyRuntimeInteractionApi["resize"];
+  focus: ResttyRuntimeInteractionApi["focus"];
+  blur: ResttyRuntimeInteractionApi["blur"];
+  updateSize: ResttyRuntimeInteractionApi["updateSize"];
+  setShaderStages: ResttyRuntimeRenderApi["setShaderStages"];
+  getShaderStages: ResttyRuntimeRenderApi["getShaderStages"];
 };
 
 export type RuntimeAppApiRuntime = {

@@ -358,18 +358,24 @@ export type ResttyRuntimeConfig = ResttyRuntimeMountConfig &
 /**
  * Public API for a single terminal runtime instance.
  */
-export type ResttyRuntime = {
+export type ResttyRuntimeLifecycleApi = {
   /** Initialize the renderer, fonts, and terminal state. */
   init: () => Promise<void>;
   /** Tear down all resources and event listeners. */
   destroy: () => void;
   /** Get the current runtime lifecycle state. */
   getLifecycleState: () => ResttyRuntimeLifecycleState;
+};
+
+export type ResttyRuntimeEventsApi = {
   /** Runtime lifecycle and state-change events. */
   events: {
     /** Subscribe to runtime lifecycle and state-change events. */
     subscribe: (listener: (event: ResttyRuntimeEvent) => void) => () => void;
   };
+};
+
+export type ResttyRuntimeTerminalApi = {
   /** Switch the renderer backend at runtime. */
   setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
   /** Pause or resume rendering. */
@@ -390,6 +396,9 @@ export type ResttyRuntime = {
   applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
   /** Reset colors to the default theme. */
   resetTheme: () => void;
+};
+
+export type ResttyRuntimeIoApi = {
   /** Write raw text to the terminal PTY. */
   sendInput: (text: string, source?: string) => void;
   /** Encode and send a key sequence to the terminal PTY. */
@@ -402,6 +411,9 @@ export type ResttyRuntime = {
   disconnectPty: () => void;
   /** Check whether the PTY transport is currently connected. */
   isPtyConnected: () => boolean;
+};
+
+export type ResttyRuntimeInteractionApi = {
   /** Override the mouse reporting mode. */
   setMouseMode: (value: MouseMode) => void;
   /** Return current mouse reporting status. */
@@ -412,6 +424,17 @@ export type ResttyRuntime = {
   pasteFromClipboard: () => Promise<boolean>;
   /** Select the word at a viewport client coordinate. */
   selectWordAtClientPoint: (clientX: number, clientY: number) => boolean;
+  /** Resize terminal grid to explicit columns/rows. */
+  resize: (cols: number, rows: number) => void;
+  /** Focus terminal input targets. */
+  focus: () => void;
+  /** Blur terminal input targets. */
+  blur: () => void;
+  /** Recalculate terminal dimensions from the canvas size. */
+  updateSize: (force?: boolean) => void;
+};
+
+export type ResttyRuntimeSearchApi = {
   /** Update the active terminal search query. */
   setSearchQuery: (query: string) => void;
   /** Clear terminal search state and visible highlights. */
@@ -422,14 +445,9 @@ export type ResttyRuntime = {
   searchPrevious: () => void;
   /** Get the current terminal search state. */
   getSearchState: () => ResttySearchState;
-  /** Resize terminal grid to explicit columns/rows. */
-  resize: (cols: number, rows: number) => void;
-  /** Focus terminal input targets. */
-  focus: () => void;
-  /** Blur terminal input targets. */
-  blur: () => void;
-  /** Recalculate terminal dimensions from the canvas size. */
-  updateSize: (force?: boolean) => void;
+};
+
+export type ResttyRuntimeRenderApi = {
   /** Return the name of the active renderer backend. */
   getBackend: () => string;
   /** Replace the active shader stage list. */
@@ -437,3 +455,11 @@ export type ResttyRuntime = {
   /** Get the current shader stage list. */
   getShaderStages: () => ResttyShaderStage[];
 };
+
+export type ResttyRuntime = ResttyRuntimeLifecycleApi &
+  ResttyRuntimeEventsApi &
+  ResttyRuntimeTerminalApi &
+  ResttyRuntimeIoApi &
+  ResttyRuntimeInteractionApi &
+  ResttyRuntimeSearchApi &
+  ResttyRuntimeRenderApi;
