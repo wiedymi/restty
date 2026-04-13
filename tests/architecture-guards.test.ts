@@ -158,6 +158,7 @@ test("surface config helpers do not depend on manager option indexed access type
 
 test("surface restty helpers do not import pane-app-manager for type access", () => {
   const helperFiles = [
+    resolve(surfaceRoot, "restty-pane-handle.ts"),
     resolve(surfaceRoot, "restty/active-pane-api.ts"),
     resolve(surfaceRoot, "restty/config.ts"),
     resolve(surfaceRoot, "restty/events.ts"),
@@ -171,6 +172,16 @@ test("surface restty helpers do not import pane-app-manager for type access", ()
   expect(
     offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
   ).toEqual([]);
+});
+
+test("surface restty facade imports pane-app-manager for factory only", () => {
+  const resttyFile = resolve(surfaceRoot, "restty.ts");
+  const source = readFileSync(resttyFile, "utf8");
+
+  expect(source).not.toMatch(/createResttyAppPaneManager,\s*type\s+/);
+  expect(source).toMatch(
+    /import\s+\{\s*createResttyAppPaneManager\s*,?\s*\}\s+from\s+"\.\/pane-app-manager"/,
+  );
 });
 
 test("playground source does not import src/internal.ts", () => {

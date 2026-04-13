@@ -3,7 +3,7 @@ import type { GhosttyTheme } from "../theme";
 import type {
   ResttyManagedAppPane,
   ResttyManagedPaneSearchUiStyleOptions,
-} from "./pane-app-manager";
+} from "./panes/managed-pane-types";
 import type {
   ResttyFontHintTarget,
   ResttyFontSource,

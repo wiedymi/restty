@@ -1,11 +1,11 @@
-import {
-  createResttyAppPaneManager,
-  type ResttyAppPaneManager,
-  type ResttyManagedAppPane,
-  type ResttyManagedPaneStyleOptions,
-  type ResttyManagedPaneSearchUiStyleOptions,
-} from "./pane-app-manager";
+import { createResttyAppPaneManager } from "./pane-app-manager";
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
+import type {
+  ResttyAppPaneManager,
+  ResttyManagedAppPane,
+  ResttyManagedPaneSearchUiStyleOptions,
+  ResttyManagedPaneStyleOptions,
+} from "./panes/managed-pane-types";
 import { ResttyPaneHandle } from "./restty-pane-handle";
 import { ResttyActivePaneApi } from "./restty/active-pane-api";
 import {
