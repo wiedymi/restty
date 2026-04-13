@@ -289,6 +289,16 @@ test("surface config helpers do not depend on manager option indexed access type
   expect(offenders).toEqual([]);
 });
 
+test("surface manager options contracts are split from implementation", () => {
+  const managerOptions = readFileSync(resolve(surfaceRoot, "restty/manager-options.ts"), "utf8");
+
+  expect(managerOptions).not.toContain("type PaneManagerEventHandlers =");
+  expect(managerOptions).not.toContain("type MergedPaneTerminalConfigDeps =");
+  expect(managerOptions).not.toContain("type MergedPaneServicesConfigDeps =");
+  expect(managerOptions).not.toContain("type PaneManagerCallbacksDeps =");
+  expect(managerOptions).toContain("./manager-options.types");
+});
+
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty/pane-handle.ts"),
