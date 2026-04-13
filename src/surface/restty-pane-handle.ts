@@ -71,7 +71,6 @@ export type ResttyPaneApi = {
   setSearchUiStyleOptions: (options: ResttyManagedPaneSearchUiStyleOptions) => void;
   setShaderStages: (stages: ResttyShaderStage[]) => void;
   getShaderStages: () => ResttyShaderStage[];
-  getRawPane: () => ResttyManagedAppPane;
 };
 
 /**
@@ -246,9 +245,5 @@ export class ResttyPaneHandle implements ResttyPaneApi {
 
   getShaderStages(): ResttyShaderStage[] {
     return this.resolvePane().app.getShaderStages();
-  }
-
-  getRawPane(): ResttyManagedAppPane {
-    return this.resolvePane();
   }
 }
