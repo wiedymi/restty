@@ -1,6 +1,6 @@
 import type { InputHandler } from "../../input";
 import type { PtyResizeMeta, PtyTransport } from "../../pty";
-import type { PtyOutputBufferController } from "../pty-output-buffer";
+import type { PtyOutputBufferController } from "./pty-output-buffer";
 import { readPastePayloadFromDataTransfer } from "../clipboard-paste";
 import { formatPasteText } from "./format-utils";
 

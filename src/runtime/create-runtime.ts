@@ -62,7 +62,7 @@ import type {
   ResttyFontResourceLease,
 } from "./types";
 import { getDefaultResttyAppSession } from "./core/session";
-import { createPtyOutputBufferController } from "./pty-output-buffer";
+import { createPtyOutputBufferController } from "./create-runtime/pty-output-buffer";
 import { fitTextTailToWidth, openLink } from "./create-runtime/create-app-io-utils";
 import {
   drawUnderlineStyle,
