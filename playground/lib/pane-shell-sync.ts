@@ -1,0 +1,241 @@
+import {
+  getLocalFontSelectValue,
+  supportsLocalFontPicker,
+  syncFontFamilyControls,
+  syncHintingControls,
+  type FontHintTarget,
+  type LocalFontOption,
+} from "./font-controls.ts";
+import type { PaneState } from "./pane-state.ts";
+import type { ConnectionBackend } from "./pty-connection.ts";
+import {
+  FONT_FAMILY_STATE_EVENT,
+  FONT_RENDERING_STATE_EVENT,
+  LOCAL_FONT_STATE_EVENT,
+  MOUSE_MODE_STATE_EVENT,
+  PTY_BUTTON_STATE_EVENT,
+  TERMINAL_STATE_EVENT,
+  THEME_SELECT_STATE_EVENT,
+  type LocalFontStateDetail,
+} from "./shell-events.ts";
+
+export type PaneShellSyncPane = {
+  runtime: {
+    io: {
+      isPtyConnected: () => boolean;
+    };
+    interaction: {
+      getMouseStatus: () => {
+        mode: string;
+      };
+    };
+  };
+};
+
+type ButtonLike = {
+  textContent?: string | null;
+};
+
+type SelectLike = {
+  value: string;
+  options?: ArrayLike<{
+    value: string;
+  }>;
+};
+
+type TextLike = {
+  textContent?: string | null;
+};
+
+type PaneShellSyncElements = {
+  btnPause: ButtonLike | null;
+  rendererSelect: SelectLike | null;
+  fontSizeInput: SelectLike | null;
+  ptyBtn: ButtonLike | null;
+  themeSelect: SelectLike | null;
+  fontFamilySelect: HTMLSelectElement | null;
+  fontFamilyLocalSelect: HTMLSelectElement | null;
+  btnLoadLocalFonts: HTMLButtonElement | null;
+  fontFamilyHintEl: TextLike | null;
+  ligaturesSelect: HTMLSelectElement | null;
+  fontHintingSelect: HTMLSelectElement | null;
+  fontHintTargetSelect: HTMLSelectElement | null;
+  mouseModeEl: HTMLSelectElement | null;
+};
+
+type CreatePaneShellSyncOptions = {
+  usesSvelteShell: boolean;
+  target?: EventTarget;
+  elements: PaneShellSyncElements;
+  getSelectedConnectionBackend: () => ConnectionBackend;
+  getSelectedFontFamily: () => string;
+  getSelectedLocalFontMatcher: () => string;
+  getDetectedLocalFontOptions: () => LocalFontOption[];
+  getLocalFontHintText: () => string;
+  getSelectedLigatures: () => boolean;
+  getSelectedFontHinting: () => boolean;
+  getSelectedFontHintTarget: () => FontHintTarget;
+  syncSelectedDefaults: (state: PaneState) => void;
+};
+
+function dispatchStateEvent(target: EventTarget | undefined, type: string, detail: object) {
+  target?.dispatchEvent(
+    new CustomEvent(type, {
+      detail,
+    }),
+  );
+}
+
+export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
+  const target = options.target;
+
+  function syncPauseButton(state: PaneState) {
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, TERMINAL_STATE_EVENT, {
+        pauseLabel: state.paused ? "Resume" : "Pause",
+      });
+      return;
+    }
+    if (options.elements.btnPause) {
+      options.elements.btnPause.textContent = state.paused ? "Resume" : "Pause";
+    }
+  }
+
+  function syncTerminalControlValues(state: PaneState) {
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, TERMINAL_STATE_EVENT, {
+        pauseLabel: state.paused ? "Resume" : "Pause",
+        renderer: state.renderer,
+        fontSize: state.fontSize,
+      });
+      return;
+    }
+    if (options.elements.rendererSelect) {
+      options.elements.rendererSelect.value = state.renderer;
+    }
+    if (options.elements.fontSizeInput) {
+      options.elements.fontSizeInput.value = `${state.fontSize}`;
+    }
+  }
+
+  function syncPtyButton(pane: PaneShellSyncPane) {
+    const label = pane.runtime.io.isPtyConnected()
+      ? "Disconnect"
+      : options.getSelectedConnectionBackend() === "webcontainer"
+        ? "Start WebContainer"
+        : "Connect PTY";
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, PTY_BUTTON_STATE_EVENT, { label });
+      return;
+    }
+    if (options.elements.ptyBtn) {
+      options.elements.ptyBtn.textContent = label;
+    }
+  }
+
+  function syncThemeSelectValue(value: string) {
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, THEME_SELECT_STATE_EVENT, { value });
+      return;
+    }
+    if (options.elements.themeSelect) {
+      options.elements.themeSelect.value = value;
+    }
+  }
+
+  function syncFontFamilyValue() {
+    const value = options.getSelectedFontFamily();
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, FONT_FAMILY_STATE_EVENT, { value });
+      return;
+    }
+    if (options.elements.fontFamilySelect) {
+      options.elements.fontFamilySelect.value = value;
+    }
+  }
+
+  function syncFontFamilyControlState() {
+    syncFontFamilyControls({
+      fontFamilySelect: options.usesSvelteShell ? null : options.elements.fontFamilySelect,
+      fontFamilyLocalSelect: options.usesSvelteShell
+        ? null
+        : options.elements.fontFamilyLocalSelect,
+      btnLoadLocalFonts: options.usesSvelteShell ? null : options.elements.btnLoadLocalFonts,
+      selectedFontFamily: options.getSelectedFontFamily(),
+      selectedLocalFontMatcher: options.getSelectedLocalFontMatcher(),
+      supportsLocalFontPicker: supportsLocalFontPicker(),
+    });
+  }
+
+  function syncLocalFontControls() {
+    const supportsPicker = supportsLocalFontPicker();
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, LOCAL_FONT_STATE_EVENT, {
+        value: getLocalFontSelectValue(options.getSelectedLocalFontMatcher()),
+        hintText: options.getLocalFontHintText(),
+        loadDisabled: !supportsPicker,
+        selectDisabled: !supportsPicker,
+        options: [
+          { value: "", label: "Local Font: None" },
+          ...options.getDetectedLocalFontOptions(),
+        ],
+      } satisfies LocalFontStateDetail);
+      return;
+    }
+    syncFontFamilyControlState();
+    if (options.elements.fontFamilyHintEl) {
+      options.elements.fontFamilyHintEl.textContent = options.getLocalFontHintText();
+    }
+  }
+
+  function syncFontRenderingControls() {
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, FONT_RENDERING_STATE_EVENT, {
+        ligatures: options.getSelectedLigatures() ? "on" : "off",
+        fontHinting: options.getSelectedFontHinting() ? "on" : "off",
+        fontHintTarget: options.getSelectedFontHintTarget(),
+      });
+      return;
+    }
+    syncHintingControls({
+      ligaturesSelect: options.elements.ligaturesSelect,
+      fontHintingSelect: options.elements.fontHintingSelect,
+      fontHintTargetSelect: options.elements.fontHintTargetSelect,
+      selectedLigatures: options.getSelectedLigatures(),
+      selectedFontHinting: options.getSelectedFontHinting(),
+      selectedFontHintTarget: options.getSelectedFontHintTarget(),
+    });
+  }
+
+  function renderActivePaneControls(pane: PaneShellSyncPane, state: PaneState) {
+    options.syncSelectedDefaults(state);
+    syncTerminalControlValues(state);
+    syncFontFamilyValue();
+    syncFontFamilyControlState();
+    syncLocalFontControls();
+    syncFontRenderingControls();
+    state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, MOUSE_MODE_STATE_EVENT, {
+        value: state.mouseMode,
+      });
+    } else if (options.elements.mouseModeEl) {
+      const hasOption = Array.from(options.elements.mouseModeEl.options).some(
+        (option) => option.value === state.mouseMode,
+      );
+      options.elements.mouseModeEl.value = hasOption ? state.mouseMode : "auto";
+    }
+    syncThemeSelectValue(state.theme.selectValue);
+  }
+
+  return {
+    renderActivePaneControls,
+    syncFontFamilyValue,
+    syncFontRenderingControls,
+    syncLocalFontControls,
+    syncPauseButton,
+    syncPtyButton,
+    syncTerminalControlValues,
+    syncThemeSelectValue,
+  };
+}

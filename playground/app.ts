@@ -17,11 +17,9 @@ import {
   detectLocalFonts,
   getDefaultLocalFontHintText,
   getCurrentFontSources,
-  getLocalFontSelectValue,
   resolveFontHintTarget,
   supportsLocalFontPicker,
   syncFontFamilyControls,
-  syncHintingControls,
   type FontHintTarget,
   type LocalFontOption,
 } from "./lib/font-controls.ts";
@@ -32,6 +30,7 @@ import {
   getConnectUrlForState,
   syncConnectionUi,
 } from "./lib/pty-connection.ts";
+import { createPaneShellSync } from "./lib/pane-shell-sync.ts";
 import {
   applyBuiltinThemeToPane,
   applySavedThemeForPane,
@@ -56,17 +55,13 @@ import {
   CONNECTION_BACKEND_CHANGE_EVENT,
   FONT_FAMILY_LOCAL_CHANGE_EVENT,
   FONT_FAMILY_CHANGE_EVENT,
-  FONT_FAMILY_STATE_EVENT,
   FONT_HINT_TARGET_CHANGE_EVENT,
   FONT_HINTING_CHANGE_EVENT,
   FONT_LIGATURES_CHANGE_EVENT,
-  FONT_RENDERING_STATE_EVENT,
-  LOCAL_FONT_STATE_EVENT,
   LOAD_LOCAL_FONTS_EVENT,
   MOUSE_MODE_CHANGE_EVENT,
   MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_EVENT,
-  PTY_BUTTON_STATE_EVENT,
   PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
@@ -77,21 +72,15 @@ import {
   TERMINAL_INIT_EVENT,
   TERMINAL_PAUSE_EVENT,
   TERMINAL_RENDERER_EVENT,
-  TERMINAL_STATE_EVENT,
   THEME_FILE_CHANGE_EVENT,
   THEME_FILE_RESET_EVENT,
   THEME_SELECT_CHANGE_EVENT,
-  THEME_SELECT_STATE_EVENT,
   WC_COMMAND_CHANGE_EVENT,
   WC_CWD_CHANGE_EVENT,
   type DemoRunDetail,
-  type FontRenderingStateDetail,
-  type LocalFontStateDetail,
-  type PtyButtonStateDetail,
   type RendererChangeDetail,
   type ShaderPresetChangeDetail,
   type ShellStringValueDetail,
-  type TerminalStateDetail,
   type ThemeFileChangeDetail,
 } from "./lib/shell-events.ts";
 
@@ -251,148 +240,38 @@ function getActivePane(): ManagedPane | null {
   return restty.getActivePane();
 }
 
-function syncPauseButton(state: PaneState) {
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(TERMINAL_STATE_EVENT, {
-        detail: {
-          pauseLabel: state.paused ? "Resume" : "Pause",
-        },
-      }),
-    );
-    return;
-  }
-  if (btnPause) btnPause.textContent = state.paused ? "Resume" : "Pause";
-}
-
-function syncTerminalControlValues(state: PaneState) {
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(TERMINAL_STATE_EVENT, {
-        detail: {
-          pauseLabel: state.paused ? "Resume" : "Pause",
-          renderer: state.renderer,
-          fontSize: state.fontSize,
-        },
-      }),
-    );
-    return;
-  }
-  if (rendererSelect) rendererSelect.value = state.renderer;
-  if (fontSizeInput) fontSizeInput.value = `${state.fontSize}`;
-}
-
-function syncPtyButton(pane: ManagedPane) {
-  if (usesSvelteShell) {
-    const label = pane.runtime.io.isPtyConnected()
-      ? "Disconnect"
-      : selectedConnectionBackend === "webcontainer"
-        ? "Start WebContainer"
-        : "Connect PTY";
-    window.dispatchEvent(
-      new CustomEvent(PTY_BUTTON_STATE_EVENT, {
-        detail: { label },
-      }),
-    );
-    return;
-  }
-  if (!ptyBtn) return;
-  if (pane.runtime.io.isPtyConnected()) {
-    ptyBtn.textContent = "Disconnect";
-    return;
-  }
-  ptyBtn.textContent =
-    selectedConnectionBackend === "webcontainer" ? "Start WebContainer" : "Connect PTY";
-}
-
-function syncThemeSelectValue(value: string) {
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(THEME_SELECT_STATE_EVENT, {
-        detail: { value },
-      }),
-    );
-    return;
-  }
-  if (themeSelect) {
-    themeSelect.value = value;
-  }
-}
-
-function syncLocalFontControls() {
-  const supportsPicker = supportsLocalFontPicker();
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(LOCAL_FONT_STATE_EVENT, {
-        detail: {
-          value: getLocalFontSelectValue(selectedLocalFontMatcher),
-          hintText: localFontHintText,
-          loadDisabled: !supportsPicker,
-          selectDisabled: !supportsPicker,
-          options: [{ value: "", label: "Local Font: None" }, ...detectedLocalFontOptions],
-        } satisfies LocalFontStateDetail,
-      }),
-    );
-    return;
-  }
-  syncFontFamilyControls({
-    fontFamilySelect: null,
+const paneShellSync = createPaneShellSync({
+  usesSvelteShell,
+  target: window,
+  elements: {
+    btnPause,
+    rendererSelect,
+    fontSizeInput,
+    ptyBtn,
+    themeSelect,
+    fontFamilySelect,
     fontFamilyLocalSelect,
     btnLoadLocalFonts,
-    selectedFontFamily,
-    selectedLocalFontMatcher,
-    supportsLocalFontPicker: supportsPicker,
-  });
-  if (fontFamilyHintEl) {
-    fontFamilyHintEl.textContent = localFontHintText;
-  }
-}
-
-function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
-  selectedRendererDefault = state.renderer;
-  selectedFontSizeDefault = state.fontSize;
-  selectedMouseModeDefault = state.mouseMode;
-  syncTerminalControlValues(state);
-  syncFontFamilyValue();
-  syncFontFamilyControls({
-    fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
-    fontFamilyLocalSelect: usesSvelteShell ? null : fontFamilyLocalSelect,
-    btnLoadLocalFonts: usesSvelteShell ? null : btnLoadLocalFonts,
-    selectedFontFamily,
-    selectedLocalFontMatcher,
-    supportsLocalFontPicker: supportsLocalFontPicker(),
-  });
-  syncLocalFontControls();
-  syncFontRenderingControls();
-  state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(MOUSE_MODE_STATE_EVENT, {
-        detail: { value: state.mouseMode },
-      }),
-    );
-  } else if (mouseModeEl) {
-    const hasOption = Array.from(mouseModeEl.options).some(
-      (option) => option.value === state.mouseMode,
-    );
-    mouseModeEl.value = hasOption ? state.mouseMode : "auto";
-  }
-  syncThemeSelectValue(state.theme.selectValue);
-}
-
-function syncFontFamilyValue() {
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(FONT_FAMILY_STATE_EVENT, {
-        detail: { value: selectedFontFamily },
-      }),
-    );
-    return;
-  }
-  if (fontFamilySelect) {
-    fontFamilySelect.value = selectedFontFamily;
-  }
-}
+    fontFamilyHintEl,
+    ligaturesSelect,
+    fontHintingSelect,
+    fontHintTargetSelect,
+    mouseModeEl,
+  },
+  getSelectedConnectionBackend: () => selectedConnectionBackend,
+  getSelectedFontFamily: () => selectedFontFamily,
+  getSelectedLocalFontMatcher: () => selectedLocalFontMatcher,
+  getDetectedLocalFontOptions: () => detectedLocalFontOptions,
+  getLocalFontHintText: () => localFontHintText,
+  getSelectedLigatures: () => selectedLigatures,
+  getSelectedFontHinting: () => selectedFontHinting,
+  getSelectedFontHintTarget: () => selectedFontHintTarget,
+  syncSelectedDefaults: (state) => {
+    selectedRendererDefault = state.renderer;
+    selectedFontSizeDefault = state.fontSize;
+    selectedMouseModeDefault = state.mouseMode;
+  },
+});
 
 function setPanePaused(id: number, value: boolean) {
   const pane = restty.getPaneById(id);
@@ -403,7 +282,7 @@ function setPanePaused(id: number, value: boolean) {
   pane.paused = nextState.paused;
   pane.runtime.terminal.setPaused(nextState.paused);
   if (id === activePaneId) {
-    syncPauseButton(nextState);
+    paneShellSync.syncPauseButton(nextState);
   }
 }
 
@@ -430,7 +309,7 @@ async function initPaneApp(pane: ManagedPane, state: PaneState) {
   pane.runtime.interaction.updateSize(true);
   connectPaneIfNeeded(pane);
   if (pane.id === activePaneId) {
-    syncPtyButton(pane);
+    paneShellSync.syncPtyButton(pane);
   }
   pane.canvas.focus({ preventScroll: true });
 }
@@ -492,8 +371,8 @@ restty = new Restty({
         if (!pane) return;
         const state = paneStates.get(pane.id);
         if (!state) return;
-        syncPtyButton(pane);
-        renderActivePaneControls(pane, state);
+        paneShellSync.syncPtyButton(pane);
+        paneShellSync.renderActivePaneControls(pane, state);
       },
       onLayoutChanged: () => {
         queueResizeAllPanes();
@@ -613,7 +492,7 @@ function applyConnectionBackend(value: string | null | undefined) {
 
   const activePane = getActivePane();
   if (activePane) {
-    syncPtyButton(activePane);
+    paneShellSync.syncPtyButton(activePane);
   }
 }
 
@@ -718,7 +597,7 @@ function handlePtyButtonClick() {
   } else {
     pane.runtime.io.connectPty(getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl));
   }
-  syncPtyButton(pane);
+  paneShellSync.syncPtyButton(pane);
 }
 
 if (usesSvelteShell) {
@@ -764,7 +643,7 @@ function applyUploadedThemeFile(file: File | null | undefined) {
       if (nextState) {
         paneStates.set(pane.id, nextState);
         if (pane.id === activePaneId) {
-          syncThemeSelectValue(nextState.theme.selectValue);
+          paneShellSync.syncThemeSelectValue(nextState.theme.selectValue);
         }
       }
     })
@@ -803,7 +682,7 @@ function applyThemeSelection(name: string | null | undefined) {
       }),
     );
     if (pane.id === activePaneId) {
-      syncThemeSelectValue("");
+      paneShellSync.syncThemeSelectValue("");
     }
     return;
   }
@@ -815,7 +694,7 @@ function applyThemeSelection(name: string | null | undefined) {
   if (nextState) {
     paneStates.set(pane.id, nextState);
     if (pane.id === activePaneId) {
-      syncThemeSelectValue(nextState.theme.selectValue);
+      paneShellSync.syncThemeSelectValue(nextState.theme.selectValue);
     }
   }
 }
@@ -908,32 +787,9 @@ if (usesSvelteShell) {
 }
 
 function applyFontRenderingSelections() {
-  syncFontRenderingControls();
+  paneShellSync.syncFontRenderingControls();
   applyFontRenderingOptionsToAllPanes({
     host: restty,
-    selectedLigatures,
-    selectedFontHinting,
-    selectedFontHintTarget,
-  });
-}
-
-function syncFontRenderingControls() {
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(FONT_RENDERING_STATE_EVENT, {
-        detail: {
-          ligatures: selectedLigatures ? "on" : "off",
-          fontHinting: selectedFontHinting ? "on" : "off",
-          fontHintTarget: selectedFontHintTarget,
-        },
-      }),
-    );
-    return;
-  }
-  syncHintingControls({
-    ligaturesSelect,
-    fontHintingSelect,
-    fontHintTargetSelect,
     selectedLigatures,
     selectedFontHinting,
     selectedFontHintTarget,
@@ -979,7 +835,7 @@ if (usesSvelteShell) {
 if (fontFamilySelect) {
   const applyFontFamilySelection = (value: string | null | undefined) => {
     selectedFontFamily = value || DEFAULT_FONT_FAMILY;
-    syncFontFamilyValue();
+    paneShellSync.syncFontFamilyValue();
     syncFontFamilyControls({
       fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
       fontFamilyLocalSelect: usesSvelteShell ? null : fontFamilyLocalSelect,
@@ -988,7 +844,7 @@ if (fontFamilySelect) {
       selectedLocalFontMatcher,
       supportsLocalFontPicker: supportsLocalFontPicker(),
     });
-    syncLocalFontControls();
+    paneShellSync.syncLocalFontControls();
     void applyFontSourcesToAllPanes({
       host: restty,
       selectedFontFamily,
@@ -1027,7 +883,7 @@ function applyLocalFontSelection(value: string | null | undefined) {
     selectedLocalFontMatcher,
     supportsLocalFontPicker: supportsLocalFontPicker(),
   });
-  syncLocalFontControls();
+  paneShellSync.syncLocalFontControls();
   void applyFontSourcesToAllPanes({
     host: restty,
     selectedFontFamily,
@@ -1046,7 +902,7 @@ if (usesSvelteShell) {
     void detectLocalFontState().then((state) => {
       detectedLocalFontOptions = state.detectedOptions;
       localFontHintText = state.hintText;
-      syncLocalFontControls();
+      paneShellSync.syncLocalFontControls();
     });
   });
 } else {
@@ -1083,21 +939,14 @@ syncFontFamilyControls({
   selectedLocalFontMatcher,
   supportsLocalFontPicker: supportsLocalFontPicker(),
 });
-syncFontFamilyValue();
-syncLocalFontControls();
-syncHintingControls({
-  ligaturesSelect,
-  fontHintingSelect,
-  fontHintTargetSelect,
-  selectedLigatures,
-  selectedFontHinting,
-  selectedFontHintTarget,
-});
+paneShellSync.syncFontFamilyValue();
+paneShellSync.syncLocalFontControls();
+paneShellSync.syncFontRenderingControls();
 const firstPane = restty.createInitialPane({ focus: true });
 activePaneId = firstPane.id;
 const firstState = paneStates.get(firstPane.id);
 if (firstState) {
-  syncPtyButton(firstPane);
-  renderActivePaneControls(firstPane, firstState);
+  paneShellSync.syncPtyButton(firstPane);
+  paneShellSync.renderActivePaneControls(firstPane, firstState);
 }
 queueResizeAllPanes();
