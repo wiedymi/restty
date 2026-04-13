@@ -299,6 +299,18 @@ test("surface manager options contracts are split from implementation", () => {
   expect(managerOptions).toContain("./manager-options.types");
 });
 
+test("surface plugin runtime and dispatcher contracts are split from implementation", () => {
+  const pluginRuntime = readFileSync(resolve(surfaceRoot, "plugins/runtime.ts"), "utf8");
+  const pluginDispatcher = readFileSync(resolve(surfaceRoot, "plugins/dispatcher.ts"), "utf8");
+
+  expect(pluginRuntime).not.toContain("export type ResttyPluginRuntime =");
+  expect(pluginRuntime).not.toContain("export type ResttyPluginDiagnostic =");
+  expect(pluginRuntime).toContain("./runtime.types");
+
+  expect(pluginDispatcher).not.toContain("export type ResttyPluginHostDeps =");
+  expect(pluginDispatcher).toContain("./dispatcher.types");
+});
+
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty/pane-handle.ts"),

@@ -1,69 +1,22 @@
-import type { ResttyShaderStage } from "../../runtime/core/models";
+import type { ResttyPluginEvents, ResttyPluginInfo } from "./types";
 import type {
-  ResttyInterceptorOptions,
-  ResttyPlugin,
-  ResttyPluginEvents,
-  ResttyPluginInfo,
-  ResttyPluginRequires,
-} from "./types";
-
-export type ResttyPluginRuntimeDisposerKind =
-  | "event"
-  | "input-interceptor"
-  | "output-interceptor"
-  | "lifecycle-hook"
-  | "render-hook"
-  | "render-stage";
-
-export type ResttyPluginRuntimeDisposer = {
-  kind: ResttyPluginRuntimeDisposerKind;
-  active: boolean;
-  dispose: () => void;
-};
-
-export type ResttyPluginRuntime = {
-  plugin: ResttyPlugin;
-  cleanup: (() => void) | null;
-  activatedAt: number;
-  options: unknown;
-  disposers: Array<ResttyPluginRuntimeDisposer>;
-};
-
-export type ResttyPluginDiagnostic = {
-  id: string;
-  version: string | null;
-  apiVersion: number | null;
-  requires: ResttyPluginRequires | null;
-  active: boolean;
-  activatedAt: number | null;
-  lastError: string | null;
-};
-
-export type ResttyRegisteredInterceptor<T extends (payload: unknown) => unknown> = {
-  id: number;
-  pluginId: string;
-  priority: number;
-  order: number;
-  interceptor: T;
-};
-
-export type ResttyManagedShaderStage = {
-  id: string;
-  stage: ResttyShaderStage;
-  order: number;
-  ownerPluginId: string | null;
-};
-
-export type ResttyInterceptorSeq = {
-  nextId: number;
-  nextOrder: number;
-};
+  PluginDiagnosticMap,
+  PluginListenersMap,
+  PluginRuntimeMap,
+  RegisterPluginInterceptorOptions,
+  ResttyInterceptorSeq,
+  ResttyPluginDiagnostic,
+  ResttyPluginRuntime,
+  ResttyPluginRuntimeDisposer,
+  ResttyPluginRuntimeDisposerKind,
+  ResttyRegisteredInterceptor,
+} from "./runtime.types";
 
 export function registerPluginInterceptor<T extends (payload: unknown) => unknown>(
   bucket: Array<ResttyRegisteredInterceptor<T>>,
   pluginId: string,
   interceptor: T,
-  options: ResttyInterceptorOptions | undefined,
+  options: RegisterPluginInterceptorOptions,
   seq: ResttyInterceptorSeq,
 ): { dispose: () => void; nextId: number; nextOrder: number } {
   const entry: ResttyRegisteredInterceptor<T> = {
@@ -162,7 +115,7 @@ export function teardownPluginRuntime(runtime: ResttyPluginRuntime): void {
 }
 
 export function setPluginLoadError(
-  pluginDiagnostics: Map<string, ResttyPluginDiagnostic>,
+  pluginDiagnostics: PluginDiagnosticMap,
   pluginId: string,
   message: string,
 ): void {
@@ -178,7 +131,7 @@ export function setPluginLoadError(
 }
 
 export function patchPluginDiagnostic(
-  pluginDiagnostics: Map<string, ResttyPluginDiagnostic>,
+  pluginDiagnostics: PluginDiagnosticMap,
   pluginId: string,
   patch: Partial<Pick<ResttyPluginDiagnostic, "active" | "activatedAt" | "lastError">>,
 ): void {
@@ -205,8 +158,8 @@ function countActiveDisposers(
 
 export function buildPluginInfo(
   pluginId: string,
-  pluginDiagnostics: Map<string, ResttyPluginDiagnostic>,
-  pluginRuntimes: Map<string, ResttyPluginRuntime>,
+  pluginDiagnostics: PluginDiagnosticMap,
+  pluginRuntimes: PluginRuntimeMap,
 ): ResttyPluginInfo | null {
   const diagnostic = pluginDiagnostics.get(pluginId) ?? null;
   const runtime = pluginRuntimes.get(pluginId) ?? null;
@@ -233,7 +186,7 @@ export function buildPluginInfo(
 }
 
 export function onPluginEvent<E extends keyof ResttyPluginEvents>(
-  pluginListeners: Map<keyof ResttyPluginEvents, Set<(payload: unknown) => void>>,
+  pluginListeners: PluginListenersMap,
   event: E,
   listener: (payload: ResttyPluginEvents[E]) => void,
 ): () => void {
@@ -255,7 +208,7 @@ export function onPluginEvent<E extends keyof ResttyPluginEvents>(
 }
 
 export function emitPluginEvent<E extends keyof ResttyPluginEvents>(
-  pluginListeners: Map<keyof ResttyPluginEvents, Set<(payload: unknown) => void>>,
+  pluginListeners: PluginListenersMap,
   event: E,
   payload: ResttyPluginEvents[E],
 ): void {

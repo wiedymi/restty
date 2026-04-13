@@ -25,7 +25,8 @@ import {
   normalizePluginMetadata,
   resolvePluginRegistryEntry,
 } from "./utils";
-import { ResttyPluginDispatcher, type ResttyPluginHostDeps } from "./dispatcher";
+import { ResttyPluginDispatcher } from "./dispatcher";
+import type { ResttyPluginHostDeps } from "./dispatcher.types";
 
 export class ResttyPluginHost {
   private readonly pluginRuntimes = new Map<string, ResttyPluginRuntime>();

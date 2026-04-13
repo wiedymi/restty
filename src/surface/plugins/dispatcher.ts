@@ -8,7 +8,6 @@ import {
   type ResttyPluginEvents,
   type ResttyRenderHook,
   type ResttyRenderHookPayload,
-  type ResttyRenderStageHandle,
 } from "./types";
 import {
   type ResttyPluginRuntimeDisposerKind,
@@ -21,22 +20,8 @@ import {
   onPluginEvent,
   emitPluginEvent,
 } from "./runtime";
+import type { ResttyPluginHostDeps } from "./dispatcher.types";
 import { normalizeShaderStage } from "../../runtime/shader-stages";
-import type { ResttyShaderStage } from "../../runtime/core/models";
-import type { ResttyPaneHandle } from "../restty/pane-handle";
-import type { Restty } from "../restty";
-
-export type ResttyPluginHostDeps = {
-  restty: Restty;
-  panes: () => ResttyPaneHandle[];
-  pane: (id: number) => ResttyPaneHandle | null;
-  activePane: () => ResttyPaneHandle | null;
-  focusedPane: () => ResttyPaneHandle | null;
-  addRenderStage: (
-    stage: ResttyShaderStage,
-    ownerPluginId: string | null,
-  ) => ResttyRenderStageHandle;
-};
 
 export class ResttyPluginDispatcher {
   private readonly deps: ResttyPluginHostDeps;
