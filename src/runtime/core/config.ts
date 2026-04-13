@@ -127,6 +127,11 @@ export type ResttyTerminalConfig = {
 /**
  * Configuration for creating a Restty runtime instance.
  */
-export type ResttyRuntimeConfig = ResttyRuntimeMountConfig &
-  ResttyRuntimeServicesConfig &
-  ResttyTerminalConfig;
+export type ResttyRuntimeConfig = {
+  /** DOM/session fields required to mount the runtime. */
+  mount: ResttyRuntimeMountConfig;
+  /** Terminal behavior/config applied to the runtime instance. */
+  terminal?: ResttyTerminalConfig;
+  /** Service hooks, adapters, and debug surfaces used by the runtime. */
+  services?: ResttyRuntimeServicesConfig;
+};

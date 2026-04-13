@@ -179,14 +179,18 @@ const FALLBACK_LOCAL_FONT_SOURCES: ResttyFontSource[] = [
 ];
 
 export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime {
-  const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
-  const beforeInputHook = options.beforeInput;
-  const beforeRenderOutputHook = options.beforeRenderOutput;
+  const mount = options.mount;
+  const terminal = options.terminal ?? {};
+  const services = options.services ?? {};
+  const { canvas: canvasInput, imeInput: imeInputInput } = mount;
+  const { elements, callbacks } = services;
+  const beforeInputHook = services.beforeInput;
+  const beforeRenderOutputHook = services.beforeRenderOutput;
   const { runBeforeInputHook, runBeforeRenderOutputHook } = createRuntimeInputHooks({
     beforeInputHook,
     beforeRenderOutputHook,
   });
-  const session = options.session ?? getDefaultResttyAppSession();
+  const session = mount.session ?? getDefaultResttyAppSession();
   const fontResourceStore = session.getFontResourceStore?.() ?? createResttyFontResourceStore();
   const textShaper = bundledTextShaper;
   if (!canvasInput) {
@@ -202,20 +206,20 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     rasterizeGlyphWithTransform,
     PixelMode,
   } = textShaper;
-  const attachWindowEvents = options.attachWindowEvents ?? true;
-  const attachCanvasEvents = options.attachCanvasEvents ?? true;
-  const autoResize = options.autoResize ?? true;
-  const debugExpose = options.debugExpose ?? false;
-  const touchSelectionMode = normalizeTouchSelectionMode(options.touchSelectionMode);
+  const attachWindowEvents = terminal.attachWindowEvents ?? true;
+  const attachCanvasEvents = terminal.attachCanvasEvents ?? true;
+  const autoResize = terminal.autoResize ?? true;
+  const debugExpose = services.debugExpose ?? false;
+  const touchSelectionMode = normalizeTouchSelectionMode(terminal.touchSelectionMode);
   const touchSelectionLongPressMs = clampFiniteNumber(
-    options.touchSelectionLongPressMs,
+    terminal.touchSelectionLongPressMs,
     450,
     120,
     2000,
     true,
   );
   const touchSelectionMoveThresholdPx = clampFiniteNumber(
-    options.touchSelectionMoveThresholdPx,
+    terminal.touchSelectionMoveThresholdPx,
     10,
     1,
     64,
@@ -224,13 +228,13 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     if (value === "light" || value === "normal" || value === "auto") return value;
     return "auto";
   };
-  let ligatures = options.ligatures ?? true;
-  let fontHinting = options.fontHinting ?? false;
-  let fontHintTarget = resolveFontHintTarget(options.fontHintTarget);
-  const nerdIconScale = Number.isFinite(options.nerdIconScale)
-    ? Number(options.nerdIconScale)
+  let ligatures = terminal.ligatures ?? true;
+  let fontHinting = terminal.fontHinting ?? false;
+  let fontHintTarget = resolveFontHintTarget(terminal.fontHintTarget);
+  const nerdIconScale = Number.isFinite(terminal.nerdIconScale)
+    ? Number(terminal.nerdIconScale)
     : 1.0;
-  const alphaBlending: AlphaBlendingMode = options.alphaBlending ?? "linear-corrected";
+  const alphaBlending: AlphaBlendingMode = terminal.alphaBlending ?? "linear-corrected";
   const cleanupFns: Array<() => void> = [];
   const cleanupCanvasFns: Array<() => void> = [];
   const runtimeEvents = createRuntimeEventHub();
@@ -333,7 +337,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   function sendInput(text: string, source = "program", config: { skipHooks?: boolean } = {}) {
     runtimeAppApi?.sendInput(text, source, config);
   }
-  const ptyTransport: PtyTransport = options.ptyTransport ?? createWebSocketPtyTransport();
+  const ptyTransport: PtyTransport = services.ptyTransport ?? createWebSocketPtyTransport();
   const PTY_OUTPUT_IDLE_MS = 10;
   const PTY_OUTPUT_MAX_MS = 40;
   const SYNC_OUTPUT_RESET_MS = 1000;
@@ -418,7 +422,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const isMacPlatform = typeof navigator !== "undefined" && /mac/i.test(navigator.platform);
 
   const fontConfig = {
-    sizePx: Number.isFinite(options.fontSize) ? Math.max(1, Math.round(options.fontSize!)) : 18,
+    sizePx: Number.isFinite(terminal.fontSize) ? Math.max(1, Math.round(terminal.fontSize)) : 18,
   };
 
   function configureImeInputElement() {
@@ -616,11 +620,11 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     font: null,
     fonts: [],
     fontSizePx: 0,
-    sizeMode: options.fontSizeMode === "em" ? "em" : "height",
+    sizeMode: terminal.fontSizeMode === "em" ? "em" : "height",
     fontPickCache: new Map(),
   };
 
-  const FONT_SCALE_OVERRIDES = options.fontScaleOverrides ?? [];
+  const FONT_SCALE_OVERRIDES = terminal.fontScaleOverrides ?? [];
 
   function applyFontSize(value) {
     if (!Number.isFinite(value)) return;
@@ -646,7 +650,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     atlasToRGBA,
   });
 
-  let configuredFontSources = normalizeFontSources(options.fontSources, options.fontPreset);
+  let configuredFontSources = normalizeFontSources(terminal.fontSources, terminal.fontPreset);
 
   const gridState = {
     cols: 0,
@@ -748,7 +752,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   let fontError: Error | null = null;
   let fontLease: ResttyFontResourceLease | null = null;
 
-  setShaderStages(options.shaderStages ?? []);
+  setShaderStages(terminal.shaderStages ?? []);
 
   const lifecycleThemeSizeRuntime = createRuntimeLifecycleThemeSize({
     attachCanvasEvents,
@@ -1277,9 +1281,9 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
       searchRuntime.handleWasmReset();
     },
     getSelectionText,
-    initialPreferredRenderer: options.renderer ?? "auto",
-    maxScrollbackBytes: options.maxScrollbackBytes,
-    maxScrollback: options.maxScrollback,
+    initialPreferredRenderer: terminal.renderer ?? "auto",
+    maxScrollbackBytes: terminal.maxScrollbackBytes,
+    maxScrollback: terminal.maxScrollback,
   });
   return runtimeAppApi.createPublicApi({
     setFontSize: applyFontSize,

@@ -34,13 +34,17 @@ export function createManagedPaneRuntime(options: CreateManagedPaneRuntimeOption
   };
 
   const app = createResttyRuntime({
-    ...baseTerminal,
-    ...baseServices,
-    canvas: context.canvas,
-    imeInput: context.imeInput,
-    session,
-    elements: mergedElements,
-    callbacks: mergedCallbacks,
+    mount: {
+      canvas: context.canvas,
+      imeInput: context.imeInput,
+      session,
+    },
+    terminal: baseTerminal,
+    services: {
+      ...baseServices,
+      elements: mergedElements,
+      callbacks: mergedCallbacks,
+    },
   });
 
   if (autoInit) {
