@@ -123,11 +123,11 @@ import { createRuntimeFontRuntimeHelpers } from "./create-runtime/font-runtime-h
 import { createRuntimeReporting } from "./create-runtime/runtime-reporting";
 import { createResttyFontResourceStore } from "./fonts/font-resource-store";
 import type { RuntimeTerminalColor } from "./create-runtime/highlight-terminal-color-utils.types";
-import { createRuntimeApi } from "./create-runtime/runtime-api";
+import { createRuntimeController } from "./create-runtime/runtime-controller";
 import type {
-  RuntimeApiController,
-  RuntimeApiSharedState,
-} from "./create-runtime/runtime-api.types";
+  RuntimeController,
+  RuntimeControllerSharedState,
+} from "./create-runtime/runtime-controller.types";
 export { createResttyRuntimeSession, getDefaultResttyRuntimeSession } from "./core/session";
 export type { ResttyRuntime } from "./core/api";
 export type { ResttyRuntimeConfig } from "./core/config";
@@ -311,7 +311,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const KEYDOWN_BEFOREINPUT_DEDUPE_MS = 80;
   let lastKeydownSeq = "";
   let lastKeydownSeqAt = 0;
-  let runtimeApi: RuntimeApiController | null = null;
+  let runtimeController: RuntimeController | null = null;
   function sendInput(text: string, source = "program", config: { skipHooks?: boolean } = {}) {
     runtimeApi?.sendInput(text, source, config);
   }
@@ -1091,7 +1091,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   // drawBoxDrawing(cp, x, rowY, cellW, cellH, fg, fgRectData, underlineThicknessPx)
   // const constraint = nerdConstraint ?? (colorGlyph ? DEFAULT_EMOJI_CONSTRAINT : DEFAULT_SYMBOL_CONSTRAINT);
   // const nerdConstraint = resolveSymbolConstraint(item.cp);
-  const readRuntimeApiState = (): RuntimeApiSharedState => ({
+  const readRuntimeControllerState = (): RuntimeControllerSharedState => ({
     wasm,
     wasmExports,
     wasmHandle,
@@ -1104,7 +1104,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     lastKeydownSeq,
     lastKeydownSeqAt,
   });
-  const writeRuntimeApiState = (patch: Partial<RuntimeApiSharedState>) => {
+  const writeRuntimeControllerState = (patch: Partial<RuntimeControllerSharedState>) => {
     ({
       wasm = wasm,
       wasmExports = wasmExports,
@@ -1122,7 +1122,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   cleanupFns.push(() => {
     kittyRenderRuntime.clearKittyRenderCaches();
   });
-  runtimeApi = createRuntimeApi({
+  runtimeController = createRuntimeController({
     runtimeEvents,
     session,
     ptyTransport,
@@ -1135,8 +1135,8 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     imeInput,
     attachWindowEvents,
     isMacPlatform,
-    readState: readRuntimeApiState,
-    writeState: writeRuntimeApiState,
+    readState: readRuntimeControllerState,
+    writeState: writeRuntimeControllerState,
     runBeforeInputHook,
     runBeforeRenderOutputHook,
     CURSOR_BLINK_MS,
@@ -1173,7 +1173,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     maxScrollbackBytes: terminal.maxScrollbackBytes,
     maxScrollback: terminal.maxScrollback,
   });
-  return runtimeApi.createPublicApi({
+  return runtimeController.createPublicApi({
     setFontSize: applyFontSize,
     setLigatures,
     setFontHinting,

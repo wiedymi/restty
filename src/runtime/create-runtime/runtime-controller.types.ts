@@ -15,7 +15,7 @@ import type { ResttyRuntimeSession } from "../core/resources";
 import type { RuntimeInteraction } from "./interaction-runtime/types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
 
-export type RuntimeApiSharedState = {
+export type RuntimeControllerSharedState = {
   wasm: ResttyWasm | null;
   wasmExports: ResttyWasmExports | null;
   wasmHandle: number;
@@ -32,7 +32,7 @@ export type RuntimeApiSharedState = {
 export type RuntimeBackend = "none" | "webgpu" | "webgl2";
 export type PreferredRenderer = "auto" | "webgpu" | "webgl2";
 
-export type RuntimeInternalState = {
+export type RuntimeControllerInternalState = {
   paused: boolean;
   backend: RuntimeBackend;
   preferredRenderer: PreferredRenderer;
@@ -46,7 +46,7 @@ export type RuntimeSendInput = (
   options?: { skipHooks?: boolean },
 ) => void;
 
-export type RuntimePublicApiOptions = {
+export type RuntimeControllerPublicOptions = {
   setFontSize: ResttyRuntimeTerminalApi["setFontSize"];
   setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
   setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
@@ -66,9 +66,9 @@ export type RuntimePublicApiOptions = {
   getShaderStages: ResttyRuntimeRenderApi["getShaderStages"];
 };
 
-export type RuntimeApiController = {
+export type RuntimeController = {
   sendInput: RuntimeSendInput;
-  createPublicApi: (options: RuntimePublicApiOptions) => ResttyRuntime;
+  createPublicApi: (options: RuntimeControllerPublicOptions) => ResttyRuntime;
 };
 
 export type LifecycleThemeRuntime = {
@@ -76,7 +76,7 @@ export type LifecycleThemeRuntime = {
   getActiveTheme: () => GhosttyTheme | null;
 };
 
-export type RuntimeApiOptions = {
+export type RuntimeControllerOptions = {
   runtimeEvents: ResttyRuntimeEventHub;
   session: ResttyRuntimeSession;
   ptyTransport: PtyTransport;
@@ -89,8 +89,8 @@ export type RuntimeApiOptions = {
   imeInput: HTMLTextAreaElement | null;
   attachWindowEvents: boolean;
   isMacPlatform: boolean;
-  readState: () => RuntimeApiSharedState;
-  writeState: (patch: Partial<RuntimeApiSharedState>) => void;
+  readState: () => RuntimeControllerSharedState;
+  writeState: (patch: Partial<RuntimeControllerSharedState>) => void;
   runBeforeInputHook: (text: string, source: string) => string | null;
   runBeforeRenderOutputHook: (text: string, source: string) => string | null;
   getSelectionText: () => string;

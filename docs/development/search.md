@@ -54,7 +54,7 @@ Restty already has most of the rendering seams needed for search highlights:
 - Interaction state already owns transient UI/runtime state in:
   - `src/runtime/create-runtime/interaction-runtime/index.ts`
 - The public runtime API is assembled in:
-  - `src/runtime/create-runtime/runtime-api.ts`
+  - `src/runtime/create-runtime/runtime-controller.ts`
 
 The missing piece is data ownership:
 
@@ -213,7 +213,7 @@ Keep UI out of core. A consumer can bind these APIs to a custom search bar, comm
 
 Files:
 
-- `src/runtime/create-runtime/runtime-api.ts`
+- `src/runtime/create-runtime/runtime-controller.ts`
 - `src/runtime/create-runtime.ts`
 - new `src/runtime/create-runtime/search-runtime.ts`
 

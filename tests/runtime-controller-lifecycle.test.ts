@@ -6,7 +6,8 @@ mock.module("../src/renderer", () => ({
   initWebGL: () => null,
 }));
 
-const { createRuntimeApi } = await import("../src/runtime/create-runtime/runtime-api");
+const { createRuntimeController } =
+  await import("../src/runtime/create-runtime/runtime-controller");
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 const originalCancelAnimationFrame = globalThis.cancelAnimationFrame;
@@ -71,7 +72,7 @@ function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
     drainOutput: () => "",
   };
 
-  const runtime = createRuntimeApi({
+  const runtimeController = createRuntimeController({
     runtimeEvents: createRuntimeEventHub(),
     session: {
       getWasm: async () => wasm as never,
@@ -154,7 +155,7 @@ function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
 
   return {
     sharedState,
-    publicRuntime: runtime.createPublicApi({
+    publicRuntime: runtimeController.createPublicApi({
       setFontSize: () => undefined,
       setLigatures: () => undefined,
       setFontHinting: () => undefined,
@@ -183,7 +184,7 @@ function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
   };
 }
 
-test("runtime api lifecycle state flows from created to ready to destroyed", async () => {
+test("runtime controller lifecycle state flows from created to ready to destroyed", async () => {
   const { publicRuntime, sharedState } = createTestRuntime();
   const states: string[] = [];
   const backends: string[] = [];
@@ -209,7 +210,7 @@ test("runtime api lifecycle state flows from created to ready to destroyed", asy
   dispose();
 });
 
-test("runtime api lifecycle state stays destroyed when init finishes late", async () => {
+test("runtime controller lifecycle state stays destroyed when init finishes late", async () => {
   let resolveFont!: () => void;
   const { publicRuntime, sharedState } = createTestRuntime({
     ensureFont: () =>

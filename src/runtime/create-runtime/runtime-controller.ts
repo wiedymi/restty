@@ -11,14 +11,14 @@ import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
 import type { ResttyRuntimeEvent } from "../core/runtime-events";
 import type { ResttyRuntime } from "../core/api";
 import type {
-  RuntimeApiController,
-  RuntimeApiOptions,
-  RuntimeApiSharedState,
-  RuntimeInternalState,
-  RuntimePublicApiOptions,
-} from "./runtime-api.types";
+  RuntimeController,
+  RuntimeControllerOptions,
+  RuntimeControllerSharedState,
+  RuntimeControllerInternalState,
+  RuntimeControllerPublicOptions,
+} from "./runtime-controller.types";
 
-export function createRuntimeApi(options: RuntimeApiOptions): RuntimeApiController {
+export function createRuntimeController(options: RuntimeControllerOptions): RuntimeController {
   const {
     session,
     ptyTransport,
@@ -77,7 +77,7 @@ export function createRuntimeApi(options: RuntimeApiOptions): RuntimeApiControll
     emitRuntimeEvent({ type: "state", state: next });
   };
 
-  const internalState: RuntimeInternalState = {
+  const internalState: RuntimeControllerInternalState = {
     paused: false,
     backend: "none",
     preferredRenderer: options.initialPreferredRenderer,
@@ -86,7 +86,7 @@ export function createRuntimeApi(options: RuntimeApiOptions): RuntimeApiControll
   };
   const maxScrollbackBytes = resolveMaxScrollbackBytes(options);
 
-  function canRenderFrame(shared: RuntimeApiSharedState): boolean {
+  function canRenderFrame(shared: RuntimeControllerSharedState): boolean {
     return Boolean(shared.wasmReady && shared.wasm && shared.wasmHandle);
   }
 
@@ -561,7 +561,7 @@ export function createRuntimeApi(options: RuntimeApiOptions): RuntimeApiControll
     return inputHandler.getMouseStatus();
   }
 
-  function createPublicApi(publicApiOptions: RuntimePublicApiOptions): ResttyRuntime {
+  function createPublicApi(publicApiOptions: RuntimeControllerPublicOptions): ResttyRuntime {
     ptyInputRuntime.setPtyStatus("disconnected");
     ptyInputRuntime.updateMouseStatus();
 

@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { createRuntimeEventHub } from "../src/runtime/core/runtime-events";
 import {
-  createRuntimeApi,
-  type RuntimeApiSharedState,
-} from "../src/runtime/create-runtime/runtime-api";
+  createRuntimeController,
+  type RuntimeControllerSharedState,
+} from "../src/runtime/create-runtime/runtime-controller";
 
-test("runtime api exposes search controls on the public Restty runtime", () => {
-  const sharedState: RuntimeApiSharedState = {
+test("runtime controller exposes search controls on the public Restty runtime", () => {
+  const sharedState: RuntimeControllerSharedState = {
     wasm: null,
     wasmExports: null,
     wasmHandle: 1,
@@ -21,7 +21,7 @@ test("runtime api exposes search controls on the public Restty runtime", () => {
   };
 
   const calls: string[] = [];
-  const runtime = createRuntimeApi({
+  const runtimeController = createRuntimeController({
     runtimeEvents: createRuntimeEventHub(),
     session: {} as never,
     ptyTransport: {
@@ -106,7 +106,7 @@ test("runtime api exposes search controls on the public Restty runtime", () => {
     selectedIndex: 1,
   } as const;
 
-  const publicRuntime = runtime.createPublicApi({
+  const publicRuntime = runtimeController.createPublicApi({
     setFontSize: () => undefined,
     setFontHinting: () => undefined,
     setFontHintTarget: () => undefined,
