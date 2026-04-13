@@ -1,11 +1,10 @@
 import { type ResttyPaneManager } from "./panes-types";
 import { createResttyPaneManager } from "./panes/manager";
-import { createManagedPaneDom } from "./panes/managed-pane-dom";
+import { createManagedPane } from "./panes/managed-pane-factory";
 import {
   resolveManagedPaneContextMenu,
   resolveManagedPaneShortcuts,
 } from "./panes/managed-pane-options";
-import { createManagedPaneRuntime } from "./panes/managed-pane-runtime";
 import { getDefaultResttyAppSession } from "../runtime/session";
 import type { PaneSearchUiController } from "./pane-search-ui";
 import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
@@ -63,16 +62,15 @@ export function createResttyAppPaneManager(
     shortcuts,
     contextMenu,
     createPane: ({ id, sourcePane }) => {
-      const { container, canvas, imeInput, termDebugEl } = createManagedPaneDom({
-        paneClassName,
-        canvasClassName,
-        imeInputClassName,
-        termDebugClassName,
-      });
-
-      const context = { id, sourcePane, canvas, imeInput, termDebugEl };
-      const app = createManagedPaneRuntime({
-        context,
+      const pane = createManagedPane({
+        id,
+        sourcePane,
+        dom: {
+          paneClassName,
+          canvasClassName,
+          imeInputClassName,
+          termDebugClassName,
+        },
         terminal: options.terminal,
         services: options.services,
         session,
@@ -81,16 +79,6 @@ export function createResttyAppPaneManager(
           searchUiController.handleSearchState(id, state);
         },
       });
-
-      const pane = {
-        id,
-        container,
-        focusTarget: canvas,
-        app,
-        canvas,
-        imeInput,
-        termDebugEl,
-      };
       searchUiController.registerPane(pane);
 
       return pane;
