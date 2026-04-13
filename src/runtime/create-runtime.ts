@@ -63,7 +63,7 @@ import type {
 } from "./types";
 import { getDefaultResttyAppSession } from "./core/session";
 import { createPtyOutputBufferController } from "./pty-output-buffer";
-import { fitTextTailToWidth, openLink } from "./create-app-io-utils";
+import { fitTextTailToWidth, openLink } from "./create-runtime/create-app-io-utils";
 import { drawUnderlineStyle, drawStrikethrough, drawOverline } from "./text-decoration";
 import {
   DEFAULT_SYMBOL_CONSTRAINT,

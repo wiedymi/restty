@@ -1,5 +1,5 @@
 import * as bundledTextShaper from "text-shaper";
-import { sourceBufferFromView, sourceLabelFromUrl } from "../create-app-io-utils";
+import { sourceBufferFromView, sourceLabelFromUrl } from "../create-runtime/create-app-io-utils";
 import type {
   GlobalWithLocalFontAccess,
   LocalFontFaceData,
