@@ -1,5 +1,5 @@
 import { createRestty, type Restty, type ResttyConfig } from "./surface/restty";
-import { createCompatServicesConfig } from "./xterm/app-options";
+import { createCompatServicesConfig } from "./xterm/compat-services";
 import { normalizeDimension } from "./xterm/dimensions";
 import { addListener, emitWithGuard } from "./xterm/listeners";
 
