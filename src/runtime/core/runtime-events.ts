@@ -1,4 +1,4 @@
-import type { ResttySearchState } from "../types";
+import type { ResttySearchState } from "./models";
 import type { ResttyRuntimeLifecycleState } from "./lifecycle";
 
 /**

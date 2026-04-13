@@ -56,11 +56,14 @@ import { normalizeFontSources } from "./fonts/font-sources";
 import * as bundledTextShaper from "text-shaper";
 import { createRuntimeEventHub } from "./core/runtime-events";
 import type {
+  ResttyAppCallbacks,
+  ResttyAppElements,
+  ResttyAppSession,
   ResttyFontHintTarget,
-  ResttyFontSource,
-  ResttyRuntime,
-  ResttyRuntimeConfig,
   ResttyFontResourceLease,
+  ResttyFontSource,
+  ResttyRuntimeConfig,
+  ResttyRuntime,
 } from "./types";
 import { getDefaultResttyAppSession } from "./core/session";
 import { createPtyOutputBufferController } from "./create-runtime/pty-output-buffer";
@@ -130,6 +133,8 @@ import {
   type RuntimeAppApiSharedState,
 } from "./create-runtime/runtime-app-api";
 export { createResttyAppSession, getDefaultResttyAppSession } from "./core/session";
+export type { ResttyRuntime } from "./core/api";
+export type { ResttyRuntimeConfig } from "./core/config";
 export type {
   ResttyAppElements,
   ResttyAppCallbacks,
@@ -149,8 +154,6 @@ export type {
   ResttyShaderStageSource,
   ResttyRuntimeEvent,
   ResttyRuntimeLifecycleState,
-  ResttyRuntimeConfig,
-  ResttyRuntime,
 } from "./types";
 
 const FALLBACK_LOCAL_FONT_SOURCES: ResttyFontSource[] = [

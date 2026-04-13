@@ -11,15 +11,14 @@ import { normalizeNewlines } from "./create-app-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
 import type { ResttyRuntimeEvent, ResttyRuntimeEventHub } from "../core/runtime-events";
+import type { ResttyAppCallbacks, ResttyAppSession } from "../core/resources";
 import type {
   ResttyRuntime,
-  ResttyRuntimeTerminalApi,
-  ResttyRuntimeSearchApi,
   ResttyRuntimeInteractionApi,
   ResttyRuntimeRenderApi,
-  ResttyAppCallbacks,
-  ResttyAppSession,
-} from "../types";
+  ResttyRuntimeSearchApi,
+  ResttyRuntimeTerminalApi,
+} from "../core/api";
 import type { PtyInputRuntime } from "./pty-input-runtime";
 import type { RuntimeInteraction } from "./interaction-runtime";
 
