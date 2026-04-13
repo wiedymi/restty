@@ -82,7 +82,7 @@ export type { ResttySurfaceEvents } from "./restty/events";
 
 /**
  * Main entry point for the restty terminal widget. Manages a set of
- * split panes, each running its own terminal app, and exposes
+ * split panes, each running its own terminal runtime, and exposes
  * convenience methods that operate on the active pane.
  */
 export class Restty extends ResttyActivePaneApi {
@@ -216,7 +216,7 @@ export class Restty extends ResttyActivePaneApi {
     const panes = this.getPanes();
     const updates: Array<Promise<void>> = new Array(panes.length);
     for (let i = 0; i < panes.length; i += 1) {
-      updates[i] = panes[i].app.terminal.setFontSources(this.fontSources ?? []);
+      updates[i] = panes[i].runtime.terminal.setFontSources(this.fontSources ?? []);
     }
     await Promise.all(updates);
   }

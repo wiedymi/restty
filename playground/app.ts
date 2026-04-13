@@ -557,9 +557,9 @@ function applyFontRenderingOptionsToAllPanes() {
   const panes = restty.getPanes();
   for (let i = 0; i < panes.length; i += 1) {
     const pane = panes[i];
-    pane.app.terminal.setLigatures(selectedLigatures);
-    pane.app.terminal.setFontHintTarget(selectedFontHintTarget);
-    pane.app.terminal.setFontHinting(selectedFontHinting);
+    pane.runtime.terminal.setLigatures(selectedLigatures);
+    pane.runtime.terminal.setFontHintTarget(selectedFontHintTarget);
+    pane.runtime.terminal.setFontHinting(selectedFontHinting);
   }
 }
 
@@ -808,7 +808,7 @@ function syncPauseButton(state: PaneState) {
 
 function syncPtyButton(pane: ManagedPane, state: PaneState) {
   if (!ptyBtn) return;
-  if (pane.app.io.isPtyConnected()) {
+  if (pane.runtime.io.isPtyConnected()) {
     ptyBtn.textContent = "Disconnect";
     return;
   }
@@ -818,7 +818,7 @@ function syncPtyButton(pane: ManagedPane, state: PaneState) {
 }
 
 function renderActivePaneStatus(pane: ManagedPane, state: PaneState) {
-  setText(backendEl, pane.app.render.getBackend());
+  setText(backendEl, pane.runtime.render.getBackend());
   setText(termSizeEl, state.ui.termSize);
   setText(ptyStatusEl, state.ui.ptyStatus);
   syncPtyButton(pane, state);
@@ -830,7 +830,7 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
   if (fontSizeInput) fontSizeInput.value = `${state.fontSize}`;
   syncFontFamilyControls();
   syncHintingControls();
-  state.mouseMode = pane.app.interaction.getMouseStatus().mode;
+  state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
   if (mouseModeEl) {
     const hasOption = Array.from(mouseModeEl.options).some(
       (option) => option.value === state.mouseMode,
@@ -858,7 +858,7 @@ function setPanePaused(id: number, value: boolean) {
   if (!pane || !state) return;
   state.paused = Boolean(value);
   pane.paused = state.paused;
-  pane.app.terminal.setPaused(state.paused);
+  pane.runtime.terminal.setPaused(state.paused);
   if (id === activePaneId) {
     syncPauseButton(state);
   }
@@ -866,11 +866,11 @@ function setPanePaused(id: number, value: boolean) {
 
 function connectPaneIfNeeded(pane: ManagedPane) {
   if (getConnectionBackend() !== "webcontainer") return;
-  if (pane.app.io.isPtyConnected()) return;
-  pane.app.interaction.updateSize(true);
-  pane.app.io.connectPty(getConnectUrl());
+  if (pane.runtime.io.isPtyConnected()) return;
+  pane.runtime.interaction.updateSize(true);
+  pane.runtime.io.connectPty(getConnectUrl());
   requestAnimationFrame(() => {
-    pane.app.interaction.updateSize(true);
+    pane.runtime.interaction.updateSize(true);
   });
 }
 
@@ -890,10 +890,10 @@ function applySavedThemeForPane(pane: ManagedPane, state: PaneState) {
 }
 
 async function initPaneApp(pane: ManagedPane, state: PaneState) {
-  await pane.app.lifecycle.init();
+  await pane.runtime.lifecycle.init();
   applySavedThemeForPane(pane, state);
   await waitForAnimationFrame();
-  pane.app.interaction.updateSize(true);
+  pane.runtime.interaction.updateSize(true);
   connectPaneIfNeeded(pane);
   if (pane.id === activePaneId) {
     renderActivePaneStatus(pane, state);
@@ -909,7 +909,7 @@ function applyThemeToPane(
   selectValue = "",
 ): boolean {
   try {
-    pane.app.terminal.applyTheme(theme, sourceLabel);
+    pane.runtime.terminal.applyTheme(theme, sourceLabel);
     state.theme = {
       selectValue,
       sourceLabel,
@@ -937,7 +937,7 @@ function applyBuiltinThemeToPane(
 }
 
 function resetThemeForPane(pane: ManagedPane, state: PaneState) {
-  pane.app.terminal.resetTheme();
+  pane.runtime.terminal.resetTheme();
   state.theme = {
     selectValue: "",
     sourceLabel: "",
@@ -953,7 +953,7 @@ function queueResizeAllPanes() {
   resizeRaf = requestAnimationFrame(() => {
     resizeRaf = 0;
     for (const pane of restty.getPanes()) {
-      pane.app.interaction.updateSize(true);
+      pane.runtime.interaction.updateSize(true);
     }
   });
 }
@@ -1007,8 +1007,8 @@ restty = new Restty({
           setPanePaused(pane.id, value);
         };
 
-        state.demos = createDemoController(pane.app);
-        state.disposeRuntimeEvents = pane.app.events.subscribe((event) => {
+        state.demos = createDemoController(pane.runtime);
+        state.disposeRuntimeEvents = pane.runtime.events.subscribe((event) => {
           if (event.type === "backend") {
             updatePaneUi(pane.id, () => undefined);
             return;
@@ -1025,7 +1025,7 @@ restty = new Restty({
             });
           }
         });
-        pane.app.interaction.setMouseMode(state.mouseMode);
+        pane.runtime.interaction.setMouseMode(state.mouseMode);
         void initPaneApp(pane, state);
       },
       onPaneClosed: (pane) => {
@@ -1114,8 +1114,8 @@ window.addEventListener("resize", () => {
 connectionBackendEl?.addEventListener("change", () => {
   syncConnectionUi();
   for (const pane of restty.getPanes()) {
-    if (pane.app.io.isPtyConnected()) {
-      pane.app.io.disconnectPty();
+    if (pane.runtime.io.isPtyConnected()) {
+      pane.runtime.io.disconnectPty();
     }
   }
   if (getConnectionBackend() === "webcontainer") {
@@ -1155,7 +1155,7 @@ btnClear?.addEventListener("click", () => {
   const state = getActivePaneState();
   if (!state) return;
   state.demos?.stop();
-  pane.app.terminal.clearScreen();
+  pane.runtime.terminal.clearScreen();
 });
 
 btnRunDemo?.addEventListener("click", () => {
@@ -1167,10 +1167,10 @@ btnRunDemo?.addEventListener("click", () => {
 ptyBtn?.addEventListener("click", () => {
   const pane = getActivePane();
   if (!pane) return;
-  if (pane.app.io.isPtyConnected()) {
-    pane.app.io.disconnectPty();
+  if (pane.runtime.io.isPtyConnected()) {
+    pane.runtime.io.disconnectPty();
   } else {
-    pane.app.io.connectPty(getConnectUrl());
+    pane.runtime.io.connectPty(getConnectUrl());
   }
 });
 
@@ -1181,7 +1181,7 @@ rendererSelect?.addEventListener("change", () => {
   const value = rendererSelect.value;
   if (!isRendererChoice(value)) return;
   state.renderer = value;
-  pane.app.terminal.setRenderer(value);
+  pane.runtime.terminal.setRenderer(value);
 });
 
 if (themeFileInput) {
@@ -1227,8 +1227,8 @@ if (mouseModeEl) {
     const state = getActivePaneState();
     if (!pane || !state) return;
     const value = mouseModeEl.value;
-    pane.app.interaction.setMouseMode(value);
-    state.mouseMode = pane.app.interaction.getMouseStatus().mode;
+    pane.runtime.interaction.setMouseMode(value);
+    state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
     if (pane.id === activePaneId) {
       mouseModeEl.value = state.mouseMode;
     }
@@ -1262,7 +1262,7 @@ if (fontSizeInput) {
     const value = Number(fontSizeInput.value);
     if (!Number.isFinite(value)) return;
     state.fontSize = value;
-    pane.app.terminal.setFontSize(value);
+    pane.runtime.terminal.setFontSize(value);
   };
 
   fontSizeInput.addEventListener("change", applyFontSize);

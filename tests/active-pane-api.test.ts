@@ -14,12 +14,12 @@ class TestActivePaneApi extends ResttyActivePaneApi {
 }
 
 describe("ResttyPaneHandle", () => {
-  test("delegates font tuning methods to the underlying pane app", async () => {
+  test("delegates font tuning methods to the underlying pane runtime", async () => {
     const calls: Array<[string, unknown]> = [];
     const fontSources = [{ type: "url" as const, url: "https://example.com/font.woff2" }];
     const pane = {
       id: 1,
-      app: {
+      runtime: {
         terminal: {
           setLigatures: (value: boolean) => void calls.push(["setLigatures", value]),
           setFontHinting: (value: boolean) => void calls.push(["setFontHinting", value]),

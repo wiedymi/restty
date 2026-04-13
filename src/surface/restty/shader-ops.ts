@@ -163,7 +163,7 @@ export class ResttyShaderOps {
     for (let i = 0; i < panes.length; i += 1) {
       const pane = panes[i];
       const base = this.paneBaseShaderStages.get(pane.id) ?? [];
-      pane.app.render.setShaderStages(this.buildMergedShaderStages(base));
+      pane.runtime.render.setShaderStages(this.buildMergedShaderStages(base));
     }
   }
 

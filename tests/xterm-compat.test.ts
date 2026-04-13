@@ -21,7 +21,7 @@ type FakePane = {
   focusTarget: null;
   paused: boolean;
   setPaused: (value: boolean) => void;
-  app: ResttyRuntime;
+  runtime: ResttyRuntime;
 };
 
 type FakeManager = {
@@ -114,7 +114,7 @@ function createFakeManager(options: any): FakeManager {
       if (intercepted === null) return;
       state.writes.push({ text: typeof intercepted === "string" ? intercepted : text, source });
     };
-    const app: ResttyRuntime = {
+    const runtime: ResttyRuntime = {
       lifecycle: {
         init: async () => undefined,
         destroy: () => undefined,
@@ -209,7 +209,7 @@ function createFakeManager(options: any): FakeManager {
       setPaused: (value: boolean) => {
         pane.paused = value;
       },
-      app,
+      runtime,
     };
 
     panes.set(id, pane);

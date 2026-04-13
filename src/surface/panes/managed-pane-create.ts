@@ -32,7 +32,7 @@ export function createManagedPane(options: CreateManagedPaneOptions): ResttyMana
     canvas,
     imeInput,
   };
-  const app = createManagedPaneRuntime({
+  const runtime = createManagedPaneRuntime({
     context,
     terminal: options.terminal,
     services: options.services,
@@ -45,7 +45,7 @@ export function createManagedPane(options: CreateManagedPaneOptions): ResttyMana
     id: options.id,
     container,
     focusTarget: canvas,
-    app,
+    runtime,
     canvas,
     imeInput,
   };

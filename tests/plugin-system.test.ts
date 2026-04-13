@@ -8,7 +8,7 @@ type FakePane = {
   focusTarget: null;
   paused: boolean;
   setPaused: (value: boolean) => void;
-  app: ResttyRuntime;
+  runtime: ResttyRuntime;
   __writes: Array<{ kind: "input" | "key"; text: string; source: string }>;
   __callbacks: {
     onDesktopNotification?: (notification: {
@@ -112,7 +112,7 @@ function createFakeManager(options: any): FakeManager {
       if (typeof intercepted === "string") nextText = intercepted;
       writes.push({ kind: "key", text: nextText, source });
     };
-    const app: ResttyRuntime = {
+    const runtime: ResttyRuntime = {
       lifecycle: {
         init: async () => undefined,
         destroy: () => undefined,
@@ -198,7 +198,7 @@ function createFakeManager(options: any): FakeManager {
       setPaused: (value: boolean) => {
         pane.paused = value;
       },
-      app,
+      runtime,
       __writes: writes,
       __callbacks: {
         onDesktopNotification: services.callbacks?.onDesktopNotification,

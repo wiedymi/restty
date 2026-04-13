@@ -32,14 +32,14 @@ export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPane
       label: "Copy",
       shortcut: `${mod}+C`,
       action: async () => {
-        await pane.app.interaction.copySelectionToClipboard();
+        await pane.runtime.interaction.copySelectionToClipboard();
       },
     },
     {
       label: "Paste",
       shortcut: `${mod}+V`,
       action: async () => {
-        await pane.app.interaction.pasteFromClipboard();
+        await pane.runtime.interaction.pasteFromClipboard();
       },
     },
     "separator",
@@ -69,18 +69,18 @@ export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPane
     {
       label: "Clear Screen",
       action: () => {
-        pane.app.terminal.clearScreen();
+        pane.runtime.terminal.clearScreen();
       },
     },
     {
-      label: pane.app.io.isPtyConnected() ? "Disconnect PTY" : "Connect PTY",
+      label: pane.runtime.io.isPtyConnected() ? "Disconnect PTY" : "Connect PTY",
       action: () => {
-        if (pane.app.io.isPtyConnected()) {
-          pane.app.io.disconnectPty();
+        if (pane.runtime.io.isPtyConnected()) {
+          pane.runtime.io.disconnectPty();
           return;
         }
         const url = (getPtyUrl?.() ?? "").trim();
-        pane.app.io.connectPty(url);
+        pane.runtime.io.connectPty(url);
       },
     },
     {
@@ -90,7 +90,7 @@ export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPane
           pane.setPaused(!(pane.paused ?? false));
           return;
         }
-        pane.app.terminal.togglePause();
+        pane.runtime.terminal.togglePause();
       },
     },
   ];

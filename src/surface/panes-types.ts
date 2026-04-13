@@ -165,7 +165,7 @@ export type ResttyPaneManager<TPane extends ResttyPaneDefinition> = {
  */
 export type ResttyPaneWithRuntime = ResttyPaneDefinition & {
   /** The terminal runtime running inside this pane. */
-  app: ResttyRuntime;
+  runtime: ResttyRuntime;
   /** Whether the pane's renderer is currently paused. */
   paused?: boolean;
   /** Pause or resume this pane's renderer. */

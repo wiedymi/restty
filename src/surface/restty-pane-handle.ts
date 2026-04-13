@@ -75,7 +75,7 @@ export type ResttyPaneApi = {
 
 /**
  * Thin wrapper around a managed pane that delegates calls to the
- * underlying app. Resolves the pane lazily so it stays valid across
+ * underlying runtime. Resolves the pane lazily so it stays valid across
  * layout changes.
  */
 export class ResttyPaneHandle implements ResttyPaneApi {
@@ -92,107 +92,107 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setRenderer(value: "auto" | "webgpu" | "webgl2"): void {
-    this.resolvePane().app.terminal.setRenderer(value);
+    this.resolvePane().runtime.terminal.setRenderer(value);
   }
 
   setPaused(value: boolean): void {
-    this.resolvePane().app.terminal.setPaused(value);
+    this.resolvePane().runtime.terminal.setPaused(value);
   }
 
   togglePause(): void {
-    this.resolvePane().app.terminal.togglePause();
+    this.resolvePane().runtime.terminal.togglePause();
   }
 
   setFontSize(value: number): void {
-    this.resolvePane().app.terminal.setFontSize(value);
+    this.resolvePane().runtime.terminal.setFontSize(value);
   }
 
   setLigatures(value: boolean): void {
-    this.resolvePane().app.terminal.setLigatures(value);
+    this.resolvePane().runtime.terminal.setLigatures(value);
   }
 
   setFontHinting(value: boolean): void {
-    this.resolvePane().app.terminal.setFontHinting(value);
+    this.resolvePane().runtime.terminal.setFontHinting(value);
   }
 
   setFontHintTarget(value: ResttyFontHintTarget): void {
-    this.resolvePane().app.terminal.setFontHintTarget(value);
+    this.resolvePane().runtime.terminal.setFontHintTarget(value);
   }
 
   setFontSources(sources: ResttyFontSource[]): Promise<void> {
-    return this.resolvePane().app.terminal.setFontSources(sources);
+    return this.resolvePane().runtime.terminal.setFontSources(sources);
   }
 
   applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {
-    this.resolvePane().app.terminal.applyTheme(theme, sourceLabel);
+    this.resolvePane().runtime.terminal.applyTheme(theme, sourceLabel);
   }
 
   resetTheme(): void {
-    this.resolvePane().app.terminal.resetTheme();
+    this.resolvePane().runtime.terminal.resetTheme();
   }
 
   sendInput(text: string, source?: string): void {
-    this.resolvePane().app.io.sendInput(text, source);
+    this.resolvePane().runtime.io.sendInput(text, source);
   }
 
   sendKeyInput(text: string, source?: string): void {
-    this.resolvePane().app.io.sendKeyInput(text, source);
+    this.resolvePane().runtime.io.sendKeyInput(text, source);
   }
 
   clearScreen(): void {
-    this.resolvePane().app.terminal.clearScreen();
+    this.resolvePane().runtime.terminal.clearScreen();
   }
 
   connectPty(url = ""): void {
-    this.resolvePane().app.io.connectPty(url);
+    this.resolvePane().runtime.io.connectPty(url);
   }
 
   disconnectPty(): void {
-    this.resolvePane().app.io.disconnectPty();
+    this.resolvePane().runtime.io.disconnectPty();
   }
 
   isPtyConnected(): boolean {
-    return this.resolvePane().app.io.isPtyConnected();
+    return this.resolvePane().runtime.io.isPtyConnected();
   }
 
   setMouseMode(value: MouseMode): void {
-    this.resolvePane().app.interaction.setMouseMode(value);
+    this.resolvePane().runtime.interaction.setMouseMode(value);
   }
 
   getMouseStatus(): ReturnType<InputHandler["getMouseStatus"]> {
-    return this.resolvePane().app.interaction.getMouseStatus();
+    return this.resolvePane().runtime.interaction.getMouseStatus();
   }
 
   copySelectionToClipboard(): Promise<boolean> {
-    return this.resolvePane().app.interaction.copySelectionToClipboard();
+    return this.resolvePane().runtime.interaction.copySelectionToClipboard();
   }
 
   pasteFromClipboard(): Promise<boolean> {
-    return this.resolvePane().app.interaction.pasteFromClipboard();
+    return this.resolvePane().runtime.interaction.pasteFromClipboard();
   }
 
   selectWordAtClientPoint(clientX: number, clientY: number): boolean {
-    return this.resolvePane().app.interaction.selectWordAtClientPoint(clientX, clientY);
+    return this.resolvePane().runtime.interaction.selectWordAtClientPoint(clientX, clientY);
   }
 
   setSearchQuery(query: string): void {
-    this.resolvePane().app.search.setQuery(query);
+    this.resolvePane().runtime.search.setQuery(query);
   }
 
   clearSearch(): void {
-    this.resolvePane().app.search.clear();
+    this.resolvePane().runtime.search.clear();
   }
 
   searchNext(): void {
-    this.resolvePane().app.search.next();
+    this.resolvePane().runtime.search.next();
   }
 
   searchPrevious(): void {
-    this.resolvePane().app.search.previous();
+    this.resolvePane().runtime.search.previous();
   }
 
   getSearchState(): ResttySearchState {
-    return this.resolvePane().app.search.getState();
+    return this.resolvePane().runtime.search.getState();
   }
 
   openSearch(options?: ResttyPaneSearchUiOpenOptions): void {
@@ -212,23 +212,23 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   resize(cols: number, rows: number): void {
-    this.resolvePane().app.interaction.resize(cols, rows);
+    this.resolvePane().runtime.interaction.resize(cols, rows);
   }
 
   focus(): void {
-    this.resolvePane().app.interaction.focus();
+    this.resolvePane().runtime.interaction.focus();
   }
 
   blur(): void {
-    this.resolvePane().app.interaction.blur();
+    this.resolvePane().runtime.interaction.blur();
   }
 
   updateSize(force?: boolean): void {
-    this.resolvePane().app.interaction.updateSize(force);
+    this.resolvePane().runtime.interaction.updateSize(force);
   }
 
   getBackend(): string {
-    return this.resolvePane().app.render.getBackend();
+    return this.resolvePane().runtime.render.getBackend();
   }
 
   getSearchUiStyleOptions(): Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>> {
@@ -240,10 +240,10 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setShaderStages(stages: ResttyShaderStage[]): void {
-    this.resolvePane().app.render.setShaderStages(stages);
+    this.resolvePane().runtime.render.setShaderStages(stages);
   }
 
   getShaderStages(): ResttyShaderStage[] {
-    return this.resolvePane().app.render.getShaderStages();
+    return this.resolvePane().runtime.render.getShaderStages();
   }
 }

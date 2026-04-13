@@ -376,7 +376,7 @@ function setupController() {
     id: 1,
     container: container as unknown as HTMLDivElement,
     focusTarget: focusTarget as unknown as HTMLElement,
-    app: {
+    runtime: {
       search: {
         setQuery: (query) => {
           calls.push(`set:${query}`);
@@ -433,7 +433,7 @@ afterEach(() => {
   restoreGlobals();
 });
 
-test("pane search ui opens from Cmd/Ctrl+F and routes search controls to the pane app", () => {
+test("pane search ui opens from Cmd/Ctrl+F and routes search controls to the pane runtime", () => {
   const { pane, calls, controller, input, status } = setupController();
 
   const shortcutEvent = createKeydownEvent("f", {
