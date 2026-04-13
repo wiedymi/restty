@@ -28,3 +28,27 @@ test("queryPlaygroundElements throws when the required pane root is missing", ()
     }),
   ).toThrow("missing #paneRoot element");
 });
+
+test("queryPlaygroundElements skips legacy controls when disabled", () => {
+  const calls: string[] = [];
+  const paneRoot = { id: "paneRoot" };
+  const settingsDialog = { id: "settingsDialog", open: false };
+  const queried = queryPlaygroundElements(
+    {
+      getElementById: (id) => {
+        calls.push(id);
+        if (id === "paneRoot") return paneRoot as HTMLElement;
+        if (id === "settingsDialog") return settingsDialog as HTMLElement;
+        return null;
+      },
+    },
+    { includeLegacyControls: false },
+  );
+
+  expect(calls).toEqual(["paneRoot", "settingsDialog"]);
+  expect(queried.paneRoot).toBe(paneRoot);
+  expect(queried.settingsDialog).toBe(settingsDialog);
+  expect(queried.rendererSelect).toBeNull();
+  expect(queried.connectionBackendEl).toBeNull();
+  expect(queried.settingsFab).toBeNull();
+});

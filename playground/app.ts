@@ -15,6 +15,7 @@ import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
 import { createPaneShellSync } from "./lib/pane-shell-sync.ts";
 import { createPlaygroundShellAdapter } from "./lib/shell-adapter.ts";
 import { getActivePaneState, type PaneState } from "./lib/pane-state.ts";
+import { DEFAULT_CONNECTION_BACKEND } from "./lib/shell-defaults.ts";
 import {
   CONNECTION_STATE_EVENT,
   SETTINGS_CLOSE_EVENT,
@@ -22,6 +23,8 @@ import {
 } from "./lib/shell-events.ts";
 import { resolvePlaygroundStartupDefaults } from "./lib/startup-defaults.ts";
 import { bootstrapPlaygroundSurface } from "./lib/surface-bootstrap.ts";
+
+const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
 
 const {
   paneRoot,
@@ -52,15 +55,18 @@ const {
   settingsFab,
   settingsDialog,
   settingsClose,
-} = queryPlaygroundElements(document);
+} = queryPlaygroundElements(document, {
+  includeLegacyControls: !usesSvelteShell,
+});
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
 let restty: Restty;
-const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
-const initialConnectionBackend = getConnectionBackend(connectionBackendEl);
+const initialConnectionBackend = usesSvelteShell
+  ? DEFAULT_CONNECTION_BACKEND
+  : getConnectionBackend(connectionBackendEl);
 const builtinThemeNames = listBuiltinThemeNames();
 const {
   initialPtyUrl,

@@ -1,5 +1,9 @@
 type DocumentLike = Pick<Document, "getElementById">;
 
+type QueryPlaygroundElementsOptions = {
+  includeLegacyControls?: boolean;
+};
+
 function getRequiredElement(documentLike: DocumentLike, id: string): HTMLElement {
   const element = documentLike.getElementById(id) as HTMLElement | null;
   if (!element) {
@@ -8,39 +12,78 @@ function getRequiredElement(documentLike: DocumentLike, id: string): HTMLElement
   return element;
 }
 
-export function queryPlaygroundElements(documentLike: DocumentLike) {
+export function queryPlaygroundElements(
+  documentLike: DocumentLike,
+  { includeLegacyControls = true }: QueryPlaygroundElementsOptions = {},
+) {
   return {
     paneRoot: getRequiredElement(documentLike, "paneRoot"),
-    btnInit: documentLike.getElementById("btnInit"),
-    btnPause: documentLike.getElementById("btnPause"),
-    btnClear: documentLike.getElementById("btnClear"),
-    rendererSelect: documentLike.getElementById("rendererSelect") as HTMLSelectElement | null,
-    demoSelect: documentLike.getElementById("demoSelect") as HTMLSelectElement | null,
-    btnRunDemo: documentLike.getElementById("btnRunDemo"),
-    connectionBackendEl: documentLike.getElementById(
-      "connectionBackend",
-    ) as HTMLSelectElement | null,
-    ptyUrlInput: documentLike.getElementById("ptyUrl") as HTMLInputElement | null,
-    wcCommandInput: documentLike.getElementById("wcCommand") as HTMLInputElement | null,
-    wcCwdInput: documentLike.getElementById("wcCwd") as HTMLInputElement | null,
-    connectionHintEl: documentLike.getElementById("connectionHint") as HTMLElement | null,
-    ptyBtn: documentLike.getElementById("btnPty"),
-    themeSelect: documentLike.getElementById("themeSelect") as HTMLSelectElement | null,
-    themeFileInput: documentLike.getElementById("themeFile") as HTMLInputElement | null,
-    fontSizeInput: documentLike.getElementById("fontSize") as HTMLInputElement | null,
-    fontFamilySelect: documentLike.getElementById("fontFamily") as HTMLSelectElement | null,
-    ligaturesSelect: documentLike.getElementById("ligatures") as HTMLSelectElement | null,
-    fontHintingSelect: documentLike.getElementById("fontHinting") as HTMLSelectElement | null,
-    fontHintTargetSelect: documentLike.getElementById("fontHintTarget") as HTMLSelectElement | null,
-    fontFamilyLocalSelect: documentLike.getElementById(
-      "fontFamilyLocal",
-    ) as HTMLSelectElement | null,
-    btnLoadLocalFonts: documentLike.getElementById("btnLoadLocalFonts") as HTMLButtonElement | null,
-    fontFamilyHintEl: documentLike.getElementById("fontFamilyHint"),
-    mouseModeEl: documentLike.getElementById("mouseMode") as HTMLSelectElement | null,
-    shaderPresetEl: documentLike.getElementById("shaderPreset") as HTMLSelectElement | null,
-    settingsFab: documentLike.getElementById("settingsFab") as HTMLButtonElement | null,
+    btnInit: includeLegacyControls ? documentLike.getElementById("btnInit") : null,
+    btnPause: includeLegacyControls ? documentLike.getElementById("btnPause") : null,
+    btnClear: includeLegacyControls ? documentLike.getElementById("btnClear") : null,
+    rendererSelect: includeLegacyControls
+      ? (documentLike.getElementById("rendererSelect") as HTMLSelectElement | null)
+      : null,
+    demoSelect: includeLegacyControls
+      ? (documentLike.getElementById("demoSelect") as HTMLSelectElement | null)
+      : null,
+    btnRunDemo: includeLegacyControls ? documentLike.getElementById("btnRunDemo") : null,
+    connectionBackendEl: includeLegacyControls
+      ? (documentLike.getElementById("connectionBackend") as HTMLSelectElement | null)
+      : null,
+    ptyUrlInput: includeLegacyControls
+      ? (documentLike.getElementById("ptyUrl") as HTMLInputElement | null)
+      : null,
+    wcCommandInput: includeLegacyControls
+      ? (documentLike.getElementById("wcCommand") as HTMLInputElement | null)
+      : null,
+    wcCwdInput: includeLegacyControls
+      ? (documentLike.getElementById("wcCwd") as HTMLInputElement | null)
+      : null,
+    connectionHintEl: includeLegacyControls
+      ? (documentLike.getElementById("connectionHint") as HTMLElement | null)
+      : null,
+    ptyBtn: includeLegacyControls ? documentLike.getElementById("btnPty") : null,
+    themeSelect: includeLegacyControls
+      ? (documentLike.getElementById("themeSelect") as HTMLSelectElement | null)
+      : null,
+    themeFileInput: includeLegacyControls
+      ? (documentLike.getElementById("themeFile") as HTMLInputElement | null)
+      : null,
+    fontSizeInput: includeLegacyControls
+      ? (documentLike.getElementById("fontSize") as HTMLInputElement | null)
+      : null,
+    fontFamilySelect: includeLegacyControls
+      ? (documentLike.getElementById("fontFamily") as HTMLSelectElement | null)
+      : null,
+    ligaturesSelect: includeLegacyControls
+      ? (documentLike.getElementById("ligatures") as HTMLSelectElement | null)
+      : null,
+    fontHintingSelect: includeLegacyControls
+      ? (documentLike.getElementById("fontHinting") as HTMLSelectElement | null)
+      : null,
+    fontHintTargetSelect: includeLegacyControls
+      ? (documentLike.getElementById("fontHintTarget") as HTMLSelectElement | null)
+      : null,
+    fontFamilyLocalSelect: includeLegacyControls
+      ? (documentLike.getElementById("fontFamilyLocal") as HTMLSelectElement | null)
+      : null,
+    btnLoadLocalFonts: includeLegacyControls
+      ? (documentLike.getElementById("btnLoadLocalFonts") as HTMLButtonElement | null)
+      : null,
+    fontFamilyHintEl: includeLegacyControls ? documentLike.getElementById("fontFamilyHint") : null,
+    mouseModeEl: includeLegacyControls
+      ? (documentLike.getElementById("mouseMode") as HTMLSelectElement | null)
+      : null,
+    shaderPresetEl: includeLegacyControls
+      ? (documentLike.getElementById("shaderPreset") as HTMLSelectElement | null)
+      : null,
+    settingsFab: includeLegacyControls
+      ? (documentLike.getElementById("settingsFab") as HTMLButtonElement | null)
+      : null,
     settingsDialog: documentLike.getElementById("settingsDialog") as HTMLDialogElement | null,
-    settingsClose: documentLike.getElementById("settingsClose") as HTMLButtonElement | null,
+    settingsClose: includeLegacyControls
+      ? (documentLike.getElementById("settingsClose") as HTMLButtonElement | null)
+      : null,
   };
 }
