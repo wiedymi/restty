@@ -6,10 +6,7 @@ import type {
   ResttySearchState,
 } from "../../runtime/core/models";
 import type { ResttyPaneHandle } from "../restty-pane-handle";
-import type {
-  ResttyPaneSearchUiCloseOptions,
-  ResttyPaneSearchUiOpenOptions,
-} from "../pane-search-ui";
+import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "../search-ui";
 import type { ResttyManagedPaneSearchUiStyleOptions } from "../panes/managed-pane-types";
 
 export abstract class ResttyActivePaneApi {

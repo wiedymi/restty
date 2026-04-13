@@ -1,4 +1,4 @@
-import { createPaneSearchUiController, type PaneSearchUiController } from "../pane-search-ui";
+import { createPaneSearchUiController, type PaneSearchUiController } from "../search-ui";
 import type { ResttyManagedPane, ResttyManagedPaneSearchUiOptions } from "./managed-pane-types";
 
 export type CreateManagedPaneSearchUiControllerOptions = {

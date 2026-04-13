@@ -13,7 +13,7 @@ import type {
   ResttyPaneSearchUiOpenOptions,
   ResttyPaneSearchUiOptions,
   ResttyPaneSearchUiStyleOptions,
-} from "../pane-search-ui";
+} from "../search-ui";
 
 /**
  * A pane created by the managed-pane manager, extending the base pane

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test } from "bun:test";
 import {
   createPaneSearchUiController,
   type ResttyPaneSearchUiPane,
-} from "../src/surface/pane-search-ui";
+} from "../src/surface/search-ui";
 import type { ResttySearchState } from "../src/runtime/types";
 
 type Listener = EventListenerOrEventListenerObject;

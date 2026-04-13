@@ -36,4 +36,4 @@ export type {
 export type {
   ResttyPaneSearchUiOpenOptions,
   ResttyPaneSearchUiCloseOptions,
-} from "../surface/pane-search-ui";
+} from "../surface/search-ui";

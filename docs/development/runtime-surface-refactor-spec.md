@@ -552,7 +552,7 @@ The following files are the clearest candidates for relocation or splitting base
 
 ### Surface
 
-- `src/surface/pane-search-ui.ts`
+- `src/surface/search-ui/`
   Split into `surface/search-ui/`.
   Current file mixes config types, controller state, DOM construction, style injection, keyboard shortcut behavior, and UI update logic.
   Target:

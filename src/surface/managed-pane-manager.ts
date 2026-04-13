@@ -6,7 +6,7 @@ import {
   resolveManagedPaneShortcuts,
 } from "./panes/managed-pane-options";
 import { getDefaultResttyRuntimeSession } from "../runtime/core/session";
-import type { PaneSearchUiController } from "./pane-search-ui";
+import type { PaneSearchUiController } from "./search-ui";
 import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
 import type {
   CreateResttyManagedPaneManagerOptions,

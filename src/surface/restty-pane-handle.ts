@@ -10,10 +10,7 @@ import type {
   ResttySearchState,
   ResttyShaderStage,
 } from "../runtime/core/models";
-import type {
-  ResttyPaneSearchUiCloseOptions,
-  ResttyPaneSearchUiOpenOptions,
-} from "./pane-search-ui";
+import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "./search-ui";
 
 type PaneSearchUiHandleOps = {
   open: (paneId: number, options?: ResttyPaneSearchUiOpenOptions) => void;
