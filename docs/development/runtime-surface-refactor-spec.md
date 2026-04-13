@@ -194,7 +194,7 @@ Notes:
 The current codebase uses too many overlapping config concepts:
 
 - `ResttyOptions`
-- `CreateResttyAppPaneManagerOptions`
+- `CreateResttyManagedPaneManagerOptions`
 - `ResttyPaneAppOptionsInput`
 - `ResttyAppOptions`
 

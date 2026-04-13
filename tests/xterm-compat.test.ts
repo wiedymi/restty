@@ -256,7 +256,7 @@ function createFakeManager(options: any): FakeManager {
 }
 
 mock.module("../src/surface/pane-app-manager", () => ({
-  createResttyAppPaneManager: (options: any) => createFakeManager(options),
+  createResttyManagedPaneManager: (options: any) => createFakeManager(options),
 }));
 
 const { Terminal } = await import("../src/xterm");

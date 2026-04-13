@@ -1,5 +1,5 @@
 import type {
-  ResttyAppPaneManager,
+  ResttyManagedPaneManager,
   ResttyManagedAppPane,
   ResttyManagedPaneStyleOptions,
   ResttyManagedPaneSearchUiStyleOptions,
@@ -429,13 +429,13 @@ export function setPaneStyleOptions(
 }
 
 export function getSearchUiStyleOptions(
-  paneManager: Pick<ResttyAppPaneManager, "getSearchUiStyleOptions">,
+  paneManager: Pick<ResttyManagedPaneManager, "getSearchUiStyleOptions">,
 ): Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>> {
   return paneManager.getSearchUiStyleOptions();
 }
 
 export function setSearchUiStyleOptions(
-  paneManager: Pick<ResttyAppPaneManager, "setSearchUiStyleOptions">,
+  paneManager: Pick<ResttyManagedPaneManager, "setSearchUiStyleOptions">,
   options: ResttyManagedPaneSearchUiStyleOptions,
 ): void {
   paneManager.setSearchUiStyleOptions(options);

@@ -62,7 +62,7 @@ export type ResttyRuntimeServicesConfigInput =
   | ResttyRuntimeServicesConfig
   | ((context: ResttyPaneRuntimeContext) => ResttyRuntimeServicesConfig);
 
-export type ResttyAppPaneManager = ResttyPaneManager<ResttyManagedAppPane> & {
+export type ResttyManagedPaneManager = ResttyPaneManager<ResttyManagedAppPane> & {
   openPaneSearch: (id: number, options?: ResttyPaneSearchUiOpenOptions) => void;
   closePaneSearch: (id: number, options?: ResttyPaneSearchUiCloseOptions) => void;
   togglePaneSearch: (
@@ -89,10 +89,10 @@ export type ResttyDefaultPaneContextMenuOptions = {
 };
 
 /**
- * Options for creating an app-level pane manager that wires up DOM
- * elements, the terminal app, and the shared session automatically.
+ * Options for creating a managed-pane manager that wires up DOM
+ * elements, the terminal runtime, and the shared session automatically.
  */
-export type CreateResttyAppPaneManagerOptions = {
+export type CreateResttyManagedPaneManagerOptions = {
   /** Root element that will contain all pane DOM trees. */
   root: HTMLElement;
   /** Shared session for WASM/WebGPU resources (defaults to the global session). */

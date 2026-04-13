@@ -1,7 +1,7 @@
-import { createResttyAppPaneManager } from "./pane-app-manager";
+import { createResttyManagedPaneManager } from "./pane-app-manager";
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
 import type {
-  ResttyAppPaneManager,
+  ResttyManagedPaneManager,
   ResttyManagedAppPane,
   ResttyManagedPaneSearchUiStyleOptions,
   ResttyManagedPaneStyleOptions,
@@ -86,7 +86,7 @@ export type { ResttySurfaceEvents } from "./restty/events";
  * convenience methods that operate on the active pane.
  */
 export class Restty extends ResttyActivePaneApi {
-  readonly paneManager: ResttyAppPaneManager;
+  readonly paneManager: ResttyManagedPaneManager;
   private fontSources: ResttyFontSource[] | undefined;
   private readonly shaderOps: ResttyShaderOps;
   private readonly pluginHost: ResttyPluginHost;
@@ -152,7 +152,7 @@ export class Restty extends ResttyActivePaneApi {
       onLayoutChanged,
     });
 
-    this.paneManager = createResttyAppPaneManager({
+    this.paneManager = createResttyManagedPaneManager({
       root,
       session,
       paneDom,
@@ -353,12 +353,12 @@ export class Restty extends ResttyActivePaneApi {
     getPaneById: (id: number) => ResttyManagedAppPane | null;
     getActivePane: () => ResttyManagedAppPane | null;
     getFocusedPane: () => ResttyManagedAppPane | null;
-    openPaneSearch: ResttyAppPaneManager["openPaneSearch"];
-    closePaneSearch: ResttyAppPaneManager["closePaneSearch"];
-    togglePaneSearch: ResttyAppPaneManager["togglePaneSearch"];
-    isPaneSearchOpen: ResttyAppPaneManager["isPaneSearchOpen"];
-    getSearchUiStyleOptions: ResttyAppPaneManager["getSearchUiStyleOptions"];
-    setSearchUiStyleOptions: ResttyAppPaneManager["setSearchUiStyleOptions"];
+    openPaneSearch: ResttyManagedPaneManager["openPaneSearch"];
+    closePaneSearch: ResttyManagedPaneManager["closePaneSearch"];
+    togglePaneSearch: ResttyManagedPaneManager["togglePaneSearch"];
+    isPaneSearchOpen: ResttyManagedPaneManager["isPaneSearchOpen"];
+    getSearchUiStyleOptions: ResttyManagedPaneManager["getSearchUiStyleOptions"];
+    setSearchUiStyleOptions: ResttyManagedPaneManager["setSearchUiStyleOptions"];
   } {
     const paneManager = this.paneManager;
     return {

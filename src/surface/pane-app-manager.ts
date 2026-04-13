@@ -9,18 +9,18 @@ import { getDefaultResttyRuntimeSession } from "../runtime/core/session";
 import type { PaneSearchUiController } from "./pane-search-ui";
 import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
 import type {
-  CreateResttyAppPaneManagerOptions,
-  ResttyAppPaneManager,
+  CreateResttyManagedPaneManagerOptions,
+  ResttyManagedPaneManager,
   ResttyManagedAppPane,
 } from "./panes/managed-pane-types";
 
 /**
- * Create an app-aware pane manager that automatically constructs
- * canvas, IME input, and terminal app instances for each pane.
+ * Create a managed-pane manager that automatically constructs
+ * canvas, IME input, and terminal runtime instances for each pane.
  */
-export function createResttyAppPaneManager(
-  options: CreateResttyAppPaneManagerOptions,
-): ResttyAppPaneManager {
+export function createResttyManagedPaneManager(
+  options: CreateResttyManagedPaneManagerOptions,
+): ResttyManagedPaneManager {
   const session = options.session ?? getDefaultResttyRuntimeSession();
   const autoInit = options.autoInit ?? true;
 

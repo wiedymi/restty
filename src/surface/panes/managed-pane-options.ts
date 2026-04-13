@@ -1,6 +1,9 @@
 import type { ResttyPaneContextMenuOptions, ResttyPaneShortcutsOptions } from "../panes-types";
 import { createDefaultResttyPaneContextMenuItems } from "./default-context-menu-items";
-import type { CreateResttyAppPaneManagerOptions, ResttyManagedAppPane } from "./managed-pane-types";
+import type {
+  CreateResttyManagedPaneManagerOptions,
+  ResttyManagedAppPane,
+} from "./managed-pane-types";
 
 export function defaultManagedPaneInputTargetPredicate(target: HTMLElement): boolean {
   return (
@@ -10,7 +13,7 @@ export function defaultManagedPaneInputTargetPredicate(target: HTMLElement): boo
 }
 
 export function resolveManagedPaneContextMenu(
-  options: Pick<CreateResttyAppPaneManagerOptions, "contextMenu" | "defaultContextMenu">,
+  options: Pick<CreateResttyManagedPaneManagerOptions, "contextMenu" | "defaultContextMenu">,
 ): ResttyPaneContextMenuOptions<ResttyManagedAppPane> | null {
   let contextMenu = options.contextMenu ?? null;
   if (!contextMenu) {
@@ -42,7 +45,7 @@ export function resolveManagedPaneContextMenu(
 }
 
 export function resolveManagedPaneShortcuts(
-  shortcuts: CreateResttyAppPaneManagerOptions["shortcuts"],
+  shortcuts: CreateResttyManagedPaneManagerOptions["shortcuts"],
 ): boolean | ResttyPaneShortcutsOptions | undefined {
   if (shortcuts === undefined || shortcuts === true) {
     return {

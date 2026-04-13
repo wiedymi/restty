@@ -203,7 +203,9 @@ test("surface config helpers do not depend on manager option indexed access type
   ];
   const offenders = paneHelperFiles.flatMap((file) => {
     const source = readFileSync(file, "utf8");
-    const matches = source.match(/CreateResttyAppPaneManagerOptions\["(?:terminal|services)"\]/g);
+    const matches = source.match(
+      /CreateResttyManagedPaneManagerOptions\["(?:terminal|services)"\]/g,
+    );
     return matches ? [`${relative(repoRoot, file)} -> ${matches[0]}`] : [];
   });
 
@@ -232,9 +234,9 @@ test("surface restty facade imports pane-app-manager for factory only", () => {
   const resttyFile = resolve(surfaceRoot, "restty.ts");
   const source = readFileSync(resttyFile, "utf8");
 
-  expect(source).not.toMatch(/createResttyAppPaneManager,\s*type\s+/);
+  expect(source).not.toMatch(/createResttyManagedPaneManager,\s*type\s+/);
   expect(source).toMatch(
-    /import\s+\{\s*createResttyAppPaneManager\s*,?\s*\}\s+from\s+"\.\/pane-app-manager"/,
+    /import\s+\{\s*createResttyManagedPaneManager\s*,?\s*\}\s+from\s+"\.\/pane-app-manager"/,
   );
 });
 
@@ -247,7 +249,7 @@ test("surface public entrypoints do not use pane-app-manager as a type barrel", 
     /export\s+type\s*\{[^}]+\}\s+from\s+"..\/surface\/pane-app-manager"/s,
   );
   expect(internalSurfaceSource).toContain(
-    'createResttyAppPaneManager } from "../surface/pane-app-manager"',
+    'createResttyManagedPaneManager } from "../surface/pane-app-manager"',
   );
 });
 
