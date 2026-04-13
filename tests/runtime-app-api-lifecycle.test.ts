@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, mock, test } from "bun:test";
+import { createRuntimeEventHub } from "../src/runtime/core/runtime-events";
 
 mock.module("../src/renderer", () => ({
   initWebGPU: async () => null,
@@ -71,6 +72,7 @@ function createTestRuntimeApp(options: { ensureFont?: () => Promise<void> } = {}
   };
 
   const runtime = createRuntimeAppApi({
+    runtimeEvents: createRuntimeEventHub(),
     session: {
       getWasm: async () => wasm as never,
       getWebGPUCore: async () => null,

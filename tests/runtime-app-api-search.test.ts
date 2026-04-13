@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { createRuntimeEventHub } from "../src/runtime/core/runtime-events";
 import {
   createRuntimeAppApi,
   type RuntimeAppApiSharedState,
@@ -21,6 +22,7 @@ test("runtime app api exposes search controls on the public Restty app", () => {
 
   const calls: string[] = [];
   const runtime = createRuntimeAppApi({
+    runtimeEvents: createRuntimeEventHub(),
     session: {} as never,
     ptyTransport: {
       isConnected: () => false,

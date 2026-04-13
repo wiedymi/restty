@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test";
+import { createRuntimeEventHub } from "../src/runtime/core/runtime-events";
 import {
   createRuntimeAppApi,
   type RuntimeAppApiSharedState,
@@ -99,6 +100,7 @@ function createHarness(
   const keyWrites: string[] = [];
 
   createRuntimeAppApi({
+    runtimeEvents: createRuntimeEventHub(),
     session: {} as never,
     ptyTransport: {
       isConnected: () => false,

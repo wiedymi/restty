@@ -54,7 +54,7 @@ import {
 import { buildFontAtlasIfNeeded } from "./fonts/atlas-builder";
 import { normalizeFontSources } from "./fonts/font-sources";
 import * as bundledTextShaper from "text-shaper";
-import type { ResttyRuntimeEvent } from "./core/runtime-events";
+import { createRuntimeEventHub } from "./core/runtime-events";
 import type {
   ResttyFontHintTarget,
   ResttyFontSource,
@@ -230,7 +230,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const alphaBlending: AlphaBlendingMode = options.alphaBlending ?? "linear-corrected";
   const cleanupFns: Array<() => void> = [];
   const cleanupCanvasFns: Array<() => void> = [];
-  let runtimeEventSink: ((event: ResttyRuntimeEvent) => void) | null = null;
+  const runtimeEvents = createRuntimeEventHub();
 
   let canvas = canvasInput;
   let currentContextType: "webgpu" | "webgl2" | null = null;
@@ -481,9 +481,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const searchRuntime = createRuntimeSearch({
     callbacks,
     cleanupFns,
-    emitRuntimeEvent: (event) => {
-      runtimeEventSink?.(event);
-    },
+    emitRuntimeEvent: runtimeEvents.emit,
     getWasmReady: () => wasmReady,
     getWasm: () => wasm,
     getWasmHandle: () => wasmHandle,
@@ -567,9 +565,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     inputHandler,
     ptyStatusEl,
     mouseStatusEl,
-    emitRuntimeEvent: (event) => {
-      runtimeEventSink?.(event);
-    },
+    emitRuntimeEvent: runtimeEvents.emit,
     onPtyStatus: callbacks?.onPtyStatus,
     onMouseStatus: callbacks?.onMouseStatus,
     appendLog,
@@ -1225,9 +1221,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     kittyRenderRuntime.clearKittyRenderCaches();
   });
   runtimeAppApi = createRuntimeAppApi({
-    bindRuntimeEventSink: (emit) => {
-      runtimeEventSink = emit;
-    },
+    runtimeEvents,
     session,
     ptyTransport,
     inputHandler: inputHandler!,

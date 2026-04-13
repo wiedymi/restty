@@ -10,7 +10,7 @@ import type { ResttyWasm, ResttyWasmExports } from "../../wasm";
 import { normalizeNewlines } from "./create-app-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
-import type { ResttyRuntimeEvent } from "../core/runtime-events";
+import type { ResttyRuntimeEvent, ResttyRuntimeEventHub } from "../core/runtime-events";
 import type { ResttyRuntime, ResttyAppCallbacks, ResttyAppSession } from "../types";
 import type { PtyInputRuntime } from "./pty-input-runtime";
 import type { RuntimeInteraction } from "./interaction-runtime";
@@ -75,7 +75,7 @@ type LifecycleThemeRuntime = {
 };
 
 type CreateRuntimeAppApiOptions = {
-  bindRuntimeEventSink?: (emit: (event: ResttyRuntimeEvent) => void) => void;
+  runtimeEvents: ResttyRuntimeEventHub;
   session: ResttyAppSession;
   ptyTransport: PtyTransport;
   inputHandler: InputHandler;
@@ -182,21 +182,13 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
 
   let lifecycleState: ResttyRuntimeLifecycleState = "created";
   let lifecycleEpoch = 0;
-  const eventListeners = new Set<(event: ResttyRuntimeEvent) => void>();
 
   const isCurrentLifecycleEpoch = (epoch: number) =>
     lifecycleState !== "destroyed" && epoch === lifecycleEpoch;
 
   const emitRuntimeEvent = (event: ResttyRuntimeEvent) => {
-    for (const listener of eventListeners) {
-      try {
-        listener(event);
-      } catch {
-        // Ignore runtime event listener errors.
-      }
-    }
+    options.runtimeEvents.emit(event);
   };
-  options.bindRuntimeEventSink?.(emitRuntimeEvent);
 
   const setLifecycleState = (next: ResttyRuntimeLifecycleState) => {
     if (lifecycleState === next) return;
@@ -771,15 +763,13 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       getLifecycleState: () => lifecycleState,
       events: {
         subscribe: (listener) => {
-          eventListeners.add(listener);
+          const dispose = options.runtimeEvents.subscribe(listener);
           try {
             listener({ type: "state", state: lifecycleState });
           } catch {
             // Ignore runtime event listener errors.
           }
-          return () => {
-            eventListeners.delete(listener);
-          };
+          return dispose;
         },
       },
       setRenderer,
