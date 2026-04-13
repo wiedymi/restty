@@ -1,11 +1,10 @@
-import {
-  type ResttyPaneContextMenuOptions,
-  type ResttyPaneManager,
-  type ResttyPaneShortcutsOptions,
-} from "./panes-types";
-import { createDefaultResttyPaneContextMenuItems } from "./panes/default-context-menu-items";
+import { type ResttyPaneManager } from "./panes-types";
 import { createResttyPaneManager } from "./panes/manager";
 import { createManagedPaneDom } from "./panes/managed-pane-dom";
+import {
+  resolveManagedPaneContextMenu,
+  resolveManagedPaneShortcuts,
+} from "./panes/managed-pane-options";
 import { getDefaultResttyAppSession } from "../runtime/session";
 import { createResttyRuntime } from "./app-factory";
 import type { ResttyAppCallbacks, ResttyRuntimeConfig } from "../runtime/types";
@@ -19,7 +18,6 @@ import {
 import type {
   CreateResttyAppPaneManagerOptions,
   ResttyAppPaneManager,
-  ResttyDefaultPaneContextMenuOptions,
   ResttyManagedAppPane,
 } from "./panes/managed-pane-types";
 
@@ -38,13 +36,6 @@ export type {
   ResttyTerminalConfigInput,
 } from "./panes/managed-pane-types";
 
-function defaultInputTargetPredicate(target: HTMLElement): boolean {
-  return (
-    target.classList.contains("pane-ime-input") ||
-    target.classList.contains("restty-pane-ime-input")
-  );
-}
-
 /**
  * Create an app-aware pane manager that automatically constructs
  * canvas, IME input, and terminal app instances for each pane.
@@ -60,45 +51,8 @@ export function createResttyAppPaneManager(
   const imeInputClassName =
     options.paneDom?.imeInputClassName ?? "pane-ime-input restty-pane-ime-input";
   const termDebugClassName = options.paneDom?.termDebugClassName ?? "pane-term-debug";
-
-  let contextMenu = options.contextMenu ?? null;
-  if (!contextMenu) {
-    const defaultMenuConfig = options.defaultContextMenu;
-    const enabled =
-      defaultMenuConfig === undefined
-        ? true
-        : typeof defaultMenuConfig === "boolean"
-          ? defaultMenuConfig
-          : (defaultMenuConfig.enabled ?? true);
-
-    if (enabled) {
-      const config =
-        typeof defaultMenuConfig === "object" && defaultMenuConfig ? defaultMenuConfig : undefined;
-      contextMenu = {
-        canOpen: config?.canOpen,
-        getItems: (pane, manager) =>
-          createDefaultResttyPaneContextMenuItems({
-            pane,
-            manager,
-            modKeyLabel: config?.modKeyLabel,
-            getPtyUrl: config?.getPtyUrl,
-          }),
-      };
-    }
-  }
-
-  let shortcuts = options.shortcuts;
-  if (shortcuts === undefined || shortcuts === true) {
-    shortcuts = {
-      enabled: true,
-      isAllowedInputTarget: defaultInputTargetPredicate,
-    };
-  } else if (typeof shortcuts === "object" && !shortcuts.isAllowedInputTarget) {
-    shortcuts = {
-      ...shortcuts,
-      isAllowedInputTarget: defaultInputTargetPredicate,
-    };
-  }
+  const contextMenu = resolveManagedPaneContextMenu(options);
+  const shortcuts = resolveManagedPaneShortcuts(options.shortcuts);
 
   let manager: ResttyPaneManager<ResttyManagedAppPane>;
   const searchUiConfig =
