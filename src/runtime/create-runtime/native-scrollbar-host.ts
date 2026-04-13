@@ -1,5 +1,5 @@
 import { clamp } from "../../grid";
-import { computeOverlayScrollbarLayout, type OverlayScrollbarLayout } from "../overlay-scrollbar";
+import { computeOverlayScrollbarLayout, type OverlayScrollbarLayout } from "./overlay-scrollbar";
 
 const NATIVE_SCROLLBAR_STYLE_MARKER = "data-restty-native-scrollbar";
 const MAX_NATIVE_SCROLL_RANGE_PX = 8_000_000;

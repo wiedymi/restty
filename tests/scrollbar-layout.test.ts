@@ -3,7 +3,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 test("overlay scrollbar layout uses fixed thickness and dynamic thumb sizing", () => {
-  const source = readFileSync(join(process.cwd(), "src/runtime/overlay-scrollbar.ts"), "utf8");
+  const source = readFileSync(
+    join(process.cwd(), "src/runtime/create-runtime/overlay-scrollbar.ts"),
+    "utf8",
+  );
   const bodyMatch = source.match(
     /export function computeOverlayScrollbarLayout\([\s\S]*?\): OverlayScrollbarLayout \| null \{[\s\S]*?return \{ total, offset, len, denom, width, trackX, trackY, trackH, thumbY, thumbH \};\n\}/,
   );
