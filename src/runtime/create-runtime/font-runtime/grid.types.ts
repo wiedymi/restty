@@ -1,8 +1,8 @@
-import type { FontEntry, FontManagerState } from "../../fonts";
-import type { WebGLState, WebGPUState } from "../../renderer";
-import type { PtyTransport } from "../../pty";
-import type { ResttyWasm } from "../../wasm";
-import type { FontConfigRef, GridStateRef } from "./font-runtime-helpers.types";
+import type { FontEntry, FontManagerState } from "../../../fonts";
+import type { WebGLState, WebGPUState } from "../../../renderer";
+import type { PtyTransport } from "../../../pty";
+import type { ResttyWasm } from "../../../wasm";
+import type { FontConfigRef, GridStateRef } from "./types";
 
 export type CreateFontRuntimeGridHelpersOptions = {
   fontState: FontManagerState;

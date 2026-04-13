@@ -6,13 +6,9 @@ import {
   type Font,
   type FontEntry,
   type FontManagerState,
-} from "../../fonts";
-import { isCoverageIgnorableCodepoint, resolvePresentationPreference } from "./codepoint-utils";
-import type {
-  GlyphBufferToShapedGlyphsFn,
-  ShapeFn,
-  UnicodeBufferCtor,
-} from "./font-runtime-helpers.types";
+} from "../../../fonts";
+import { isCoverageIgnorableCodepoint, resolvePresentationPreference } from "../codepoint-utils";
+import type { GlyphBufferToShapedGlyphsFn, ShapeFn, UnicodeBufferCtor } from "./types";
 
 type CreateFontRuntimeTextHelpersOptions = {
   fontState: FontManagerState;

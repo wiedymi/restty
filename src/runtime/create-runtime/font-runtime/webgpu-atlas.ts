@@ -3,16 +3,16 @@ import {
   fontScaleOverride,
   type FontEntry,
   type FontManagerState,
-} from "../../fonts";
-import type { WebGPUState } from "../../renderer";
+} from "../../../fonts";
+import type { WebGPUState } from "../../../renderer";
 import {
   buildFontAtlasIfNeeded,
   type AtlasConstraintContext,
   type GlyphConstraintMeta,
-} from "../fonts/atlas-builder";
-import { buildGlyphAtlasWithConstraints } from "../font-atlas-utils/glyph-atlas-builder";
-import { nerdConstraintSignature } from "../font-atlas-utils/nerd-metrics-utils";
-import type { ResttyFontHintTarget } from "../core/models";
+} from "../../fonts/atlas-builder";
+import { buildGlyphAtlasWithConstraints } from "../../font-atlas-utils/glyph-atlas-builder";
+import { nerdConstraintSignature } from "../../font-atlas-utils/nerd-metrics-utils";
+import type { ResttyFontHintTarget } from "../../core/models";
 import type {
   AtlasBitmapToRGBA,
   BuildAtlasFn,
@@ -21,7 +21,7 @@ import type {
   RasterizeGlyphFn,
   RasterizeGlyphWithTransformFn,
   ResolveGlyphPixelMode,
-} from "./font-runtime-helpers.types";
+} from "./types";
 
 type CreateRuntimeWebGPUAtlasHelpersOptions = {
   fontState: FontManagerState;

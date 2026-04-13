@@ -1,9 +1,9 @@
-import type { CreateRuntimeFontRuntimeHelpersOptions } from "./font-runtime-helpers.types";
-import { createFontRuntimeGridHelpers } from "./font-runtime-grid-helpers";
-import { createFontRuntimeTextHelpers } from "./font-runtime-text-helpers";
-import { createRuntimeWebGPUAtlasHelpers } from "./font-runtime-webgpu-atlas";
+import type { CreateRuntimeFontRuntimeHelpersOptions } from "./types";
+import { createFontRuntimeGridHelpers } from "./grid";
+import { createFontRuntimeTextHelpers } from "./text";
+import { createRuntimeWebGPUAtlasHelpers } from "./webgpu-atlas";
 
-export type { CreateRuntimeFontRuntimeHelpersOptions } from "./font-runtime-helpers.types";
+export type { CreateRuntimeFontRuntimeHelpersOptions } from "./types";
 
 export function createRuntimeFontRuntimeHelpers(options: CreateRuntimeFontRuntimeHelpersOptions) {
   const {

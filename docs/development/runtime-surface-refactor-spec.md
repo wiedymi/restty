@@ -528,7 +528,7 @@ src/
       font-resource-store.ts
       font-sources.ts
       atlas-builder.ts
-      font-runtime-helpers.ts
+      font-runtime/
     io/
       pty-input-runtime.ts
       pty-output-buffer.ts

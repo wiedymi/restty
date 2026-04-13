@@ -1,7 +1,7 @@
-import { resetFontEntry } from "../../fonts";
-import { fontHeightUnits } from "../../grid";
-import type { CellMetrics } from "./font-runtime-helpers.types";
-import type { CreateFontRuntimeGridHelpersOptions } from "./font-runtime-grid-helpers.types";
+import { resetFontEntry } from "../../../fonts";
+import { fontHeightUnits } from "../../../grid";
+import type { CellMetrics } from "./types";
+import type { CreateFontRuntimeGridHelpersOptions } from "./grid.types";
 
 export function createFontRuntimeGridHelpers(options: CreateFontRuntimeGridHelpersOptions) {
   const {

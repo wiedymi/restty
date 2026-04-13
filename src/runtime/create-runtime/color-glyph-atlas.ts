@@ -6,7 +6,7 @@ import { atlasBitmapToRGBA as atlasBitmapToRGBAFromBitmap } from "./atlas-bitmap
 import type {
   BuildColorEmojiAtlasWithCanvas,
   BuildColorEmojiAtlasWithCanvasOptions,
-} from "./font-runtime-helpers.types";
+} from "./font-runtime/types";
 import type { RasterizedGlyph } from "text-shaper";
 
 const COLOR_EMOJI_FONT_STACK =

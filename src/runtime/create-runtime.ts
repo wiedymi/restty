@@ -119,7 +119,7 @@ import { createKittyRenderRuntime } from "./create-runtime/kitty-render-runtime"
 import { createRuntimeLifecycleThemeSize } from "./create-runtime/lifecycle-theme-size";
 import { createRuntimeSearch } from "./create-runtime/search-runtime";
 import { createRuntimeRenderTicks } from "./create-runtime/render-ticks";
-import { createRuntimeFontRuntimeHelpers } from "./create-runtime/font-runtime-helpers";
+import { createRuntimeFontRuntimeHelpers } from "./create-runtime/font-runtime";
 import { createRuntimeReporting } from "./create-runtime/runtime-reporting";
 import { createResttyFontResourceStore } from "./fonts/font-resource-store";
 import type { RuntimeTerminalColor } from "./create-runtime/highlight-terminal-color-utils.types";

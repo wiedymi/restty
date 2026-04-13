@@ -5,11 +5,11 @@ import type {
   FontManagerState,
   FontSizeMode,
   ShapedGlyph,
-} from "../../fonts";
-import type { WebGLState, WebGPUState } from "../../renderer";
-import type { PtyTransport } from "../../pty";
-import type { ResttyWasm } from "../../wasm";
-import type { ResttyFontHintTarget } from "../core/models";
+} from "../../../fonts";
+import type { WebGLState, WebGPUState } from "../../../renderer";
+import type { PtyTransport } from "../../../pty";
+import type { ResttyWasm } from "../../../wasm";
+import type { ResttyFontHintTarget } from "../../core/models";
 import type {
   AtlasOptions,
   GlyphBuffer,
