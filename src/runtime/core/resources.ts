@@ -59,8 +59,6 @@ export type ResttyAppElements = {
   cellEl?: HTMLElement | null;
   /** Cursor position display. */
   cursorPosEl?: HTMLElement | null;
-  /** Mouse mode/status display. */
-  mouseStatusEl?: HTMLElement | null;
 };
 
 /**
@@ -77,8 +75,6 @@ export type ResttyAppCallbacks = {
   onCellSize?: (cellW: number, cellH: number) => void;
   /** Cursor position changed. */
   onCursor?: (col: number, row: number) => void;
-  /** Mouse mode/status changed. */
-  onMouseStatus?: (status: string) => void;
   /** Terminal requested a desktop notification via OSC 9 / OSC 777. */
   onDesktopNotification?: (notification: DesktopNotification) => void;
   /** Terminal search state changed. */

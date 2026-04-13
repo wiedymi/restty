@@ -242,7 +242,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const gridEl = elements?.gridEl ?? null;
   const cellEl = elements?.cellEl ?? null;
   const cursorPosEl = elements?.cursorPosEl ?? null;
-  const mouseStatusEl = elements?.mouseStatusEl ?? null;
 
   const DEFAULT_BG_BASE: Color = [0.08, 0.09, 0.1, 1.0];
   const DEFAULT_FG_BASE: Color = [0.92, 0.93, 0.95, 1.0];
@@ -545,9 +544,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     ptyTransport,
     ptyOutputBuffer,
     inputHandler,
-    mouseStatusEl,
     emitRuntimeEvent: runtimeEvents.emit,
-    onMouseStatus: callbacks?.onMouseStatus,
     getGridSize: () => ({ cols: gridState.cols || 0, rows: gridState.rows || 0 }),
     getResizeMeta: () => {
       const cols = gridState.cols || 0;

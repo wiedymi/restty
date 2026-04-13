@@ -18,9 +18,7 @@ export type PtyInputRuntimeOptions = {
   ptyTransport: PtyTransport;
   ptyOutputBuffer: PtyOutputBufferController;
   inputHandler: InputHandler;
-  mouseStatusEl?: HTMLElement | null;
   emitRuntimeEvent?: (event: Extract<ResttyRuntimeEvent, { type: "pty-status" }>) => void;
-  onMouseStatus?: ((status: string) => void) | null;
   getGridSize: () => { cols: number; rows: number };
   getResizeMeta?: () => PtyResizeMeta | null;
   getCursorForCpr: () => CursorPosition;

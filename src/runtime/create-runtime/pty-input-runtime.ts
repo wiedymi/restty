@@ -11,8 +11,6 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
     ptyTransport,
     ptyOutputBuffer,
     inputHandler,
-    mouseStatusEl,
-    onMouseStatus,
     getGridSize,
     getResizeMeta,
     getCursorForCpr,
@@ -36,8 +34,6 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
   function setMouseStatus(text: string): void {
     if (text === lastReportedMouseStatus) return;
     lastReportedMouseStatus = text;
-    if (mouseStatusEl) mouseStatusEl.textContent = text;
-    onMouseStatus?.(text);
   }
 
   function updateMouseStatus(): void {
