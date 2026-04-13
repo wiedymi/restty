@@ -157,6 +157,11 @@ let selectedConnectionBackend = getConnectionBackend(connectionBackendEl);
 let selectedPtyUrl = ptyUrlInput?.value ?? "ws://localhost:8787/pty";
 let selectedWebContainerCommand = wcCommandInput?.value?.trim() || "jsh";
 let selectedWebContainerCwd = wcCwdInput?.value?.trim() || "/";
+let selectedRendererDefault: RendererChoice = isRendererChoice(rendererSelect?.value)
+  ? rendererSelect.value
+  : "auto";
+let selectedFontSizeDefault = parseFontSize(fontSizeInput?.value, 18);
+let selectedMouseModeDefault = mouseModeEl?.value || "auto";
 
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
 let selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
@@ -344,6 +349,9 @@ function syncLocalFontControls() {
 }
 
 function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
+  selectedRendererDefault = state.renderer;
+  selectedFontSizeDefault = state.fontSize;
+  selectedMouseModeDefault = state.mouseMode;
   syncTerminalControlValues(state);
   syncFontFamilyValue();
   syncFontFamilyControls({
@@ -505,12 +513,13 @@ restty = new Restty({
     const paneState = createPaneState({
       id,
       sourceState: sourcePane ? (paneStates.get(sourcePane.id) ?? null) : null,
-      renderer: isRendererChoice(rendererSelect?.value) ? rendererSelect.value : "auto",
-      fontSize: parseFontSize(
-        fontSizeInput?.value,
-        Number.isFinite(initialFontSize) ? initialFontSize : 18,
-      ),
-      mouseMode: mouseModeEl?.value || "auto",
+      renderer: selectedRendererDefault,
+      fontSize: Number.isFinite(selectedFontSizeDefault)
+        ? selectedFontSizeDefault
+        : Number.isFinite(initialFontSize)
+          ? initialFontSize
+          : 18,
+      mouseMode: selectedMouseModeDefault,
       defaultThemeName,
     });
     paneStates.set(id, paneState);
@@ -723,6 +732,7 @@ function applyRendererChoice(value: string | null | undefined) {
   const state = getActivePaneState(paneStates, activePaneId);
   if (!pane || !state) return;
   if (!isRendererChoice(value)) return;
+  selectedRendererDefault = value;
   state.renderer = value;
   pane.runtime.terminal.setRenderer(value);
 }
@@ -824,6 +834,7 @@ function applyMouseMode(value: string | null | undefined) {
   const pane = getActivePane();
   const state = getActivePaneState(paneStates, activePaneId);
   if (!pane || !state) return;
+  selectedMouseModeDefault = value ?? "auto";
   pane.runtime.interaction.setMouseMode(value ?? "auto");
   state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
   if (pane.id === activePaneId && usesSvelteShell) {
@@ -878,6 +889,7 @@ function applyFontSizeValue(value: string | null | undefined) {
   if (!pane || !state) return;
   const nextValue = Number(value);
   if (!Number.isFinite(nextValue)) return;
+  selectedFontSizeDefault = nextValue;
   state.fontSize = nextValue;
   pane.runtime.terminal.setFontSize(nextValue);
 }
