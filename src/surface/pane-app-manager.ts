@@ -5,9 +5,8 @@ import {
   resolveManagedPaneContextMenu,
   resolveManagedPaneShortcuts,
 } from "./panes/managed-pane-options";
+import { createManagedPaneRuntime } from "./panes/managed-pane-runtime";
 import { getDefaultResttyAppSession } from "../runtime/session";
-import { createResttyRuntime } from "./app-factory";
-import type { ResttyAppCallbacks, ResttyRuntimeConfig } from "../runtime/types";
 import type { PaneSearchUiController } from "./pane-search-ui";
 import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
 import type {
@@ -72,41 +71,16 @@ export function createResttyAppPaneManager(
       });
 
       const context = { id, sourcePane, canvas, imeInput, termDebugEl };
-      const baseTerminal =
-        typeof options.terminal === "function"
-          ? options.terminal(context)
-          : (options.terminal ?? {});
-      const baseServices =
-        typeof options.services === "function"
-          ? options.services(context)
-          : (options.services ?? {});
-
-      const mergedElements = {
-        ...baseServices.elements,
-        termDebugEl: baseServices.elements?.termDebugEl ?? termDebugEl,
-      };
-      const mergedCallbacks: ResttyAppCallbacks = {
-        ...baseServices.callbacks,
+      const app = createManagedPaneRuntime({
+        context,
+        terminal: options.terminal,
+        services: options.services,
+        session,
+        autoInit,
         onSearchState: (state) => {
-          baseServices.callbacks?.onSearchState?.(state);
           searchUiController.handleSearchState(id, state);
         },
-      };
-      const runtimeOptions: ResttyRuntimeConfig = {
-        ...baseTerminal,
-        ...baseServices,
-        canvas,
-        imeInput,
-        session,
-        elements: mergedElements,
-        callbacks: mergedCallbacks,
-      };
-
-      const app = createResttyRuntime(runtimeOptions);
-
-      if (autoInit) {
-        void app.init();
-      }
+      });
 
       const pane = {
         id,
