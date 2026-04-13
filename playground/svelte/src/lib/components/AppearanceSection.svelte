@@ -2,6 +2,9 @@
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
 
   const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
+  const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
+  const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
+  const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
   const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
   const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
@@ -34,6 +37,36 @@
       }),
     );
   }
+
+  function handleLigaturesChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(FONT_LIGATURES_CHANGE_EVENT, {
+        detail: { value: select.value },
+      }),
+    );
+  }
+
+  function handleHintingChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(FONT_HINTING_CHANGE_EVENT, {
+        detail: { value: select.value },
+      }),
+    );
+  }
+
+  function handleHintTargetChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(FONT_HINT_TARGET_CHANGE_EVENT, {
+        detail: { value: select.value },
+      }),
+    );
+  }
 </script>
 
 <section class="section">
@@ -45,15 +78,15 @@
     </select>
   </div>
   <div class="field-row">
-    <select id="ligatures">
+    <select id="ligatures" onchange={handleLigaturesChange}>
       <option value="on" selected>Ligatures: On</option>
       <option value="off">Ligatures: Off</option>
     </select>
-    <select id="fontHinting">
+    <select id="fontHinting" onchange={handleHintingChange}>
       <option value="off" selected>Hinting: Off</option>
       <option value="on">Hinting: On</option>
     </select>
-    <select id="fontHintTarget">
+    <select id="fontHintTarget" onchange={handleHintTargetChange}>
       <option value="auto" selected>Hint Target: Auto</option>
       <option value="light">Hint Target: Light</option>
       <option value="normal">Hint Target: Normal</option>

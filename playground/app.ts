@@ -87,6 +87,9 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const RUN_DEMO_EVENT = "restty:playground-demo-run";
+const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
+const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
+const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
 const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
 const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
 const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
@@ -98,6 +101,7 @@ const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
+type FontControlChangeEvent = CustomEvent<{ value?: string }>;
 type MouseModeChangeEvent = CustomEvent<{ value?: string }>;
 type ThemeSelectChangeEvent = CustomEvent<{ value?: string }>;
 type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
@@ -706,64 +710,57 @@ if (usesSvelteShell) {
   fontSizeInput.addEventListener("input", applyFontSize);
 }
 
-if (fontHintingSelect) {
-  fontHintingSelect.addEventListener("change", () => {
-    selectedFontHinting = fontHintingSelect.value === "on";
-    syncHintingControls({
-      ligaturesSelect,
-      fontHintingSelect,
-      fontHintTargetSelect,
-      selectedLigatures,
-      selectedFontHinting,
-      selectedFontHintTarget,
-    });
-    applyFontRenderingOptionsToAllPanes({
-      host: restty,
-      selectedLigatures,
-      selectedFontHinting,
-      selectedFontHintTarget,
-    });
+function applyFontRenderingSelections() {
+  syncHintingControls({
+    ligaturesSelect,
+    fontHintingSelect,
+    fontHintTargetSelect,
+    selectedLigatures,
+    selectedFontHinting,
+    selectedFontHintTarget,
+  });
+  applyFontRenderingOptionsToAllPanes({
+    host: restty,
+    selectedLigatures,
+    selectedFontHinting,
+    selectedFontHintTarget,
   });
 }
 
-if (ligaturesSelect) {
-  ligaturesSelect.addEventListener("change", () => {
-    selectedLigatures = ligaturesSelect.value === "on";
-    syncHintingControls({
-      ligaturesSelect,
-      fontHintingSelect,
-      fontHintTargetSelect,
-      selectedLigatures,
-      selectedFontHinting,
-      selectedFontHintTarget,
-    });
-    applyFontRenderingOptionsToAllPanes({
-      host: restty,
-      selectedLigatures,
-      selectedFontHinting,
-      selectedFontHintTarget,
-    });
+if (usesSvelteShell) {
+  window.addEventListener(FONT_HINTING_CHANGE_EVENT, (event) => {
+    selectedFontHinting = (event as FontControlChangeEvent).detail?.value === "on";
+    applyFontRenderingSelections();
   });
-}
+  window.addEventListener(FONT_LIGATURES_CHANGE_EVENT, (event) => {
+    selectedLigatures = (event as FontControlChangeEvent).detail?.value === "on";
+    applyFontRenderingSelections();
+  });
+  window.addEventListener(FONT_HINT_TARGET_CHANGE_EVENT, (event) => {
+    selectedFontHintTarget = resolveFontHintTarget((event as FontControlChangeEvent).detail?.value);
+    applyFontRenderingSelections();
+  });
+} else {
+  if (fontHintingSelect) {
+    fontHintingSelect.addEventListener("change", () => {
+      selectedFontHinting = fontHintingSelect.value === "on";
+      applyFontRenderingSelections();
+    });
+  }
 
-if (fontHintTargetSelect) {
-  fontHintTargetSelect.addEventListener("change", () => {
-    selectedFontHintTarget = resolveFontHintTarget(fontHintTargetSelect.value);
-    syncHintingControls({
-      ligaturesSelect,
-      fontHintingSelect,
-      fontHintTargetSelect,
-      selectedLigatures,
-      selectedFontHinting,
-      selectedFontHintTarget,
+  if (ligaturesSelect) {
+    ligaturesSelect.addEventListener("change", () => {
+      selectedLigatures = ligaturesSelect.value === "on";
+      applyFontRenderingSelections();
     });
-    applyFontRenderingOptionsToAllPanes({
-      host: restty,
-      selectedLigatures,
-      selectedFontHinting,
-      selectedFontHintTarget,
+  }
+
+  if (fontHintTargetSelect) {
+    fontHintTargetSelect.addEventListener("change", () => {
+      selectedFontHintTarget = resolveFontHintTarget(fontHintTargetSelect.value);
+      applyFontRenderingSelections();
     });
-  });
+  }
 }
 
 if (fontFamilySelect) {
