@@ -1,4 +1,3 @@
-import type { MouseMode } from "../../input";
 import { initWebGPU, initWebGL, type WebGPUState, type WebGLState } from "../../renderer";
 import {
   copyToClipboard as writeClipboardText,
@@ -7,14 +6,10 @@ import {
 import type { ResttyWasm } from "../../wasm";
 import { normalizeNewlines } from "./runtime-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
+import { createRuntimePublicApi } from "./runtime-controller.public-api";
 import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
 import type { ResttyRuntimeEvent } from "../core/runtime-events";
-import type { ResttyRuntime } from "../core/api";
-import type {
-  RuntimeController,
-  RuntimeControllerOptions,
-  RuntimeControllerPublicOptions,
-} from "./runtime-controller.api.types";
+import type { RuntimeController, RuntimeControllerOptions } from "./runtime-controller.api.types";
 import type {
   RuntimeControllerSharedState,
   RuntimeControllerInternalState,
@@ -541,107 +536,25 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
     cleanupFns.length = 0;
   }
 
-  function setRenderer(value: "auto" | "webgpu" | "webgl2") {
-    if (lifecycleState === "destroyed") return;
-    if (value !== "auto" && value !== "webgpu" && value !== "webgl2") return;
-    internalState.preferredRenderer = value;
-    void init();
-  }
-
-  function setPaused(value: boolean) {
-    internalState.paused = Boolean(value);
-  }
-
-  function togglePause() {
-    internalState.paused = !internalState.paused;
-  }
-
-  function setMouseMode(value: MouseMode) {
-    inputHandler.setMouseMode(value);
-    ptyInputRuntime.updateMouseStatus();
-  }
-
-  function getMouseStatus() {
-    return inputHandler.getMouseStatus();
-  }
-
-  function createPublicApi(publicApiOptions: RuntimeControllerPublicOptions): ResttyRuntime {
-    ptyInputRuntime.setPtyStatus("disconnected");
-    ptyInputRuntime.updateMouseStatus();
-
-    const lifecycle = {
-      init,
-      destroy,
-      state: () => lifecycleState,
-    };
-    const terminal = {
-      setRenderer,
-      setPaused,
-      togglePause,
-      setFontSize: publicApiOptions.setFontSize,
-      setLigatures: publicApiOptions.setLigatures,
-      setFontHinting: publicApiOptions.setFontHinting,
-      setFontHintTarget: publicApiOptions.setFontHintTarget,
-      setFontSources: publicApiOptions.setFontSources,
-      applyTheme,
-      resetTheme: publicApiOptions.resetTheme,
-      clearScreen,
-    };
-    const io = {
-      sendInput,
-      sendKeyInput: ptyInputRuntime.sendKeyInput,
-      connectPty: ptyInputRuntime.connectPty,
-      disconnectPty: ptyInputRuntime.disconnectPty,
-      isPtyConnected: () => ptyTransport.isConnected(),
-    };
-    const interactionApi = {
-      setMouseMode,
-      getMouseStatus,
-      copySelectionToClipboard,
-      pasteFromClipboard,
-      selectWordAtClientPoint: interaction.selectWordAtClientPoint,
-      resize: publicApiOptions.resize,
-      focus: publicApiOptions.focus,
-      blur: publicApiOptions.blur,
-      updateSize: publicApiOptions.updateSize,
-    };
-    const search = {
-      setQuery: publicApiOptions.setSearchQuery,
-      clear: publicApiOptions.clearSearch,
-      next: publicApiOptions.searchNext,
-      previous: publicApiOptions.searchPrevious,
-      getState: publicApiOptions.getSearchState,
-    };
-    const render = {
-      getBackend: () => internalState.backend,
-      setShaderStages: publicApiOptions.setShaderStages,
-      getShaderStages: publicApiOptions.getShaderStages,
-    };
-    const events = {
-      subscribe: (listener: (event: ResttyRuntimeEvent) => void) => {
-        const dispose = options.runtimeEvents.subscribe(listener);
-        try {
-          listener({ type: "state", state: lifecycleState });
-        } catch {
-          // Ignore runtime event listener errors.
-        }
-        return dispose;
-      },
-    };
-
-    return {
-      lifecycle,
-      events,
-      terminal,
-      io,
-      interaction: interactionApi,
-      search,
-      render,
-    };
-  }
-
   return {
     sendInput,
-    createPublicApi,
+    createPublicApi: (publicApiOptions) =>
+      createRuntimePublicApi({
+        runtimeEvents: options.runtimeEvents,
+        getLifecycleState: () => lifecycleState,
+        internalState,
+        inputHandler,
+        ptyInputRuntime,
+        ptyTransport,
+        interaction,
+        init,
+        destroy,
+        applyTheme,
+        clearScreen,
+        sendInput,
+        copySelectionToClipboard,
+        pasteFromClipboard,
+        publicApiOptions,
+      }),
   };
 }

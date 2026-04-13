@@ -160,6 +160,22 @@ test("runtime controller and reporting point at split interaction contracts", ()
   expect(reportingTypes).toContain("./interaction-runtime/state.types");
 });
 
+test("runtime controller delegates public api projection to a dedicated module", () => {
+  const runtimeController = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.ts"),
+    "utf8",
+  );
+  const runtimeControllerPublicApi = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.public-api.ts"),
+    "utf8",
+  );
+
+  expect(runtimeController).toContain('./runtime-controller.public-api"');
+  expect(runtimeController).not.toContain("function createPublicApi(");
+  expect(runtimeControllerPublicApi).toContain("export function createRuntimePublicApi");
+  expect(runtimeControllerPublicApi).toContain("deps.runtimeEvents.subscribe(listener)");
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });
