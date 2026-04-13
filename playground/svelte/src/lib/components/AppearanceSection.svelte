@@ -2,6 +2,7 @@
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
 
   const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
+  const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
   const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
   let shaderPreset: ShaderPreset = "none";
@@ -19,6 +20,16 @@
     if (!(select instanceof HTMLSelectElement)) return;
     window.dispatchEvent(
       new CustomEvent(MOUSE_MODE_CHANGE_EVENT, {
+        detail: { value: select.value },
+      }),
+    );
+  }
+
+  function handleThemeSelectChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(THEME_SELECT_CHANGE_EVENT, {
         detail: { value: select.value },
       }),
     );
@@ -61,7 +72,7 @@
     Main font family for all panes. Use Detect Local to add system fonts.
   </div>
   <div class="field-row">
-    <select id="themeSelect">
+    <select id="themeSelect" onchange={handleThemeSelectChange}>
       <option value="">Default Theme</option>
     </select>
     <label class="file-input">

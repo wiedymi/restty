@@ -88,6 +88,7 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const RUN_DEMO_EVENT = "restty:playground-demo-run";
 const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
+const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
 const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
 const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
@@ -98,6 +99,7 @@ const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
 type MouseModeChangeEvent = CustomEvent<{ value?: string }>;
+type ThemeSelectChangeEvent = CustomEvent<{ value?: string }>;
 type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
 type FontSizeChangeEvent = CustomEvent<{ value?: string }>;
 type RendererChangeEvent = CustomEvent<{ value?: RendererChoice | string }>;
@@ -597,34 +599,41 @@ if (themeFileInput) {
   });
 }
 
-if (themeSelect) {
+function applyThemeSelection(name: string | null | undefined) {
+  const pane = getActivePane();
+  const state = getActivePaneState(paneStates, activePaneId);
+  if (!pane || !state) return;
+  if (!name) {
+    paneStates.set(
+      pane.id,
+      resetThemeForPane({
+        pane,
+        state,
+        activePaneId,
+        themeSelect,
+      }),
+    );
+    return;
+  }
+  const nextState = applyBuiltinThemeToPane({
+    pane,
+    state,
+    name,
+    activePaneId,
+    themeSelect,
+  });
+  if (nextState) {
+    paneStates.set(pane.id, nextState);
+  }
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(THEME_SELECT_CHANGE_EVENT, (event) => {
+    applyThemeSelection((event as ThemeSelectChangeEvent).detail?.value);
+  });
+} else if (themeSelect) {
   themeSelect.addEventListener("change", () => {
-    const pane = getActivePane();
-    const state = getActivePaneState(paneStates, activePaneId);
-    if (!pane || !state) return;
-    const name = themeSelect.value;
-    if (!name) {
-      paneStates.set(
-        pane.id,
-        resetThemeForPane({
-          pane,
-          state,
-          activePaneId,
-          themeSelect,
-        }),
-      );
-      return;
-    }
-    const nextState = applyBuiltinThemeToPane({
-      pane,
-      state,
-      name,
-      activePaneId,
-      themeSelect,
-    });
-    if (nextState) {
-      paneStates.set(pane.id, nextState);
-    }
+    applyThemeSelection(themeSelect.value);
   });
 }
 
