@@ -1,142 +1,24 @@
-import type { InputHandler, MouseMode } from "../../input";
+import type { MouseMode } from "../../input";
 import { initWebGPU, initWebGL, type WebGPUState, type WebGLState } from "../../renderer";
-import type { PtyTransport } from "../../pty";
-import { type GhosttyTheme } from "../../theme";
 import {
   copyToClipboard as writeClipboardText,
   pasteFromClipboard as readClipboardText,
 } from "../../selection";
-import type { ResttyWasm, ResttyWasmExports } from "../../wasm";
+import type { ResttyWasm } from "../../wasm";
 import { normalizeNewlines } from "./create-app-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
-import type { ResttyRuntimeEvent, ResttyRuntimeEventHub } from "../core/runtime-events";
-import type { ResttyAppCallbacks, ResttyAppSession } from "../core/resources";
+import type { ResttyRuntimeEvent } from "../core/runtime-events";
+import type { ResttyRuntime } from "../core/api";
 import type {
-  ResttyRuntime,
-  ResttyRuntimeInteractionApi,
-  ResttyRuntimeRenderApi,
-  ResttyRuntimeSearchApi,
-  ResttyRuntimeTerminalApi,
-} from "../core/api";
-import type { PtyInputRuntime } from "./pty-input-runtime";
-import type { RuntimeInteraction } from "./interaction-runtime";
+  RuntimeAppApiOptions,
+  RuntimeAppApiRuntime,
+  RuntimeAppApiSharedState,
+  RuntimeInternalState,
+  RuntimePublicApiOptions,
+} from "./runtime-app-api.types";
 
-export type RuntimeAppApiSharedState = {
-  wasm: ResttyWasm | null;
-  wasmExports: ResttyWasmExports | null;
-  wasmHandle: number;
-  wasmReady: boolean;
-  activeState: WebGPUState | WebGLState | null;
-  needsRender: boolean;
-  lastRenderTime: number;
-  currentContextType: "webgpu" | "webgl2" | null;
-  isFocused: boolean;
-  lastKeydownSeq: string;
-  lastKeydownSeqAt: number;
-};
-
-type RuntimeBackend = "none" | "webgpu" | "webgl2";
-type PreferredRenderer = "auto" | "webgpu" | "webgl2";
-
-type RuntimeInternalState = {
-  paused: boolean;
-  backend: RuntimeBackend;
-  preferredRenderer: PreferredRenderer;
-  rafId: number;
-  frameCount: number;
-  lastFpsTime: number;
-  nextBlinkTime: number;
-};
-
-type RuntimeSendInput = (text: string, source?: string, options?: { skipHooks?: boolean }) => void;
-
-type RuntimePublicApiOptions = {
-  setFontSize: ResttyRuntimeTerminalApi["setFontSize"];
-  setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
-  setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
-  setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
-  setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
-  resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
-  setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
-  clearSearch: ResttyRuntimeSearchApi["clear"];
-  searchNext: ResttyRuntimeSearchApi["next"];
-  searchPrevious: ResttyRuntimeSearchApi["previous"];
-  getSearchState: ResttyRuntimeSearchApi["getState"];
-  resize: ResttyRuntimeInteractionApi["resize"];
-  focus: ResttyRuntimeInteractionApi["focus"];
-  blur: ResttyRuntimeInteractionApi["blur"];
-  updateSize: ResttyRuntimeInteractionApi["updateSize"];
-  setShaderStages: ResttyRuntimeRenderApi["setShaderStages"];
-  getShaderStages: ResttyRuntimeRenderApi["getShaderStages"];
-};
-
-export type RuntimeAppApiRuntime = {
-  sendInput: RuntimeSendInput;
-  createPublicApi: (options: RuntimePublicApiOptions) => ResttyRuntime;
-};
-
-type LifecycleThemeRuntime = {
-  cancelScheduledSizeUpdate: () => void;
-  getActiveTheme: () => GhosttyTheme | null;
-};
-
-type CreateRuntimeAppApiOptions = {
-  runtimeEvents: ResttyRuntimeEventHub;
-  session: ResttyAppSession;
-  ptyTransport: PtyTransport;
-  inputHandler: InputHandler;
-  ptyInputRuntime: PtyInputRuntime;
-  interaction: RuntimeInteraction;
-  lifecycleThemeSizeRuntime: LifecycleThemeRuntime;
-  cleanupFns: Array<() => void>;
-  cleanupCanvasFns: Array<() => void>;
-  callbacks?: ResttyAppCallbacks;
-  fpsEl: HTMLElement | null;
-  backendEl: HTMLElement | null;
-  inputDebugEl: HTMLElement | null;
-  imeInput: HTMLTextAreaElement | null;
-  attachWindowEvents: boolean;
-  isMacPlatform: boolean;
-  textEncoder: TextEncoder;
-  readState: () => RuntimeAppApiSharedState;
-  writeState: (patch: Partial<RuntimeAppApiSharedState>) => void;
-  appendLog: (line: string) => void;
-  shouldSuppressWasmLog: (text: string) => boolean;
-  runBeforeInputHook: (text: string, source: string) => string | null;
-  runBeforeRenderOutputHook: (text: string, source: string) => string | null;
-  getSelectionText: () => string;
-  initialPreferredRenderer: PreferredRenderer;
-  maxScrollbackBytes?: number;
-  maxScrollback?: number;
-  CURSOR_BLINK_MS: number;
-  RESIZE_ACTIVE_MS: number;
-  TARGET_RENDER_FPS: number;
-  BACKGROUND_RENDER_FPS: number;
-  KITTY_FLAG_REPORT_EVENTS: number;
-  resizeState: { lastAt: number };
-  tickWebGPU: (state: WebGPUState) => void;
-  tickWebGL: (state: WebGLState) => void;
-  updateGrid: () => void;
-  gridState: { cols: number; rows: number };
-  getCanvas: () => HTMLCanvasElement;
-  applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
-  ensureFont: () => Promise<void>;
-  updateSize: ResttyRuntimeInteractionApi["updateSize"];
-  log: (line: string) => void;
-  replaceCanvas: () => void;
-  rebuildWebGPUShaderStages: (state: WebGPUState) => void;
-  rebuildWebGLShaderStages: (state: WebGLState) => void;
-  setShaderStagesDirty: (dirty: boolean) => void;
-  clearWebGPUShaderStages: () => void;
-  destroyWebGPUStageTargets: () => void;
-  clearWebGLShaderStages: (state?: WebGLState) => void;
-  destroyWebGLStageTargets: (state?: WebGLState) => void;
-  markSearchDirty: () => void;
-  handleSearchWasmReset: () => void;
-};
-
-export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): RuntimeAppApiRuntime {
+export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppApiRuntime {
   const {
     session,
     ptyTransport,
