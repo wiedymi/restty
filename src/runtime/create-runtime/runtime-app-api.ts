@@ -8,7 +8,7 @@ import {
 } from "../../selection";
 import type { ResttyWasm, ResttyWasmExports } from "../../wasm";
 import { normalizeNewlines } from "./create-app-io-utils";
-import { resolveMaxScrollbackBytes } from "../max-scrollback";
+import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import type {
   ResttyRuntime,
   ResttyAppCallbacks,

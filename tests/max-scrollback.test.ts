@@ -4,7 +4,7 @@ import {
   MAX_MAX_SCROLLBACK_BYTES,
   normalizeMaxScrollbackBytes,
   resolveMaxScrollbackBytes,
-} from "../src/runtime/max-scrollback";
+} from "../src/runtime/create-runtime/max-scrollback";
 import { loadResttyWasm } from "../src/wasm/runtime/restty-wasm";
 
 let wasm: Awaited<ReturnType<typeof loadResttyWasm>>;
@@ -32,9 +32,7 @@ test("normalizeMaxScrollbackBytes applies defaults, truncation, and bounds", () 
   expect(normalizeMaxScrollbackBytes(2048.9)).toBe(2048);
   expect(normalizeMaxScrollbackBytes(-1)).toBe(0);
   expect(normalizeMaxScrollbackBytes(0)).toBe(0);
-  expect(normalizeMaxScrollbackBytes(MAX_MAX_SCROLLBACK_BYTES + 1)).toBe(
-    MAX_MAX_SCROLLBACK_BYTES,
-  );
+  expect(normalizeMaxScrollbackBytes(MAX_MAX_SCROLLBACK_BYTES + 1)).toBe(MAX_MAX_SCROLLBACK_BYTES);
 });
 
 test("resolveMaxScrollbackBytes prefers maxScrollbackBytes over deprecated maxScrollback", () => {
@@ -49,7 +47,11 @@ test(
   "default scrollback keeps more history than tiny limits while zero disables history",
   { timeout: 120_000 },
   () => {
-    const noHistoryHandle = wasm.create(80, 24, resolveMaxScrollbackBytes({ maxScrollbackBytes: 0 }));
+    const noHistoryHandle = wasm.create(
+      80,
+      24,
+      resolveMaxScrollbackBytes({ maxScrollbackBytes: 0 }),
+    );
     const tinyHandle = wasm.create(80, 24, resolveMaxScrollbackBytes({ maxScrollbackBytes: 500 }));
     const defaultHandle = wasm.create(80, 24, resolveMaxScrollbackBytes({}));
 
