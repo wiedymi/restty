@@ -227,9 +227,9 @@ export type ResttyShaderStage = {
 };
 
 /**
- * Options for creating a ResttyApp instance.
+ * Configuration for creating a Restty runtime instance.
  */
-export type ResttyAppOptions = {
+export type ResttyRuntimeConfig = {
   /** Target canvas element for terminal rendering. */
   canvas: HTMLCanvasElement;
   /** Shared session for WASM/WebGPU resource reuse across panes. */

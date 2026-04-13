@@ -1,4 +1,4 @@
-import { createRestty, type Restty, type ResttyOptions } from "./surface/restty";
+import { createRestty, type Restty, type ResttyConfig } from "./surface/restty";
 import { createCompatAppOptions } from "./xterm/app-options";
 import { normalizeDimension } from "./xterm/dimensions";
 import { addListener, emitWithGuard } from "./xterm/listeners";
@@ -27,7 +27,7 @@ export type TerminalAddon = {
  * Additional unknown keys are accepted for migration ergonomics and kept in
  * the terminal option bag, but are not forwarded to restty internals.
  */
-export type TerminalOptions = Omit<ResttyOptions, "root"> & {
+export type TerminalOptions = Omit<ResttyConfig, "root"> & {
   cols?: number;
   rows?: number;
   [key: string]: unknown;
@@ -39,8 +39,8 @@ export type TerminalOptions = Omit<ResttyOptions, "root"> & {
  * This intentionally implements a focused subset needed for migration.
  */
 export class Terminal {
-  private readonly resttyOptionsBase: Omit<ResttyOptions, "root" | "appOptions">;
-  private readonly userAppOptions: ResttyOptions["appOptions"];
+  private readonly resttyOptionsBase: Omit<ResttyConfig, "root" | "terminal">;
+  private readonly userTerminalConfig: ResttyConfig["terminal"];
   private readonly addons = new Set<TerminalAddon>();
   private readonly pendingOutput: string[] = [];
   private readonly dataListeners = new Set<(data: string) => void>();
@@ -57,9 +57,9 @@ export class Terminal {
   rows: number;
 
   constructor(options: TerminalOptions = {}) {
-    const { cols, rows, appOptions, ...resttyOptionsBase } = options;
-    this.resttyOptionsBase = resttyOptionsBase as Omit<ResttyOptions, "root" | "appOptions">;
-    this.userAppOptions = appOptions;
+    const { cols, rows, terminal, ...resttyOptionsBase } = options;
+    this.resttyOptionsBase = resttyOptionsBase as Omit<ResttyConfig, "root" | "terminal">;
+    this.userTerminalConfig = terminal;
     this.optionValues = { ...options };
     delete this.optionValues.cols;
     delete this.optionValues.rows;
@@ -104,7 +104,7 @@ export class Terminal {
     this.elementRef = parent;
     this.resttyInstance = createRestty({
       ...this.resttyOptionsBase,
-      appOptions: createCompatAppOptions(this.userAppOptions, (data) => {
+      terminal: createCompatAppOptions(this.userTerminalConfig, (data) => {
         emitWithGuard(this.dataListeners, data, "onData");
       }),
       root: parent,

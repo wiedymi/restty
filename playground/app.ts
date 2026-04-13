@@ -835,7 +835,9 @@ function renderActivePaneControls(pane: ResttyManagedAppPane, state: PaneState) 
   syncHintingControls();
   state.mouseMode = pane.app.getMouseStatus().mode;
   if (mouseModeEl) {
-    const hasOption = Array.from(mouseModeEl.options).some((option) => option.value === state.mouseMode);
+    const hasOption = Array.from(mouseModeEl.options).some(
+      (option) => option.value === state.mouseMode,
+    );
     mouseModeEl.value = hasOption ? state.mouseMode : "auto";
   }
   if (shaderPresetEl) shaderPresetEl.value = selectedShaderPreset;
@@ -995,7 +997,7 @@ restty = new Restty({
       statusActiveTextColor: "#e0bc72",
     },
   },
-  appOptions: ({ id, sourcePane }) => {
+  terminal: ({ id, sourcePane }) => {
     const paneState = createPaneState(id, sourcePane);
     paneStates.set(id, paneState);
     return {

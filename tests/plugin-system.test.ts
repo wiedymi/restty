@@ -300,7 +300,7 @@ test("restty onDesktopNotification callback receives paneId and preserves pane c
         source: notification.source,
       });
     },
-    appOptions: ({ id }) => ({
+    terminal: ({ id }) => ({
       callbacks: {
         onDesktopNotification: (notification) => {
           paneNotifications.push({
@@ -345,10 +345,8 @@ test("restty shader stage API syncs stages to existing panes and supports handle
     mode: "after-main",
     uniforms: [0.2, 0.7],
     shader: {
-      wgsl:
-        "fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f { return color; }",
-      glsl:
-        "vec4 resttyStage(vec4 color, vec2 uv, float time, vec4 params0, vec4 params1) { return color; }",
+      wgsl: "fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f { return color; }",
+      glsl: "vec4 resttyStage(vec4 color, vec2 uv, float time, vec4 params0, vec4 params1) { return color; }",
     },
   });
 
@@ -380,10 +378,8 @@ test("plugin addRenderStage registers namespaced stage and cleans up on unuse", 
         mode: "after-main",
         uniforms: [0.8],
         shader: {
-          wgsl:
-            "fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f { return color; }",
-          glsl:
-            "vec4 resttyStage(vec4 color, vec2 uv, float time, vec4 params0, vec4 params1) { return color; }",
+          wgsl: "fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f { return color; }",
+          glsl: "vec4 resttyStage(vec4 color, vec2 uv, float time, vec4 params0, vec4 params1) { return color; }",
         },
       });
       stage.setEnabled(true);
@@ -685,10 +681,7 @@ test("output interceptors can transform and drop PTY output", async () => {
   await restty.use({
     id: "plugin/output",
     activate(ctx) {
-      const d1 = ctx.addOutputInterceptor(
-        ({ text }) => `A${text}`,
-        { priority: -1 },
-      );
+      const d1 = ctx.addOutputInterceptor(({ text }) => `A${text}`, { priority: -1 });
       const d2 = ctx.addOutputInterceptor(({ text }) => {
         if (text.includes("DROP")) return null;
         return `${text}B`;

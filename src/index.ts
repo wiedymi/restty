@@ -7,7 +7,7 @@ export {
   createRestty,
 } from "./surface/restty";
 export type {
-  ResttyOptions,
+  ResttyConfig,
   ResttyPaneApi,
   ResttyPluginApiRange,
   ResttyPlugin,
@@ -34,6 +34,7 @@ export type {
   ResttyRenderStageHandle,
 } from "./surface/restty";
 export type {
+  ResttyTerminalConfig,
   ResttyManagedPaneSearchUiOptions,
   ResttyManagedPaneSearchUiStyleOptions,
 } from "./surface/pane-app-manager";
@@ -58,6 +59,7 @@ export type {
   ResttyBufferFontSource,
   ResttyLocalFontSource,
   ResttyFontPreset,
+  ResttyRuntimeConfig,
   ResttyShaderStage,
   ResttyShaderStageMode,
   ResttyShaderStageBackend,

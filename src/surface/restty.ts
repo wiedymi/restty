@@ -6,7 +6,7 @@ import {
   type ResttyManagedAppPane,
   type ResttyManagedPaneStyleOptions,
   type ResttyManagedPaneSearchUiStyleOptions,
-  type ResttyPaneAppOptionsInput,
+  type ResttyTerminalConfig,
 } from "./pane-app-manager";
 import type { ResttyPaneSplitDirection } from "./panes-types";
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/types";
@@ -78,11 +78,11 @@ export type {
 /**
  * Top-level configuration for creating a Restty instance.
  */
-export type ResttyOptions = Omit<CreateResttyAppPaneManagerOptions, "appOptions"> & {
-  /** Per-pane app options, static or factory. */
-  appOptions?: CreateResttyAppPaneManagerOptions["appOptions"];
+export type ResttyConfig = Omit<CreateResttyAppPaneManagerOptions, "appOptions"> & {
+  /** Per-pane terminal config, static or factory. */
+  terminal?: CreateResttyAppPaneManagerOptions["appOptions"];
   /** Font sources applied to every pane. */
-  fontSources?: ResttyPaneAppOptionsInput["fontSources"];
+  fontSources?: ResttyTerminalConfig["fontSources"];
   /** Global shader stages synchronized to all panes. */
   shaderStages?: ResttyShaderStage[];
   /** Global handler for desktop notifications emitted by any pane. */
@@ -102,11 +102,11 @@ export class Restty extends ResttyActivePaneApi {
   private readonly shaderOps: ResttyShaderOps;
   private readonly pluginOps: ResttyPluginOps;
 
-  constructor(options: ResttyOptions) {
+  constructor(options: ResttyConfig) {
     super();
     const {
       createInitialPane = true,
-      appOptions,
+      terminal,
       fontSources,
       shaderStages,
       onDesktopNotification,
@@ -137,7 +137,7 @@ export class Restty extends ResttyActivePaneApi {
     });
 
     const mergedAppOptions = createMergedPaneAppOptions({
-      appOptions,
+      appOptions: terminal,
       getFontSources: () => this.fontSources,
       onDesktopNotification,
       shaderOps: this.shaderOps,
@@ -418,6 +418,6 @@ export class Restty extends ResttyActivePaneApi {
 }
 
 /** Create a new Restty instance with the given options. */
-export function createRestty(options: ResttyOptions): Restty {
+export function createRestty(options: ResttyConfig): Restty {
   return new Restty(options);
 }

@@ -10,7 +10,7 @@ import { createDefaultResttyPaneContextMenuItems } from "./panes/default-context
 import { createResttyPaneManager } from "./panes/manager";
 import { getDefaultResttyAppSession } from "../runtime/session";
 import { createResttyApp } from "./app-factory";
-import type { ResttyAppCallbacks, ResttyAppOptions, ResttyAppSession } from "../runtime/types";
+import type { ResttyAppCallbacks, ResttyRuntimeConfig, ResttyAppSession } from "../runtime/types";
 import {
   createPaneSearchUiController,
   type PaneSearchUiController,
@@ -52,8 +52,8 @@ export type ResttyManagedPaneSearchUiStyleOptions = ResttyPaneSearchUiStyleOptio
 /** Built-in pane search UI configuration. */
 export type ResttyManagedPaneSearchUiOptions = ResttyPaneSearchUiOptions;
 
-/** App options minus the DOM/session fields that the pane manager provides. */
-export type ResttyPaneAppOptionsInput = Omit<ResttyAppOptions, "canvas" | "imeInput" | "session">;
+/** Terminal config minus the DOM/session fields that the pane manager provides. */
+export type ResttyTerminalConfig = Omit<ResttyRuntimeConfig, "canvas" | "imeInput" | "session">;
 
 export type ResttyAppPaneManager = ResttyPaneManager<ResttyManagedAppPane> & {
   openPaneSearch: (id: number, options?: ResttyPaneSearchUiOpenOptions) => void;
@@ -92,14 +92,14 @@ export type CreateResttyAppPaneManagerOptions = {
   session?: ResttyAppSession;
   /** Per-pane app options, static object or factory receiving pane context. */
   appOptions?:
-    | ResttyPaneAppOptionsInput
+    | ResttyTerminalConfig
     | ((context: {
         id: number;
         sourcePane: ResttyManagedAppPane | null;
         canvas: HTMLCanvasElement;
         imeInput: HTMLTextAreaElement;
         termDebugEl: HTMLPreElement;
-      }) => ResttyPaneAppOptionsInput);
+      }) => ResttyTerminalConfig);
   /** Override default CSS class names for pane DOM elements. */
   paneDom?: ResttyPaneDomDefaults;
   /** Automatically call app.init() after pane creation (default true). */

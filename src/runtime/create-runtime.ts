@@ -58,7 +58,7 @@ import type {
   ResttyFontHintTarget,
   ResttyFontSource,
   ResttyApp,
-  ResttyAppOptions,
+  ResttyRuntimeConfig,
   ResttyFontResourceLease,
 } from "./types";
 import { getDefaultResttyAppSession } from "./session";
@@ -142,7 +142,7 @@ export type {
   ResttyShaderStageMode,
   ResttyShaderStageBackend,
   ResttyShaderStageSource,
-  ResttyAppOptions,
+  ResttyRuntimeConfig,
   ResttyApp,
 } from "./types";
 export type {
@@ -181,7 +181,7 @@ const FALLBACK_LOCAL_FONT_SOURCES: ResttyFontSource[] = [
   },
 ];
 
-export function createResttyApp(options: ResttyAppOptions): ResttyApp {
+export function createResttyApp(options: ResttyRuntimeConfig): ResttyApp {
   const { canvas: canvasInput, imeInput: imeInputInput, elements, callbacks } = options;
   const beforeInputHook = options.beforeInput;
   const beforeRenderOutputHook = options.beforeRenderOutput;
