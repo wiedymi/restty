@@ -1,5 +1,9 @@
 import { clamp } from "../../grid";
 import { computeOverlayScrollbarLayout, type OverlayScrollbarLayout } from "./overlay-scrollbar";
+import type {
+  NativeScrollbarHost,
+  NativeScrollbarHostOptions,
+} from "./native-scrollbar-host.types";
 
 const NATIVE_SCROLLBAR_STYLE_MARKER = "data-restty-native-scrollbar";
 const MAX_NATIVE_SCROLL_RANGE_PX = 8_000_000;
@@ -8,19 +12,6 @@ const FADE_DURATION_MS = 520;
 const VISIBLE_OPACITY = 0.68;
 const MIN_SCROLL_PX_PER_ROW = 8;
 const MAX_SCROLL_PX_PER_ROW = 14;
-
-type CreateNativeScrollbarHostOptions = {
-  canvas: HTMLCanvasElement;
-  getGridState: () => { cellH: number };
-  noteScrollActivity: () => void;
-  setViewportScrollOffset: (nextOffset: number) => void;
-};
-
-export type NativeScrollbarHost = {
-  flash: () => void;
-  sync: (total: number, offset: number, len: number) => void;
-  destroy: () => void;
-};
 
 function ensureNativeScrollbarStyles() {
   if (typeof document === "undefined") return;
@@ -100,7 +91,7 @@ function ensureNativeScrollbarStyles() {
 }
 
 export function createNativeScrollbarHost(
-  options: CreateNativeScrollbarHostOptions,
+  options: NativeScrollbarHostOptions,
 ): NativeScrollbarHost {
   const { canvas, getGridState, noteScrollActivity, setViewportScrollOffset } = options;
   if (typeof document === "undefined") {
