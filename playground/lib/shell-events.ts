@@ -1,11 +1,13 @@
 import type { PlaygroundDemoKind } from "./demos.ts";
 import type { LocalFontOption } from "./font-controls.ts";
 import type { RendererChoice } from "./pane-state.ts";
+import type { ConnectionBackend } from "./pty-connection.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 
 export const SETTINGS_OPEN_EVENT = "restty:playground-settings-open";
 export const SETTINGS_CLOSE_EVENT = "restty:playground-settings-close";
 export const CONNECTION_BACKEND_CHANGE_EVENT = "restty:playground-connection-backend-change";
+export const CONNECTION_STATE_EVENT = "restty:playground-connection-state";
 export const RUN_DEMO_EVENT = "restty:playground-demo-run";
 export const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
 export const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
@@ -41,6 +43,13 @@ export type ShellStringValueDetail = {
 
 export type DemoRunDetail = {
   kind?: PlaygroundDemoKind | string;
+};
+
+export type ConnectionStateDetail = {
+  backend?: ConnectionBackend | string;
+  ptyUrl?: string;
+  webContainerCommand?: string;
+  webContainerCwd?: string;
 };
 
 export type FontRenderingStateDetail = {

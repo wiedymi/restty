@@ -29,8 +29,8 @@ test("connection controller updates backend state and reconnect flow", () => {
     connectPaneIfNeeded: (pane) => {
       syncCalls.push(pane === first.pane ? "connect:first" : "connect:second");
     },
-    syncConnectionUi: () => {
-      syncCalls.push("sync-ui");
+    syncConnectionState: () => {
+      syncCalls.push("sync-state");
     },
     syncPtyButton: (pane) => {
       syncCalls.push(pane === first.pane ? "sync-pty:first" : "sync-pty:second");
@@ -53,7 +53,15 @@ test("connection controller updates backend state and reconnect flow", () => {
   expect(controller.getWebContainerCwd()).toBe("/tmp");
   expect(first.calls).toEqual(["disconnect"]);
   expect(second.calls).toEqual([]);
-  expect(syncCalls).toEqual(["sync-ui", "connect:first", "connect:second", "sync-pty:first"]);
+  expect(syncCalls).toEqual([
+    "sync-state",
+    "sync-state",
+    "sync-state",
+    "sync-state",
+    "connect:first",
+    "connect:second",
+    "sync-pty:first",
+  ]);
 });
 
 test("connection controller normalizes string inputs", () => {

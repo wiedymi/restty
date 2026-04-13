@@ -1,6 +1,8 @@
 import { writable } from "svelte/store";
 import type { LocalFontOption } from "../../../../lib/font-controls.ts";
+import { getConnectionBackendForValue } from "../../../../lib/pty-connection.ts";
 import {
+  CONNECTION_STATE_EVENT,
   FONT_FAMILY_STATE_EVENT,
   FONT_RENDERING_STATE_EVENT,
   LOCAL_FONT_STATE_EVENT,
@@ -8,6 +10,7 @@ import {
   PTY_BUTTON_STATE_EVENT,
   TERMINAL_STATE_EVENT,
   THEME_SELECT_STATE_EVENT,
+  type ConnectionStateDetail,
   type FontRenderingStateDetail,
   type LocalFontStateDetail,
   type PtyButtonStateDetail,
@@ -22,6 +25,10 @@ type TerminalShellState = {
 };
 
 type ConnectionShellState = {
+  backend: string;
+  ptyUrl: string;
+  webContainerCommand: string;
+  webContainerCwd: string;
   ptyButtonLabel: string;
 };
 
@@ -46,6 +53,10 @@ const initialTerminalShellState: TerminalShellState = {
 };
 
 const initialConnectionShellState: ConnectionShellState = {
+  backend: "webcontainer",
+  ptyUrl: "ws://localhost:8787/pty",
+  webContainerCommand: "jsh",
+  webContainerCwd: "/",
   ptyButtonLabel: "Connect PTY",
 };
 
@@ -93,6 +104,25 @@ export function startShellStateBridge(target: EventTarget = window) {
     connectionShellState.update((state) => ({
       ...state,
       ptyButtonLabel: detail.label!,
+    }));
+  };
+
+  const handleConnectionState: EventListener = (event) => {
+    const detail = (event as CustomEvent<ConnectionStateDetail>).detail;
+    if (!detail) return;
+    connectionShellState.update((state) => ({
+      ...state,
+      backend:
+        typeof detail.backend === "string"
+          ? getConnectionBackendForValue(detail.backend)
+          : state.backend,
+      ptyUrl: typeof detail.ptyUrl === "string" ? detail.ptyUrl : state.ptyUrl,
+      webContainerCommand:
+        typeof detail.webContainerCommand === "string"
+          ? detail.webContainerCommand
+          : state.webContainerCommand,
+      webContainerCwd:
+        typeof detail.webContainerCwd === "string" ? detail.webContainerCwd : state.webContainerCwd,
     }));
   };
 
@@ -145,6 +175,7 @@ export function startShellStateBridge(target: EventTarget = window) {
 
   target.addEventListener(TERMINAL_STATE_EVENT, handleTerminalState);
   target.addEventListener(PTY_BUTTON_STATE_EVENT, handlePtyButtonState);
+  target.addEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
   target.addEventListener(FONT_RENDERING_STATE_EVENT, handleFontRenderingState);
   target.addEventListener(MOUSE_MODE_STATE_EVENT, handleMouseModeState);
   target.addEventListener(THEME_SELECT_STATE_EVENT, handleThemeSelectState);
@@ -154,6 +185,7 @@ export function startShellStateBridge(target: EventTarget = window) {
   return () => {
     target.removeEventListener(TERMINAL_STATE_EVENT, handleTerminalState);
     target.removeEventListener(PTY_BUTTON_STATE_EVENT, handlePtyButtonState);
+    target.removeEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
     target.removeEventListener(FONT_RENDERING_STATE_EVENT, handleFontRenderingState);
     target.removeEventListener(MOUSE_MODE_STATE_EVENT, handleMouseModeState);
     target.removeEventListener(THEME_SELECT_STATE_EVENT, handleThemeSelectState);

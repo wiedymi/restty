@@ -17,7 +17,7 @@ type CreateConnectionControllerOptions = {
   getActivePane: () => ConnectionControllerPane | null;
   getPanes: () => ConnectionControllerPane[];
   connectPaneIfNeeded: (pane: ConnectionControllerPane) => void;
-  syncConnectionUi?: () => void;
+  syncConnectionState?: () => void;
   syncPtyButton: (pane: ConnectionControllerPane) => void;
   initialBackend: ConnectionBackend;
   initialPtyUrl: string;
@@ -33,7 +33,7 @@ export function createConnectionController(options: CreateConnectionControllerOp
 
   function applyConnectionBackend(value: string | null | undefined) {
     selectedConnectionBackend = getConnectionBackendForValue(value);
-    options.syncConnectionUi?.();
+    options.syncConnectionState?.();
     for (const pane of options.getPanes()) {
       if (pane.runtime.io.isPtyConnected()) {
         pane.runtime.io.disconnectPty();
@@ -59,12 +59,15 @@ export function createConnectionController(options: CreateConnectionControllerOp
     getWebContainerCwd: () => selectedWebContainerCwd,
     setPtyUrl: (value: string | null | undefined) => {
       selectedPtyUrl = value ?? selectedPtyUrl;
+      options.syncConnectionState?.();
     },
     setWebContainerCommand: (value: string | null | undefined) => {
       selectedWebContainerCommand = value?.trim() || "jsh";
+      options.syncConnectionState?.();
     },
     setWebContainerCwd: (value: string | null | undefined) => {
       selectedWebContainerCwd = value?.trim() || "/";
+      options.syncConnectionState?.();
     },
   };
 }

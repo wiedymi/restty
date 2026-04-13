@@ -1,8 +1,5 @@
 <script lang="ts">
-  import {
-    getConnectionUiState,
-    type ConnectionBackend,
-  } from "../../../../lib/pty-connection.ts";
+  import { getConnectionUiState } from "../../../../lib/pty-connection.ts";
   import {
     dispatchConnectionBackendChange,
     dispatchPtyButton,
@@ -12,12 +9,7 @@
   } from "../shell-dispatch.ts";
   import { connectionShellState } from "../stores/shell-state.ts";
 
-  let connectionBackend: ConnectionBackend = "webcontainer";
-  let ptyUrl = "ws://localhost:8787/pty";
-  let wcCommand = "jsh";
-  let wcCwd = "/";
-
-  $: connectionUi = getConnectionUiState(connectionBackend);
+  $: connectionUi = getConnectionUiState($connectionShellState.backend);
 
   function handleConnectionBackendChange(event: Event) {
     const select = event.currentTarget;
@@ -52,7 +44,7 @@
       <span>Backend</span>
       <select
         id="connectionBackend"
-        bind:value={connectionBackend}
+        value={$connectionShellState.backend}
         onchange={handleConnectionBackendChange}
       >
         <option value="ws">WebSocket PTY</option>
@@ -64,7 +56,7 @@
     <input
       id="ptyUrl"
       type="text"
-      bind:value={ptyUrl}
+      value={$connectionShellState.ptyUrl}
       placeholder="PTY URL"
       disabled={connectionUi.ptyUrlDisabled}
       oninput={handlePtyUrlChange}
@@ -78,7 +70,7 @@
     <input
       id="wcCommand"
       type="text"
-      bind:value={wcCommand}
+      value={$connectionShellState.webContainerCommand}
       placeholder="WebContainer command"
       disabled={connectionUi.webContainerInputsDisabled}
       oninput={handleWebContainerCommandChange}
@@ -87,7 +79,7 @@
     <input
       id="wcCwd"
       type="text"
-      bind:value={wcCwd}
+      value={$connectionShellState.webContainerCwd}
       placeholder="WebContainer cwd"
       disabled={connectionUi.webContainerInputsDisabled}
       oninput={handleWebContainerCwdChange}

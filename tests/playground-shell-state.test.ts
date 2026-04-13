@@ -2,6 +2,7 @@ import { beforeEach, expect, test } from "bun:test";
 import { get } from "svelte/store";
 import type { LocalFontOption } from "../playground/lib/font-controls.ts";
 import {
+  CONNECTION_STATE_EVENT,
   FONT_FAMILY_STATE_EVENT,
   FONT_RENDERING_STATE_EVENT,
   LOCAL_FONT_STATE_EVENT,
@@ -42,6 +43,16 @@ test("startShellStateBridge syncs terminal and connection state from shell event
       },
     }),
   );
+  target.dispatchEvent(
+    new CustomEvent(CONNECTION_STATE_EVENT, {
+      detail: {
+        backend: "ws",
+        ptyUrl: "ws://example.test/pty",
+        webContainerCommand: "bash",
+        webContainerCwd: "/tmp",
+      },
+    }),
+  );
 
   expect(get(terminalShellState)).toEqual({
     pauseLabel: "Resume",
@@ -49,6 +60,10 @@ test("startShellStateBridge syncs terminal and connection state from shell event
     fontSize: "24",
   });
   expect(get(connectionShellState)).toEqual({
+    backend: "ws",
+    ptyUrl: "ws://example.test/pty",
+    webContainerCommand: "bash",
+    webContainerCwd: "/tmp",
     ptyButtonLabel: "Disconnect",
   });
 
