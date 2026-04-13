@@ -2,7 +2,7 @@ import type { ResttyPaneContextMenuOptions, ResttyPaneShortcutsOptions } from ".
 import { createDefaultResttyPaneContextMenuItems } from "./default-context-menu-items";
 import type {
   CreateResttyManagedPaneManagerOptions,
-  ResttyManagedAppPane,
+  ResttyManagedPane,
 } from "./managed-pane-types";
 
 export function defaultManagedPaneInputTargetPredicate(target: HTMLElement): boolean {
@@ -14,7 +14,7 @@ export function defaultManagedPaneInputTargetPredicate(target: HTMLElement): boo
 
 export function resolveManagedPaneContextMenu(
   options: Pick<CreateResttyManagedPaneManagerOptions, "contextMenu" | "defaultContextMenu">,
-): ResttyPaneContextMenuOptions<ResttyManagedAppPane> | null {
+): ResttyPaneContextMenuOptions<ResttyManagedPane> | null {
   let contextMenu = options.contextMenu ?? null;
   if (!contextMenu) {
     const defaultMenuConfig = options.defaultContextMenu;

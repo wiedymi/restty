@@ -2,7 +2,7 @@ import { createResttyManagedPaneManager } from "./pane-app-manager";
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
 import type {
   ResttyManagedPaneManager,
-  ResttyManagedAppPane,
+  ResttyManagedPane,
   ResttyManagedPaneSearchUiStyleOptions,
   ResttyManagedPaneStyleOptions,
 } from "./panes/managed-pane-types";
@@ -175,19 +175,19 @@ export class Restty extends ResttyActivePaneApi {
     }
   }
 
-  getPanes(): ResttyManagedAppPane[] {
+  getPanes(): ResttyManagedPane[] {
     return this.paneManager.getPanes();
   }
 
-  getPaneById(id: number): ResttyManagedAppPane | null {
+  getPaneById(id: number): ResttyManagedPane | null {
     return this.paneManager.getPaneById(id);
   }
 
-  getActivePane(): ResttyManagedAppPane | null {
+  getActivePane(): ResttyManagedPane | null {
     return this.paneManager.getActivePane();
   }
 
-  getFocusedPane(): ResttyManagedAppPane | null {
+  getFocusedPane(): ResttyManagedPane | null {
     return this.paneManager.getFocusedPane();
   }
 
@@ -237,11 +237,11 @@ export class Restty extends ResttyActivePaneApi {
     return this.shaderOps.removeShaderStage(id);
   }
 
-  createInitialPane(options?: { focus?: boolean }): ResttyManagedAppPane {
+  createInitialPane(options?: { focus?: boolean }): ResttyManagedPane {
     return paneOps.createInitialPane(this.paneManager, this.lifecycleHooks(), options);
   }
 
-  splitActivePane(direction: ResttyPaneSplitDirection): ResttyManagedAppPane | null {
+  splitActivePane(direction: ResttyPaneSplitDirection): ResttyManagedPane | null {
     return paneOps.splitActivePane(
       this.paneManager,
       this.paneLookup(),
@@ -250,7 +250,7 @@ export class Restty extends ResttyActivePaneApi {
     );
   }
 
-  splitPane(id: number, direction: ResttyPaneSplitDirection): ResttyManagedAppPane | null {
+  splitPane(id: number, direction: ResttyPaneSplitDirection): ResttyManagedPane | null {
     return paneOps.splitPane(this.paneManager, this.lifecycleHooks(), id, direction);
   }
 
@@ -349,10 +349,10 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   private paneLookup(): {
-    getPanes: () => ResttyManagedAppPane[];
-    getPaneById: (id: number) => ResttyManagedAppPane | null;
-    getActivePane: () => ResttyManagedAppPane | null;
-    getFocusedPane: () => ResttyManagedAppPane | null;
+    getPanes: () => ResttyManagedPane[];
+    getPaneById: (id: number) => ResttyManagedPane | null;
+    getActivePane: () => ResttyManagedPane | null;
+    getFocusedPane: () => ResttyManagedPane | null;
     openPaneSearch: ResttyManagedPaneManager["openPaneSearch"];
     closePaneSearch: ResttyManagedPaneManager["closePaneSearch"];
     togglePaneSearch: ResttyManagedPaneManager["togglePaneSearch"];

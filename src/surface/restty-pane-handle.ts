@@ -1,7 +1,7 @@
 import type { InputHandler, MouseMode } from "../input";
 import type { GhosttyTheme } from "../theme";
 import type {
-  ResttyManagedAppPane,
+  ResttyManagedPane,
   ResttyManagedPaneSearchUiStyleOptions,
 } from "./panes/managed-pane-types";
 import type {
@@ -79,10 +79,10 @@ export type ResttyPaneApi = {
  * layout changes.
  */
 export class ResttyPaneHandle implements ResttyPaneApi {
-  private readonly resolvePane: () => ResttyManagedAppPane;
+  private readonly resolvePane: () => ResttyManagedPane;
   private readonly searchUiOps: PaneSearchUiHandleOps;
 
-  constructor(resolvePane: () => ResttyManagedAppPane, searchUiOps: PaneSearchUiHandleOps) {
+  constructor(resolvePane: () => ResttyManagedPane, searchUiOps: PaneSearchUiHandleOps) {
     this.resolvePane = resolvePane;
     this.searchUiOps = searchUiOps;
   }

@@ -2,7 +2,7 @@ import type { ResttyRuntimeServicesConfig } from "../../runtime/core/config";
 import type { ResttyRuntimeSession } from "../../runtime/core/resources";
 import type {
   ResttyDefaultPaneContextMenuOptions,
-  ResttyManagedAppPane,
+  ResttyManagedPane,
   ResttyManagedPaneSearchUiOptions,
   ResttyManagedPaneStylesOptions,
   ResttyPaneDomDefaults,
@@ -26,7 +26,7 @@ export type ResttySurfaceConfig = {
   /** Enable or configure keyboard shortcuts for splitting. */
   shortcuts?: boolean | ResttyPaneShortcutsOptions;
   /** Custom context menu implementation (overrides defaultContextMenu). */
-  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedAppPane> | null;
+  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedPane> | null;
   /** Enable or configure the built-in default context menu. */
   defaultContextMenu?: boolean | ResttyDefaultPaneContextMenuOptions;
   /** Whether to create the first pane automatically (default true). */

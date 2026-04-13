@@ -11,7 +11,7 @@ import { createManagedPaneSearchUiController } from "./panes/managed-pane-search
 import type {
   CreateResttyManagedPaneManagerOptions,
   ResttyManagedPaneManager,
-  ResttyManagedAppPane,
+  ResttyManagedPane,
 } from "./panes/managed-pane-types";
 
 /**
@@ -31,7 +31,7 @@ export function createResttyManagedPaneManager(
   const contextMenu = resolveManagedPaneContextMenu(options);
   const shortcuts = resolveManagedPaneShortcuts(options.shortcuts);
 
-  let manager: ResttyPaneManager<ResttyManagedAppPane>;
+  let manager: ResttyPaneManager<ResttyManagedPane>;
   const searchUiController: PaneSearchUiController = createManagedPaneSearchUiController({
     root: options.root,
     searchUi: options.searchUi,
@@ -39,7 +39,7 @@ export function createResttyManagedPaneManager(
     getFocusedPane: () => manager.getFocusedPane(),
   });
 
-  manager = createResttyPaneManager<ResttyManagedAppPane>({
+  manager = createResttyPaneManager<ResttyManagedPane>({
     root: options.root,
     minPaneSize: options.minPaneSize,
     styles: options.paneStyles,

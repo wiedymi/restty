@@ -130,7 +130,7 @@ export type ResttySurfaceConfig = {
   paneStyles?: boolean | ResttyManagedPaneStylesOptions;
   searchUi?: boolean | ResttyManagedPaneSearchUiOptions;
   shortcuts?: boolean | ResttyPaneShortcutsOptions;
-  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedAppPane> | null;
+  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedPane> | null;
   defaultContextMenu?: boolean | ResttyDefaultPaneContextMenuOptions;
   events?: ResttySurfaceEvents;
   plugins?: ResttyPluginConfig;
@@ -160,14 +160,14 @@ export type ResttyServicesConfig = {
 
 ```ts
 export type ResttySurfaceEvents = {
-  onPaneCreated?: (pane: ResttyManagedAppPane) => void;
-  onPaneClosed?: (pane: ResttyManagedAppPane) => void;
+  onPaneCreated?: (pane: ResttyManagedPane) => void;
+  onPaneClosed?: (pane: ResttyManagedPane) => void;
   onPaneSplit?: (
-    sourcePane: ResttyManagedAppPane,
-    createdPane: ResttyManagedAppPane,
+    sourcePane: ResttyManagedPane,
+    createdPane: ResttyManagedPane,
     direction: "vertical" | "horizontal",
   ) => void;
-  onActivePaneChange?: (pane: ResttyManagedAppPane | null) => void;
+  onActivePaneChange?: (pane: ResttyManagedPane | null) => void;
   onLayoutChanged?: () => void;
   onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
 };

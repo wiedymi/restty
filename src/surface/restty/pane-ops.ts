@@ -1,6 +1,6 @@
 import type {
   ResttyManagedPaneManager,
-  ResttyManagedAppPane,
+  ResttyManagedPane,
   ResttyManagedPaneStyleOptions,
   ResttyManagedPaneSearchUiStyleOptions,
 } from "../panes/managed-pane-types";
@@ -13,10 +13,10 @@ import type {
 } from "../pane-search-ui";
 
 type ResttyPaneLookup = {
-  getPanes: () => ResttyManagedAppPane[];
-  getPaneById: (id: number) => ResttyManagedAppPane | null;
-  getActivePane: () => ResttyManagedAppPane | null;
-  getFocusedPane: () => ResttyManagedAppPane | null;
+  getPanes: () => ResttyManagedPane[];
+  getPaneById: (id: number) => ResttyManagedPane | null;
+  getActivePane: () => ResttyManagedPane | null;
+  getFocusedPane: () => ResttyManagedPane | null;
   openPaneSearch: (id: number, options?: ResttyPaneSearchUiOpenOptions) => void;
   closePaneSearch: (id: number, options?: ResttyPaneSearchUiCloseOptions) => void;
   togglePaneSearch: (
@@ -37,9 +37,9 @@ type ResttyLifecycleEmitter = {
 };
 
 export function requirePaneById(
-  getPaneById: (id: number) => ResttyManagedAppPane | null,
+  getPaneById: (id: number) => ResttyManagedPane | null,
   id: number,
-): ResttyManagedAppPane {
+): ResttyManagedPane {
   const pane = getPaneById(id);
   if (!pane) throw new Error(`Restty pane ${id} does not exist`);
   return pane;
@@ -186,10 +186,10 @@ export function forEachPane(
 }
 
 export function createInitialPane(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
   hooks: Pick<ResttyLifecycleEmitter, "runLifecycleHooks">,
   options?: { focus?: boolean },
-): ResttyManagedAppPane {
+): ResttyManagedPane {
   hooks.runLifecycleHooks({ phase: "before", action: "create-initial-pane" });
   const pane = paneManager.createInitialPane(options);
   hooks.runLifecycleHooks({
@@ -202,11 +202,11 @@ export function createInitialPane(
 }
 
 export function splitActivePane(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
   lookup: Pick<ResttyPaneLookup, "getActivePane">,
   hooks: Pick<ResttyLifecycleEmitter, "runLifecycleHooks">,
   direction: ResttyPaneSplitDirection,
-): ResttyManagedAppPane | null {
+): ResttyManagedPane | null {
   const sourcePaneId = lookup.getActivePane()?.id ?? null;
   hooks.runLifecycleHooks({
     phase: "before",
@@ -227,11 +227,11 @@ export function splitActivePane(
 }
 
 export function splitPane(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
   hooks: Pick<ResttyLifecycleEmitter, "runLifecycleHooks">,
   id: number,
   direction: ResttyPaneSplitDirection,
-): ResttyManagedAppPane | null {
+): ResttyManagedPane | null {
   hooks.runLifecycleHooks({
     phase: "before",
     action: "split-pane",
@@ -251,7 +251,7 @@ export function splitPane(
 }
 
 export function closePane(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
   hooks: Pick<ResttyLifecycleEmitter, "runLifecycleHooks">,
   id: number,
 ): boolean {
@@ -267,7 +267,7 @@ export function closePane(
 }
 
 export function setActivePane(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
   lookup: Pick<ResttyPaneLookup, "getActivePane">,
   hooks: Pick<ResttyLifecycleEmitter, "runLifecycleHooks">,
   id: number,
@@ -289,7 +289,7 @@ export function setActivePane(
 }
 
 export function markPaneFocused(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
   lookup: Pick<ResttyPaneLookup, "getFocusedPane">,
   hooks: Pick<ResttyLifecycleEmitter, "runLifecycleHooks">,
   id: number,
@@ -416,13 +416,13 @@ export function blur(
 }
 
 export function getPaneStyleOptions(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
 ): Readonly<Required<ResttyManagedPaneStyleOptions>> {
   return paneManager.getStyleOptions();
 }
 
 export function setPaneStyleOptions(
-  paneManager: ResttyPaneManager<ResttyManagedAppPane>,
+  paneManager: ResttyPaneManager<ResttyManagedPane>,
   options: ResttyManagedPaneStyleOptions,
 ): void {
   paneManager.setStyleOptions(options);

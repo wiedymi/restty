@@ -13,7 +13,7 @@ export type {
   ResttyPaneContextMenuOptions,
   CreateResttyPaneManagerOptions,
   ResttyPaneManager,
-  ResttyPaneWithApp,
+  ResttyPaneWithRuntime,
   CreateDefaultResttyPaneContextMenuItemsOptions,
 } from "../surface/panes-types";
 
@@ -22,7 +22,7 @@ export type {
   CreateResttyManagedPaneManagerOptions,
   ResttyManagedPaneManager,
   ResttyDefaultPaneContextMenuOptions,
-  ResttyManagedAppPane,
+  ResttyManagedPane,
   ResttyPaneDomDefaults,
   ResttyManagedPaneStyleOptions,
   ResttyManagedPaneStylesOptions,

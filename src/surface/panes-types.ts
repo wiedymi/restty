@@ -163,7 +163,7 @@ export type ResttyPaneManager<TPane extends ResttyPaneDefinition> = {
 /**
  * Pane definition extended with a ResttyRuntime instance and pause control.
  */
-export type ResttyPaneWithApp = ResttyPaneDefinition & {
+export type ResttyPaneWithRuntime = ResttyPaneDefinition & {
   /** The terminal runtime running inside this pane. */
   app: ResttyRuntime;
   /** Whether the pane's renderer is currently paused. */
@@ -173,9 +173,9 @@ export type ResttyPaneWithApp = ResttyPaneDefinition & {
 };
 
 /**
- * Options for building the default set of context menu items for a pane with an app.
+ * Options for building the default set of context menu items for a pane with a runtime.
  */
-export type CreateDefaultResttyPaneContextMenuItemsOptions<TPane extends ResttyPaneWithApp> = {
+export type CreateDefaultResttyPaneContextMenuItemsOptions<TPane extends ResttyPaneWithRuntime> = {
   /** The pane the context menu was opened on. */
   pane: TPane;
   /** Subset of the pane manager API needed for split/close actions. */

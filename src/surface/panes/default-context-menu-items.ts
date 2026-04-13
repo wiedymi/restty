@@ -1,7 +1,7 @@
 import type {
   CreateDefaultResttyPaneContextMenuItemsOptions,
   ResttyPaneContextMenuItem,
-  ResttyPaneWithApp,
+  ResttyPaneWithRuntime,
 } from "../panes-types";
 
 /** Return the platform-appropriate shortcut modifier label ("Cmd" on macOS, "Ctrl" elsewhere). */
@@ -14,7 +14,7 @@ export function getResttyShortcutModifierLabel(): "Cmd" | "Ctrl" {
  * Build the standard right-click context menu items for a pane
  * (copy, paste, split, close, clear, PTY toggle, pause toggle).
  */
-export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPaneWithApp>(
+export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPaneWithRuntime>(
   options: CreateDefaultResttyPaneContextMenuItemsOptions<TPane>,
 ): Array<ResttyPaneContextMenuItem | "separator"> {
   const { pane, manager, getPtyUrl } = options;

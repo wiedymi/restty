@@ -1,4 +1,4 @@
-import type { ResttyManagedAppPane } from "../panes/managed-pane-types";
+import type { ResttyManagedPane } from "../panes/managed-pane-types";
 import type { ResttyRenderStageHandle } from "../plugins/types";
 import type { ResttyShaderStage } from "../../runtime/core/models";
 import type { ResttyManagedShaderStage } from "../plugins/runtime";
@@ -10,8 +10,8 @@ import {
 } from "../../runtime/shader-stages";
 
 type ResttyShaderOpsDeps = {
-  getPanes: () => ResttyManagedAppPane[];
-  getPaneById: (id: number) => ResttyManagedAppPane | null;
+  getPanes: () => ResttyManagedPane[];
+  getPaneById: (id: number) => ResttyManagedPane | null;
 };
 
 export class ResttyShaderOps {
@@ -153,7 +153,7 @@ export class ResttyShaderOps {
   }
 
   syncPaneShaderStages(paneId?: number): void {
-    const panes: ResttyManagedAppPane[] = [];
+    const panes: ResttyManagedPane[] = [];
     if (paneId === undefined) {
       panes.push(...this.deps.getPanes());
     } else {

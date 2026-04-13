@@ -4,7 +4,7 @@ import type {
   ResttyPaneShortcutsOptions,
   ResttyPaneStyleOptions,
   ResttyPaneStylesOptions,
-  ResttyPaneWithApp,
+  ResttyPaneWithRuntime,
 } from "../panes-types";
 import type { ResttyRuntimeServicesConfig, ResttyTerminalConfig } from "../../runtime/core/config";
 import type { ResttyRuntimeSession } from "../../runtime/core/resources";
@@ -16,10 +16,10 @@ import type {
 } from "../pane-search-ui";
 
 /**
- * A pane created by the app pane manager, extending the base pane
- * with DOM elements needed by the terminal app.
+ * A pane created by the managed-pane manager, extending the base pane
+ * with DOM elements needed by the terminal runtime.
  */
-export type ResttyManagedAppPane = ResttyPaneWithApp & {
+export type ResttyManagedPane = ResttyPaneWithRuntime & {
   /** The canvas element used for terminal rendering. */
   canvas: HTMLCanvasElement;
   /** Hidden textarea for IME composition input. */
@@ -47,7 +47,7 @@ export type ResttyManagedPaneSearchUiOptions = ResttyPaneSearchUiOptions;
 /** Pane context passed to per-pane config factories. */
 export type ResttyPaneRuntimeContext = {
   id: number;
-  sourcePane: ResttyManagedAppPane | null;
+  sourcePane: ResttyManagedPane | null;
   canvas: HTMLCanvasElement;
   imeInput: HTMLTextAreaElement;
 };
@@ -62,7 +62,7 @@ export type ResttyRuntimeServicesConfigInput =
   | ResttyRuntimeServicesConfig
   | ((context: ResttyPaneRuntimeContext) => ResttyRuntimeServicesConfig);
 
-export type ResttyManagedPaneManager = ResttyPaneManager<ResttyManagedAppPane> & {
+export type ResttyManagedPaneManager = ResttyPaneManager<ResttyManagedPane> & {
   openPaneSearch: (id: number, options?: ResttyPaneSearchUiOpenOptions) => void;
   closePaneSearch: (id: number, options?: ResttyPaneSearchUiCloseOptions) => void;
   togglePaneSearch: (
@@ -81,7 +81,7 @@ export type ResttyDefaultPaneContextMenuOptions = {
   /** Whether the default context menu is enabled (default true). */
   enabled?: boolean;
   /** Guard predicate; return false to suppress the menu for a given event. */
-  canOpen?: (event: MouseEvent, pane: ResttyManagedAppPane) => boolean;
+  canOpen?: (event: MouseEvent, pane: ResttyManagedPane) => boolean;
   /** Override the modifier key label shown in shortcut hints. */
   modKeyLabel?: string;
   /** Provide the PTY WebSocket URL for the connect/disconnect menu item. */
@@ -114,21 +114,21 @@ export type CreateResttyManagedPaneManagerOptions = {
   /** Enable or configure keyboard shortcuts for splitting. */
   shortcuts?: boolean | ResttyPaneShortcutsOptions;
   /** Custom context menu implementation (overrides defaultContextMenu). */
-  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedAppPane> | null;
+  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedPane> | null;
   /** Enable or configure the built-in default context menu. */
   defaultContextMenu?: boolean | ResttyDefaultPaneContextMenuOptions;
   /** Called after a new pane is created. */
-  onPaneCreated?: (pane: ResttyManagedAppPane) => void;
+  onPaneCreated?: (pane: ResttyManagedPane) => void;
   /** Called after a pane is closed. */
-  onPaneClosed?: (pane: ResttyManagedAppPane) => void;
+  onPaneClosed?: (pane: ResttyManagedPane) => void;
   /** Called after a pane is split. */
   onPaneSplit?: (
-    sourcePane: ResttyManagedAppPane,
-    createdPane: ResttyManagedAppPane,
+    sourcePane: ResttyManagedPane,
+    createdPane: ResttyManagedPane,
     direction: "vertical" | "horizontal",
   ) => void;
   /** Called when the active pane changes (or becomes null). */
-  onActivePaneChange?: (pane: ResttyManagedAppPane | null) => void;
+  onActivePaneChange?: (pane: ResttyManagedPane | null) => void;
   /** Called when the layout changes (splits, closes, resizes). */
   onLayoutChanged?: () => void;
 };

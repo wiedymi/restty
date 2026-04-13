@@ -1,6 +1,6 @@
 import type { DesktopNotification } from "../../input";
 import type {
-  ResttyManagedAppPane,
+  ResttyManagedPane,
   ResttyRuntimeServicesConfigInput,
   ResttyTerminalConfigInput,
 } from "../panes/managed-pane-types";
@@ -11,14 +11,14 @@ import type { ResttyPaneSplitDirection } from "../panes-types";
 import type { ResttyShaderOps } from "./shader-ops";
 
 type PaneManagerEventHandlers = {
-  onPaneCreated?: (pane: ResttyManagedAppPane) => void;
-  onPaneClosed?: (pane: ResttyManagedAppPane) => void;
+  onPaneCreated?: (pane: ResttyManagedPane) => void;
+  onPaneClosed?: (pane: ResttyManagedPane) => void;
   onPaneSplit?: (
-    sourcePane: ResttyManagedAppPane,
-    createdPane: ResttyManagedAppPane,
+    sourcePane: ResttyManagedPane,
+    createdPane: ResttyManagedPane,
     direction: ResttyPaneSplitDirection,
   ) => void;
-  onActivePaneChange?: (pane: ResttyManagedAppPane | null) => void;
+  onActivePaneChange?: (pane: ResttyManagedPane | null) => void;
   onLayoutChanged?: () => void;
 };
 
@@ -131,12 +131,12 @@ export function createPaneManagerEventHandlers(
   deps: PaneManagerCallbacksDeps,
 ): PaneManagerEventHandlers {
   return {
-    onPaneCreated: (pane: ResttyManagedAppPane) => {
+    onPaneCreated: (pane: ResttyManagedPane) => {
       deps.shaderOps.syncPaneShaderStages(pane.id);
       deps.emitPluginEvent("pane:created", { paneId: pane.id });
       deps.onPaneCreated?.(pane);
     },
-    onPaneClosed: (pane: ResttyManagedAppPane) => {
+    onPaneClosed: (pane: ResttyManagedPane) => {
       deps.shaderOps.removePaneBaseShaderStages(pane.id);
       deps.emitPluginEvent("pane:closed", { paneId: pane.id });
       deps.onPaneClosed?.(pane);

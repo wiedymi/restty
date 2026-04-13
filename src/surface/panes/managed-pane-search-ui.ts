@@ -1,11 +1,11 @@
 import { createPaneSearchUiController, type PaneSearchUiController } from "../pane-search-ui";
-import type { ResttyManagedAppPane, ResttyManagedPaneSearchUiOptions } from "./managed-pane-types";
+import type { ResttyManagedPane, ResttyManagedPaneSearchUiOptions } from "./managed-pane-types";
 
 export type CreateManagedPaneSearchUiControllerOptions = {
   root: HTMLElement;
   searchUi?: boolean | ResttyManagedPaneSearchUiOptions;
-  getActivePane: () => ResttyManagedAppPane | null;
-  getFocusedPane: () => ResttyManagedAppPane | null;
+  getActivePane: () => ResttyManagedPane | null;
+  getFocusedPane: () => ResttyManagedPane | null;
 };
 
 export function createManagedPaneSearchUiController(
