@@ -361,10 +361,15 @@ export type ResttyRuntimeLifecycleState =
 /**
  * Event emitted by a single runtime instance.
  */
-export type ResttyRuntimeEvent = {
-  type: "state";
-  state: ResttyRuntimeLifecycleState;
-};
+export type ResttyRuntimeEvent =
+  | {
+      type: "state";
+      state: ResttyRuntimeLifecycleState;
+    }
+  | {
+      type: "backend";
+      backend: string;
+    };
 
 /**
  * Public API for a single terminal runtime instance.

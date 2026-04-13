@@ -192,9 +192,11 @@ function createTestRuntimeApp(options: { ensureFont?: () => Promise<void> } = {}
 test("runtime app api lifecycle state flows from created to ready to destroyed", async () => {
   const { app, sharedState } = createTestRuntimeApp();
   const states: string[] = [];
+  const backends: string[] = [];
 
   const dispose = app.subscribe((event) => {
     if (event.type === "state") states.push(event.state);
+    if (event.type === "backend") backends.push(event.backend);
   });
 
   expect(app.getLifecycleState()).toBe("created");
@@ -209,6 +211,7 @@ test("runtime app api lifecycle state flows from created to ready to destroyed",
   expect(app.getLifecycleState()).toBe("destroyed");
   expect(sharedState.wasmHandle).toBe(0);
   expect(states).toEqual(["created", "initializing", "ready", "destroyed"]);
+  expect(backends).toEqual(["none"]);
   dispose();
 });
 

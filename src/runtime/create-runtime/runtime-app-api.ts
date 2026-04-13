@@ -632,6 +632,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
             needsRender: true,
           });
           if (backendEl) backendEl.textContent = "webgpu";
+          emitRuntimeEvent({ type: "backend", backend: "webgpu" });
           callbacks?.onBackend?.("webgpu");
           log("webgpu ready");
           clearWebGLShaderStages();
@@ -669,6 +670,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
             needsRender: true,
           });
           if (backendEl) backendEl.textContent = "webgl2";
+          emitRuntimeEvent({ type: "backend", backend: "webgl2" });
           callbacks?.onBackend?.("webgl2");
           log("webgl2 ready");
           clearWebGPUShaderStages();
@@ -686,6 +688,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
 
       internalState.backend = "none";
       if (backendEl) backendEl.textContent = "none";
+      emitRuntimeEvent({ type: "backend", backend: "none" });
       callbacks?.onBackend?.("none");
       log("no GPU backend available");
       writeState({ activeState: null, currentContextType: null });
