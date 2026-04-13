@@ -7,11 +7,6 @@ import {
   bindSettingsControls,
   bindTerminalControls,
 } from "./lib/control-bindings.ts";
-import {
-  DEFAULT_FONT_FAMILY,
-  getDefaultLocalFontHintText,
-  supportsLocalFontPicker,
-} from "./lib/font-controls.ts";
 import { createPaneAppearanceController } from "./lib/appearance-controller.ts";
 import {
   createAdaptivePtyTransport,
@@ -20,24 +15,19 @@ import {
 } from "./lib/pty-connection.ts";
 import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
 import { createPaneShellSync } from "./lib/pane-shell-sync.ts";
-import type { ShaderPreset } from "./lib/shader-presets.ts";
 import {
   closeSettingsDialog,
   isSettingsDialogOpen,
   openSettingsDialog,
   restoreTerminalFocus,
 } from "./lib/settings-dialog.ts";
-import {
-  createPaneState,
-  getActivePaneState,
-  type PaneState,
-  type RendererChoice,
-} from "./lib/pane-state.ts";
+import { createPaneState, getActivePaneState, type PaneState } from "./lib/pane-state.ts";
 import {
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
   THEME_FILE_RESET_EVENT,
 } from "./lib/shell-events.ts";
+import { resolvePlaygroundStartupDefaults } from "./lib/startup-defaults.ts";
 
 const paneRoot = document.getElementById("paneRoot") as HTMLElement | null;
 if (!paneRoot) {
@@ -85,53 +75,37 @@ let resizeRaf = 0;
 let restty: Restty;
 let notificationPermissionRequest: Promise<NotificationPermission> | null = null;
 const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
-const initialShaderPreset = usesSvelteShell
-  ? "none"
-  : ((shaderPresetEl?.value as ShaderPreset | undefined) ?? "none");
 const initialConnectionBackend = getConnectionBackend(connectionBackendEl);
-const initialPtyUrl = ptyUrlInput?.value ?? "ws://localhost:8787/pty";
-const initialWebContainerCommand = wcCommandInput?.value?.trim() || "jsh";
-const initialWebContainerCwd = wcCwdInput?.value?.trim() || "/";
-const initialRendererDefault: RendererChoice = isRendererChoice(rendererSelect?.value)
-  ? rendererSelect.value
-  : "auto";
-const initialFontSizeDefault = parseFontSize(fontSizeInput?.value, 18);
-const initialMouseModeDefault = mouseModeEl?.value || "auto";
-
-const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
-const initialFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
-const initialLocalFontMatcher = "";
-const initialDetectedLocalFontOptions = [];
-const initialLocalFontHintText = getDefaultLocalFontHintText(supportsLocalFontPicker());
-const searchParams =
-  typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-function isTruthyQueryParam(value: string | null | undefined) {
-  if (!value) return false;
-  const normalized = value.toLowerCase();
-  return normalized === "1" || normalized === "true" || normalized === "on";
-}
-
-function isFalsyQueryParam(value: string | null | undefined) {
-  if (!value) return false;
-  const normalized = value.toLowerCase();
-  return normalized === "0" || normalized === "false" || normalized === "off";
-}
-
-const initialLigatures = !isFalsyQueryParam(searchParams?.get("ligatures"));
-const initialFontHinting = isTruthyQueryParam(searchParams?.get("hinting"));
-const initialFontHintTarget =
-  searchParams?.get("hintTarget") === "light" || searchParams?.get("hintTarget") === "normal"
-    ? searchParams.get("hintTarget")!
-    : "auto";
-
-function isRendererChoice(value: string | null | undefined): value is RendererChoice {
-  return value === "auto" || value === "webgpu" || value === "webgl2";
-}
-
-function parseFontSize(value: string | null | undefined, fallback = 18) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
+const {
+  initialShaderPreset,
+  initialPtyUrl,
+  initialWebContainerCommand,
+  initialWebContainerCwd,
+  initialRendererDefault,
+  initialFontSizeDefault,
+  initialMouseModeDefault,
+  initialFontSize,
+  initialFontFamily,
+  initialLocalFontMatcher,
+  initialDetectedLocalFontOptions,
+  initialLocalFontHintText,
+  initialLigatures,
+  initialFontHinting,
+  initialFontHintTarget,
+} = resolvePlaygroundStartupDefaults({
+  usesSvelteShell,
+  shaderPresetValue: shaderPresetEl?.value,
+  ptyUrlValue: ptyUrlInput?.value,
+  webContainerCommandValue: wcCommandInput?.value,
+  webContainerCwdValue: wcCwdInput?.value,
+  rendererValue: rendererSelect?.value,
+  fontSizeValue: fontSizeInput?.value,
+  mouseModeValue: mouseModeEl?.value,
+  fontFamilyValue: fontFamilySelect?.value,
+  locationSearch: window.location.search,
+  localFontPickerSupported:
+    typeof window === "object" && window !== null && "queryLocalFonts" in window,
+});
 
 function handleDesktopNotification(notification: {
   title: string;
