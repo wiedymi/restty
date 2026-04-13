@@ -229,6 +229,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const alphaBlending: AlphaBlendingMode = options.alphaBlending ?? "linear-corrected";
   const cleanupFns: Array<() => void> = [];
   const cleanupCanvasFns: Array<() => void> = [];
+  let runtimeEventSink: ((event: ResttyRuntimeEvent) => void) | null = null;
 
   let canvas = canvasInput;
   let currentContextType: "webgpu" | "webgl2" | null = null;
@@ -479,6 +480,9 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const searchRuntime = createRuntimeSearch({
     callbacks,
     cleanupFns,
+    emitRuntimeEvent: (event) => {
+      runtimeEventSink?.(event);
+    },
     getWasmReady: () => wasmReady,
     getWasm: () => wasm,
     getWasmHandle: () => wasmHandle,
@@ -1217,6 +1221,9 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     kittyRenderRuntime.clearKittyRenderCaches();
   });
   runtimeAppApi = createRuntimeAppApi({
+    bindRuntimeEventSink: (emit) => {
+      runtimeEventSink = emit;
+    },
     session,
     ptyTransport,
     inputHandler: inputHandler!,

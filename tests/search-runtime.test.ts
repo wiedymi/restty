@@ -42,6 +42,7 @@ afterEach(() => {
 
 test("createRuntimeSearch syncs query state, viewport matches, and navigation", () => {
   const states: ResttySearchState[] = [];
+  const runtimeEvents: ResttySearchState[] = [];
   let markNeedsRenderCount = 0;
   let setQueryArg = "";
   let stepBudget = -1;
@@ -122,6 +123,9 @@ test("createRuntimeSearch syncs query state, viewport matches, and navigation", 
       },
     },
     cleanupFns: [],
+    emitRuntimeEvent: (event) => {
+      runtimeEvents.push(event.state);
+    },
     getWasmReady: () => true,
     getWasm: () => wasm as never,
     getWasmHandle: () => 7,
@@ -182,6 +186,7 @@ test("createRuntimeSearch syncs query state, viewport matches, and navigation", 
   expect(search.getViewportMatches()).toEqual([]);
   expect(markNeedsRenderCount).toBeGreaterThan(0);
   expect(states.at(-1)).toEqual(search.getState());
+  expect(runtimeEvents).toEqual(states);
 });
 
 test("createRuntimeSearch replays an active query after wasm reset", () => {

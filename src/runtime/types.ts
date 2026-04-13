@@ -369,6 +369,10 @@ export type ResttyRuntimeEvent =
   | {
       type: "backend";
       backend: string;
+    }
+  | {
+      type: "search-state";
+      state: ResttySearchState;
     };
 
 /**

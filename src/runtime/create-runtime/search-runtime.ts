@@ -1,9 +1,10 @@
 import type { ResttyWasm, SearchStatus, SearchViewportMatch } from "../../wasm";
-import type { ResttyAppCallbacks, ResttySearchState } from "../types";
+import type { ResttyAppCallbacks, ResttyRuntimeEvent, ResttySearchState } from "../types";
 
 type CreateRuntimeSearchOptions = {
   callbacks?: ResttyAppCallbacks;
   cleanupFns: Array<() => void>;
+  emitRuntimeEvent?: (event: Extract<ResttyRuntimeEvent, { type: "search-state" }>) => void;
   getWasmReady: () => boolean;
   getWasm: () => ResttyWasm | null;
   getWasmHandle: () => number;
@@ -63,6 +64,7 @@ export function createRuntimeSearch(options: CreateRuntimeSearchOptions): Runtim
     }
     state = next;
     options.callbacks?.onSearchState?.(next);
+    options.emitRuntimeEvent?.({ type: "search-state", state: next });
   };
 
   const getWasmContext = (): { wasm: ResttyWasm; handle: number } | null => {

@@ -79,6 +79,7 @@ type LifecycleThemeRuntime = {
 };
 
 type CreateRuntimeAppApiOptions = {
+  bindRuntimeEventSink?: (emit: (event: ResttyRuntimeEvent) => void) => void;
   session: ResttyAppSession;
   ptyTransport: PtyTransport;
   inputHandler: InputHandler;
@@ -199,6 +200,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       }
     }
   };
+  options.bindRuntimeEventSink?.(emitRuntimeEvent);
 
   const setLifecycleState = (next: ResttyRuntimeLifecycleState) => {
     if (lifecycleState === next) return;
