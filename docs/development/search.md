@@ -268,7 +268,7 @@ Do not reuse `selectionColor`. Search and selection need distinct semantics and 
 Files:
 
 - `src/theme/ghostty.ts`
-- `src/runtime/create-runtime/lifecycle-theme-size-theme.ts`
+- `src/runtime/create-runtime/lifecycle-theme-size/theme.ts`
 - `src/renderer/types.ts`
 
 Work:

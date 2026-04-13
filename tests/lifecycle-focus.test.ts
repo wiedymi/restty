@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createLifecycleCanvasHandlers } from "../src/runtime/create-runtime/lifecycle-theme-size-canvas";
+import { createLifecycleCanvasHandlers } from "../src/runtime/create-runtime/lifecycle-theme-size/canvas";
 
 type FakeDoc = {
   activeElement: unknown;

@@ -1,6 +1,6 @@
-import { createLifecycleCanvasHandlers } from "./lifecycle-theme-size-canvas";
-import { createLifecycleThemeHandlers } from "./lifecycle-theme-size-theme";
-import type { LifecycleThemeSizeDeps } from "./lifecycle-theme-size.types";
+import { createLifecycleCanvasHandlers } from "./canvas";
+import { createLifecycleThemeHandlers } from "./theme";
+import type { LifecycleThemeSizeDeps } from "./types";
 
 export function createRuntimeLifecycleThemeSize(deps: LifecycleThemeSizeDeps) {
   const { applyTheme, resetTheme } = createLifecycleThemeHandlers(deps);

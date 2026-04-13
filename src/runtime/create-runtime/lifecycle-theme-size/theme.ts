@@ -1,6 +1,6 @@
-import { colorToFloats, colorToRgbU32, type GhosttyTheme } from "../../theme";
-import { runtimeTerminalColorFromTheme } from "./highlight-terminal-color-utils";
-import type { LifecycleThemeSizeDeps } from "./lifecycle-theme-size.types";
+import { colorToFloats, colorToRgbU32, type GhosttyTheme } from "../../../theme";
+import { runtimeTerminalColorFromTheme } from "../highlight-terminal-color-utils";
+import type { LifecycleThemeSizeDeps } from "./types";
 
 export function createLifecycleThemeHandlers(deps: LifecycleThemeSizeDeps) {
   function applyTheme(theme: GhosttyTheme | null | undefined, sourceLabel = "theme") {
