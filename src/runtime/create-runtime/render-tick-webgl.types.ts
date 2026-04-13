@@ -1,7 +1,7 @@
 import type { FontEntry } from "../../fonts";
 import type { Color, WebGLState } from "../../renderer";
 import type { CursorInfo, RenderState, ResttyWasmExports } from "../../wasm";
-import type { CompiledWebGLShaderStage, WebGLStageTargets } from "./create-app-types";
+import type { CompiledWebGLShaderStage, WebGLStageTargets } from "./render-stage-runtime.types";
 import type {
   BuildFontAtlasParams,
   BuildFontAtlasResult,

@@ -2,7 +2,7 @@ import type { FontEntry, FontManagerState } from "../../fonts";
 import type { NerdConstraint } from "../../fonts/nerd-constraints";
 import type { Color, WebGPUState } from "../../renderer";
 import type { RuntimeTerminalColor } from "./highlight-terminal-color-utils";
-import type { CompiledWebGPUShaderStage, WebGPUStageTargets } from "./create-app-types";
+import type { CompiledWebGPUShaderStage, WebGPUStageTargets } from "./render-stage-runtime.types";
 import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
 import type {
   KittyPlacement,
