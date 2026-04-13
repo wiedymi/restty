@@ -106,7 +106,7 @@ test("runtime api exposes search controls on the public Restty runtime", () => {
     selectedIndex: 1,
   } as const;
 
-  const app = runtime.createPublicApi({
+  const publicRuntime = runtime.createPublicApi({
     setFontSize: () => undefined,
     setFontHinting: () => undefined,
     setFontHintTarget: () => undefined,
@@ -133,11 +133,11 @@ test("runtime api exposes search controls on the public Restty runtime", () => {
     getShaderStages: () => [],
   });
 
-  app.search.setQuery("foo");
-  app.search.next();
-  app.search.previous();
-  app.search.clear();
+  publicRuntime.search.setQuery("foo");
+  publicRuntime.search.next();
+  publicRuntime.search.previous();
+  publicRuntime.search.clear();
 
   expect(calls).toEqual(["set:foo", "next", "prev", "clear"]);
-  expect(app.search.getState()).toEqual(expectedState);
+  expect(publicRuntime.search.getState()).toEqual(expectedState);
 });

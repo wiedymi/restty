@@ -46,7 +46,7 @@ afterEach(() => {
   }
 });
 
-function createTestRuntimeApp(options: { ensureFont?: () => Promise<void> } = {}) {
+function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
   const sharedState = {
     wasm: null,
     wasmExports: null,
@@ -154,7 +154,7 @@ function createTestRuntimeApp(options: { ensureFont?: () => Promise<void> } = {}
 
   return {
     sharedState,
-    app: runtime.createPublicApi({
+    publicRuntime: runtime.createPublicApi({
       setFontSize: () => undefined,
       setLigatures: () => undefined,
       setFontHinting: () => undefined,
@@ -184,25 +184,25 @@ function createTestRuntimeApp(options: { ensureFont?: () => Promise<void> } = {}
 }
 
 test("runtime api lifecycle state flows from created to ready to destroyed", async () => {
-  const { app, sharedState } = createTestRuntimeApp();
+  const { publicRuntime, sharedState } = createTestRuntime();
   const states: string[] = [];
   const backends: string[] = [];
 
-  const dispose = app.events.subscribe((event) => {
+  const dispose = publicRuntime.events.subscribe((event) => {
     if (event.type === "state") states.push(event.state);
     if (event.type === "backend") backends.push(event.backend);
   });
 
-  expect(app.lifecycle.state()).toBe("created");
+  expect(publicRuntime.lifecycle.state()).toBe("created");
 
-  const initPromise = app.lifecycle.init();
-  expect(app.lifecycle.state()).toBe("initializing");
+  const initPromise = publicRuntime.lifecycle.init();
+  expect(publicRuntime.lifecycle.state()).toBe("initializing");
 
   await initPromise;
-  expect(app.lifecycle.state()).toBe("ready");
+  expect(publicRuntime.lifecycle.state()).toBe("ready");
 
-  app.lifecycle.destroy();
-  expect(app.lifecycle.state()).toBe("destroyed");
+  publicRuntime.lifecycle.destroy();
+  expect(publicRuntime.lifecycle.state()).toBe("destroyed");
   expect(sharedState.wasmHandle).toBe(0);
   expect(states).toEqual(["created", "initializing", "ready", "destroyed"]);
   expect(backends).toEqual(["none"]);
@@ -211,7 +211,7 @@ test("runtime api lifecycle state flows from created to ready to destroyed", asy
 
 test("runtime api lifecycle state stays destroyed when init finishes late", async () => {
   let resolveFont!: () => void;
-  const { app, sharedState } = createTestRuntimeApp({
+  const { publicRuntime, sharedState } = createTestRuntime({
     ensureFont: () =>
       new Promise<void>((resolve) => {
         resolveFont = resolve;
@@ -219,20 +219,20 @@ test("runtime api lifecycle state stays destroyed when init finishes late", asyn
   });
   const states: string[] = [];
 
-  const dispose = app.events.subscribe((event) => {
+  const dispose = publicRuntime.events.subscribe((event) => {
     if (event.type === "state") states.push(event.state);
   });
 
-  const initPromise = app.lifecycle.init();
-  expect(app.lifecycle.state()).toBe("initializing");
+  const initPromise = publicRuntime.lifecycle.init();
+  expect(publicRuntime.lifecycle.state()).toBe("initializing");
 
-  app.lifecycle.destroy();
-  expect(app.lifecycle.state()).toBe("destroyed");
+  publicRuntime.lifecycle.destroy();
+  expect(publicRuntime.lifecycle.state()).toBe("destroyed");
 
   resolveFont();
   await initPromise;
 
-  expect(app.lifecycle.state()).toBe("destroyed");
+  expect(publicRuntime.lifecycle.state()).toBe("destroyed");
   expect(sharedState.wasmHandle).toBe(0);
   expect(states).toEqual(["created", "initializing", "destroyed"]);
   dispose();
