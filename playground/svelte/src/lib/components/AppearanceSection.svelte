@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { listBuiltinThemeNames } from "../../../../../src/index.ts";
   import {
     FONT_FAMILY_LOCAL_CHANGE_EVENT,
     FONT_FAMILY_CHANGE_EVENT,
@@ -22,6 +23,8 @@
   } from "../../../../lib/shell-events.ts";
   import type { LocalFontOption } from "../../../../lib/font-controls.ts";
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
+
+  const builtinThemeNames = listBuiltinThemeNames();
 
   let mouseMode = "auto";
   let ligatures = "on";
@@ -250,6 +253,9 @@
   <div class="field-row">
     <select id="themeSelect" bind:value={themeSelectValue} onchange={handleThemeSelectChange}>
       <option value="">Default Theme</option>
+      {#each builtinThemeNames as name}
+        <option value={name}>{name}</option>
+      {/each}
     </select>
     <label class="file-input">
       <input

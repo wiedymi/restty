@@ -430,23 +430,7 @@ function queueResizeAllPanes() {
   });
 }
 
-function populateThemeSelect(names: string[]) {
-  if (!themeSelect) return;
-  const existing = new Set<string>();
-  for (const opt of themeSelect.options) {
-    if (opt.value) existing.add(opt.value);
-  }
-  for (const name of names) {
-    if (existing.has(name)) continue;
-    const option = document.createElement("option");
-    option.value = name;
-    option.textContent = name;
-    themeSelect.appendChild(option);
-  }
-}
-
 const builtinThemeNames = listBuiltinThemeNames();
-populateThemeSelect(builtinThemeNames);
 const defaultThemeName = builtinThemeNames.includes(DEFAULT_THEME_NAME) ? DEFAULT_THEME_NAME : "";
 
 restty = new Restty({
