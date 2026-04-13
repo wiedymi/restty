@@ -1,4 +1,4 @@
-import { createResttyRuntime } from "../app-factory";
+import { createResttyRuntime } from "../../runtime/create-runtime";
 import type { ResttyRuntime } from "../../runtime/core/api";
 import type { ResttyRuntimeCallbacks, ResttyRuntimeSession } from "../../runtime/core/resources";
 import { createManagedPaneRuntimeConfig } from "./managed-pane-runtime-config";
