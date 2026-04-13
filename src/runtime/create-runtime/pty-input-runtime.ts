@@ -1,5 +1,6 @@
 import type { InputHandler } from "../../input";
 import type { PtyResizeMeta, PtyTransport } from "../../pty";
+import type { ResttyRuntimeEvent } from "../types";
 import type { PtyOutputBufferController } from "./pty-output-buffer";
 import { readPastePayloadFromDataTransfer } from "./clipboard-paste";
 import { formatPasteText } from "./format-utils";
@@ -17,6 +18,7 @@ export type CreatePtyInputRuntimeOptions = {
   inputHandler: InputHandler;
   ptyStatusEl?: HTMLElement | null;
   mouseStatusEl?: HTMLElement | null;
+  emitRuntimeEvent?: (event: Extract<ResttyRuntimeEvent, { type: "pty-status" }>) => void;
   onPtyStatus?: ((status: string) => void) | null;
   onMouseStatus?: ((status: string) => void) | null;
   appendLog: (line: string) => void;
@@ -80,6 +82,7 @@ export function createPtyInputRuntime(options: CreatePtyInputRuntimeOptions): Pt
     lastReportedPtyStatus = text;
     if (ptyStatusEl) ptyStatusEl.textContent = text;
     onPtyStatus?.(text);
+    options.emitRuntimeEvent?.({ type: "pty-status", status: text });
   }
 
   function setMouseStatus(text: string): void {

@@ -566,6 +566,9 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     inputHandler,
     ptyStatusEl,
     mouseStatusEl,
+    emitRuntimeEvent: (event) => {
+      runtimeEventSink?.(event);
+    },
     onPtyStatus: callbacks?.onPtyStatus,
     onMouseStatus: callbacks?.onMouseStatus,
     appendLog,

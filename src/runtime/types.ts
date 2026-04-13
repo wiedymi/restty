@@ -371,6 +371,10 @@ export type ResttyRuntimeEvent =
       backend: string;
     }
   | {
+      type: "pty-status";
+      status: string;
+    }
+  | {
       type: "search-state";
       state: ResttySearchState;
     };

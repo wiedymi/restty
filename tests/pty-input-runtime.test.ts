@@ -107,3 +107,35 @@ test("sendKeyInput keeps legacy mapper behavior for non-kitty payloads", () => {
 
   expect(sent).toEqual(["mapped:\x08"]);
 });
+
+test("setPtyStatus emits deduped runtime pty-status events", () => {
+  const events: string[] = [];
+  const runtime = createPtyInputRuntime({
+    ptyTransport: createTransportStub([]),
+    ptyOutputBuffer: {
+      queue: () => {},
+      flush: () => {},
+      cancel: () => {},
+      clear: () => {},
+    },
+    inputHandler: createInputHandlerStub((seq) => seq),
+    emitRuntimeEvent: (event) => {
+      events.push(event.status);
+    },
+    appendLog: () => {},
+    getGridSize: () => ({ cols: 80, rows: 24 }),
+    getCursorForCpr: () => ({ row: 1, col: 1 }),
+    sendInput: () => {},
+    runBeforeInputHook: (text) => text,
+    shouldClearSelection: () => false,
+    clearSelection: () => {},
+    syncOutputResetMs: 1000,
+    syncOutputResetSeq: "\x1b[?2026l",
+  });
+
+  runtime.setPtyStatus("connecting...");
+  runtime.setPtyStatus("connecting...");
+  runtime.setPtyStatus("connected");
+
+  expect(events).toEqual(["connecting...", "connected"]);
+});
