@@ -1,4 +1,8 @@
-import type { ResttyShaderStage, ResttyShaderStageBackend, ResttyShaderStageMode } from "./types";
+import type {
+  ResttyShaderStage,
+  ResttyShaderStageBackend,
+  ResttyShaderStageMode,
+} from "./core/models";
 
 export const RESTTY_SHADER_STAGE_UNIFORM_CAP = 8;
 

@@ -12,7 +12,7 @@ import type {
   SearchViewportMatch,
 } from "../../wasm";
 import type { KittyDrawPlan, KittyDrawSlice } from "./kitty-render-runtime";
-import type { ResttyFontHintTarget } from "../types";
+import type { ResttyFontHintTarget } from "../core/models";
 
 export type CursorPosition = {
   col: number;

@@ -1,5 +1,7 @@
 import type { ResttyWasm, SearchStatus, SearchViewportMatch } from "../../wasm";
-import type { ResttyAppCallbacks, ResttyRuntimeEvent, ResttySearchState } from "../types";
+import type { ResttySearchState } from "../core/models";
+import type { ResttyAppCallbacks } from "../core/resources";
+import type { ResttyRuntimeEvent } from "../core/runtime-events";
 
 type CreateRuntimeSearchOptions = {
   callbacks?: ResttyAppCallbacks;

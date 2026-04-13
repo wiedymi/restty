@@ -4,7 +4,7 @@ import type { Color, WebGLState, WebGPUState } from "../../renderer";
 import type { GhosttyTheme } from "../../theme";
 import type { RuntimeTerminalColor } from "./highlight-terminal-color-utils";
 import type { ResttyWasm } from "../../wasm";
-import type { ResttyAppCallbacks } from "../types";
+import type { ResttyAppCallbacks } from "../core/resources";
 
 export type ActiveState = WebGPUState | WebGLState | null;
 

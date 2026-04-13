@@ -3,7 +3,7 @@ import { fontHeightUnits } from "../../grid";
 import type { WebGLState, WebGPUState } from "../../renderer";
 import type { PtyTransport } from "../../pty";
 import type { ResttyWasm } from "../../wasm";
-import type { ResttyAppCallbacks } from "../types";
+import type { ResttyAppCallbacks } from "../core/resources";
 import type { CellMetrics, FontConfigRef, GridStateRef } from "./font-runtime-helpers.types";
 
 type CreateFontRuntimeGridHelpersOptions = {

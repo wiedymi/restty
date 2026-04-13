@@ -1,6 +1,6 @@
 import type { InputHandler } from "../../input";
 import type { PtyResizeMeta, PtyTransport } from "../../pty";
-import type { ResttyRuntimeEvent } from "../types";
+import type { ResttyRuntimeEvent } from "../core/runtime-events";
 import type { PtyOutputBufferController } from "./pty-output-buffer";
 import { readPastePayloadFromDataTransfer } from "./clipboard-paste";
 import { formatPasteText } from "./format-utils";

@@ -1,6 +1,6 @@
 import { getNerdConstraint, type NerdConstraint } from "../../fonts";
 import { isSymbolCp } from "../../renderer";
-import type { ResttyTouchSelectionMode } from "../types";
+import type { ResttyTouchSelectionMode } from "../core/models";
 
 const RENDERER_SYMBOL_FALLBACK_RANGES: ReadonlyArray<readonly [number, number]> = [
   // Geometric Shapes: includes boxed/dot indicators often used in prompts.

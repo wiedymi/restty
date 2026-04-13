@@ -9,7 +9,8 @@ import type {
 import type { WebGLState, WebGPUState } from "../../renderer";
 import type { PtyTransport } from "../../pty";
 import type { ResttyWasm } from "../../wasm";
-import type { ResttyAppCallbacks, ResttyFontHintTarget } from "../types";
+import type { ResttyFontHintTarget } from "../core/models";
+import type { ResttyAppCallbacks } from "../core/resources";
 import type {
   AtlasOptions,
   GlyphBuffer,

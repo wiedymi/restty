@@ -5,12 +5,12 @@ import type {
   LocalFontFaceData,
   NavigatorWithLocalFontAccess,
 } from "../create-runtime/create-app-types";
+import type { ResttyFontSource } from "../core/models";
 import type {
   ResttyFontResourceFace,
   ResttyFontResourceLease,
   ResttyFontResourceStore,
-  ResttyFontSource,
-} from "../types";
+} from "../core/resources";
 
 type ParsedFontFace = {
   font: ResttyFontResourceFace["font"];

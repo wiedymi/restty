@@ -12,7 +12,7 @@ import {
 } from "../fonts/atlas-builder";
 import { buildGlyphAtlasWithConstraints } from "../font-atlas-utils/glyph-atlas-builder";
 import { nerdConstraintSignature } from "../font-atlas-utils/nerd-metrics-utils";
-import type { ResttyFontHintTarget } from "../types";
+import type { ResttyFontHintTarget } from "../core/models";
 import type {
   AtlasBitmapToRGBA,
   BuildAtlasFn,

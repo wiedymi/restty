@@ -1,4 +1,4 @@
-import type { ResttyAppInputPayload } from "../types";
+import type { ResttyAppInputPayload } from "../core/models";
 
 type RuntimeInputHook =
   | ((payload: ResttyAppInputPayload) => string | null | void)

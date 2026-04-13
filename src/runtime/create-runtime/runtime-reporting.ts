@@ -3,7 +3,7 @@ import {
   getSelectionText as extractSelectionText,
 } from "../../selection";
 import type { CursorInfo, RenderState, ResttyWasm, ResttyWasmExports } from "../../wasm";
-import type { ResttyAppCallbacks } from "../types";
+import type { ResttyAppCallbacks } from "../core/resources";
 import type { RuntimeSelectionState } from "./interaction-runtime/types";
 
 export type CreateRuntimeReportingOptions = {

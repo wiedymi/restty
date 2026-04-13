@@ -55,16 +55,15 @@ import { buildFontAtlasIfNeeded } from "./fonts/atlas-builder";
 import { normalizeFontSources } from "./fonts/font-sources";
 import * as bundledTextShaper from "text-shaper";
 import { createRuntimeEventHub } from "./core/runtime-events";
+import type { ResttyRuntime } from "./core/api";
+import type { ResttyRuntimeConfig } from "./core/config";
+import type { ResttyFontHintTarget, ResttyFontSource } from "./core/models";
 import type {
   ResttyAppCallbacks,
   ResttyAppElements,
   ResttyAppSession,
-  ResttyFontHintTarget,
   ResttyFontResourceLease,
-  ResttyFontSource,
-  ResttyRuntimeConfig,
-  ResttyRuntime,
-} from "./types";
+} from "./core/resources";
 import { getDefaultResttyAppSession } from "./core/session";
 import { createPtyOutputBufferController } from "./create-runtime/pty-output-buffer";
 import { fitTextTailToWidth, openLink } from "./create-runtime/create-app-io-utils";

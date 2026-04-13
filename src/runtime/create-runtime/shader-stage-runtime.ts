@@ -5,7 +5,7 @@ import type {
   CompiledWebGLShaderStage,
   WebGLStageTargets,
 } from "./create-app-types";
-import type { ResttyShaderStage } from "../types";
+import type { ResttyShaderStage } from "../core/models";
 import {
   cloneShaderStages,
   isShaderStageEnabledForBackend,

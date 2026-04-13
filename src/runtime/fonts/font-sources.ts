@@ -1,4 +1,4 @@
-import type { ResttyFontPreset, ResttyFontSource } from "../types";
+import type { ResttyFontPreset, ResttyFontSource } from "../core/models";
 
 /** Local-first default font fallback chain with CDN fallback for JetBrains Mono, Nerd symbols, emoji, and CJK support. */
 export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [

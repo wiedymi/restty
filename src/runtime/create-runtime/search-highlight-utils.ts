@@ -1,5 +1,5 @@
 import type { Color } from "../../renderer";
-import type { ResttySearchViewportMatch } from "../types";
+import type { ResttySearchViewportMatch } from "../core/models";
 
 export type SearchCellHighlightKind = 0 | 1 | 2;
 
