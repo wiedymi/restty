@@ -17,6 +17,7 @@ export type {
   ResttyPluginCleanup,
   ResttyPluginContext,
   ResttyPluginDisposable,
+  ResttyPluginHostApi,
   ResttyPluginEvents,
   ResttyPluginInfo,
   ResttyPluginRequires,

@@ -1,10 +1,9 @@
 import type { ResttyShaderStage } from "../../runtime/core/models";
 import type { ResttyPaneHandle } from "../restty/pane-handle";
-import type { Restty } from "../restty";
-import type { ResttyRenderStageHandle } from "./context.types";
+import type { ResttyPluginHostApi, ResttyRenderStageHandle } from "./context.types";
 
 export type ResttyPluginHostDeps = {
-  restty: Restty;
+  restty: ResttyPluginHostApi;
   panes: () => ResttyPaneHandle[];
   pane: (id: number) => ResttyPaneHandle | null;
   activePane: () => ResttyPaneHandle | null;

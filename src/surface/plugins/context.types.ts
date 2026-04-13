@@ -1,7 +1,10 @@
 import type { ResttyShaderStage } from "../../runtime/core/models";
+import type {
+  ResttyManagedPaneSearchUiStyleOptions,
+  ResttyManagedPaneStyleOptions,
+} from "../panes/managed-pane-types";
 import type { ResttyPaneSplitDirection } from "../panes/types";
-import type { ResttyPaneHandle } from "../restty/pane-handle";
-import type { Restty } from "../restty";
+import type { ResttyPaneApi, ResttyPaneHandle } from "../restty/pane-handle";
 import type { ResttyPluginEvents, ResttyPluginRequires } from "./types";
 
 /** A disposable resource returned by plugin APIs. */
@@ -88,9 +91,31 @@ export type ResttyRenderStageHandle = {
   dispose: () => void;
 };
 
+export type ResttyPluginHostApi = Omit<ResttyPaneApi, "id"> & {
+  panes: () => ResttyPaneHandle[];
+  pane: (id: number) => ResttyPaneHandle | null;
+  activePane: () => ResttyPaneHandle | null;
+  focusedPane: () => ResttyPaneHandle | null;
+  forEachPane: (visitor: (pane: ResttyPaneHandle) => void) => void;
+  createInitialPane: (options?: { focus?: boolean }) => ResttyPaneHandle;
+  splitActivePane: (direction: ResttyPaneSplitDirection) => ResttyPaneHandle | null;
+  splitPane: (id: number, direction: ResttyPaneSplitDirection) => ResttyPaneHandle | null;
+  closePane: (id: number) => boolean;
+  getPaneStyleOptions: () => Readonly<Required<ResttyManagedPaneStyleOptions>>;
+  setPaneStyleOptions: (options: ResttyManagedPaneStyleOptions) => void;
+  getSearchUiStyleOptions: () => Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>>;
+  setSearchUiStyleOptions: (options: ResttyManagedPaneSearchUiStyleOptions) => void;
+  setActivePane: (id: number, options?: { focus?: boolean }) => void;
+  markPaneFocused: (id: number, options?: { focus?: boolean }) => void;
+  requestLayoutSync: () => void;
+  hideContextMenu: () => void;
+  addShaderStage: (stage: ResttyShaderStage) => ResttyRenderStageHandle;
+  removeShaderStage: (id: string) => boolean;
+};
+
 /** Context object provided to each plugin on activation. */
 export type ResttyPluginContext = {
-  restty: Restty;
+  restty: ResttyPluginHostApi;
   options: unknown;
   panes: () => ResttyPaneHandle[];
   pane: (id: number) => ResttyPaneHandle | null;

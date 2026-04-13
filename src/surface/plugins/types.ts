@@ -14,6 +14,7 @@ export type {
   ResttyRenderHook,
   ResttyInterceptorOptions,
   ResttyRenderStageHandle,
+  ResttyPluginHostApi,
   ResttyPluginContext,
   ResttyPlugin,
 } from "./context.types";

@@ -362,6 +362,22 @@ test("surface plugin context contracts are split from the plugin barrel", () => 
   expect(pluginTypes).toContain("./context.types");
 });
 
+test("surface plugin context depends on a plugin host api instead of the full Restty class", () => {
+  const pluginContext = readFileSync(resolve(surfaceRoot, "plugins/context.types.ts"), "utf8");
+  const pluginDispatcherDeps = readFileSync(
+    resolve(surfaceRoot, "plugins/dispatcher.types.ts"),
+    "utf8",
+  );
+
+  expect(pluginContext).not.toContain('type { Restty } from "../restty"');
+  expect(pluginContext).not.toContain("restty: Restty;");
+  expect(pluginContext).toContain("export type ResttyPluginHostApi =");
+  expect(pluginContext).toContain("restty: ResttyPluginHostApi;");
+
+  expect(pluginDispatcherDeps).not.toContain('type { Restty } from "../restty"');
+  expect(pluginDispatcherDeps).toContain('from "./context.types"');
+});
+
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty/pane-handle.ts"),

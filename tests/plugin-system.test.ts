@@ -320,6 +320,40 @@ test("plugin lifecycle: use/unuse/plugins and cleanup", async () => {
   expect(restty.unuse("plugin/lifecycle")).toBe(false);
 });
 
+test("plugin context exposes a narrowed restty host surface adapter", async () => {
+  const restty = createRestty();
+  let pluginRestty: Record<string, unknown> | null = null;
+
+  await restty.use({
+    id: "plugin/context-surface",
+    activate(ctx) {
+      pluginRestty = ctx.restty as Record<string, unknown>;
+    },
+  });
+
+  expect(pluginRestty).not.toBeNull();
+  expect(pluginRestty).not.toBe(restty);
+  expect("use" in (pluginRestty as Record<string, unknown>)).toBe(false);
+  expect("pluginInfo" in (pluginRestty as Record<string, unknown>)).toBe(false);
+  expect("destroy" in (pluginRestty as Record<string, unknown>)).toBe(false);
+  expect("createInitialPane" in (pluginRestty as Record<string, unknown>)).toBe(true);
+
+  const pane = (
+    pluginRestty as { createInitialPane: (options?: { focus?: boolean }) => { id: number } }
+  ).createInitialPane();
+  expect(pane.id).toBe(1);
+  expect(
+    typeof (
+      pluginRestty as {
+        activePane: () => { sendInput: (text: string, source?: string) => void } | null;
+      }
+    ).activePane()?.sendInput,
+  ).toBe("function");
+
+  restty.sendInput("ok");
+  expect(activeWrites(restty)).toEqual([{ kind: "input", text: "ok", source: "program" }]);
+});
+
 test("restty onDesktopNotification callback receives paneId and preserves pane callback", () => {
   const paneNotifications: Array<{ paneId: number; title: string; source: string }> = [];
   const resttyNotifications: Array<{ paneId: number; title: string; source: string }> = [];
