@@ -537,6 +537,20 @@ test("playground no longer ships legacy runtime status or log widgets", () => {
   expect(webcontainerPty).not.toContain("[webcontainer]");
 });
 
+test("webcontainer pty delegates seed script bootstrap", () => {
+  const webcontainerPty = readFileSync(resolve(playgroundRoot, "lib/webcontainer-pty.ts"), "utf8");
+  const seedScripts = readFileSync(
+    resolve(playgroundRoot, "lib/webcontainer-seed-scripts.ts"),
+    "utf8",
+  );
+
+  expect(webcontainerPty).toContain('./webcontainer-seed-scripts.ts"');
+  expect(webcontainerPty).not.toContain("normalizeFetchedScript(");
+  expect(webcontainerPty).not.toContain("restty demo fallback");
+  expect(seedScripts).toContain("normalizeFetchedScript(");
+  expect(seedScripts).toContain("restty demo fallback");
+});
+
 test("src/internal.ts does not import runtime or surface modules directly", () => {
   const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
     return (
