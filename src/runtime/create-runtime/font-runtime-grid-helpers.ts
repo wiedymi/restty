@@ -1,25 +1,7 @@
-import { resetFontEntry, type FontEntry, type FontManagerState } from "../../fonts";
+import { resetFontEntry } from "../../fonts";
 import { fontHeightUnits } from "../../grid";
-import type { WebGLState, WebGPUState } from "../../renderer";
-import type { PtyTransport } from "../../pty";
-import type { ResttyWasm } from "../../wasm";
-import type { CellMetrics, FontConfigRef, GridStateRef } from "./font-runtime-helpers.types";
-
-type CreateFontRuntimeGridHelpersOptions = {
-  fontState: FontManagerState;
-  fontConfig: FontConfigRef;
-  gridState: GridStateRef;
-  getCanvas: () => HTMLCanvasElement;
-  getCurrentDpr: () => number;
-  getActiveState: () => WebGPUState | WebGLState | null;
-  getWasmReady: () => boolean;
-  getWasm: () => ResttyWasm | null;
-  getWasmHandle: () => number;
-  ptyTransport: PtyTransport;
-  setNeedsRender: () => void;
-  markSearchDirty?: () => void;
-  shapeClusterWithFont: (entry: FontEntry, text: string) => { advance: number };
-};
+import type { CellMetrics } from "./font-runtime-helpers.types";
+import type { CreateFontRuntimeGridHelpersOptions } from "./font-runtime-grid-helpers.types";
 
 export function createFontRuntimeGridHelpers(options: CreateFontRuntimeGridHelpersOptions) {
   const {
