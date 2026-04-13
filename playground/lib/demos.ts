@@ -1,3 +1,5 @@
+import { getActivePaneState, type PaneState } from "./pane-state.ts";
+
 type DemoApp = {
   terminal: {
     clearScreen: () => void;
@@ -146,4 +148,21 @@ export function createDemoController(app: DemoApp) {
   };
 
   return { run, stop };
+}
+
+export function stopPaneDemo(state: Pick<PaneState, "demos"> | null | undefined) {
+  if (!state?.demos) return false;
+  state.demos.stop();
+  return true;
+}
+
+export function runActivePaneDemo(
+  paneStates: Map<number, PaneState>,
+  activePaneId: number | null,
+  kind: PlaygroundDemoKind | string | null | undefined,
+) {
+  const state = getActivePaneState(paneStates, activePaneId);
+  if (!state?.demos) return false;
+  state.demos.run(kind ?? "basic");
+  return true;
 }

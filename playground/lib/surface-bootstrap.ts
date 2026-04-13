@@ -1,6 +1,6 @@
 import { Restty } from "../../src/index.ts";
 import { createAdaptivePtyTransport } from "./pty-connection.ts";
-import { createDemoController } from "./demos.ts";
+import { createDemoController, stopPaneDemo } from "./demos.ts";
 import type { PlaygroundDesktopNotification } from "./desktop-notifications.ts";
 import type { createPaneAppearanceController } from "./appearance-controller.ts";
 import type { createConnectionController } from "./connection-controller.ts";
@@ -94,7 +94,7 @@ export function bootstrapPlaygroundSurface({
         },
         onPaneClosed: (pane) => {
           const state = paneStates.get(pane.id);
-          state?.demos?.stop();
+          stopPaneDemo(state);
           paneStates.delete(pane.id);
         },
         onActivePaneChange: (pane) => {

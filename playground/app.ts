@@ -1,5 +1,5 @@
 import { Restty, listBuiltinThemeNames } from "../src/index.ts";
-import type { PlaygroundDemoKind } from "./lib/demos.ts";
+import { runActivePaneDemo, type PlaygroundDemoKind } from "./lib/demos.ts";
 import { createConnectionController } from "./lib/connection-controller.ts";
 import {
   bindAppearanceControls,
@@ -253,12 +253,6 @@ function handleTerminalClear() {
   paneLifecycle.handleTerminalClear();
 }
 
-function runSelectedDemo(kind: PlaygroundDemoKind | string | null | undefined) {
-  const state = getActivePaneState(paneStates, activePaneId);
-  if (!state) return;
-  state.demos?.run(kind ?? "basic");
-}
-
 function handlePtyButtonClick() {
   paneLifecycle.handlePtyButtonClick();
 }
@@ -297,7 +291,7 @@ bindTerminalControls({
   rendererSelect,
   onClear: handleTerminalClear,
   onDemoRun: (kind) => {
-    runSelectedDemo(kind);
+    runActivePaneDemo(paneStates, activePaneId, kind);
   },
   onFontSizeChange: (value) => {
     appearanceController.applyFontSizeValue(value);

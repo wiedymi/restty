@@ -1,3 +1,4 @@
+import { stopPaneDemo } from "./demos.ts";
 import { applySavedThemeForPane } from "./pane-theme.ts";
 import { withPanePaused, type PaneState } from "./pane-state.ts";
 import { getConnectUrlForState, type ConnectionBackend } from "./pty-connection.ts";
@@ -112,7 +113,7 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
     const active = getActivePaneState();
     if (!active) return;
     setPanePaused(active.pane.id, false);
-    active.state.demos?.stop();
+    stopPaneDemo(active.state);
     void initPane(active.pane, active.state);
   }
 
@@ -125,7 +126,7 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
   function handleTerminalClear() {
     const active = getActivePaneState();
     if (!active) return;
-    active.state.demos?.stop();
+    stopPaneDemo(active.state);
     active.pane.runtime.terminal.clearScreen();
   }
 
