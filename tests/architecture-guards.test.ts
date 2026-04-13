@@ -139,11 +139,12 @@ test("surface source does not import runtime create-runtime internals", () => {
   ).toEqual([]);
 });
 
-test("surface pane runtime helpers do not depend on manager option indexed access types", () => {
+test("surface config helpers do not depend on manager option indexed access types", () => {
   const paneHelperFiles = [
     resolve(surfaceRoot, "panes/managed-pane-create.ts"),
     resolve(surfaceRoot, "panes/managed-pane-runtime.ts"),
     resolve(surfaceRoot, "panes/managed-pane-runtime-config.ts"),
+    resolve(surfaceRoot, "restty/manager-options.ts"),
   ];
   const offenders = paneHelperFiles.flatMap((file) => {
     const source = readFileSync(file, "utf8");

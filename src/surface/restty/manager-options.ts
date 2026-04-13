@@ -1,5 +1,9 @@
 import type { DesktopNotification } from "../../input";
-import type { CreateResttyAppPaneManagerOptions, ResttyManagedAppPane } from "../pane-app-manager";
+import type {
+  ResttyManagedAppPane,
+  ResttyRuntimeServicesConfigInput,
+  ResttyTerminalConfigInput,
+} from "../panes/managed-pane-types";
 import type { ResttyPluginEvents, ResttyRenderHookPayload } from "../plugins/types";
 import type { ResttyFontSource } from "../../runtime/core/models";
 import type { ResttyPluginHost } from "../plugins/host";
@@ -19,7 +23,7 @@ type PaneManagerEventHandlers = {
 };
 
 type MergedPaneTerminalConfigDeps = {
-  terminal: CreateResttyAppPaneManagerOptions["terminal"] | undefined;
+  terminal: ResttyTerminalConfigInput | undefined;
   getFontSources: () => ResttyFontSource[] | undefined;
   shaderOps: Pick<
     ResttyShaderOps,
@@ -28,7 +32,7 @@ type MergedPaneTerminalConfigDeps = {
 };
 
 type MergedPaneServicesConfigDeps = {
-  services: CreateResttyAppPaneManagerOptions["services"] | undefined;
+  services: ResttyRuntimeServicesConfigInput | undefined;
   onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
   pluginHost: Pick<ResttyPluginHost, "applyInputInterceptors" | "applyOutputInterceptors">;
   runRenderHooks: (payload: ResttyRenderHookPayload) => void;
@@ -44,7 +48,7 @@ type PaneManagerCallbacksDeps = PaneManagerEventHandlers & {
 
 export function createMergedPaneTerminalConfig(
   deps: MergedPaneTerminalConfigDeps,
-): CreateResttyAppPaneManagerOptions["terminal"] {
+): ResttyTerminalConfigInput {
   return (context) => {
     const paneId = context.id;
     const resolved =
@@ -63,7 +67,7 @@ export function createMergedPaneTerminalConfig(
 
 export function createMergedPaneServicesConfig(
   deps: MergedPaneServicesConfigDeps,
-): CreateResttyAppPaneManagerOptions["services"] {
+): ResttyRuntimeServicesConfigInput {
   return (context) => {
     const paneId = context.id;
     const resolved =
