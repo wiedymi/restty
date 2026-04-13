@@ -551,6 +551,23 @@ test("webcontainer pty delegates seed script bootstrap", () => {
   expect(seedScripts).toContain("restty demo fallback");
 });
 
+test("appearance controller delegates theme and shader policy", () => {
+  const appearanceController = readFileSync(
+    resolve(playgroundRoot, "lib/appearance-controller.ts"),
+    "utf8",
+  );
+  const themeController = readFileSync(resolve(playgroundRoot, "lib/theme-controller.ts"), "utf8");
+
+  expect(appearanceController).toContain('./theme-controller.ts"');
+  expect(appearanceController).not.toContain("applyBuiltinThemeToPane(");
+  expect(appearanceController).not.toContain("applyThemeToPane(");
+  expect(appearanceController).not.toContain("resetThemeForPane(");
+  expect(appearanceController).not.toContain("parseGhosttyTheme");
+  expect(themeController).toContain("applyBuiltinThemeToPane(");
+  expect(themeController).toContain("applyThemeToPane(");
+  expect(themeController).toContain("parseGhosttyTheme");
+});
+
 test("src/internal.ts does not import runtime or surface modules directly", () => {
   const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
     return (

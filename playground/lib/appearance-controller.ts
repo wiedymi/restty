@@ -1,4 +1,3 @@
-import { parseGhosttyTheme, type GhosttyTheme } from "../../src/index.ts";
 import {
   applyFontRenderingOptionsToAllPanes,
   applyFontSourcesToAllPanes,
@@ -13,13 +12,9 @@ import {
   type LocalFontOption,
 } from "./font-controls.ts";
 import type { PaneState, RendererChoice } from "./pane-state.ts";
-import {
-  applyBuiltinThemeToPane,
-  applyThemeToPane,
-  resetThemeForPane,
-  type PaneThemeTarget,
-} from "./pane-theme.ts";
-import { shaderStagesForPreset, type ShaderPreset } from "./shader-presets.ts";
+import { type PaneThemeTarget } from "./pane-theme.ts";
+import { type ShaderPreset } from "./shader-presets.ts";
+import { createPaneThemeController } from "./theme-controller.ts";
 
 export type AppearanceControllerPane = PaneThemeTarget & {
   runtime: PaneThemeTarget["runtime"] & {
@@ -69,12 +64,10 @@ type CreatePaneAppearanceControllerOptions = {
     shaderPreset: ShaderPreset;
   };
   detectLocalFontState?: typeof detectLocalFontState;
-  parseTheme?: (text: string) => GhosttyTheme;
 };
 
 export function createPaneAppearanceController(options: CreatePaneAppearanceControllerOptions) {
   const detectLocalFontStateImpl = options.detectLocalFontState ?? detectLocalFontState;
-  const parseTheme = options.parseTheme ?? parseGhosttyTheme;
   const defaultFontFamily = options.initialState.fontFamily;
 
   let detectedLocalFontOptions = options.initialState.detectedLocalFontOptions;
@@ -87,18 +80,25 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
   let selectedLocalFontMatcher = options.initialState.localFontMatcher;
   let selectedMouseModeDefault = options.initialState.mouseModeDefault;
   let selectedRendererDefault = options.initialState.rendererDefault;
-  let selectedShaderPreset = options.initialState.shaderPreset;
+  const themeController = createPaneThemeController({
+    host: options.host,
+    getActivePane: options.getActivePane,
+    getActivePaneState: options.getActivePaneState,
+    getActivePaneId: options.getActivePaneId,
+    setPaneState: options.setPaneState,
+    shellSync: {
+      syncShaderPresetValue: options.shellSync.syncShaderPresetValue,
+      syncThemeSelectValue: options.shellSync.syncThemeSelectValue,
+    },
+    onThemeFileReset: options.onThemeFileReset,
+    initialShaderPreset: options.initialState.shaderPreset,
+  });
 
   function getActiveContext() {
     const pane = options.getActivePane();
     const state = options.getActivePaneState();
     if (!pane || !state) return null;
     return { pane, state };
-  }
-
-  function applyCurrentShaderPreset() {
-    options.shellSync.syncShaderPresetValue(selectedShaderPreset);
-    options.host.setShaderStages(shaderStagesForPreset(selectedShaderPreset));
   }
 
   function syncTerminalDefaultsFromState(state: PaneState) {
@@ -137,57 +137,6 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     active.pane.runtime.terminal.setRenderer(value);
   }
 
-  async function applyUploadedThemeFile(file: File | null | undefined) {
-    const active = getActiveContext();
-    if (!active || !file) return;
-    try {
-      const text = await file.text();
-      const theme = parseTheme(text);
-      const nextState = applyThemeToPane({
-        pane: active.pane,
-        state: active.state,
-        theme,
-        sourceLabel: file.name || "theme file",
-      });
-      if (nextState) {
-        options.setPaneState(active.pane.id, nextState);
-        if (active.pane.id === options.getActivePaneId()) {
-          options.shellSync.syncThemeSelectValue(nextState.theme.selectValue);
-        }
-      }
-    } catch (err) {
-      console.error("theme load failed", err);
-    } finally {
-      options.onThemeFileReset();
-    }
-  }
-
-  function applyThemeSelection(name: string | null | undefined) {
-    const active = getActiveContext();
-    if (!active) return;
-    if (!name) {
-      const nextState = resetThemeForPane({
-        pane: active.pane,
-        state: active.state,
-      });
-      options.setPaneState(active.pane.id, nextState);
-      if (active.pane.id === options.getActivePaneId()) {
-        options.shellSync.syncThemeSelectValue("");
-      }
-      return;
-    }
-    const nextState = applyBuiltinThemeToPane({
-      pane: active.pane,
-      state: active.state,
-      name,
-    });
-    if (!nextState) return;
-    options.setPaneState(active.pane.id, nextState);
-    if (active.pane.id === options.getActivePaneId()) {
-      options.shellSync.syncThemeSelectValue(nextState.theme.selectValue);
-    }
-  }
-
   function applyMouseMode(value: string | null | undefined) {
     const active = getActiveContext();
     if (!active) return;
@@ -197,21 +146,6 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     if (active.pane.id === options.getActivePaneId()) {
       options.shellSync.syncMouseModeValue(active.state.mouseMode);
     }
-  }
-
-  function applySelectedShaderPreset(value: ShaderPreset | string | null | undefined) {
-    if (
-      value !== "none" &&
-      value !== "scanline" &&
-      value !== "aurora" &&
-      value !== "crt-lite" &&
-      value !== "mono-green"
-    ) {
-      selectedShaderPreset = "none";
-    } else {
-      selectedShaderPreset = value;
-    }
-    applyCurrentShaderPreset();
   }
 
   function applyFontSizeValue(value: string | null | undefined) {
@@ -267,7 +201,7 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
   }
 
   return {
-    applyCurrentShaderPreset,
+    applyCurrentShaderPreset: themeController.applyCurrentShaderPreset,
     applyFontFamilySelection,
     applyFontHintTargetChange,
     applyFontHintingChange,
@@ -277,9 +211,9 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     applyLocalFontSelection,
     applyMouseMode,
     applyRendererChoice,
-    applySelectedShaderPreset,
-    applyThemeSelection,
-    applyUploadedThemeFile,
+    applySelectedShaderPreset: themeController.applySelectedShaderPreset,
+    applyThemeSelection: themeController.applyThemeSelection,
+    applyUploadedThemeFile: themeController.applyUploadedThemeFile,
     getDetectedLocalFontOptions: () => detectedLocalFontOptions,
     getFontFamily: () => selectedFontFamily,
     getFontHintTarget: () => selectedFontHintTarget,
@@ -291,7 +225,7 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     getLocalFontMatcher: () => selectedLocalFontMatcher,
     getMouseModeDefault: () => selectedMouseModeDefault,
     getRendererDefault: () => selectedRendererDefault,
-    getShaderPreset: () => selectedShaderPreset,
+    getShaderPreset: themeController.getShaderPreset,
     loadLocalFonts,
     syncTerminalDefaultsFromState,
   };

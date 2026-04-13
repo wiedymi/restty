@@ -74,71 +74,15 @@ function createShellSyncCalls() {
       syncMouseModeValue: (value: string) => {
         calls.push(`sync-mouse:${value}`);
       },
-      syncShaderPresetValue: (value: string) => {
-        calls.push(`sync-shader:${value}`);
-      },
       syncThemeSelectValue: (value: string) => {
         calls.push(`sync-theme:${value}`);
+      },
+      syncShaderPresetValue: (value: string) => {
+        calls.push(`sync-shader:${value}`);
       },
     },
   };
 }
-
-test("appearance controller applies theme selection and uploaded theme files", async () => {
-  const { pane, calls: paneCalls } = createPane(4);
-  const paneStates = new Map<number, PaneState>([[4, createState({ id: 4 })]]);
-  const { calls: syncCalls, shellSync } = createShellSyncCalls();
-  const shaderStages: string[] = [];
-  let themeFileResets = 0;
-
-  const controller = createPaneAppearanceController({
-    host: {
-      getPanes: () => [pane],
-      setFontSources: async () => {},
-      setShaderStages: () => {
-        shaderStages.push("set");
-      },
-    },
-    getActivePane: () => pane,
-    getActivePaneState: () => paneStates.get(4) ?? null,
-    getActivePaneId: () => 4,
-    setPaneState: (id, state) => {
-      paneStates.set(id, state);
-    },
-    shellSync,
-    onThemeFileReset: () => {
-      themeFileResets += 1;
-    },
-    initialState: {
-      detectedLocalFontOptions: [],
-      fontFamily: "fira-code",
-      fontHintTarget: "auto",
-      fontHinting: false,
-      fontSizeDefault: 18,
-      ligatures: true,
-      localFontHintText: "hint",
-      localFontMatcher: "",
-      mouseModeDefault: "auto",
-      rendererDefault: "auto",
-      shaderPreset: "none",
-    },
-    parseTheme: (text) => ({
-      name: text,
-      colors: { palette: [] },
-      raw: {},
-    }),
-  });
-
-  controller.applyThemeSelection("Aizen Dark");
-  await controller.applyUploadedThemeFile(new File(["Uploaded Theme"], "uploaded.conf"));
-  controller.applyThemeSelection("");
-
-  expect(paneStates.get(4)?.theme.selectValue).toBe("");
-  expect(syncCalls).toEqual(["sync-theme:Aizen Dark", "sync-theme:", "sync-theme:"]);
-  expect(themeFileResets).toBe(1);
-  expect(shaderStages).toEqual([]);
-  expect(paneCalls).toEqual(["theme:Aizen Dark", "theme:uploaded.conf", "reset-theme"]);
-});
 
 test("appearance controller updates renderer, font, mouse, shader, and local font state", async () => {
   const { pane, calls: paneCalls } = createPane(9);
@@ -187,7 +131,6 @@ test("appearance controller updates renderer, font, mouse, shader, and local fon
   controller.applyRendererChoice("webgpu");
   controller.applyFontSizeValue("24");
   controller.applyMouseMode("drag");
-  controller.applySelectedShaderPreset("aurora");
   controller.applyFontHintingChange("on");
   controller.applyLigaturesChange("off");
   controller.applyFontHintTargetChange("light");
@@ -203,15 +146,15 @@ test("appearance controller updates renderer, font, mouse, shader, and local fon
   expect(controller.getLigatures()).toBe(false);
   expect(controller.getFontHinting()).toBe(true);
   expect(controller.getFontHintTarget()).toBe("light");
+  expect(controller.getShaderPreset()).toBe("none");
   expect(controller.getLocalFontHintText()).toBe("Detected 1 local font families.");
   expect(controller.getDetectedLocalFontOptions()).toEqual([
     { value: "local:fira%20code", label: "Local Font: Fira Code" },
   ]);
-  expect(shaderStages).toEqual(["set"]);
+  expect(shaderStages).toEqual([]);
   expect(fontSourceLabels.length).toBe(2);
   expect(syncCalls).toEqual([
     "sync-mouse:drag",
-    "sync-shader:aurora",
     "sync-font-rendering",
     "sync-font-rendering",
     "sync-font-rendering",
