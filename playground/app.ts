@@ -38,6 +38,7 @@ import {
   closeSettingsDialog,
   isSettingsDialogOpen,
   openSettingsDialog,
+  restoreTerminalFocus,
 } from "./lib/settings-dialog.ts";
 import {
   createPaneState,
@@ -94,6 +95,7 @@ let resizeRaf = 0;
 let restty: Restty;
 let notificationPermissionRequest: Promise<NotificationPermission> | null = null;
 let selectedShaderPreset = (shaderPresetEl?.value as ShaderPreset | undefined) ?? "none";
+const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
 
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
 let selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
@@ -398,34 +400,43 @@ restty = new Restty({
 });
 applyShaderPreset();
 
-settingsFab?.addEventListener("click", () => {
-  openSettingsDialog({ host: restty, settingsDialog });
-});
+if (usesSvelteShell) {
+  window.addEventListener("restty:playground-settings-open", () => {
+    restty.hideContextMenu();
+  });
+  window.addEventListener("restty:playground-settings-close", () => {
+    restoreTerminalFocus(restty);
+  });
+} else {
+  settingsFab?.addEventListener("click", () => {
+    openSettingsDialog({ host: restty, settingsDialog });
+  });
 
-settingsClose?.addEventListener("click", () => {
-  closeSettingsDialog({ host: restty, settingsDialog });
-});
+  settingsClose?.addEventListener("click", () => {
+    closeSettingsDialog({ host: restty, settingsDialog });
+  });
 
-settingsDialog?.addEventListener("click", (event) => {
-  if (event.target !== settingsDialog) return;
-  closeSettingsDialog({ host: restty, settingsDialog });
-});
+  settingsDialog?.addEventListener("click", (event) => {
+    if (event.target !== settingsDialog) return;
+    closeSettingsDialog({ host: restty, settingsDialog });
+  });
 
-settingsDialog?.addEventListener("cancel", (event) => {
-  event.preventDefault();
-  closeSettingsDialog({ host: restty, settingsDialog });
-});
+  settingsDialog?.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeSettingsDialog({ host: restty, settingsDialog });
+  });
 
-window.addEventListener(
-  "keydown",
-  (event) => {
-    if (isSettingsDialogOpen(settingsDialog) && event.key === "Escape") {
-      event.preventDefault();
-      closeSettingsDialog({ host: restty, settingsDialog });
-    }
-  },
-  { capture: true },
-);
+  window.addEventListener(
+    "keydown",
+    (event) => {
+      if (isSettingsDialogOpen(settingsDialog) && event.key === "Escape") {
+        event.preventDefault();
+        closeSettingsDialog({ host: restty, settingsDialog });
+      }
+    },
+    { capture: true },
+  );
+}
 
 window.addEventListener("resize", () => {
   queueResizeAllPanes();

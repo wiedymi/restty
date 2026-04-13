@@ -1,6 +1,69 @@
+<script lang="ts">
+  const SETTINGS_OPEN_EVENT = "restty:playground-settings-open";
+  const SETTINGS_CLOSE_EVENT = "restty:playground-settings-close";
+
+  document.documentElement.dataset.playgroundShell = "svelte";
+
+  let settingsDialog: HTMLDialogElement | null = null;
+  let settingsOpen = false;
+
+  function syncSettingsDialog() {
+    if (!settingsDialog) return;
+    if (settingsOpen) {
+      if (!settingsDialog.open) {
+        if (typeof settingsDialog.showModal === "function") {
+          settingsDialog.showModal();
+        } else {
+          settingsDialog.setAttribute("open", "");
+        }
+      }
+      return;
+    }
+    if (settingsDialog.open) {
+      if (typeof settingsDialog.close === "function") {
+        settingsDialog.close();
+      } else {
+        settingsDialog.removeAttribute("open");
+      }
+    }
+  }
+
+  function openSettings() {
+    if (settingsOpen) return;
+    window.dispatchEvent(new CustomEvent(SETTINGS_OPEN_EVENT));
+    settingsOpen = true;
+  }
+
+  function closeSettings() {
+    if (!settingsOpen) return;
+    settingsOpen = false;
+    window.dispatchEvent(new CustomEvent(SETTINGS_CLOSE_EVENT));
+  }
+
+  function handleDialogClick(event: MouseEvent) {
+    if (event.target !== settingsDialog) return;
+    closeSettings();
+  }
+
+  function handleDialogCancel(event: Event) {
+    event.preventDefault();
+    closeSettings();
+  }
+
+  function handleWindowKeydown(event: KeyboardEvent) {
+    if (!settingsOpen || event.key !== "Escape") return;
+    event.preventDefault();
+    closeSettings();
+  }
+
+  $: syncSettingsDialog();
+</script>
+
 <svelte:head>
   <title>restty Playground</title>
 </svelte:head>
+
+<svelte:window onkeydown={handleWindowKeydown} />
 
 <main id="paneRoot" class="pane-root"></main>
 
@@ -35,6 +98,7 @@
     type="button"
     aria-label="Open settings"
     title="Settings"
+    onclick={openSettings}
   >
     <svg class="settings-fab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path
@@ -44,7 +108,13 @@
   </button>
 </div>
 
-<dialog id="settingsDialog" class="settings-dialog">
+<dialog
+  bind:this={settingsDialog}
+  id="settingsDialog"
+  class="settings-dialog"
+  onclick={handleDialogClick}
+  oncancel={handleDialogCancel}
+>
   <div class="panel settings-panel">
     <header>
       <h1>restty</h1>
@@ -53,6 +123,7 @@
         class="settings-close"
         type="button"
         aria-label="Close settings"
+        onclick={closeSettings}
       >
         ✕
       </button>
