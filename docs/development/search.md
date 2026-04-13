@@ -53,8 +53,8 @@ Restty already has most of the rendering seams needed for search highlights:
   - `src/runtime/create-runtime/render-tick-webgl-glyph-pipeline.ts`
 - Interaction state already owns transient UI/runtime state in:
   - `src/runtime/create-runtime/interaction-runtime.ts`
-- The public app API is assembled in:
-  - `src/runtime/create-runtime/runtime-app-api.ts`
+- The public runtime API is assembled in:
+  - `src/runtime/create-runtime/runtime-api.ts`
 
 The missing piece is data ownership:
 
@@ -180,7 +180,7 @@ Keep the viewport result format flat and renderer-friendly. Do not expose intern
 
 ## Proposed Restty Runtime API
 
-Extend `ResttyApp` in `src/runtime/types.ts` with search methods:
+Extend `ResttyRuntime` in `src/runtime/types.ts` with search methods:
 
 - `setSearchQuery(query: string): void`
 - `clearSearch(): void`
@@ -213,7 +213,7 @@ Keep UI out of core. A consumer can bind these APIs to a custom search bar, comm
 
 Files:
 
-- `src/runtime/create-runtime/runtime-app-api.ts`
+- `src/runtime/create-runtime/runtime-api.ts`
 - `src/runtime/create-runtime.ts`
 - new `src/runtime/create-runtime/search-runtime.ts`
 

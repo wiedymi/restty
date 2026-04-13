@@ -11,14 +11,14 @@ import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
 import type { ResttyRuntimeEvent } from "../core/runtime-events";
 import type { ResttyRuntime } from "../core/api";
 import type {
-  RuntimeAppApiOptions,
-  RuntimeAppApiRuntime,
-  RuntimeAppApiSharedState,
+  RuntimeApiController,
+  RuntimeApiOptions,
+  RuntimeApiSharedState,
   RuntimeInternalState,
   RuntimePublicApiOptions,
-} from "./runtime-app-api.types";
+} from "./runtime-api.types";
 
-export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppApiRuntime {
+export function createRuntimeApi(options: RuntimeApiOptions): RuntimeApiController {
   const {
     session,
     ptyTransport,
@@ -86,7 +86,7 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
   };
   const maxScrollbackBytes = resolveMaxScrollbackBytes(options);
 
-  function canRenderFrame(shared: RuntimeAppApiSharedState): boolean {
+  function canRenderFrame(shared: RuntimeApiSharedState): boolean {
     return Boolean(shared.wasmReady && shared.wasm && shared.wasmHandle);
   }
 

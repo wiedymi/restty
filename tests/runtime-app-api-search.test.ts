@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test";
 import { createRuntimeEventHub } from "../src/runtime/core/runtime-events";
 import {
-  createRuntimeAppApi,
-  type RuntimeAppApiSharedState,
-} from "../src/runtime/create-runtime/runtime-app-api";
+  createRuntimeApi,
+  type RuntimeApiSharedState,
+} from "../src/runtime/create-runtime/runtime-api";
 
-test("runtime app api exposes search controls on the public Restty app", () => {
-  const sharedState: RuntimeAppApiSharedState = {
+test("runtime api exposes search controls on the public Restty runtime", () => {
+  const sharedState: RuntimeApiSharedState = {
     wasm: null,
     wasmExports: null,
     wasmHandle: 1,
@@ -21,7 +21,7 @@ test("runtime app api exposes search controls on the public Restty app", () => {
   };
 
   const calls: string[] = [];
-  const runtime = createRuntimeAppApi({
+  const runtime = createRuntimeApi({
     runtimeEvents: createRuntimeEventHub(),
     session: {} as never,
     ptyTransport: {

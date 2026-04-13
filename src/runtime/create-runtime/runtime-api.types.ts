@@ -15,7 +15,7 @@ import type { ResttyRuntimeSession } from "../core/resources";
 import type { RuntimeInteraction } from "./interaction-runtime/types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
 
-export type RuntimeAppApiSharedState = {
+export type RuntimeApiSharedState = {
   wasm: ResttyWasm | null;
   wasmExports: ResttyWasmExports | null;
   wasmHandle: number;
@@ -66,7 +66,7 @@ export type RuntimePublicApiOptions = {
   getShaderStages: ResttyRuntimeRenderApi["getShaderStages"];
 };
 
-export type RuntimeAppApiRuntime = {
+export type RuntimeApiController = {
   sendInput: RuntimeSendInput;
   createPublicApi: (options: RuntimePublicApiOptions) => ResttyRuntime;
 };
@@ -76,7 +76,7 @@ export type LifecycleThemeRuntime = {
   getActiveTheme: () => GhosttyTheme | null;
 };
 
-export type RuntimeAppApiOptions = {
+export type RuntimeApiOptions = {
   runtimeEvents: ResttyRuntimeEventHub;
   session: ResttyRuntimeSession;
   ptyTransport: PtyTransport;
@@ -89,8 +89,8 @@ export type RuntimeAppApiOptions = {
   imeInput: HTMLTextAreaElement | null;
   attachWindowEvents: boolean;
   isMacPlatform: boolean;
-  readState: () => RuntimeAppApiSharedState;
-  writeState: (patch: Partial<RuntimeAppApiSharedState>) => void;
+  readState: () => RuntimeApiSharedState;
+  writeState: (patch: Partial<RuntimeApiSharedState>) => void;
   runBeforeInputHook: (text: string, source: string) => string | null;
   runBeforeRenderOutputHook: (text: string, source: string) => string | null;
   getSelectionText: () => string;

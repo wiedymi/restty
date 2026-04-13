@@ -123,11 +123,11 @@ import { createRuntimeFontRuntimeHelpers } from "./create-runtime/font-runtime-h
 import { createRuntimeReporting } from "./create-runtime/runtime-reporting";
 import { createResttyFontResourceStore } from "./fonts/font-resource-store";
 import type { RuntimeTerminalColor } from "./create-runtime/highlight-terminal-color-utils.types";
-import { createRuntimeAppApi } from "./create-runtime/runtime-app-api";
+import { createRuntimeApi } from "./create-runtime/runtime-api";
 import type {
-  RuntimeAppApiRuntime,
-  RuntimeAppApiSharedState,
-} from "./create-runtime/runtime-app-api.types";
+  RuntimeApiController,
+  RuntimeApiSharedState,
+} from "./create-runtime/runtime-api.types";
 export { createResttyRuntimeSession, getDefaultResttyRuntimeSession } from "./core/session";
 export type { ResttyRuntime } from "./core/api";
 export type { ResttyRuntimeConfig } from "./core/config";
@@ -311,9 +311,9 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const KEYDOWN_BEFOREINPUT_DEDUPE_MS = 80;
   let lastKeydownSeq = "";
   let lastKeydownSeqAt = 0;
-  let runtimeAppApi: RuntimeAppApiRuntime | null = null;
+  let runtimeApi: RuntimeApiController | null = null;
   function sendInput(text: string, source = "program", config: { skipHooks?: boolean } = {}) {
-    runtimeAppApi?.sendInput(text, source, config);
+    runtimeApi?.sendInput(text, source, config);
   }
   const ptyTransport: PtyTransport = services.ptyTransport ?? createWebSocketPtyTransport();
   const PTY_OUTPUT_IDLE_MS = 10;
@@ -1091,7 +1091,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   // drawBoxDrawing(cp, x, rowY, cellW, cellH, fg, fgRectData, underlineThicknessPx)
   // const constraint = nerdConstraint ?? (colorGlyph ? DEFAULT_EMOJI_CONSTRAINT : DEFAULT_SYMBOL_CONSTRAINT);
   // const nerdConstraint = resolveSymbolConstraint(item.cp);
-  const readRuntimeAppApiState = (): RuntimeAppApiSharedState => ({
+  const readRuntimeApiState = (): RuntimeApiSharedState => ({
     wasm,
     wasmExports,
     wasmHandle,
@@ -1104,7 +1104,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     lastKeydownSeq,
     lastKeydownSeqAt,
   });
-  const writeRuntimeAppApiState = (patch: Partial<RuntimeAppApiSharedState>) => {
+  const writeRuntimeApiState = (patch: Partial<RuntimeApiSharedState>) => {
     ({
       wasm = wasm,
       wasmExports = wasmExports,
@@ -1122,7 +1122,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   cleanupFns.push(() => {
     kittyRenderRuntime.clearKittyRenderCaches();
   });
-  runtimeAppApi = createRuntimeAppApi({
+  runtimeApi = createRuntimeApi({
     runtimeEvents,
     session,
     ptyTransport,
@@ -1135,8 +1135,8 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     imeInput,
     attachWindowEvents,
     isMacPlatform,
-    readState: readRuntimeAppApiState,
-    writeState: writeRuntimeAppApiState,
+    readState: readRuntimeApiState,
+    writeState: writeRuntimeApiState,
     runBeforeInputHook,
     runBeforeRenderOutputHook,
     CURSOR_BLINK_MS,
@@ -1173,7 +1173,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     maxScrollbackBytes: terminal.maxScrollbackBytes,
     maxScrollback: terminal.maxScrollback,
   });
-  return runtimeAppApi.createPublicApi({
+  return runtimeApi.createPublicApi({
     setFontSize: applyFontSize,
     setLigatures,
     setFontHinting,

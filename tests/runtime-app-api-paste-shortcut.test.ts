@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
 import { createRuntimeEventHub } from "../src/runtime/core/runtime-events";
 import {
-  createRuntimeAppApi,
-  type RuntimeAppApiSharedState,
-} from "../src/runtime/create-runtime/runtime-app-api";
+  createRuntimeApi,
+  type RuntimeApiSharedState,
+} from "../src/runtime/create-runtime/runtime-api";
 
 type Listener = (event: KeyboardEvent) => void;
 
@@ -82,7 +82,7 @@ function createHarness(
     },
   });
 
-  const sharedState: RuntimeAppApiSharedState = {
+  const sharedState: RuntimeApiSharedState = {
     wasm: null,
     wasmExports: null,
     wasmHandle: 1,
@@ -99,7 +99,7 @@ function createHarness(
   const writes: string[] = [];
   const keyWrites: string[] = [];
 
-  createRuntimeAppApi({
+  createRuntimeApi({
     runtimeEvents: createRuntimeEventHub(),
     session: {} as never,
     ptyTransport: {
