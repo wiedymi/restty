@@ -1,4 +1,4 @@
-import type { FontEntry } from "../fonts";
+import type { FontEntry } from "../../fonts";
 
 export function isLikelyEmojiCodepoint(cp: number): boolean {
   if (cp >= 0x1f1e6 && cp <= 0x1f1ff) return true;

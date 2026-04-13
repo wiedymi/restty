@@ -7,7 +7,7 @@ import {
   type FontEntry,
   type FontManagerState,
 } from "../../fonts";
-import { isCoverageIgnorableCodepoint, resolvePresentationPreference } from "../codepoint-utils";
+import { isCoverageIgnorableCodepoint, resolvePresentationPreference } from "./codepoint-utils";
 import type {
   GlyphBufferToShapedGlyphsFn,
   ShapeFn,

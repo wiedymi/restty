@@ -90,7 +90,7 @@ import {
   isAppleSymbolsFont,
   fontEntryHasBoldStyle,
   fontEntryHasItalicStyle,
-} from "./codepoint-utils";
+} from "./create-runtime/codepoint-utils";
 import {
   buildNerdMetrics,
   nerdConstraintSignature,
