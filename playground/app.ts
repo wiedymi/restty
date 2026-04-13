@@ -7,6 +7,10 @@ import {
 } from "../src/index.ts";
 import { createDemoController, type PlaygroundDemoKind } from "./lib/demos.ts";
 import {
+  applyFontRenderingOptionsToAllPanes,
+  applyFontSourcesToAllPanes,
+} from "./lib/font-application.ts";
+import {
   DEFAULT_FONT_FAMILY,
   FONT_FAMILY_LOCAL_PREFIX,
   detectLocalFonts,
@@ -286,26 +290,6 @@ vec4 resttyStage(vec4 color, vec2 uv, float time, vec4 params0, vec4 params1) {
 
 function applyShaderPreset() {
   restty.setShaderStages(shaderStagesForPreset(selectedShaderPreset));
-}
-
-async function applyFontSourcesToAllPanes() {
-  try {
-    await restty.setFontSources(
-      getCurrentFontSources(selectedFontFamily, selectedLocalFontMatcher),
-    );
-  } catch (err: any) {
-    console.error("font source apply failed", err);
-  }
-}
-
-function applyFontRenderingOptionsToAllPanes() {
-  const panes = restty.getPanes();
-  for (let i = 0; i < panes.length; i += 1) {
-    const pane = panes[i];
-    pane.runtime.terminal.setLigatures(selectedLigatures);
-    pane.runtime.terminal.setFontHintTarget(selectedFontHintTarget);
-    pane.runtime.terminal.setFontHinting(selectedFontHinting);
-  }
 }
 
 function handleDesktopNotification(notification: {
@@ -810,7 +794,12 @@ if (fontHintingSelect) {
       selectedFontHinting,
       selectedFontHintTarget,
     });
-    applyFontRenderingOptionsToAllPanes();
+    applyFontRenderingOptionsToAllPanes({
+      host: restty,
+      selectedLigatures,
+      selectedFontHinting,
+      selectedFontHintTarget,
+    });
   });
 }
 
@@ -825,7 +814,12 @@ if (ligaturesSelect) {
       selectedFontHinting,
       selectedFontHintTarget,
     });
-    applyFontRenderingOptionsToAllPanes();
+    applyFontRenderingOptionsToAllPanes({
+      host: restty,
+      selectedLigatures,
+      selectedFontHinting,
+      selectedFontHintTarget,
+    });
   });
 }
 
@@ -840,7 +834,12 @@ if (fontHintTargetSelect) {
       selectedFontHinting,
       selectedFontHintTarget,
     });
-    applyFontRenderingOptionsToAllPanes();
+    applyFontRenderingOptionsToAllPanes({
+      host: restty,
+      selectedLigatures,
+      selectedFontHinting,
+      selectedFontHintTarget,
+    });
   });
 }
 
@@ -855,7 +854,14 @@ if (fontFamilySelect) {
       selectedLocalFontMatcher,
       supportsLocalFontPicker: supportsLocalFontPicker(),
     });
-    void applyFontSourcesToAllPanes();
+    void applyFontSourcesToAllPanes({
+      host: restty,
+      selectedFontFamily,
+      selectedLocalFontMatcher,
+      onError: (error) => {
+        console.error("font source apply failed", error);
+      },
+    });
   });
 }
 
@@ -878,7 +884,14 @@ if (fontFamilyLocalSelect) {
       selectedLocalFontMatcher,
       supportsLocalFontPicker: supportsLocalFontPicker(),
     });
-    void applyFontSourcesToAllPanes();
+    void applyFontSourcesToAllPanes({
+      host: restty,
+      selectedFontFamily,
+      selectedLocalFontMatcher,
+      onError: (error) => {
+        console.error("font source apply failed", error);
+      },
+    });
   });
 }
 
