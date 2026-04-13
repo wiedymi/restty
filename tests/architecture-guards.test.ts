@@ -185,6 +185,16 @@ test("max scrollback contract is split from implementation", () => {
   expect(maxScrollback).toContain("./max-scrollback.types");
 });
 
+test("font runtime webgpu atlas contract is split from implementation", () => {
+  const webgpuAtlas = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "font-runtime/webgpu-atlas.ts"),
+    "utf8",
+  );
+
+  expect(webgpuAtlas).not.toContain("type CreateRuntimeWebGPUAtlasHelpersOptions =");
+  expect(webgpuAtlas).toContain("./webgpu-atlas.types");
+});
+
 test("runtime internals do not use render-tick-webgl-context.ts as a type barrel", () => {
   const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
     return (

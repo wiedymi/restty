@@ -1,9 +1,4 @@
-import {
-  isSymbolFont,
-  fontScaleOverride,
-  type FontEntry,
-  type FontManagerState,
-} from "../../../fonts";
+import { isSymbolFont, fontScaleOverride, type FontEntry } from "../../../fonts";
 import type { WebGPUState } from "../../../renderer";
 import {
   buildFontAtlasIfNeeded,
@@ -12,34 +7,7 @@ import {
 } from "../../fonts/atlas-builder";
 import { buildGlyphAtlasWithConstraints } from "../../font-atlas-utils/glyph-atlas-builder";
 import { nerdConstraintSignature } from "../../font-atlas-utils/nerd-metrics-utils";
-import type { ResttyFontHintTarget } from "../../core/models";
-import type {
-  AtlasBitmapToRGBA,
-  BuildAtlasFn,
-  BuildColorEmojiAtlasWithCanvas,
-  PadAtlasRGBAFn,
-  RasterizeGlyphFn,
-  RasterizeGlyphWithTransformFn,
-  ResolveGlyphPixelMode,
-} from "./types";
-
-type CreateRuntimeWebGPUAtlasHelpersOptions = {
-  fontState: FontManagerState;
-  getFontHinting: () => boolean;
-  getFontHintTarget: () => ResttyFontHintTarget;
-  fontScaleOverrides: Array<{ match: RegExp; scale: number }>;
-  resolveGlyphPixelMode: ResolveGlyphPixelMode;
-  atlasBitmapToRGBA: AtlasBitmapToRGBA;
-  padAtlasRGBA: PadAtlasRGBAFn;
-  buildAtlas: BuildAtlasFn;
-  buildColorEmojiAtlasWithCanvas: BuildColorEmojiAtlasWithCanvas;
-  rasterizeGlyph: RasterizeGlyphFn;
-  rasterizeGlyphWithTransform: RasterizeGlyphWithTransformFn;
-  pixelModeRgbaValue: number;
-  atlasPadding: number;
-  symbolAtlasPadding: number;
-  symbolAtlasMaxSize: number;
-};
+import type { CreateRuntimeWebGPUAtlasHelpersOptions } from "./webgpu-atlas.types";
 
 export function createRuntimeWebGPUAtlasHelpers(options: CreateRuntimeWebGPUAtlasHelpersOptions) {
   const {
