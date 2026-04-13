@@ -9,21 +9,12 @@ import {
 } from "./lib/control-bindings.ts";
 import { createDesktopNotificationHandler } from "./lib/desktop-notifications.ts";
 import { createPaneAppearanceController } from "./lib/appearance-controller.ts";
-import { getConnectionBackend, syncConnectionUi } from "./lib/pty-connection.ts";
+import { getConnectionBackend } from "./lib/pty-connection.ts";
 import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
 import { createPaneShellSync } from "./lib/pane-shell-sync.ts";
-import {
-  closeSettingsDialog,
-  isSettingsDialogOpen,
-  openSettingsDialog,
-  restoreTerminalFocus,
-} from "./lib/settings-dialog.ts";
+import { createPlaygroundShellAdapter } from "./lib/shell-adapter.ts";
 import { getActivePaneState, type PaneState } from "./lib/pane-state.ts";
-import {
-  SETTINGS_CLOSE_EVENT,
-  SETTINGS_OPEN_EVENT,
-  THEME_FILE_RESET_EVENT,
-} from "./lib/shell-events.ts";
+import { SETTINGS_CLOSE_EVENT, SETTINGS_OPEN_EVENT } from "./lib/shell-events.ts";
 import { resolvePlaygroundStartupDefaults } from "./lib/startup-defaults.ts";
 import { bootstrapPlaygroundSurface } from "./lib/surface-bootstrap.ts";
 
@@ -119,6 +110,20 @@ function getActivePane(): ManagedPane | null {
   return restty.getActivePane();
 }
 
+const shellAdapter = createPlaygroundShellAdapter({
+  usesSvelteShell,
+  target: window,
+  themeFileInput,
+  settingsDialog,
+  connectionUi: {
+    connectionBackendEl,
+    ptyUrlInput,
+    wcCommandInput,
+    wcCwdInput,
+    connectionHintEl,
+  },
+});
+
 let appearanceController: ReturnType<typeof createPaneAppearanceController>;
 let connectionController: ReturnType<typeof createConnectionController>;
 
@@ -157,17 +162,7 @@ connectionController = createConnectionController({
   getActivePane: () => getActivePane(),
   getPanes: () => restty.getPanes(),
   connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
-  syncConnectionUi: usesSvelteShell
-    ? undefined
-    : () => {
-        syncConnectionUi({
-          connectionBackendEl,
-          ptyUrlInput,
-          wcCommandInput,
-          wcCwdInput,
-          connectionHintEl,
-        });
-      },
+  syncConnectionUi: shellAdapter.syncConnectionUiState,
   syncPtyButton: (pane) => {
     paneShellSync.syncPtyButton(pane);
   },
@@ -216,13 +211,7 @@ appearanceController = createPaneAppearanceController({
     syncMouseModeValue: (value) => paneShellSync.syncMouseModeValue(value),
     syncThemeSelectValue: (value) => paneShellSync.syncThemeSelectValue(value),
   },
-  onThemeFileReset: () => {
-    if (usesSvelteShell) {
-      window.dispatchEvent(new CustomEvent(THEME_FILE_RESET_EVENT));
-    } else if (themeFileInput) {
-      themeFileInput.value = "";
-    }
-  },
+  onThemeFileReset: shellAdapter.resetThemeFileInput,
   initialState: appearanceInitialState,
 });
 
@@ -235,7 +224,7 @@ restty = bootstrapPlaygroundSurface({
   setActivePaneId: (id) => {
     activePaneId = id;
   },
-  isSettingsDialogOpen: () => isSettingsDialogOpen(),
+  isSettingsDialogOpen: shellAdapter.isSettingsDialogOpen,
   appearanceController,
   connectionController,
   paneLifecycle,
@@ -250,19 +239,10 @@ bindSettingsControls({
   settingsFab,
   settingsClose,
   onOpen: () => {
-    if (usesSvelteShell) {
-      restty.hideContextMenu();
-      return;
-    }
-    openSettingsDialog({ host: restty, settingsDialog });
+    shellAdapter.openSettings(restty);
   },
   onClose: () => {
-    if (usesSvelteShell) {
-      restoreTerminalFocus(restty);
-      return;
-    }
-    if (!isSettingsDialogOpen(settingsDialog)) return;
-    closeSettingsDialog({ host: restty, settingsDialog });
+    shellAdapter.closeSettings(restty);
   },
 });
 
@@ -372,15 +352,7 @@ bindAppearanceControls({
   },
 });
 
-if (!usesSvelteShell) {
-  syncConnectionUi({
-    connectionBackendEl,
-    ptyUrlInput,
-    wcCommandInput,
-    wcCwdInput,
-    connectionHintEl,
-  });
-}
+shellAdapter.syncConnectionUiState();
 paneShellSync.syncFontFamilyValue();
 paneShellSync.syncLocalFontControls();
 paneShellSync.syncFontRenderingControls();
