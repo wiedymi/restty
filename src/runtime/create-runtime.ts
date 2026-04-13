@@ -54,6 +54,7 @@ import {
 import { buildFontAtlasIfNeeded } from "./fonts/atlas-builder";
 import { normalizeFontSources } from "./fonts/font-sources";
 import * as bundledTextShaper from "text-shaper";
+import type { ResttyRuntimeEvent } from "./core/runtime-events";
 import type {
   ResttyFontHintTarget,
   ResttyFontSource,

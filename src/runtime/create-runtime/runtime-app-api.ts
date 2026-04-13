@@ -9,13 +9,9 @@ import {
 import type { ResttyWasm, ResttyWasmExports } from "../../wasm";
 import { normalizeNewlines } from "./create-app-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
-import type {
-  ResttyRuntime,
-  ResttyAppCallbacks,
-  ResttyAppSession,
-  ResttyRuntimeEvent,
-  ResttyRuntimeLifecycleState,
-} from "../types";
+import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
+import type { ResttyRuntimeEvent } from "../core/runtime-events";
+import type { ResttyRuntime, ResttyAppCallbacks, ResttyAppSession } from "../types";
 import type { PtyInputRuntime } from "./pty-input-runtime";
 import type { RuntimeInteraction } from "./interaction-runtime";
 

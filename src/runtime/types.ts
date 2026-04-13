@@ -4,7 +4,11 @@ import type { WebGPUCoreState } from "../renderer";
 import type { GhosttyTheme } from "../theme";
 import type { ResttyWasm } from "../wasm";
 import type { SearchViewportMatch } from "../wasm";
+import type { ResttyRuntimeLifecycleState } from "./core/lifecycle";
+import type { ResttyRuntimeEvent } from "./core/runtime-events";
 import type { Font as TextShaperFont } from "text-shaper";
+export type { ResttyRuntimeLifecycleState } from "./core/lifecycle";
+export type { ResttyRuntimeEvent } from "./core/runtime-events";
 
 /** Callback for WASM log messages. */
 export type ResttyWasmLogListener = (message: string) => void;
@@ -351,34 +355,6 @@ export type ResttyRuntimeConfig = ResttyRuntimeMountConfig &
 /**
  * Lifecycle state for a single runtime instance.
  */
-export type ResttyRuntimeLifecycleState =
-  | "created"
-  | "initializing"
-  | "ready"
-  | "failed"
-  | "destroyed";
-
-/**
- * Event emitted by a single runtime instance.
- */
-export type ResttyRuntimeEvent =
-  | {
-      type: "state";
-      state: ResttyRuntimeLifecycleState;
-    }
-  | {
-      type: "backend";
-      backend: string;
-    }
-  | {
-      type: "pty-status";
-      status: string;
-    }
-  | {
-      type: "search-state";
-      state: ResttySearchState;
-    };
-
 /**
  * Public API for a single terminal runtime instance.
  */
