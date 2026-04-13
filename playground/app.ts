@@ -76,6 +76,7 @@ import {
   TERMINAL_RENDERER_EVENT,
   TERMINAL_STATE_EVENT,
   THEME_FILE_CHANGE_EVENT,
+  THEME_FILE_RESET_EVENT,
   THEME_SELECT_CHANGE_EVENT,
   THEME_SELECT_STATE_EVENT,
   type DemoRunDetail,
@@ -729,7 +730,9 @@ function applyUploadedThemeFile(file: File | null | undefined) {
       console.error("theme load failed", err);
     })
     .finally(() => {
-      if (themeFileInput) {
+      if (usesSvelteShell) {
+        window.dispatchEvent(new CustomEvent(THEME_FILE_RESET_EVENT));
+      } else if (themeFileInput) {
         themeFileInput.value = "";
       }
     });

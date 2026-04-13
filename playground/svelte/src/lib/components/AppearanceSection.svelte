@@ -13,6 +13,7 @@
     MOUSE_MODE_STATE_EVENT,
     SHADER_PRESET_CHANGE_EVENT,
     THEME_FILE_CHANGE_EVENT,
+    THEME_FILE_RESET_EVENT,
     THEME_SELECT_CHANGE_EVENT,
     THEME_SELECT_STATE_EVENT,
     type FontRenderingStateDetail,
@@ -34,6 +35,7 @@
   let fontHintTarget = "auto";
   let shaderPreset: ShaderPreset = "none";
   let themeSelectValue = "";
+  let themeFileInput: HTMLInputElement | null = null;
 
   function handleShaderPresetChange() {
     window.dispatchEvent(
@@ -114,6 +116,12 @@
     );
   }
 
+  function handleWindowThemeFileReset() {
+    if (themeFileInput) {
+      themeFileInput.value = "";
+    }
+  }
+
   function handleLigaturesChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
@@ -188,6 +196,7 @@
   on:restty:playground-font-rendering-state={handleWindowFontRenderingState}
   on:restty:playground-local-font-state={handleWindowLocalFontState}
   on:restty:playground-mouse-mode-state={handleWindowMouseModeState}
+  on:restty:playground-theme-file-reset={handleWindowThemeFileReset}
   on:restty:playground-theme-select-state={handleWindowThemeSelectState}
 />
 
@@ -244,6 +253,7 @@
     </select>
     <label class="file-input">
       <input
+        bind:this={themeFileInput}
         id="themeFile"
         type="file"
         accept=".conf,.theme,.txt"

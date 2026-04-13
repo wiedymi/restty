@@ -16,6 +16,7 @@ export const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target
 export const FONT_RENDERING_STATE_EVENT = "restty:playground-font-rendering-state";
 export const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
 export const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
+export const THEME_FILE_RESET_EVENT = "restty:playground-theme-file-reset";
 export const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
 export const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
 export const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
