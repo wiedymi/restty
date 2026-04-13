@@ -2,6 +2,7 @@
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
 
   const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
+  const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
   const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
   const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
   const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
@@ -48,6 +49,16 @@
     );
   }
 
+  function handleFontFamilyChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(FONT_FAMILY_CHANGE_EVENT, {
+        detail: { value: select.value },
+      }),
+    );
+  }
+
   function handleHintingChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
@@ -72,7 +83,7 @@
 <section class="section">
   <div class="section-title">Appearance</div>
   <div class="field-row">
-    <select id="fontFamily">
+    <select id="fontFamily" onchange={handleFontFamilyChange}>
       <option value="fira-code" selected>Base Font: Fira Code (default)</option>
       <option value="jetbrains">Base Font: JetBrains Mono</option>
     </select>

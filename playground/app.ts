@@ -87,6 +87,7 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const RUN_DEMO_EVENT = "restty:playground-demo-run";
+const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
 const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
 const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
 const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
@@ -764,8 +765,8 @@ if (usesSvelteShell) {
 }
 
 if (fontFamilySelect) {
-  fontFamilySelect.addEventListener("change", () => {
-    selectedFontFamily = fontFamilySelect.value || DEFAULT_FONT_FAMILY;
+  const applyFontFamilySelection = (value: string | null | undefined) => {
+    selectedFontFamily = value || DEFAULT_FONT_FAMILY;
     syncFontFamilyControls({
       fontFamilySelect,
       fontFamilyLocalSelect,
@@ -782,7 +783,17 @@ if (fontFamilySelect) {
         console.error("font source apply failed", error);
       },
     });
-  });
+  };
+
+  if (usesSvelteShell) {
+    window.addEventListener(FONT_FAMILY_CHANGE_EVENT, (event) => {
+      applyFontFamilySelection((event as FontControlChangeEvent).detail?.value);
+    });
+  } else {
+    fontFamilySelect.addEventListener("change", () => {
+      applyFontFamilySelection(fontFamilySelect.value);
+    });
+  }
 }
 
 if (fontFamilyLocalSelect) {
