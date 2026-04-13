@@ -87,10 +87,13 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const RUN_DEMO_EVENT = "restty:playground-demo-run";
+const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
 const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
 const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
 const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
 const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
+const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
+const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
 const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
 const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
 const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
@@ -103,7 +106,9 @@ const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
 type FontControlChangeEvent = CustomEvent<{ value?: string }>;
+type LocalFontControlChangeEvent = CustomEvent<{ value?: string }>;
 type MouseModeChangeEvent = CustomEvent<{ value?: string }>;
+type ThemeFileChangeEvent = CustomEvent<{ file?: File | null }>;
 type ThemeSelectChangeEvent = CustomEvent<{ value?: string }>;
 type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
 type FontSizeChangeEvent = CustomEvent<{ value?: string }>;
@@ -573,34 +578,43 @@ if (usesSvelteShell) {
   });
 }
 
-if (themeFileInput) {
-  themeFileInput.addEventListener("change", () => {
-    const pane = getActivePane();
-    const state = getActivePaneState(paneStates, activePaneId);
-    const file = themeFileInput.files?.[0];
-    if (!pane || !state || !file) return;
-    file
-      .text()
-      .then((text) => {
-        const theme: GhosttyTheme = parseGhosttyTheme(text);
-        const nextState = applyThemeToPane({
-          pane,
-          state,
-          theme,
-          sourceLabel: file.name || "theme file",
-          activePaneId,
-          themeSelect,
-        });
-        if (nextState) {
-          paneStates.set(pane.id, nextState);
-        }
-      })
-      .catch((err) => {
-        console.error("theme load failed", err);
-      })
-      .finally(() => {
-        themeFileInput.value = "";
+function applyUploadedThemeFile(file: File | null | undefined) {
+  const pane = getActivePane();
+  const state = getActivePaneState(paneStates, activePaneId);
+  if (!pane || !state || !file) return;
+  file
+    .text()
+    .then((text) => {
+      const theme: GhosttyTheme = parseGhosttyTheme(text);
+      const nextState = applyThemeToPane({
+        pane,
+        state,
+        theme,
+        sourceLabel: file.name || "theme file",
+        activePaneId,
+        themeSelect,
       });
+      if (nextState) {
+        paneStates.set(pane.id, nextState);
+      }
+    })
+    .catch((err) => {
+      console.error("theme load failed", err);
+    })
+    .finally(() => {
+      if (themeFileInput) {
+        themeFileInput.value = "";
+      }
+    });
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(THEME_FILE_CHANGE_EVENT, (event) => {
+    applyUploadedThemeFile((event as ThemeFileChangeEvent).detail?.file);
+  });
+} else if (themeFileInput) {
+  themeFileInput.addEventListener("change", () => {
+    applyUploadedThemeFile(themeFileInput.files?.[0]);
   });
 }
 
@@ -796,43 +810,58 @@ if (fontFamilySelect) {
   }
 }
 
-if (fontFamilyLocalSelect) {
-  fontFamilyLocalSelect.addEventListener("change", () => {
-    const value = fontFamilyLocalSelect.value;
-    if (!value) {
-      selectedLocalFontMatcher = "";
-    } else if (value.startsWith(FONT_FAMILY_LOCAL_PREFIX)) {
-      const encoded = value.slice(FONT_FAMILY_LOCAL_PREFIX.length);
-      selectedLocalFontMatcher = decodeURIComponent(encoded).trim().toLowerCase();
-    } else {
-      selectedLocalFontMatcher = "";
-    }
-    syncFontFamilyControls({
-      fontFamilySelect,
-      fontFamilyLocalSelect,
-      btnLoadLocalFonts,
-      selectedFontFamily,
-      selectedLocalFontMatcher,
-      supportsLocalFontPicker: supportsLocalFontPicker(),
-    });
-    void applyFontSourcesToAllPanes({
-      host: restty,
-      selectedFontFamily,
-      selectedLocalFontMatcher,
-      onError: (error) => {
-        console.error("font source apply failed", error);
-      },
-    });
+function applyLocalFontSelection(value: string | null | undefined) {
+  if (!value) {
+    selectedLocalFontMatcher = "";
+  } else if (value.startsWith(FONT_FAMILY_LOCAL_PREFIX)) {
+    const encoded = value.slice(FONT_FAMILY_LOCAL_PREFIX.length);
+    selectedLocalFontMatcher = decodeURIComponent(encoded).trim().toLowerCase();
+  } else {
+    selectedLocalFontMatcher = "";
+  }
+  syncFontFamilyControls({
+    fontFamilySelect,
+    fontFamilyLocalSelect,
+    btnLoadLocalFonts,
+    selectedFontFamily,
+    selectedLocalFontMatcher,
+    supportsLocalFontPicker: supportsLocalFontPicker(),
+  });
+  void applyFontSourcesToAllPanes({
+    host: restty,
+    selectedFontFamily,
+    selectedLocalFontMatcher,
+    onError: (error) => {
+      console.error("font source apply failed", error);
+    },
   });
 }
 
-if (btnLoadLocalFonts) {
-  btnLoadLocalFonts.addEventListener("click", () => {
+if (usesSvelteShell) {
+  window.addEventListener(FONT_FAMILY_LOCAL_CHANGE_EVENT, (event) => {
+    applyLocalFontSelection((event as LocalFontControlChangeEvent).detail?.value);
+  });
+  window.addEventListener(LOAD_LOCAL_FONTS_EVENT, () => {
     void detectLocalFonts({
       fontFamilyLocalSelect,
       fontFamilyHintEl,
     });
   });
+} else {
+  if (fontFamilyLocalSelect) {
+    fontFamilyLocalSelect.addEventListener("change", () => {
+      applyLocalFontSelection(fontFamilyLocalSelect.value);
+    });
+  }
+
+  if (btnLoadLocalFonts) {
+    btnLoadLocalFonts.addEventListener("click", () => {
+      void detectLocalFonts({
+        fontFamilyLocalSelect,
+        fontFamilyHintEl,
+      });
+    });
+  }
 }
 
 if (!usesSvelteShell) {

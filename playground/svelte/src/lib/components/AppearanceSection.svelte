@@ -1,11 +1,14 @@
 <script lang="ts">
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
 
+  const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
   const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
   const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
   const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
   const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
   const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
+  const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
+  const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
   const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
   const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
@@ -39,6 +42,16 @@
     );
   }
 
+  function handleThemeFileChange(event: Event) {
+    const input = event.currentTarget;
+    if (!(input instanceof HTMLInputElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(THEME_FILE_CHANGE_EVENT, {
+        detail: { file: input.files?.[0] ?? null },
+      }),
+    );
+  }
+
   function handleLigaturesChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
@@ -54,6 +67,16 @@
     if (!(select instanceof HTMLSelectElement)) return;
     window.dispatchEvent(
       new CustomEvent(FONT_FAMILY_CHANGE_EVENT, {
+        detail: { value: select.value },
+      }),
+    );
+  }
+
+  function handleLocalFontFamilyChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(FONT_FAMILY_LOCAL_CHANGE_EVENT, {
         detail: { value: select.value },
       }),
     );
@@ -77,6 +100,10 @@
         detail: { value: select.value },
       }),
     );
+  }
+
+  function handleLoadLocalFonts() {
+    window.dispatchEvent(new CustomEvent(LOAD_LOCAL_FONTS_EVENT));
   }
 </script>
 
@@ -107,10 +134,12 @@
     Bundled Fira Code is available in the playground for ligatures and fallback checks.
   </div>
   <div class="field-row">
-    <select id="fontFamilyLocal">
+    <select id="fontFamilyLocal" onchange={handleLocalFontFamilyChange}>
       <option value="">Local Font: None</option>
     </select>
-    <button id="btnLoadLocalFonts" type="button">Detect Local</button>
+    <button id="btnLoadLocalFonts" type="button" onclick={handleLoadLocalFonts}>
+      Detect Local
+    </button>
   </div>
   <div id="fontFamilyHint" class="hint">
     Main font family for all panes. Use Detect Local to add system fonts.
@@ -120,7 +149,12 @@
       <option value="">Default Theme</option>
     </select>
     <label class="file-input">
-      <input id="themeFile" type="file" accept=".conf,.theme,.txt" />
+      <input
+        id="themeFile"
+        type="file"
+        accept=".conf,.theme,.txt"
+        onchange={handleThemeFileChange}
+      />
       <span>Upload</span>
     </label>
   </div>
