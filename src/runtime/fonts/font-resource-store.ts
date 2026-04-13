@@ -4,7 +4,7 @@ import type {
   LocalFontFaceData,
   NavigatorWithLocalFontAccess,
 } from "../../fonts/local-font-access.types";
-import { sourceBufferFromView, sourceLabelFromUrl } from "../create-runtime/create-app-io-utils";
+import { sourceBufferFromView, sourceLabelFromUrl } from "../create-runtime/runtime-io-utils";
 import type { ResttyFontSource } from "../core/models";
 import type {
   ResttyFontResourceFace,

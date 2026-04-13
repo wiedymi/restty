@@ -5,7 +5,7 @@ import { isSymbolCp } from "../src/renderer/shapes";
 import {
   isRenderSymbolLike,
   resolveSymbolConstraint,
-} from "../src/runtime/create-runtime/create-app-symbols";
+} from "../src/runtime/create-runtime/runtime-symbols";
 
 test("symbol-like classification follows Ghostty's precomputed table", () => {
   expect(isSymbolCp(0x2192)).toBe(true); // →
@@ -71,7 +71,7 @@ test("render path uses generic symbol handling without per-codepoint override ta
     "utf8",
   );
   const symbolSource = readFileSync(
-    join(process.cwd(), "src/runtime/create-runtime/create-app-symbols.ts"),
+    join(process.cwd(), "src/runtime/create-runtime/runtime-symbols.ts"),
     "utf8",
   );
   expect(symbolSource.includes("[0x2300, 0x23ff]")).toBe(false);
@@ -127,7 +127,7 @@ test("symbol constraint width rule is applied for all symbol-like glyphs", () =>
 
 test("symbol constraints remain table-driven without per-codepoint overrides", () => {
   const symbolSource = readFileSync(
-    join(process.cwd(), "src/runtime/create-runtime/create-app-symbols.ts"),
+    join(process.cwd(), "src/runtime/create-runtime/runtime-symbols.ts"),
     "utf8",
   );
   expect(symbolSource.includes("cp === 0x15e3")).toBe(false);

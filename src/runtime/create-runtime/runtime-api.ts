@@ -5,7 +5,7 @@ import {
   pasteFromClipboard as readClipboardText,
 } from "../../selection";
 import type { ResttyWasm } from "../../wasm";
-import { normalizeNewlines } from "./create-app-io-utils";
+import { normalizeNewlines } from "./runtime-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
 import type { ResttyRuntimeEvent } from "../core/runtime-events";

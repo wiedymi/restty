@@ -620,14 +620,14 @@ The following files are the clearest candidates for relocation or splitting base
   - `create-runtime.ts` should only compose subsystems and expose the runtime API
   - implementation helpers should live in subfolders
 
-- `src/runtime/create-app-symbols.ts`
+- `src/runtime/create-runtime/runtime-symbols.ts`
   Split immediately.
   This file currently mixes symbol-constraint policy with touch-selection config behavior.
   Target:
   - `runtime/fonts/symbol-constraints.ts`
   - `runtime/interaction/touch-selection.ts`
 
-- `src/runtime/create-app-io-utils.ts`
+- `src/runtime/create-runtime/runtime-io-utils.ts`
   Split by domain.
   It currently mixes URL opening, font-source labeling, buffer conversion, newline normalization, and text-tail fitting.
   Target:

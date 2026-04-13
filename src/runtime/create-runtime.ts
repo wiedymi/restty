@@ -65,7 +65,7 @@ import type {
 } from "./core/resources";
 import { getDefaultResttyRuntimeSession } from "./core/session";
 import { createPtyOutputBufferController } from "./create-runtime/pty-output-buffer";
-import { fitTextTailToWidth, openLink } from "./create-runtime/create-app-io-utils";
+import { fitTextTailToWidth, openLink } from "./create-runtime/runtime-io-utils";
 import {
   drawUnderlineStyle,
   drawStrikethrough,
@@ -79,7 +79,7 @@ import {
   clampFiniteNumber,
   isRenderSymbolLike,
   resolveSymbolConstraint,
-} from "./create-runtime/create-app-symbols";
+} from "./create-runtime/runtime-symbols";
 import {
   decodePackedRGBA,
   decodeRGBAWithCache,

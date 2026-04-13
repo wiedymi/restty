@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { fitTextTailToWidth } from "../src/runtime/create-runtime/create-app-io-utils";
+import { fitTextTailToWidth } from "../src/runtime/create-runtime/runtime-io-utils";
 
 test("fitTextTailToWidth keeps full text when it already fits", () => {
   const result = fitTextTailToWidth("hello", 50, (value) => value.length * 10);
