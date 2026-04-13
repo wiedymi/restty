@@ -771,16 +771,18 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       init,
       destroy,
       getLifecycleState: () => lifecycleState,
-      subscribe: (listener) => {
-        eventListeners.add(listener);
-        try {
-          listener({ type: "state", state: lifecycleState });
-        } catch {
-          // Ignore runtime event listener errors.
-        }
-        return () => {
-          eventListeners.delete(listener);
-        };
+      events: {
+        subscribe: (listener) => {
+          eventListeners.add(listener);
+          try {
+            listener({ type: "state", state: lifecycleState });
+          } catch {
+            // Ignore runtime event listener errors.
+          }
+          return () => {
+            eventListeners.delete(listener);
+          };
+        },
       },
       setRenderer,
       setPaused,

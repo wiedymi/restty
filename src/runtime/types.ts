@@ -381,8 +381,11 @@ export type ResttyRuntime = {
   destroy: () => void;
   /** Get the current runtime lifecycle state. */
   getLifecycleState: () => ResttyRuntimeLifecycleState;
-  /** Subscribe to runtime lifecycle events. */
-  subscribe: (listener: (event: ResttyRuntimeEvent) => void) => () => void;
+  /** Runtime lifecycle and state-change events. */
+  events: {
+    /** Subscribe to runtime lifecycle and state-change events. */
+    subscribe: (listener: (event: ResttyRuntimeEvent) => void) => () => void;
+  };
   /** Switch the renderer backend at runtime. */
   setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
   /** Pause or resume rendering. */

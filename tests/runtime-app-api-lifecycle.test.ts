@@ -194,7 +194,7 @@ test("runtime app api lifecycle state flows from created to ready to destroyed",
   const states: string[] = [];
   const backends: string[] = [];
 
-  const dispose = app.subscribe((event) => {
+  const dispose = app.events.subscribe((event) => {
     if (event.type === "state") states.push(event.state);
     if (event.type === "backend") backends.push(event.backend);
   });
@@ -225,7 +225,7 @@ test("runtime app api lifecycle state stays destroyed when init finishes late", 
   });
   const states: string[] = [];
 
-  const dispose = app.subscribe((event) => {
+  const dispose = app.events.subscribe((event) => {
     if (event.type === "state") states.push(event.state);
   });
 
