@@ -559,9 +559,9 @@ function applyFontRenderingOptionsToAllPanes() {
   const panes = restty.getPanes();
   for (let i = 0; i < panes.length; i += 1) {
     const pane = panes[i];
-    pane.app.setLigatures(selectedLigatures);
-    pane.app.setFontHintTarget(selectedFontHintTarget);
-    pane.app.setFontHinting(selectedFontHinting);
+    pane.app.terminal.setLigatures(selectedLigatures);
+    pane.app.terminal.setFontHintTarget(selectedFontHintTarget);
+    pane.app.terminal.setFontHinting(selectedFontHinting);
   }
 }
 
@@ -811,7 +811,7 @@ function syncPauseButton(state: PaneState) {
 
 function syncPtyButton(pane: ManagedPane, state: PaneState) {
   if (!ptyBtn) return;
-  if (pane.app.isPtyConnected()) {
+  if (pane.app.io.isPtyConnected()) {
     ptyBtn.textContent = "Disconnect";
     return;
   }
@@ -834,7 +834,7 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
   if (fontSizeInput) fontSizeInput.value = `${state.fontSize}`;
   syncFontFamilyControls();
   syncHintingControls();
-  state.mouseMode = pane.app.getMouseStatus().mode;
+  state.mouseMode = pane.app.interaction.getMouseStatus().mode;
   if (mouseModeEl) {
     const hasOption = Array.from(mouseModeEl.options).some(
       (option) => option.value === state.mouseMode,
@@ -862,7 +862,7 @@ function setPanePaused(id: number, value: boolean) {
   if (!pane || !state) return;
   state.paused = Boolean(value);
   pane.paused = state.paused;
-  pane.app.setPaused(state.paused);
+  pane.app.terminal.setPaused(state.paused);
   if (id === activePaneId) {
     syncPauseButton(state);
   }
@@ -870,11 +870,11 @@ function setPanePaused(id: number, value: boolean) {
 
 function connectPaneIfNeeded(pane: ManagedPane) {
   if (getConnectionBackend() !== "webcontainer") return;
-  if (pane.app.isPtyConnected()) return;
-  pane.app.updateSize(true);
-  pane.app.connectPty(getConnectUrl());
+  if (pane.app.io.isPtyConnected()) return;
+  pane.app.interaction.updateSize(true);
+  pane.app.io.connectPty(getConnectUrl());
   requestAnimationFrame(() => {
-    pane.app.updateSize(true);
+    pane.app.interaction.updateSize(true);
   });
 }
 
@@ -894,10 +894,10 @@ function applySavedThemeForPane(pane: ManagedPane, state: PaneState) {
 }
 
 async function initPaneApp(pane: ManagedPane, state: PaneState) {
-  await pane.app.init();
+  await pane.app.lifecycle.init();
   applySavedThemeForPane(pane, state);
   await waitForAnimationFrame();
-  pane.app.updateSize(true);
+  pane.app.interaction.updateSize(true);
   connectPaneIfNeeded(pane);
   pane.canvas.focus({ preventScroll: true });
 }
@@ -910,7 +910,7 @@ function applyThemeToPane(
   selectValue = "",
 ): boolean {
   try {
-    pane.app.applyTheme(theme, sourceLabel);
+    pane.app.terminal.applyTheme(theme, sourceLabel);
     state.theme = {
       selectValue,
       sourceLabel,
@@ -938,7 +938,7 @@ function applyBuiltinThemeToPane(
 }
 
 function resetThemeForPane(pane: ManagedPane, state: PaneState) {
-  pane.app.resetTheme();
+  pane.app.terminal.resetTheme();
   state.theme = {
     selectValue: "",
     sourceLabel: "",
@@ -954,7 +954,7 @@ function queueResizeAllPanes() {
   resizeRaf = requestAnimationFrame(() => {
     resizeRaf = 0;
     for (const pane of restty.getPanes()) {
-      pane.app.updateSize(true);
+      pane.app.interaction.updateSize(true);
     }
   });
 }
@@ -1009,7 +1009,7 @@ restty = new Restty({
         };
 
         state.demos = createDemoController(pane.app);
-        pane.app.setMouseMode(state.mouseMode);
+        pane.app.interaction.setMouseMode(state.mouseMode);
         void initPaneApp(pane, state);
       },
       onPaneClosed: (pane) => {
@@ -1118,8 +1118,8 @@ window.addEventListener("resize", () => {
 connectionBackendEl?.addEventListener("change", () => {
   syncConnectionUi();
   for (const pane of restty.getPanes()) {
-    if (pane.app.isPtyConnected()) {
-      pane.app.disconnectPty();
+    if (pane.app.io.isPtyConnected()) {
+      pane.app.io.disconnectPty();
     }
   }
   if (getConnectionBackend() === "webcontainer") {
@@ -1159,7 +1159,7 @@ btnClear?.addEventListener("click", () => {
   const state = getActivePaneState();
   if (!state) return;
   state.demos?.stop();
-  pane.app.clearScreen();
+  pane.app.terminal.clearScreen();
 });
 
 btnRunDemo?.addEventListener("click", () => {
@@ -1171,10 +1171,10 @@ btnRunDemo?.addEventListener("click", () => {
 ptyBtn?.addEventListener("click", () => {
   const pane = getActivePane();
   if (!pane) return;
-  if (pane.app.isPtyConnected()) {
-    pane.app.disconnectPty();
+  if (pane.app.io.isPtyConnected()) {
+    pane.app.io.disconnectPty();
   } else {
-    pane.app.connectPty(getConnectUrl());
+    pane.app.io.connectPty(getConnectUrl());
   }
 });
 
@@ -1185,7 +1185,7 @@ rendererSelect?.addEventListener("change", () => {
   const value = rendererSelect.value;
   if (!isRendererChoice(value)) return;
   state.renderer = value;
-  pane.app.setRenderer(value);
+  pane.app.terminal.setRenderer(value);
 });
 
 if (themeFileInput) {
@@ -1231,8 +1231,8 @@ if (mouseModeEl) {
     const state = getActivePaneState();
     if (!pane || !state) return;
     const value = mouseModeEl.value;
-    pane.app.setMouseMode(value);
-    state.mouseMode = pane.app.getMouseStatus().mode;
+    pane.app.interaction.setMouseMode(value);
+    state.mouseMode = pane.app.interaction.getMouseStatus().mode;
     if (pane.id === activePaneId) {
       mouseModeEl.value = state.mouseMode;
     }
@@ -1266,7 +1266,7 @@ if (fontSizeInput) {
     const value = Number(fontSizeInput.value);
     if (!Number.isFinite(value)) return;
     state.fontSize = value;
-    pane.app.setFontSize(value);
+    pane.app.terminal.setFontSize(value);
   };
 
   fontSizeInput.addEventListener("change", applyFontSize);

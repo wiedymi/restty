@@ -1,6 +1,10 @@
 type DemoApp = {
-  clearScreen: () => void;
-  sendInput: (text: string) => void;
+  terminal: {
+    clearScreen: () => void;
+  };
+  io: {
+    sendInput: (text: string) => void;
+  };
 };
 
 export type PlaygroundDemoKind = "basic" | "palette" | "unicode" | "anim";
@@ -92,7 +96,7 @@ export function createDemoController(app: DemoApp) {
 
   const startAnimation = () => {
     stop();
-    app.clearScreen();
+    app.terminal.clearScreen();
     const start = performance.now();
     let tick = 0;
     timer = window.setInterval(() => {
@@ -117,7 +121,7 @@ export function createDemoController(app: DemoApp) {
         "type to echo input below...",
         "",
       ];
-      app.sendInput(`\x1b[H\x1b[J${joinLines(lines)}`);
+      app.io.sendInput(`\x1b[H\x1b[J${joinLines(lines)}`);
       tick += 1;
     }, 80);
   };
@@ -126,17 +130,17 @@ export function createDemoController(app: DemoApp) {
     stop();
     switch (kind) {
       case "palette":
-        app.sendInput(demoPalette());
+        app.io.sendInput(demoPalette());
         break;
       case "unicode":
-        app.sendInput(demoUnicode());
+        app.io.sendInput(demoUnicode());
         break;
       case "anim":
         startAnimation();
         break;
       case "basic":
       default:
-        app.sendInput(demoBasic());
+        app.io.sendInput(demoBasic());
         break;
     }
   };
