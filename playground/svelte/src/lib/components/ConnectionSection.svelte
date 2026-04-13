@@ -34,7 +34,6 @@
     if (!(input instanceof HTMLInputElement)) return;
     dispatchWebContainerCwdChange(input.value);
   }
-
 </script>
 
 <section class="section">
@@ -60,7 +59,6 @@
       placeholder="PTY URL"
       disabled={connectionUi.ptyUrlDisabled}
       oninput={handlePtyUrlChange}
-      onchange={handlePtyUrlChange}
     />
     <button id="btnPty" type="button" onclick={dispatchPtyButton}>
       {$connectionShellState.ptyButtonLabel}
@@ -74,7 +72,6 @@
       placeholder="WebContainer command"
       disabled={connectionUi.webContainerInputsDisabled}
       oninput={handleWebContainerCommandChange}
-      onchange={handleWebContainerCommandChange}
     />
     <input
       id="wcCwd"
@@ -83,7 +80,6 @@
       placeholder="WebContainer cwd"
       disabled={connectionUi.webContainerInputsDisabled}
       oninput={handleWebContainerCwdChange}
-      onchange={handleWebContainerCwdChange}
     />
   </div>
   <div id="connectionHint" class="hint">{connectionUi.hintText}</div>

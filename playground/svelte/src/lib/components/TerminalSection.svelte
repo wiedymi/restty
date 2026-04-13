@@ -1,8 +1,5 @@
 <script lang="ts">
   import {
-    type ShellStringValueDetail,
-  } from "../../../../lib/shell-events.ts";
-  import {
     dispatchTerminalClear,
     dispatchTerminalFontSizeChange,
     dispatchTerminalInit,
@@ -56,7 +53,6 @@
         step="1"
         value={$terminalShellState.fontSize}
         oninput={handleFontSizeEvent}
-        onchange={handleFontSizeEvent}
       />
     </label>
   </div>
