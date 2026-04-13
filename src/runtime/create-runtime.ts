@@ -125,7 +125,7 @@ import { createRuntimeRenderTicks } from "./create-runtime/render-ticks";
 import { createRuntimeFontRuntimeHelpers } from "./create-runtime/font-runtime-helpers";
 import { createRuntimeReporting } from "./create-runtime/runtime-reporting";
 import { createResttyFontResourceStore } from "./fonts/font-resource-store";
-import type { RuntimeTerminalColor } from "./create-runtime/highlight-terminal-color-utils";
+import type { RuntimeTerminalColor } from "./create-runtime/highlight-terminal-color-utils.types";
 import { createRuntimeAppApi } from "./create-runtime/runtime-app-api";
 import type {
   RuntimeAppApiRuntime,

@@ -1,17 +1,6 @@
 import { colorToFloats, type ThemeTerminalColor } from "../../theme";
 import type { Color } from "../../renderer";
-
-export type RuntimeTerminalColor =
-  | {
-      kind: "color";
-      color: Color;
-    }
-  | {
-      kind: "cell-foreground";
-    }
-  | {
-      kind: "cell-background";
-    };
+import type { RuntimeTerminalColor } from "./highlight-terminal-color-utils.types";
 
 export function runtimeTerminalColorFromTheme(value: ThemeTerminalColor): RuntimeTerminalColor {
   if (value === "cell-foreground") return { kind: "cell-foreground" };
