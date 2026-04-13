@@ -283,6 +283,8 @@ fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4
   },
 };
 
+// ctx.restty is a narrowed host surface. Prefer ctx.activePane()/ctx.pane(id)
+// for pane-local terminal actions, and use ctx.restty for higher-level shell ops.
 await restty.use(logPlugin);
 console.log(restty.plugins()); // ["example/log-pane-events"]
 console.log(restty.pluginInfo("example/log-pane-events"));

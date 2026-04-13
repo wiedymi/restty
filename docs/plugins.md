@@ -56,6 +56,10 @@ fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4
 };
 ```
 
+`ctx.restty` exposes a narrowed plugin host surface for pane/layout/style/shader orchestration.
+Use `ctx.panes()`, `ctx.pane(id)`, `ctx.activePane()`, and `ctx.focusedPane()` for pane-local
+terminal control instead of depending on the full `Restty` class shape.
+
 ## Metadata and compatibility
 
 - `id`: required stable identifier (`namespace/name` recommended).
