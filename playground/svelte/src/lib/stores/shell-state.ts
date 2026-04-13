@@ -3,6 +3,13 @@ import type { LocalFontOption } from "../../../../lib/font-controls.ts";
 import { getConnectionBackendForValue } from "../../../../lib/pty-connection.ts";
 import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
 import {
+  createInitialAppearanceShellValues,
+  createInitialConnectionShellValues,
+  DEFAULT_DEMO_KIND,
+  DEFAULT_TERMINAL_FONT_SIZE,
+  DEFAULT_TERMINAL_RENDERER,
+} from "../../../../lib/shell-defaults.ts";
+import {
   CONNECTION_STATE_EVENT,
   FONT_FAMILY_STATE_EVENT,
   FONT_RENDERING_STATE_EVENT,
@@ -55,35 +62,21 @@ type DemoShellState = {
 
 const initialTerminalShellState: TerminalShellState = {
   pauseLabel: "Pause",
-  renderer: "auto",
-  fontSize: "18",
+  renderer: DEFAULT_TERMINAL_RENDERER,
+  fontSize: String(DEFAULT_TERMINAL_FONT_SIZE),
 };
 
 const initialConnectionShellState: ConnectionShellState = {
-  backend: "webcontainer",
-  ptyUrl: "ws://localhost:8787/pty",
-  webContainerCommand: "jsh",
-  webContainerCwd: "/",
+  ...createInitialConnectionShellValues(),
   ptyButtonLabel: "Connect PTY",
 };
 
 const initialAppearanceShellState: AppearanceShellState = {
-  mouseMode: "auto",
-  fontFamily: "fira-code",
-  localFontHintText: "Main font family for all panes. Use Detect Local to add system fonts.",
-  localFontOptions: [{ value: "", label: "Local Font: None" }],
-  localFontSelectDisabled: false,
-  localFontValue: "",
-  loadLocalFontsDisabled: false,
-  ligatures: "on",
-  fontHinting: "off",
-  fontHintTarget: "auto",
-  shaderPreset: "none",
-  themeSelectValue: "",
+  ...createInitialAppearanceShellValues(),
 };
 
 const initialDemoShellState: DemoShellState = {
-  kind: "basic",
+  kind: DEFAULT_DEMO_KIND,
 };
 
 export const terminalShellState = writable<TerminalShellState>(initialTerminalShellState);

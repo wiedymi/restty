@@ -5,13 +5,20 @@ import {
   type LocalFontOption,
 } from "./font-controls.ts";
 import type { RendererChoice } from "./pane-state.ts";
+import {
+  DEFAULT_FONT_HINT_TARGET,
+  DEFAULT_FONT_HINTING,
+  DEFAULT_LIGATURES,
+  DEFAULT_MOUSE_MODE,
+  DEFAULT_PTY_URL,
+  DEFAULT_SHADER_PRESET,
+  DEFAULT_TERMINAL_FONT_SIZE,
+  DEFAULT_TERMINAL_RENDERER,
+  DEFAULT_THEME_NAME,
+  DEFAULT_WEB_CONTAINER_COMMAND,
+  DEFAULT_WEB_CONTAINER_CWD,
+} from "./shell-defaults.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
-
-const DEFAULT_FONT_SIZE = 18;
-const DEFAULT_PTY_URL = "ws://localhost:8787/pty";
-const DEFAULT_WEB_CONTAINER_COMMAND = "jsh";
-const DEFAULT_WEB_CONTAINER_CWD = "/";
-const DEFAULT_THEME_NAME = "Aizen Dark";
 
 export type PlaygroundAppearanceInitialState = {
   detectedLocalFontOptions: LocalFontOption[];
@@ -78,13 +85,13 @@ function isShaderPreset(value: string | null | undefined): value is ShaderPreset
   );
 }
 
-function parseFontSize(value: string | null | undefined, fallback = DEFAULT_FONT_SIZE) {
+function parseFontSize(value: string | null | undefined, fallback = DEFAULT_TERMINAL_FONT_SIZE) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
 function resolveFontHintTarget(value: string | null | undefined): FontHintTarget {
-  return value === "light" || value === "normal" ? value : "auto";
+  return value === "light" || value === "normal" ? value : DEFAULT_FONT_HINT_TARGET;
 }
 
 export function resolvePlaygroundStartupDefaults({
@@ -104,17 +111,25 @@ export function resolvePlaygroundStartupDefaults({
 }: ResolvePlaygroundStartupDefaultsOptions): PlaygroundStartupDefaults {
   const searchParams = locationSearch ? new URLSearchParams(locationSearch) : null;
   const initialShaderPreset =
-    usesSvelteShell || !isShaderPreset(shaderPresetValue) ? "none" : shaderPresetValue;
-  const initialRendererDefault = isRendererChoice(rendererValue) ? rendererValue : "auto";
-  const initialFontSizeDefault = parseFontSize(fontSizeValue);
-  const initialMouseModeDefault = mouseModeValue || "auto";
-  const initialFontSize = fontSizeValue ? Number(fontSizeValue) : DEFAULT_FONT_SIZE;
+    usesSvelteShell || !isShaderPreset(shaderPresetValue)
+      ? DEFAULT_SHADER_PRESET
+      : shaderPresetValue;
+  const initialRendererDefault = isRendererChoice(rendererValue)
+    ? rendererValue
+    : DEFAULT_TERMINAL_RENDERER;
+  const initialFontSizeDefault = parseFontSize(fontSizeValue, DEFAULT_TERMINAL_FONT_SIZE);
+  const initialMouseModeDefault = mouseModeValue || DEFAULT_MOUSE_MODE;
+  const initialFontSize = fontSizeValue ? Number(fontSizeValue) : DEFAULT_TERMINAL_FONT_SIZE;
   const initialFontFamily = fontFamilyValue ?? DEFAULT_FONT_FAMILY;
   const initialLocalFontMatcher = "";
   const initialDetectedLocalFontOptions: LocalFontOption[] = [];
   const initialLocalFontHintText = getDefaultLocalFontHintText(localFontPickerSupported);
-  const initialLigatures = !isFalsyQueryParam(searchParams?.get("ligatures"));
-  const initialFontHinting = isTruthyQueryParam(searchParams?.get("hinting"));
+  const initialLigatures = isFalsyQueryParam(searchParams?.get("ligatures"))
+    ? false
+    : DEFAULT_LIGATURES;
+  const initialFontHinting = isTruthyQueryParam(searchParams?.get("hinting"))
+    ? true
+    : DEFAULT_FONT_HINTING;
   const initialFontHintTarget = resolveFontHintTarget(searchParams?.get("hintTarget"));
 
   return {

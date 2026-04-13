@@ -4,6 +4,12 @@ import {
   DEFAULT_LOCAL_FONT_HINT,
   UNSUPPORTED_LOCAL_FONT_HINT,
 } from "../playground/lib/font-controls.ts";
+import {
+  DEFAULT_PTY_URL,
+  DEFAULT_TERMINAL_FONT_SIZE,
+  DEFAULT_THEME_NAME,
+  DEFAULT_WEB_CONTAINER_COMMAND,
+} from "../playground/lib/shell-defaults.ts";
 import { resolvePlaygroundStartupDefaults } from "../playground/lib/startup-defaults.ts";
 
 test("resolvePlaygroundStartupDefaults honors shell defaults and query params", () => {
@@ -23,11 +29,11 @@ test("resolvePlaygroundStartupDefaults honors shell defaults and query params", 
   });
 
   expect(startup).toMatchObject({
-    initialPtyUrl: "ws://localhost:8787/pty",
-    initialWebContainerCommand: "jsh",
+    initialPtyUrl: DEFAULT_PTY_URL,
+    initialWebContainerCommand: DEFAULT_WEB_CONTAINER_COMMAND,
     initialWebContainerCwd: "/workspace",
     initialFontSize: 20,
-    defaultThemeName: "Aizen Dark",
+    defaultThemeName: DEFAULT_THEME_NAME,
     appearanceInitialState: {
       shaderPreset: "none",
       rendererDefault: "webgpu",
@@ -61,14 +67,14 @@ test("resolvePlaygroundStartupDefaults falls back for invalid control values", (
   });
 
   expect(startup).toMatchObject({
-    initialPtyUrl: "ws://localhost:8787/pty",
-    initialWebContainerCommand: "jsh",
+    initialPtyUrl: DEFAULT_PTY_URL,
+    initialWebContainerCommand: DEFAULT_WEB_CONTAINER_COMMAND,
     initialWebContainerCwd: "/",
     defaultThemeName: "",
     appearanceInitialState: {
       shaderPreset: "none",
       rendererDefault: "auto",
-      fontSizeDefault: 18,
+      fontSizeDefault: DEFAULT_TERMINAL_FONT_SIZE,
       mouseModeDefault: "auto",
       fontFamily: "jetbrains",
       localFontHintText: DEFAULT_LOCAL_FONT_HINT,
