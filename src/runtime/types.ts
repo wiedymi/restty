@@ -2,7 +2,7 @@ export type { ResttyRuntimeLifecycleState } from "./core/lifecycle";
 export type { ResttyRuntimeEvent } from "./core/runtime-events";
 export type {
   FontSource,
-  ResttyAppInputPayload,
+  ResttyRuntimeInputPayload,
   ResttyBufferFontSource,
   ResttyFontBufferData,
   ResttyFontHintTarget,
@@ -19,8 +19,8 @@ export type {
   ResttyUrlFontSource,
 } from "./core/models";
 export type {
-  ResttyAppCallbacks,
-  ResttyAppSession,
+  ResttyRuntimeCallbacks,
+  ResttyRuntimeSession,
   ResttyFontResourceFace,
   ResttyFontResourceLease,
   ResttyFontResourceStore,

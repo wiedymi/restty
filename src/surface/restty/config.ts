@@ -1,5 +1,5 @@
 import type { ResttyRuntimeServicesConfig } from "../../runtime/core/config";
-import type { ResttyAppSession } from "../../runtime/core/resources";
+import type { ResttyRuntimeSession } from "../../runtime/core/resources";
 import type {
   ResttyDefaultPaneContextMenuOptions,
   ResttyManagedAppPane,
@@ -47,7 +47,7 @@ export type ResttyConfig = {
   /** Root element that will contain the Restty surface. */
   root: HTMLElement;
   /** Shared session for WASM/WebGPU resources. */
-  session?: ResttyAppSession;
+  session?: ResttyRuntimeSession;
   /** Surface shell and pane manager behavior. */
   surface?: ResttySurfaceConfig;
   /** Per-pane terminal behavior config, static or factory. */

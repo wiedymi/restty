@@ -1,4 +1,4 @@
-import type { ResttyAppCallbacks, ResttyAppSession } from "../../runtime/core/resources";
+import type { ResttyRuntimeCallbacks, ResttyRuntimeSession } from "../../runtime/core/resources";
 import type { ResttyRuntimeConfig } from "../../runtime/core/config";
 import type {
   ResttyPaneRuntimeContext,
@@ -10,8 +10,8 @@ export type CreateManagedPaneRuntimeConfigOptions = {
   context: ResttyPaneRuntimeContext;
   terminal?: ResttyTerminalConfigInput;
   services?: ResttyRuntimeServicesConfigInput;
-  session: ResttyAppSession;
-  onSearchState?: ResttyAppCallbacks["onSearchState"];
+  session: ResttyRuntimeSession;
+  onSearchState?: ResttyRuntimeCallbacks["onSearchState"];
 };
 
 export function createManagedPaneRuntimeConfig(
@@ -23,7 +23,7 @@ export function createManagedPaneRuntimeConfig(
   const baseServices =
     typeof options.services === "function" ? options.services(context) : (options.services ?? {});
 
-  const mergedCallbacks: ResttyAppCallbacks = {
+  const mergedCallbacks: ResttyRuntimeCallbacks = {
     ...baseServices.callbacks,
     onSearchState: (state) => {
       baseServices.callbacks?.onSearchState?.(state);

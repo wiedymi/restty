@@ -1,6 +1,6 @@
 import { createResttyRuntime } from "../app-factory";
 import type { ResttyRuntime } from "../../runtime/core/api";
-import type { ResttyAppCallbacks, ResttyAppSession } from "../../runtime/core/resources";
+import type { ResttyRuntimeCallbacks, ResttyRuntimeSession } from "../../runtime/core/resources";
 import { createManagedPaneRuntimeConfig } from "./managed-pane-runtime-config";
 import type {
   ResttyPaneRuntimeContext,
@@ -12,9 +12,9 @@ export type CreateManagedPaneRuntimeOptions = {
   context: ResttyPaneRuntimeContext;
   terminal?: ResttyTerminalConfigInput;
   services?: ResttyRuntimeServicesConfigInput;
-  session: ResttyAppSession;
+  session: ResttyRuntimeSession;
   autoInit?: boolean;
-  onSearchState?: ResttyAppCallbacks["onSearchState"];
+  onSearchState?: ResttyRuntimeCallbacks["onSearchState"];
 };
 
 export function createManagedPaneRuntime(options: CreateManagedPaneRuntimeOptions): ResttyRuntime {

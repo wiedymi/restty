@@ -256,16 +256,16 @@ export type ResttyRuntimeConfig = {
 export type ResttyRuntimeMountConfig = {
   canvas: HTMLCanvasElement;
   imeInput?: HTMLTextAreaElement | null;
-  session?: ResttyAppSession;
+  session?: ResttyRuntimeSession;
 };
 ```
 
 ```ts
 export type ResttyRuntimeServicesConfig = {
   ptyTransport?: PtyTransport;
-  callbacks?: ResttyAppCallbacks;
-  beforeInput?: (payload: ResttyAppInputPayload) => string | null | void;
-  beforeRenderOutput?: (payload: ResttyAppInputPayload) => string | null | void;
+  callbacks?: ResttyRuntimeCallbacks;
+  beforeInput?: (payload: ResttyRuntimeInputPayload) => string | null | void;
+  beforeRenderOutput?: (payload: ResttyRuntimeInputPayload) => string | null | void;
 };
 ```
 

@@ -11,7 +11,7 @@ import type {
   ResttyRuntimeTerminalApi,
 } from "../core/api";
 import type { ResttyRuntimeEventHub } from "../core/runtime-events";
-import type { ResttyAppSession } from "../core/resources";
+import type { ResttyRuntimeSession } from "../core/resources";
 import type { RuntimeInteraction } from "./interaction-runtime/types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
 
@@ -78,7 +78,7 @@ export type LifecycleThemeRuntime = {
 
 export type RuntimeAppApiOptions = {
   runtimeEvents: ResttyRuntimeEventHub;
-  session: ResttyAppSession;
+  session: ResttyRuntimeSession;
   ptyTransport: PtyTransport;
   inputHandler: InputHandler;
   ptyInputRuntime: PtyInputRuntime;

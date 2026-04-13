@@ -69,7 +69,7 @@ export type ResttyTouchSelectionMode = "drag" | "long-press" | "off";
 export type ResttyFontHintTarget = "auto" | "light" | "normal";
 
 /** Input payload passed to runtime before-input hooks. */
-export type ResttyAppInputPayload = {
+export type ResttyRuntimeInputPayload = {
   text: string;
   source: string;
 };

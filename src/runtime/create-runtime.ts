@@ -59,11 +59,11 @@ import type { ResttyRuntime } from "./core/api";
 import type { ResttyRuntimeConfig } from "./core/config";
 import type { ResttyFontHintTarget, ResttyFontSource } from "./core/models";
 import type {
-  ResttyAppCallbacks,
-  ResttyAppSession,
+  ResttyRuntimeCallbacks,
+  ResttyRuntimeSession,
   ResttyFontResourceLease,
 } from "./core/resources";
-import { getDefaultResttyAppSession } from "./core/session";
+import { getDefaultResttyRuntimeSession } from "./core/session";
 import { createPtyOutputBufferController } from "./create-runtime/pty-output-buffer";
 import { fitTextTailToWidth, openLink } from "./create-runtime/create-app-io-utils";
 import {
@@ -128,11 +128,11 @@ import type {
   RuntimeAppApiRuntime,
   RuntimeAppApiSharedState,
 } from "./create-runtime/runtime-app-api.types";
-export { createResttyAppSession, getDefaultResttyAppSession } from "./core/session";
+export { createResttyRuntimeSession, getDefaultResttyRuntimeSession } from "./core/session";
 export type { ResttyRuntime } from "./core/api";
 export type { ResttyRuntimeConfig } from "./core/config";
 export type {
-  ResttyAppCallbacks,
+  ResttyRuntimeCallbacks,
   FontSource,
   ResttyFontHintTarget,
   ResttyFontSource,
@@ -141,8 +141,8 @@ export type {
   ResttyBufferFontSource,
   ResttyLocalFontSource,
   ResttyWasmLogListener,
-  ResttyAppSession,
-  ResttyAppInputPayload,
+  ResttyRuntimeSession,
+  ResttyRuntimeInputPayload,
   ResttyShaderStage,
   ResttyShaderStageMode,
   ResttyShaderStageBackend,
@@ -185,7 +185,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     beforeInputHook,
     beforeRenderOutputHook,
   });
-  const session = mount.session ?? getDefaultResttyAppSession();
+  const session = mount.session ?? getDefaultResttyRuntimeSession();
   const fontResourceStore = session.getFontResourceStore?.() ?? createResttyFontResourceStore();
   const textShaper = bundledTextShaper;
   if (!canvasInput) {

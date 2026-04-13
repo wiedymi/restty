@@ -151,11 +151,11 @@ This is defensive cleanup, even if GC would eventually reclaim.
 
 ### Session extension
 
-Extend `ResttyAppSession` with optional font store access:
+Extend `ResttyRuntimeSession` with optional font store access:
 
 - `getFontResourceStore?: () => SharedFontResourceStore`
 
-Default session implementation (`getDefaultResttyAppSession`) provides it automatically, so all panes using default session share one store per tab.
+Default session implementation (`getDefaultResttyRuntimeSession`) provides it automatically, so all panes using default session share one store per tab.
 
 Compatibility:
 

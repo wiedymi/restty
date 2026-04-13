@@ -30,9 +30,9 @@ export type ResttyFontResourceStore = {
 };
 
 /**
- * Session provider that supplies shared WASM and WebGPU resources.
+ * Runtime session provider that supplies shared WASM and WebGPU resources.
  */
-export type ResttyAppSession = {
+export type ResttyRuntimeSession = {
   /** Lazily initialize and return the WASM module. */
   getWasm: () => Promise<ResttyWasm>;
   /** Lazily initialize and return the WebGPU renderer core for a canvas. */
@@ -46,9 +46,9 @@ export type ResttyAppSession = {
 };
 
 /**
- * Callbacks fired by the app when internal state changes.
+ * Callbacks fired by the runtime when internal state changes.
  */
-export type ResttyAppCallbacks = {
+export type ResttyRuntimeCallbacks = {
   /** Terminal requested a desktop notification via OSC 9 / OSC 777. */
   onDesktopNotification?: (notification: DesktopNotification) => void;
   /** Terminal search state changed. */

@@ -1,11 +1,11 @@
 export {
   createResttyRuntime,
-  createResttyAppSession,
-  getDefaultResttyAppSession,
+  createResttyRuntimeSession,
+  getDefaultResttyRuntimeSession,
 } from "../runtime/create-runtime";
 
 export type {
-  ResttyAppCallbacks,
+  ResttyRuntimeCallbacks,
   FontSource,
   ResttyFontHintTarget,
   ResttyFontSource,
@@ -14,8 +14,8 @@ export type {
   ResttyBufferFontSource,
   ResttyLocalFontSource,
   ResttyWasmLogListener,
-  ResttyAppSession,
-  ResttyAppInputPayload,
+  ResttyRuntimeSession,
+  ResttyRuntimeInputPayload,
   ResttyRuntimeEvent,
   ResttyRuntimeLifecycleState,
   ResttyRuntimeConfig,

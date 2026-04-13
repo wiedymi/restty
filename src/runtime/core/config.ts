@@ -1,13 +1,13 @@
 import type { PtyTransport } from "../../pty";
 import type {
-  ResttyAppInputPayload,
+  ResttyRuntimeInputPayload,
   ResttyFontHintTarget,
   ResttyFontPreset,
   ResttyFontSource,
   ResttyShaderStage,
   ResttyTouchSelectionMode,
 } from "./models";
-import type { ResttyAppCallbacks, ResttyAppSession } from "./resources";
+import type { ResttyRuntimeCallbacks, ResttyRuntimeSession } from "./resources";
 
 /**
  * DOM/session fields required to mount a runtime instance.
@@ -16,7 +16,7 @@ export type ResttyRuntimeMountConfig = {
   /** Target canvas element for terminal rendering. */
   canvas: HTMLCanvasElement;
   /** Shared session for WASM/WebGPU resource reuse across panes. */
-  session?: ResttyAppSession;
+  session?: ResttyRuntimeSession;
   /** Hidden textarea for IME composition input. */
   imeInput?: HTMLTextAreaElement | null;
 };
@@ -26,19 +26,19 @@ export type ResttyRuntimeMountConfig = {
  */
 export type ResttyRuntimeServicesConfig = {
   /** Callbacks for state-change notifications. */
-  callbacks?: ResttyAppCallbacks;
+  callbacks?: ResttyRuntimeCallbacks;
   /** PTY transport layer for terminal I/O. */
   ptyTransport?: PtyTransport;
   /**
    * Optional hook to transform or suppress terminal/program input
    * before it is written to the terminal core.
    */
-  beforeInput?: (payload: ResttyAppInputPayload) => string | null | void;
+  beforeInput?: (payload: ResttyRuntimeInputPayload) => string | null | void;
   /**
    * Optional hook to transform or suppress PTY output before it is
    * queued for rendering.
    */
-  beforeRenderOutput?: (payload: ResttyAppInputPayload) => string | null | void;
+  beforeRenderOutput?: (payload: ResttyRuntimeInputPayload) => string | null | void;
 };
 
 /**

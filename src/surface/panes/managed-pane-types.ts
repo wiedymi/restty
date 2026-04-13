@@ -7,7 +7,7 @@ import type {
   ResttyPaneWithApp,
 } from "../panes-types";
 import type { ResttyRuntimeServicesConfig, ResttyTerminalConfig } from "../../runtime/core/config";
-import type { ResttyAppSession } from "../../runtime/core/resources";
+import type { ResttyRuntimeSession } from "../../runtime/core/resources";
 import type {
   ResttyPaneSearchUiCloseOptions,
   ResttyPaneSearchUiOpenOptions,
@@ -96,7 +96,7 @@ export type CreateResttyAppPaneManagerOptions = {
   /** Root element that will contain all pane DOM trees. */
   root: HTMLElement;
   /** Shared session for WASM/WebGPU resources (defaults to the global session). */
-  session?: ResttyAppSession;
+  session?: ResttyRuntimeSession;
   /** Per-pane terminal behavior config, static object or factory. */
   terminal?: ResttyTerminalConfigInput;
   /** Per-pane runtime services config, static object or factory. */

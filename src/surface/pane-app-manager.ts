@@ -5,7 +5,7 @@ import {
   resolveManagedPaneContextMenu,
   resolveManagedPaneShortcuts,
 } from "./panes/managed-pane-options";
-import { getDefaultResttyAppSession } from "../runtime/core/session";
+import { getDefaultResttyRuntimeSession } from "../runtime/core/session";
 import type { PaneSearchUiController } from "./pane-search-ui";
 import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
 import type {
@@ -21,7 +21,7 @@ import type {
 export function createResttyAppPaneManager(
   options: CreateResttyAppPaneManagerOptions,
 ): ResttyAppPaneManager {
-  const session = options.session ?? getDefaultResttyAppSession();
+  const session = options.session ?? getDefaultResttyRuntimeSession();
   const autoInit = options.autoInit ?? true;
 
   const paneClassName = options.paneDom?.paneClassName ?? "pane";
