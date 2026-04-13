@@ -4,6 +4,7 @@ import {
   createAdaptivePtyTransport,
   getConnectUrl,
   getConnectionBackend,
+  getConnectionUiState,
   syncConnectionUi,
 } from "../playground/lib/pty-connection.ts";
 
@@ -87,6 +88,19 @@ test("syncConnectionUi toggles inputs and hint text", () => {
   expect(wcCommandInput.disabled).toBe(true);
   expect(wcCwdInput.disabled).toBe(true);
   expect(connectionHintEl.textContent).toBe("Using WebSocket PTY URL");
+});
+
+test("getConnectionUiState describes backend-specific shell state", () => {
+  expect(getConnectionUiState("webcontainer")).toEqual({
+    ptyUrlDisabled: true,
+    webContainerInputsDisabled: false,
+    hintText: "Using in-browser WebContainer process",
+  });
+  expect(getConnectionUiState("ws")).toEqual({
+    ptyUrlDisabled: false,
+    webContainerInputsDisabled: true,
+    hintText: "Using WebSocket PTY URL",
+  });
 });
 
 test("createAdaptivePtyTransport switches transports when backend changes", () => {

@@ -7,6 +7,11 @@ import {
 import { createWebContainerPtyTransport } from "./webcontainer-pty.ts";
 
 export type ConnectionBackend = "ws" | "webcontainer";
+export type ConnectionUiState = {
+  ptyUrlDisabled: boolean;
+  webContainerInputsDisabled: boolean;
+  hintText: string;
+};
 
 type ConnectionBackendElement = {
   value?: string | null;
@@ -40,17 +45,30 @@ export function getConnectUrl(
   return ptyUrlInput?.value?.trim?.() ?? "";
 }
 
+export function getConnectionUiState(backend: ConnectionBackend): ConnectionUiState {
+  const webcontainerMode = backend === "webcontainer";
+  return {
+    ptyUrlDisabled: webcontainerMode,
+    webContainerInputsDisabled: !webcontainerMode,
+    hintText: webcontainerMode
+      ? "Using in-browser WebContainer process"
+      : "Using WebSocket PTY URL",
+  };
+}
+
 export function syncConnectionUi(elements: ConnectionUiElements): ConnectionBackend {
   const backend = getConnectionBackend(elements.connectionBackendEl);
-  const webcontainerMode = backend === "webcontainer";
+  const uiState = getConnectionUiState(backend);
 
-  if (elements.ptyUrlInput) elements.ptyUrlInput.disabled = webcontainerMode;
-  if (elements.wcCommandInput) elements.wcCommandInput.disabled = !webcontainerMode;
-  if (elements.wcCwdInput) elements.wcCwdInput.disabled = !webcontainerMode;
+  if (elements.ptyUrlInput) elements.ptyUrlInput.disabled = uiState.ptyUrlDisabled;
+  if (elements.wcCommandInput) {
+    elements.wcCommandInput.disabled = uiState.webContainerInputsDisabled;
+  }
+  if (elements.wcCwdInput) {
+    elements.wcCwdInput.disabled = uiState.webContainerInputsDisabled;
+  }
   if (elements.connectionHintEl) {
-    elements.connectionHintEl.textContent = webcontainerMode
-      ? "Using in-browser WebContainer process"
-      : "Using WebSocket PTY URL";
+    elements.connectionHintEl.textContent = uiState.hintText;
   }
 
   return backend;

@@ -443,13 +443,15 @@ window.addEventListener("resize", () => {
 });
 
 connectionBackendEl?.addEventListener("change", () => {
-  syncConnectionUi({
-    connectionBackendEl,
-    ptyUrlInput,
-    wcCommandInput,
-    wcCwdInput,
-    connectionHintEl,
-  });
+  if (!usesSvelteShell) {
+    syncConnectionUi({
+      connectionBackendEl,
+      ptyUrlInput,
+      wcCommandInput,
+      wcCwdInput,
+      connectionHintEl,
+    });
+  }
   for (const pane of restty.getPanes()) {
     if (pane.runtime.io.isPtyConnected()) {
       pane.runtime.io.disconnectPty();
@@ -752,13 +754,15 @@ if (btnLoadLocalFonts) {
   });
 }
 
-syncConnectionUi({
-  connectionBackendEl,
-  ptyUrlInput,
-  wcCommandInput,
-  wcCwdInput,
-  connectionHintEl,
-});
+if (!usesSvelteShell) {
+  syncConnectionUi({
+    connectionBackendEl,
+    ptyUrlInput,
+    wcCommandInput,
+    wcCwdInput,
+    connectionHintEl,
+  });
+}
 syncFontFamilyControls({
   fontFamilySelect,
   fontFamilyLocalSelect,

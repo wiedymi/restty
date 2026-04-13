@@ -1,4 +1,9 @@
 <script lang="ts">
+  import {
+    getConnectionUiState,
+    type ConnectionBackend,
+  } from "../../lib/pty-connection.ts";
+
   const SETTINGS_OPEN_EVENT = "restty:playground-settings-open";
   const SETTINGS_CLOSE_EVENT = "restty:playground-settings-close";
 
@@ -6,6 +11,7 @@
 
   let settingsDialog: HTMLDialogElement | null = null;
   let settingsOpen = false;
+  let connectionBackend: ConnectionBackend = "webcontainer";
 
   function syncSettingsDialog() {
     if (!settingsDialog) return;
@@ -56,6 +62,7 @@
     closeSettings();
   }
 
+  $: connectionUi = getConnectionUiState(connectionBackend);
   $: syncSettingsDialog();
 </script>
 
@@ -157,21 +164,39 @@
       <div class="field-row">
         <label>
           <span>Backend</span>
-          <select id="connectionBackend">
+          <select id="connectionBackend" bind:value={connectionBackend}>
             <option value="ws">WebSocket PTY</option>
-            <option value="webcontainer" selected>WebContainer</option>
+            <option value="webcontainer">WebContainer</option>
           </select>
         </label>
       </div>
       <div class="field-row">
-        <input id="ptyUrl" type="text" value="ws://localhost:8787/pty" placeholder="PTY URL" />
+        <input
+          id="ptyUrl"
+          type="text"
+          value="ws://localhost:8787/pty"
+          placeholder="PTY URL"
+          disabled={connectionUi.ptyUrlDisabled}
+        />
         <button id="btnPty">Connect</button>
       </div>
       <div class="field-row">
-        <input id="wcCommand" type="text" value="jsh" placeholder="WebContainer command" />
-        <input id="wcCwd" type="text" value="/" placeholder="WebContainer cwd" />
+        <input
+          id="wcCommand"
+          type="text"
+          value="jsh"
+          placeholder="WebContainer command"
+          disabled={connectionUi.webContainerInputsDisabled}
+        />
+        <input
+          id="wcCwd"
+          type="text"
+          value="/"
+          placeholder="WebContainer cwd"
+          disabled={connectionUi.webContainerInputsDisabled}
+        />
       </div>
-      <div id="connectionHint" class="hint">Using in-browser WebContainer process</div>
+      <div id="connectionHint" class="hint">{connectionUi.hintText}</div>
     </section>
 
     <section class="section">
