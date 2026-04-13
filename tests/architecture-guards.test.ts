@@ -176,6 +176,23 @@ test("runtime controller delegates public api projection to a dedicated module",
   expect(runtimeControllerPublicApi).toContain("deps.runtimeEvents.subscribe(listener)");
 });
 
+test("runtime controller delegates lifecycle orchestration to a dedicated module", () => {
+  const runtimeController = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.ts"),
+    "utf8",
+  );
+  const runtimeControllerLifecycle = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.lifecycle.ts"),
+    "utf8",
+  );
+
+  expect(runtimeController).toContain('./runtime-controller.lifecycle"');
+  expect(runtimeController).not.toContain("async function init(");
+  expect(runtimeController).not.toContain("function destroy()");
+  expect(runtimeControllerLifecycle).toContain("export function createRuntimeControllerLifecycle");
+  expect(runtimeControllerLifecycle).toContain('setLifecycleState("initializing")');
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });
