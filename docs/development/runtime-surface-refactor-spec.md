@@ -562,8 +562,8 @@ The following files are the clearest candidates for relocation or splitting base
   - `surface/search-ui/styles.ts`
   - `surface/search-ui/shortcuts.ts`
 
-- `src/surface/managed-pane-manager.ts`
-  Keep the concept, but split the file.
+- `src/surface/panes/managed-pane-manager.ts`
+  Keep the concept, but continue splitting the file.
   Current file owns types, DOM element creation, context-menu defaults, search UI wiring, pane-manager composition, and runtime creation.
   It should also avoid defining the public/internal bridge through omission-based config derivation.
   Target:

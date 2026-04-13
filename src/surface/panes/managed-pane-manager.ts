@@ -1,18 +1,15 @@
-import { type ResttyPaneManager } from "./panes-types";
-import { createResttyPaneManager } from "./panes/manager";
-import { createManagedPane } from "./panes/managed-pane-create";
-import {
-  resolveManagedPaneContextMenu,
-  resolveManagedPaneShortcuts,
-} from "./panes/managed-pane-options";
-import { getDefaultResttyRuntimeSession } from "../runtime/core/session";
-import type { PaneSearchUiController } from "./search-ui";
-import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
+import { type ResttyPaneManager } from "../panes-types";
+import { createResttyPaneManager } from "./manager";
+import { createManagedPane } from "./managed-pane-create";
+import { resolveManagedPaneContextMenu, resolveManagedPaneShortcuts } from "./managed-pane-options";
+import { getDefaultResttyRuntimeSession } from "../../runtime/core/session";
+import type { PaneSearchUiController } from "../search-ui";
+import { createManagedPaneSearchUiController } from "./managed-pane-search-ui";
 import type {
   CreateResttyManagedPaneManagerOptions,
   ResttyManagedPaneManager,
   ResttyManagedPane,
-} from "./panes/managed-pane-types";
+} from "./managed-pane-types";
 
 /**
  * Create a managed-pane manager that automatically constructs

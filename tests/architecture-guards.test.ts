@@ -7,7 +7,7 @@ const runtimeRoot = resolve(repoRoot, "src/runtime");
 const runtimeCreateRuntimeRoot = resolve(repoRoot, "src/runtime/create-runtime");
 const runtimeTypesEntry = resolve(runtimeRoot, "types.ts");
 const surfaceRoot = resolve(repoRoot, "src/surface");
-const managedPaneManagerEntry = resolve(surfaceRoot, "managed-pane-manager.ts");
+const managedPaneManagerEntry = resolve(surfaceRoot, "panes/managed-pane-manager.ts");
 const playgroundRoot = resolve(repoRoot, "playground");
 const playgroundPublicRoot = resolve(playgroundRoot, "public");
 const playgroundDistRoot = resolve(playgroundRoot, "dist");
@@ -236,7 +236,7 @@ test("surface restty facade imports managed-pane-manager for factory only", () =
 
   expect(source).not.toMatch(/createResttyManagedPaneManager,\s*type\s+/);
   expect(source).toMatch(
-    /import\s+\{\s*createResttyManagedPaneManager\s*,?\s*\}\s+from\s+"\.\/managed-pane-manager"/,
+    /import\s+\{\s*createResttyManagedPaneManager\s*,?\s*\}\s+from\s+"\.\/panes\/managed-pane-manager"/,
   );
 });
 
@@ -246,10 +246,10 @@ test("surface public entrypoints do not use managed-pane-manager as a type barre
 
   expect(indexSource).not.toContain("./surface/managed-pane-manager");
   expect(internalSurfaceSource).not.toMatch(
-    /export\s+type\s*\{[^}]+\}\s+from\s+"..\/surface\/managed-pane-manager"/s,
+    /export\s+type\s*\{[^}]+\}\s+from\s+"..\/surface\/panes\/managed-pane-manager"/s,
   );
   expect(internalSurfaceSource).toContain(
-    'createResttyManagedPaneManager } from "../surface/managed-pane-manager"',
+    'createResttyManagedPaneManager } from "../surface/panes/managed-pane-manager"',
   );
 });
 
