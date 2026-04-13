@@ -175,6 +175,16 @@ test("scrollbar runtime contract is split from generic interaction state", () =>
   expect(scrollbarRuntime).toContain("./scrollbar-runtime.types");
 });
 
+test("max scrollback contract is split from implementation", () => {
+  const maxScrollback = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "max-scrollback.ts"),
+    "utf8",
+  );
+
+  expect(maxScrollback).not.toContain("type MaxScrollbackOptions =");
+  expect(maxScrollback).toContain("./max-scrollback.types");
+});
+
 test("runtime internals do not use render-tick-webgl-context.ts as a type barrel", () => {
   const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
     return (

@@ -1,10 +1,9 @@
+import type { MaxScrollbackOptions } from "./max-scrollback.types";
+
 export const DEFAULT_MAX_SCROLLBACK_BYTES = 10_000_000;
 export const MAX_MAX_SCROLLBACK_BYTES = 256_000_000;
 
-type MaxScrollbackOptions = {
-  maxScrollbackBytes?: number;
-  maxScrollback?: number;
-};
+export type { MaxScrollbackOptions } from "./max-scrollback.types";
 
 export function normalizeMaxScrollbackBytes(value: number | undefined): number {
   if (!Number.isFinite(value)) return DEFAULT_MAX_SCROLLBACK_BYTES;
