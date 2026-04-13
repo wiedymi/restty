@@ -64,7 +64,11 @@ import type {
 import { getDefaultResttyAppSession } from "./core/session";
 import { createPtyOutputBufferController } from "./pty-output-buffer";
 import { fitTextTailToWidth, openLink } from "./create-runtime/create-app-io-utils";
-import { drawUnderlineStyle, drawStrikethrough, drawOverline } from "./text-decoration";
+import {
+  drawUnderlineStyle,
+  drawStrikethrough,
+  drawOverline,
+} from "./create-runtime/text-decoration";
 import {
   DEFAULT_SYMBOL_CONSTRAINT,
   DEFAULT_APPLE_SYMBOLS_CONSTRAINT,
@@ -74,7 +78,12 @@ import {
   isRenderSymbolLike,
   resolveSymbolConstraint,
 } from "./create-runtime/create-app-symbols";
-import { decodePackedRGBA, decodeRGBAWithCache, brighten, fade } from "./render-color-utils";
+import {
+  decodePackedRGBA,
+  decodeRGBAWithCache,
+  brighten,
+  fade,
+} from "./create-runtime/render-color-utils";
 import {
   shouldMergeTrailingClusterCodepoint,
   stylePreferenceFromFlags,

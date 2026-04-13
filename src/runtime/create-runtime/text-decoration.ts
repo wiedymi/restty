@@ -1,5 +1,5 @@
-import { clamp } from "../grid";
-import { pushRect, type Color } from "../renderer";
+import { clamp } from "../../grid";
+import { pushRect, type Color } from "../../renderer";
 
 export function drawUnderlineStyle(
   underlineData: number[],

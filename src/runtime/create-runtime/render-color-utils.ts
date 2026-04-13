@@ -1,4 +1,4 @@
-import type { Color } from "../renderer";
+import type { Color } from "../../renderer";
 
 export function decodePackedRGBA(color: number): Color {
   return [
