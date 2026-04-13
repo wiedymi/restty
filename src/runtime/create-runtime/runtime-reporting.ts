@@ -3,24 +3,9 @@ import {
   getSelectionText as extractSelectionText,
 } from "../../selection";
 import type { CursorInfo, RenderState, ResttyWasm, ResttyWasmExports } from "../../wasm";
-import type { ResttyAppCallbacks } from "../core/resources";
-import type { RuntimeSelectionState } from "./interaction-runtime/types";
+import type { RuntimeReportingOptions } from "./runtime-reporting.types";
 
-export type CreateRuntimeReportingOptions = {
-  selectionState: RuntimeSelectionState;
-  getLastRenderState: () => RenderState | null;
-  getWasmReady: () => boolean;
-  getWasm: () => ResttyWasm | null;
-  getWasmHandle: () => number;
-  getWasmExports: () => ResttyWasmExports | null;
-  callbacks?: ResttyAppCallbacks;
-  termSizeEl: HTMLElement | null;
-  cursorPosEl: HTMLElement | null;
-  dbgEl: HTMLElement | null;
-  setCursorForCpr: (pos: { row: number; col: number }) => void;
-};
-
-export function createRuntimeReporting(options: CreateRuntimeReportingOptions) {
+export function createRuntimeReporting(options: RuntimeReportingOptions) {
   let lastReportedTermCols = -1;
   let lastReportedTermRows = -1;
   let lastReportedCursorCol = -1;
