@@ -1,0 +1,53 @@
+import type {
+  ResttyAppCallbacks,
+  ResttyAppSession,
+  ResttyRuntimeConfig,
+} from "../../runtime/types";
+import type {
+  CreateResttyAppPaneManagerOptions,
+  ResttyPaneRuntimeContext,
+} from "./managed-pane-types";
+
+export type CreateManagedPaneRuntimeConfigOptions = {
+  context: ResttyPaneRuntimeContext;
+  terminal?: CreateResttyAppPaneManagerOptions["terminal"];
+  services?: CreateResttyAppPaneManagerOptions["services"];
+  session: ResttyAppSession;
+  onSearchState?: ResttyAppCallbacks["onSearchState"];
+};
+
+export function createManagedPaneRuntimeConfig(
+  options: CreateManagedPaneRuntimeConfigOptions,
+): ResttyRuntimeConfig {
+  const { context, session, onSearchState } = options;
+  const baseTerminal =
+    typeof options.terminal === "function" ? options.terminal(context) : (options.terminal ?? {});
+  const baseServices =
+    typeof options.services === "function" ? options.services(context) : (options.services ?? {});
+
+  const mergedElements = {
+    ...baseServices.elements,
+    termDebugEl: baseServices.elements?.termDebugEl ?? context.termDebugEl,
+  };
+  const mergedCallbacks: ResttyAppCallbacks = {
+    ...baseServices.callbacks,
+    onSearchState: (state) => {
+      baseServices.callbacks?.onSearchState?.(state);
+      onSearchState?.(state);
+    },
+  };
+
+  return {
+    mount: {
+      canvas: context.canvas,
+      imeInput: context.imeInput,
+      session,
+    },
+    terminal: baseTerminal,
+    services: {
+      ...baseServices,
+      elements: mergedElements,
+      callbacks: mergedCallbacks,
+    },
+  };
+}
