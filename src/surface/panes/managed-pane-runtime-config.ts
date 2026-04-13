@@ -23,10 +23,6 @@ export function createManagedPaneRuntimeConfig(
   const baseServices =
     typeof options.services === "function" ? options.services(context) : (options.services ?? {});
 
-  const mergedElements = {
-    ...baseServices.elements,
-    termDebugEl: baseServices.elements?.termDebugEl ?? context.termDebugEl,
-  };
   const mergedCallbacks: ResttyAppCallbacks = {
     ...baseServices.callbacks,
     onSearchState: (state) => {
@@ -44,7 +40,6 @@ export function createManagedPaneRuntimeConfig(
     terminal: baseTerminal,
     services: {
       ...baseServices,
-      elements: mergedElements,
       callbacks: mergedCallbacks,
     },
   };

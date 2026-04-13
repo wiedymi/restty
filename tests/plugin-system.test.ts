@@ -71,7 +71,6 @@ function createFakeManager(options: any): FakeManager {
       sourcePane,
       canvas: {},
       imeInput: {},
-      termDebugEl: {},
     };
     const terminal =
       typeof options.terminal === "function" ? options.terminal(context) : (options.terminal ?? {});

@@ -28,7 +28,6 @@ export function createResttyAppPaneManager(
   const canvasClassName = options.paneDom?.canvasClassName ?? "pane-canvas";
   const imeInputClassName =
     options.paneDom?.imeInputClassName ?? "pane-ime-input restty-pane-ime-input";
-  const termDebugClassName = options.paneDom?.termDebugClassName ?? "pane-term-debug";
   const contextMenu = resolveManagedPaneContextMenu(options);
   const shortcuts = resolveManagedPaneShortcuts(options.shortcuts);
 
@@ -54,7 +53,6 @@ export function createResttyAppPaneManager(
           paneClassName,
           canvasClassName,
           imeInputClassName,
-          termDebugClassName,
         },
         terminal: options.terminal,
         services: options.services,

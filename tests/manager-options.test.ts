@@ -40,7 +40,6 @@ test("createMergedPaneServicesConfig captures paneId snapshot for callbacks and 
     sourcePane: null,
     canvas: {} as HTMLCanvasElement,
     imeInput: {} as HTMLTextAreaElement,
-    termDebugEl: {} as HTMLPreElement,
   };
 
   const merged = mergedFactory(context);

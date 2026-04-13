@@ -24,8 +24,6 @@ export type ResttyManagedAppPane = ResttyPaneWithApp & {
   canvas: HTMLCanvasElement;
   /** Hidden textarea for IME composition input. */
   imeInput: HTMLTextAreaElement;
-  /** Pre element for terminal debug / accessibility output. */
-  termDebugEl: HTMLPreElement;
 };
 
 /**
@@ -35,7 +33,6 @@ export type ResttyPaneDomDefaults = {
   paneClassName?: string;
   canvasClassName?: string;
   imeInputClassName?: string;
-  termDebugClassName?: string;
 };
 
 /** Style options for managed panes (alias for ResttyPaneStyleOptions). */
@@ -53,7 +50,6 @@ export type ResttyPaneRuntimeContext = {
   sourcePane: ResttyManagedAppPane | null;
   canvas: HTMLCanvasElement;
   imeInput: HTMLTextAreaElement;
-  termDebugEl: HTMLPreElement;
 };
 
 /** Static or factory terminal behavior config for one pane. */

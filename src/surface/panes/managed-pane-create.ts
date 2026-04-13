@@ -11,7 +11,6 @@ export type ManagedPaneDomClassNames = {
   paneClassName: string;
   canvasClassName: string;
   imeInputClassName: string;
-  termDebugClassName: string;
 };
 
 export type CreateManagedPaneOptions = {
@@ -26,13 +25,12 @@ export type CreateManagedPaneOptions = {
 };
 
 export function createManagedPane(options: CreateManagedPaneOptions): ResttyManagedAppPane {
-  const { container, canvas, imeInput, termDebugEl } = createManagedPaneDom(options.dom);
+  const { container, canvas, imeInput } = createManagedPaneDom(options.dom);
   const context = {
     id: options.id,
     sourcePane: options.sourcePane,
     canvas,
     imeInput,
-    termDebugEl,
   };
   const app = createManagedPaneRuntime({
     context,
@@ -50,6 +48,5 @@ export function createManagedPane(options: CreateManagedPaneOptions): ResttyMana
     app,
     canvas,
     imeInput,
-    termDebugEl,
   };
 }

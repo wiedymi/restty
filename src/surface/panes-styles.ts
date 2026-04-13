@@ -118,10 +118,6 @@ body.is-resizing-split {
   pointer-events: none;
 }
 
-.${RESTTY_PANE_ROOT_CLASS} .pane-term-debug {
-  display: none;
-}
-
 .pane-context-menu {
   position: fixed;
   z-index: 9999;

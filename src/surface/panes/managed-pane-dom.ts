@@ -2,7 +2,6 @@ export type ManagedPaneDom = {
   container: HTMLDivElement;
   canvas: HTMLCanvasElement;
   imeInput: HTMLTextAreaElement;
-  termDebugEl: HTMLPreElement;
 };
 
 export type CreateManagedPaneDomOptions = {
@@ -10,7 +9,6 @@ export type CreateManagedPaneDomOptions = {
   paneClassName: string;
   canvasClassName: string;
   imeInputClassName: string;
-  termDebugClassName: string;
 };
 
 export function createImeInput(className: string, doc: Document = document): HTMLTextAreaElement {
@@ -50,17 +48,11 @@ export function createManagedPaneDom(options: CreateManagedPaneDomOptions): Mana
   canvas.tabIndex = 0;
 
   const imeInput = createImeInput(options.imeInputClassName, doc);
-
-  const termDebugEl = doc.createElement("pre");
-  termDebugEl.className = options.termDebugClassName;
-  termDebugEl.setAttribute("aria-live", "polite");
-
-  container.append(canvas, imeInput, termDebugEl);
+  container.append(canvas, imeInput);
 
   return {
     container,
     canvas,
     imeInput,
-    termDebugEl,
   };
 }
