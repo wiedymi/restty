@@ -9,6 +9,7 @@ const playgroundRoot = resolve(repoRoot, "playground");
 const playgroundPublicRoot = resolve(playgroundRoot, "public");
 const playgroundDistRoot = resolve(playgroundRoot, "dist");
 const internalEntry = resolve(repoRoot, "src/internal.ts");
+const internalRoot = resolve(repoRoot, "src/internal");
 
 function listTsFiles(root: string, options: { exclude?: string[] } = {}): string[] {
   const excludeRoots = (options.exclude ?? []).map((path) => resolve(path));
@@ -123,4 +124,21 @@ test("playground source does not import src/internal.ts", () => {
   expect(
     offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
   ).toEqual([]);
+});
+
+test("src/internal.ts does not import runtime or surface modules directly", () => {
+  const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
+    return (
+      resolved === runtimeRoot ||
+      resolved.startsWith(`${runtimeRoot}/`) ||
+      resolved === surfaceRoot ||
+      resolved.startsWith(`${surfaceRoot}/`)
+    );
+  });
+
+  expect(
+    offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
+  ).toEqual([]);
+  expect(existsSync(resolve(internalRoot, "runtime.ts"))).toBe(true);
+  expect(existsSync(resolve(internalRoot, "surface.ts"))).toBe(true);
 });
