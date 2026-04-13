@@ -8,7 +8,11 @@ import {
   bindTerminalControls,
 } from "./lib/control-bindings.ts";
 import { createDesktopNotificationHandler } from "./lib/desktop-notifications.ts";
-import { queryPlaygroundElements } from "./lib/elements.ts";
+import {
+  createEmptyLegacyPlaygroundElements,
+  queryLegacyPlaygroundElements,
+  querySharedPlaygroundElements,
+} from "./lib/elements.ts";
 import { createPaneAppearanceController } from "./lib/appearance-controller.ts";
 import { getConnectionBackend } from "./lib/pty-connection.ts";
 import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
@@ -26,8 +30,8 @@ import { bootstrapPlaygroundSurface } from "./lib/surface-bootstrap.ts";
 
 const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
 
+const { paneRoot, settingsDialog } = querySharedPlaygroundElements(document);
 const {
-  paneRoot,
   btnInit,
   btnPause,
   btnClear,
@@ -53,11 +57,10 @@ const {
   mouseModeEl,
   shaderPresetEl,
   settingsFab,
-  settingsDialog,
   settingsClose,
-} = queryPlaygroundElements(document, {
-  includeLegacyControls: !usesSvelteShell,
-});
+} = usesSvelteShell
+  ? createEmptyLegacyPlaygroundElements()
+  : queryLegacyPlaygroundElements(document);
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 

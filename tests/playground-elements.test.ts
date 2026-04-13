@@ -1,54 +1,60 @@
 import { expect, test } from "bun:test";
-import { queryPlaygroundElements } from "../playground/lib/elements.ts";
+import {
+  createEmptyLegacyPlaygroundElements,
+  queryLegacyPlaygroundElements,
+  querySharedPlaygroundElements,
+} from "../playground/lib/elements.ts";
 
-test("queryPlaygroundElements returns the required pane root and optional controls", () => {
+test("querySharedPlaygroundElements returns the required shared elements", () => {
   const paneRoot = { id: "paneRoot" };
-  const rendererSelect = { id: "rendererSelect", value: "auto" };
   const settingsDialog = { id: "settingsDialog", open: false };
   const elements = new Map<string, unknown>([
     ["paneRoot", paneRoot],
-    ["rendererSelect", rendererSelect],
     ["settingsDialog", settingsDialog],
   ]);
 
-  const queried = queryPlaygroundElements({
+  const queried = querySharedPlaygroundElements({
     getElementById: (id) => (elements.get(id) ?? null) as HTMLElement | null,
   });
 
   expect(queried.paneRoot).toBe(paneRoot);
-  expect(queried.rendererSelect).toBe(rendererSelect);
   expect(queried.settingsDialog).toBe(settingsDialog);
-  expect(queried.btnInit).toBeNull();
 });
 
-test("queryPlaygroundElements throws when the required pane root is missing", () => {
+test("querySharedPlaygroundElements throws when the required pane root is missing", () => {
   expect(() =>
-    queryPlaygroundElements({
+    querySharedPlaygroundElements({
       getElementById: () => null,
     }),
   ).toThrow("missing #paneRoot element");
 });
 
-test("queryPlaygroundElements skips legacy controls when disabled", () => {
+test("queryLegacyPlaygroundElements looks up only legacy controls", () => {
   const calls: string[] = [];
-  const paneRoot = { id: "paneRoot" };
-  const settingsDialog = { id: "settingsDialog", open: false };
-  const queried = queryPlaygroundElements(
-    {
-      getElementById: (id) => {
-        calls.push(id);
-        if (id === "paneRoot") return paneRoot as HTMLElement;
-        if (id === "settingsDialog") return settingsDialog as HTMLElement;
-        return null;
-      },
+  const rendererSelect = { id: "rendererSelect", value: "auto" };
+  const settingsFab = { id: "settingsFab" };
+  const queried = queryLegacyPlaygroundElements({
+    getElementById: (id) => {
+      calls.push(id);
+      if (id === "rendererSelect") return rendererSelect as HTMLElement;
+      if (id === "settingsFab") return settingsFab as HTMLElement;
+      return null;
     },
-    { includeLegacyControls: false },
-  );
+  });
 
-  expect(calls).toEqual(["paneRoot", "settingsDialog"]);
-  expect(queried.paneRoot).toBe(paneRoot);
-  expect(queried.settingsDialog).toBe(settingsDialog);
+  expect(calls).not.toContain("paneRoot");
+  expect(calls).not.toContain("settingsDialog");
+  expect(queried.rendererSelect).toBe(rendererSelect);
+  expect(queried.settingsFab).toBe(settingsFab);
+  expect(queried.btnInit).toBeNull();
+});
+
+test("createEmptyLegacyPlaygroundElements returns nulls for every legacy field", () => {
+  const queried = createEmptyLegacyPlaygroundElements();
+
+  expect(queried.btnInit).toBeNull();
   expect(queried.rendererSelect).toBeNull();
   expect(queried.connectionBackendEl).toBeNull();
+  expect(queried.themeFileInput).toBeNull();
   expect(queried.settingsFab).toBeNull();
 });
