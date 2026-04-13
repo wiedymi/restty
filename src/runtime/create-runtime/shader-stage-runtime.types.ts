@@ -8,7 +8,6 @@ import type {
 import type { ResttyShaderStage } from "../core/models";
 
 export type ShaderStageRuntimeOptions = {
-  appendLog: (line: string) => void;
   getCanvasSize: () => { width: number; height: number };
   getActiveWebGLState: () => WebGLState | null;
   onShaderStagesChanged: () => void;

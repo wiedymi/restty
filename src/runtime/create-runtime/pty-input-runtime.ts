@@ -6,13 +6,6 @@ import type {
   PtyInputRuntimeOptions,
 } from "./pty-input-runtime.types";
 
-function formatError(err: unknown): string {
-  if (err && typeof err === "object" && "message" in err) {
-    return String((err as { message?: unknown }).message);
-  }
-  return String(err);
-}
-
 export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInputRuntime {
   const {
     ptyTransport,
@@ -22,7 +15,6 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
     mouseStatusEl,
     onPtyStatus,
     onMouseStatus,
-    appendLog,
     getGridSize,
     getResizeMeta,
     getCursorForCpr,
@@ -118,25 +110,16 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
                 getResizeMeta?.() ?? undefined,
               );
             }
-            appendLog("[pty] connected");
           },
           onDisconnect: () => {
-            appendLog("[pty] disconnected");
             setPtyStatus("disconnected");
             updateMouseStatus();
           },
-          onStatus: (shell) => {
-            appendLog(`[pty] shell ${shell ?? ""}`);
-          },
-          onError: (message, errors) => {
-            appendLog(`[pty] error ${message ?? ""}`);
-            if (errors) {
-              for (const err of errors) appendLog(`[pty] spawn ${err}`);
-            }
+          onStatus: () => {},
+          onError: () => {
             disconnectPty();
           },
-          onExit: (code) => {
-            appendLog(`[pty] exit ${code ?? ""}`);
+          onExit: () => {
             disconnectPty();
           },
           onData: (text) => {
@@ -147,11 +130,11 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
         },
       });
       Promise.resolve(connectResult).catch((err: unknown) => {
-        appendLog(`[pty] error ${formatError(err)}`);
+        console.error("[restty] pty connect error", err);
         disconnectPty();
       });
     } catch (err) {
-      appendLog(`[pty] error ${formatError(err)}`);
+      console.error("[restty] pty connect error", err);
       disconnectPty();
     }
   }

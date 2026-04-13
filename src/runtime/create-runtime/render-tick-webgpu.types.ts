@@ -336,8 +336,6 @@ export type RuntimeTickDeps = SharedTickDeps & {
   setShaderStagesDirty: (value: boolean) => void;
   getCompiledWebGPUShaderStages: () => CompiledWebGPUShaderStage[];
   ensureWebGPUStageTargets: (state: WebGPUState) => WebGPUStageTargets | null;
-  fontError: Error | null;
-  reportDebugText: (text: string) => void;
   updateGrid: () => void;
   getRenderState: () => RenderState | null;
   resolveBlendFlags: (
@@ -364,7 +362,6 @@ export type RuntimeTickDeps = SharedTickDeps & {
     cols: number,
     rows: number,
   ) => { row: number; col: number } | null;
-  dbgEl: HTMLElement | null;
   wasmExports: ResttyWasmExports | null;
   wasmHandle: number;
   gridState: {

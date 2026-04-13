@@ -11,8 +11,6 @@ export function tickWebGPU(deps: RuntimeTickDeps, state: WebGPUState) {
     setShaderStagesDirty,
     getCompiledWebGPUShaderStages,
     ensureWebGPUStageTargets,
-    fontError,
-    reportDebugText,
     updateGrid,
     getRenderState,
     fontState,
@@ -30,7 +28,6 @@ export function tickWebGPU(deps: RuntimeTickDeps, state: WebGPUState) {
     isFocused,
     imeState,
     resolveImeAnchor,
-    dbgEl,
     wasmExports,
     wasmHandle,
     gridState,
@@ -48,11 +45,6 @@ export function tickWebGPU(deps: RuntimeTickDeps, state: WebGPUState) {
   const shaderStageCount = compiledWebGPUStages.length;
   const stageTargets = shaderStageCount > 0 ? ensureWebGPUStageTargets(state) : null;
   const hasShaderStages = shaderStageCount > 0 && !!stageTargets;
-
-  if (fontError) {
-    const text = `Font error: ${fontError.message}`;
-    reportDebugText(text);
-  }
 
   updateGrid();
 
@@ -161,34 +153,6 @@ export function tickWebGPU(deps: RuntimeTickDeps, state: WebGPUState) {
     }
   }
   const cursorImeAnchor = resolveImeAnchor(imeCursorPos, cols, rows);
-  if (dbgEl && wasmExports && wasmHandle) {
-    const cx = wasmExports.restty_active_cursor_x
-      ? wasmExports.restty_active_cursor_x(wasmHandle)
-      : 0;
-    const cy = wasmExports.restty_active_cursor_y
-      ? wasmExports.restty_active_cursor_y(wasmHandle)
-      : 0;
-    const sl = wasmExports.restty_debug_scroll_left
-      ? wasmExports.restty_debug_scroll_left(wasmHandle)
-      : 0;
-    const sr = wasmExports.restty_debug_scroll_right
-      ? wasmExports.restty_debug_scroll_right(wasmHandle)
-      : 0;
-    const tc = wasmExports.restty_debug_term_cols
-      ? wasmExports.restty_debug_term_cols(wasmHandle)
-      : 0;
-    const tr = wasmExports.restty_debug_term_rows
-      ? wasmExports.restty_debug_term_rows(wasmHandle)
-      : 0;
-    const pc = wasmExports.restty_debug_page_cols
-      ? wasmExports.restty_debug_page_cols(wasmHandle)
-      : 0;
-    const pr = wasmExports.restty_debug_page_rows
-      ? wasmExports.restty_debug_page_rows(wasmHandle)
-      : 0;
-    const text = `${cx},${cy} | ${sl}-${sr} | t:${tc}x${tr} p:${pc}x${pr}`;
-    reportDebugText(text);
-  }
 
   const cellW = gridState.cellW || canvas.width / cols;
   const cellH = gridState.cellH || canvas.height / rows;

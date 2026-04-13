@@ -178,6 +178,11 @@ test("legacy runtime debug-tools directory is removed", () => {
   );
 });
 
+test("legacy runtime logger helper is removed", () => {
+  expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-logger.ts"))).toBe(false);
+  expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-logger.types.ts"))).toBe(false);
+});
+
 test("surface source does not import runtime create-runtime internals", () => {
   const surfaceFiles = listTsFiles(surfaceRoot);
   const offenders = collectResolvedImports(surfaceFiles).filter(({ resolved }) => {

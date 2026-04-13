@@ -12,6 +12,5 @@ export type RuntimeReportingOptions = {
   callbacks?: ResttyAppCallbacks;
   termSizeEl: HTMLElement | null;
   cursorPosEl: HTMLElement | null;
-  dbgEl: HTMLElement | null;
   setCursorForCpr: (pos: { row: number; col: number }) => void;
 };

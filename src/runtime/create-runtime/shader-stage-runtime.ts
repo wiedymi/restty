@@ -33,7 +33,6 @@ export function createShaderStageRuntime(options: ShaderStageRuntimeOptions): Sh
 
   function reportShaderStageError(stage: ResttyShaderStage, message: string): void {
     const text = `[shader-stage:${stage.id}] ${message}`;
-    options.appendLog(text);
     console.warn(text);
     try {
       stage.onError?.(text);
@@ -194,7 +193,6 @@ export function createShaderStageRuntime(options: ShaderStageRuntimeOptions): Sh
       const text = `[shader-stage] invalid configuration: ${
         error instanceof Error ? error.message : String(error)
       }`;
-      options.appendLog(text);
       console.warn(text);
       shaderStages = [];
     }

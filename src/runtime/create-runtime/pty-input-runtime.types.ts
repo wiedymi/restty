@@ -23,7 +23,6 @@ export type PtyInputRuntimeOptions = {
   emitRuntimeEvent?: (event: Extract<ResttyRuntimeEvent, { type: "pty-status" }>) => void;
   onPtyStatus?: ((status: string) => void) | null;
   onMouseStatus?: ((status: string) => void) | null;
-  appendLog: (line: string) => void;
   getGridSize: () => { cols: number; rows: number };
   getResizeMeta?: () => PtyResizeMeta | null;
   getCursorForCpr: () => CursorPosition;

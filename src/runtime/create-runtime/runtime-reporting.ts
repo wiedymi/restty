@@ -11,7 +11,6 @@ export function createRuntimeReporting(options: RuntimeReportingOptions) {
   let lastReportedCursorCol = -1;
   let lastReportedCursorRow = -1;
   let lastResolvedCursor: { col: number; row: number; wideTail: boolean } | null = null;
-  let lastReportedDebugText = "";
 
   function selectionForRow(row: number, cols: number) {
     return selectionRangeForRow(options.selectionState, row, cols);
@@ -146,13 +145,6 @@ export function createRuntimeReporting(options: RuntimeReportingOptions) {
     options.setCursorForCpr({ row: row + 1, col: col + 1 });
   }
 
-  function reportDebugText(text: string): void {
-    if (text === lastReportedDebugText) return;
-    lastReportedDebugText = text;
-    if (options.dbgEl) options.dbgEl.textContent = text;
-    options.callbacks?.onDebug?.(text);
-  }
-
   return {
     selectionForRow,
     getSelectionText,
@@ -161,6 +153,5 @@ export function createRuntimeReporting(options: RuntimeReportingOptions) {
     resolveCursorStyle,
     reportTermSize,
     reportCursor,
-    reportDebugText,
   };
 }

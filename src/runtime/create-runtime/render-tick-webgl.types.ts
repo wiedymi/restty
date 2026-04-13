@@ -24,8 +24,6 @@ export type WebGLTickDeps = SharedTickDeps & {
   setShaderStagesDirty: (value: boolean) => void;
   getCompiledWebGLShaderStages: () => CompiledWebGLShaderStage[];
   ensureWebGLStageTargets: (state: WebGLState) => WebGLStageTargets | null;
-  fontError: Error | null;
-  reportDebugText: (text: string) => void;
   updateGrid: () => void;
   getRenderState: () => RenderState | null;
   resolveBlendFlags: (

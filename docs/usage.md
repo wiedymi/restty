@@ -53,7 +53,7 @@ const restty = new Restty({
 
   services: {
     ptyTransport: myPtyTransport,
-    // Use this bucket for callbacks and debug hooks too.
+    // Use this bucket for runtime services and callbacks too.
   },
 });
 ```
@@ -289,12 +289,9 @@ console.log(restty.pluginInfo("example/log-pane-events"));
 restty.unuse("example/log-pane-events");
 
 // Optional manifest + registry loading
-await restty.loadPlugins(
-  [{ id: "example/log-pane-events", options: { level: "info" } }],
-  {
-    "example/log-pane-events": () => logPlugin,
-  },
-);
+await restty.loadPlugins([{ id: "example/log-pane-events", options: { level: "info" } }], {
+  "example/log-pane-events": () => logPlugin,
+});
 ```
 
 ## 10) Shader stages

@@ -111,7 +111,6 @@ import {
   resolveGlyphPixelMode as resolveGlyphPixelModeFromEntry,
 } from "./create-runtime/atlas-debug-utils";
 import { formatCodepoint } from "./create-runtime/format-utils";
-import { createRuntimeLogger } from "./create-runtime/runtime-logger";
 import { createShaderStageRuntime } from "./create-runtime/shader-stage-runtime";
 import { createColorGlyphAtlasHelpers } from "./create-runtime/color-glyph-atlas";
 import { createRuntimeInputHooks } from "./create-runtime/input-hooks";
@@ -246,11 +245,8 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const cellEl = elements?.cellEl ?? null;
   const termSizeEl = elements?.termSizeEl ?? null;
   const cursorPosEl = elements?.cursorPosEl ?? null;
-  const inputDebugEl = elements?.inputDebugEl ?? null;
-  const dbgEl = elements?.dbgEl ?? null;
   const ptyStatusEl = elements?.ptyStatusEl ?? null;
   const mouseStatusEl = elements?.mouseStatusEl ?? null;
-  const logEl = elements?.logEl ?? null;
 
   const DEFAULT_BG_BASE: Color = [0.08, 0.09, 0.1, 1.0];
   const DEFAULT_FG_BASE: Color = [0.92, 0.93, 0.95, 1.0];
@@ -369,13 +365,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   let inputHandler: InputHandler | null = null;
   let activeTheme: GhosttyTheme | null = null;
   const webgpuUniforms = new Float32Array(8);
-  const runtimeLogger = createRuntimeLogger({
-    logEl,
-    onLog: callbacks?.onLog,
-  });
-  const { appendLog, log, shouldSuppressWasmLog } = runtimeLogger;
   const shaderStageRuntime = createShaderStageRuntime({
-    appendLog,
     getCanvasSize: () => ({ width: canvas.width, height: canvas.height }),
     getActiveWebGLState: () => (activeState && "gl" in activeState ? activeState : null),
     onShaderStagesChanged: () => {
@@ -407,7 +397,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const KITTY_PLACEHOLDER_CP = 0x10eeee;
   const KITTY_FLAG_REPORT_EVENTS = 1 << 1;
 
-  const textEncoder = new TextEncoder();
   const textDecoder = new TextDecoder();
 
   let isFocused = typeof document !== "undefined" ? document.activeElement === canvas : true;
@@ -504,7 +493,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     resolveCursorStyle,
     reportTermSize,
     reportCursor,
-    reportDebugText,
   } = createRuntimeReporting({
     selectionState,
     getLastRenderState: () => lastRenderState,
@@ -515,7 +503,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     callbacks,
     termSizeEl,
     cursorPosEl,
-    dbgEl,
     setCursorForCpr: (value) => {
       lastCursorForCpr = value;
     },
@@ -553,9 +540,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
       if (!wasm || !wasmHandle) return 0;
       return wasm.getKittyKeyboardFlags(wasmHandle);
     },
-    onWindowOp: (op) => {
-      appendLog(`[term] window op ${op.type} ${op.params.join(";")}`);
-    },
+    onWindowOp: () => {},
     onDesktopNotification: callbacks?.onDesktopNotification,
   });
   inputHandler!.setMouseMode("auto");
@@ -569,7 +554,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     emitRuntimeEvent: runtimeEvents.emit,
     onPtyStatus: callbacks?.onPtyStatus,
     onMouseStatus: callbacks?.onMouseStatus,
-    appendLog,
     getGridSize: () => ({ cols: gridState.cols || 0, rows: gridState.rows || 0 }),
     getResizeMeta: () => {
       const cols = gridState.cols || 0;
@@ -633,7 +617,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     updateGrid();
     wasm?.renderUpdate?.(wasmHandle);
     needsRender = true;
-    appendLog(`[ui] font size ${clamped}px`);
   }
 
   const resolveGlyphPixelMode = (entry: FontEntry): number =>
@@ -708,7 +691,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   });
 
   let fontPromise: Promise<void> | null = null;
-  let fontError: Error | null = null;
   let fontLease: ResttyFontResourceLease | null = null;
 
   setShaderStages(terminal.shaderStages ?? []);
@@ -757,7 +739,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     getWasmReady: () => wasmReady,
     getWasm: () => wasm,
     getWasmHandle: () => wasmHandle,
-    appendLog,
     bindCanvasEvents,
     computeCellMetrics,
     updateGrid,
@@ -851,14 +832,12 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   async function setFontSources(sources: ResttyFontSource[]) {
     configuredFontSources = normalizeFontSources(sources, undefined);
     fontPromise = null;
-    fontError = null;
     releaseFontLease();
     clearFontRuntimeState();
 
     await ensureFont();
     updateGrid();
     needsRender = true;
-    appendLog("[ui] font sources updated");
   }
 
   function invalidateFontAtlasesForHinting() {
@@ -881,7 +860,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     if (fontHinting === next) return;
     fontHinting = next;
     invalidateFontAtlasesForHinting();
-    appendLog(`[ui] font hinting ${next ? "on" : "off"}`);
   }
 
   function setLigatures(value: boolean) {
@@ -889,7 +867,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     if (ligatures === next) return;
     ligatures = next;
     needsRender = true;
-    appendLog(`[ui] ligatures ${next ? "on" : "off"}`);
   }
 
   function setFontHintTarget(value: ResttyFontHintTarget) {
@@ -899,7 +876,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     if (fontHinting) {
       invalidateFontAtlasesForHinting();
     }
-    appendLog(`[ui] font hint target ${next}`);
   }
 
   async function ensureFont() {
@@ -934,12 +910,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
         if (activeState && activeState.glyphAtlases) {
           activeState.glyphAtlases = new Map();
         }
-        fontError = null;
-        if (entries.length > 1) {
-          log(`font loaded (+${entries.length - 1} fallback)`);
-        } else {
-          log("font loaded");
-        }
         updateGrid();
       } catch (err) {
         if (acquiredLease) {
@@ -948,10 +918,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
           releaseFontLease();
         }
         clearFontRuntimeState();
-        const error = err instanceof Error ? err : new Error(String(err));
-        fontError = error;
         console.error("font load error", err);
-        log("font load failed");
       }
     })();
     return fontPromise;
@@ -962,7 +929,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     clearFontRuntimeState();
     configuredFontSources = [];
     fontPromise = null;
-    fontError = null;
   });
 
   const { tickWebGPU, tickWebGL } = createRuntimeRenderTicks({
@@ -974,10 +940,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     getCompiledWebGLShaderStages,
     ensureWebGPUStageTargets,
     ensureWebGLStageTargets,
-    get fontError() {
-      return fontError;
-    },
-    reportDebugText,
     updateGrid,
     getRenderState,
     fontState,
@@ -999,7 +961,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     },
     imeState,
     resolveImeAnchor,
-    dbgEl,
     get wasmExports() {
       return wasmExports;
     },
@@ -1198,15 +1159,11 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     callbacks,
     fpsEl,
     backendEl,
-    inputDebugEl,
     imeInput,
     attachWindowEvents,
     isMacPlatform,
-    textEncoder,
     readState: readRuntimeAppApiState,
     writeState: writeRuntimeAppApiState,
-    appendLog,
-    shouldSuppressWasmLog,
     runBeforeInputHook,
     runBeforeRenderOutputHook,
     CURSOR_BLINK_MS,

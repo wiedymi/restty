@@ -567,7 +567,6 @@ src/
       search-highlight-utils.ts
     debug/
       runtime-reporting.ts
-      runtime-logger.ts
       debug-tools/
 ```
 

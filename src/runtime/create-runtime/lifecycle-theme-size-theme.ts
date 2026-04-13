@@ -83,7 +83,6 @@ export function createLifecycleThemeHandlers(deps: LifecycleThemeSizeDeps) {
     }
 
     deps.markNeedsRender();
-    deps.appendLog(`[ui] theme applied (${sourceLabel})`);
   }
 
   function resetTheme() {
@@ -115,7 +114,6 @@ export function createLifecycleThemeHandlers(deps: LifecycleThemeSizeDeps) {
     }
 
     deps.markNeedsRender();
-    deps.appendLog("[ui] theme reset (default)");
   }
 
   return { applyTheme, resetTheme };

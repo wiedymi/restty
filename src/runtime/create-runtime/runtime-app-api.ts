@@ -31,15 +31,11 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     callbacks,
     fpsEl,
     backendEl,
-    inputDebugEl,
     imeInput,
     attachWindowEvents,
     isMacPlatform,
-    textEncoder,
     readState,
     writeState,
-    appendLog,
-    shouldSuppressWasmLog,
     runBeforeInputHook,
     runBeforeRenderOutputHook,
     CURSOR_BLINK_MS,
@@ -56,7 +52,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     applyTheme,
     ensureFont,
     updateSize,
-    log,
     replaceCanvas,
     rebuildWebGPUShaderStages,
     rebuildWebGLShaderStages,
@@ -146,16 +141,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     internalState.rafId = requestAnimationFrame(() => loop(state));
   }
 
-  const onWasmLog = (text: string) => {
-    if (shouldSuppressWasmLog(text)) return;
-    console.log(`[wasm] ${text}`);
-    appendLog(`[wasm] ${text}`);
-  };
-  if (session.addWasmLogListener) {
-    session.addWasmLogListener(onWasmLog);
-    cleanupFns.push(() => session.removeWasmLogListener?.(onWasmLog));
-  }
-
   function destroyWasmHandle(instance: ResttyWasm, handle: number) {
     try {
       instance.destroy(handle);
@@ -210,25 +195,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     }
     if (!intercepted) return;
     const normalized = source === "pty" ? intercepted : normalizeNewlines(intercepted);
-    if (source === "key") {
-      const bytes = textEncoder.encode(normalized);
-      const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(" ");
-      const debugText = `${hex} (${bytes.length})`;
-      if (inputDebugEl) inputDebugEl.textContent = debugText;
-      callbacks?.onInputDebug?.(debugText);
-    }
-    if (source === "key") {
-      let before = "";
-      if (
-        shared.wasmExports?.restty_active_cursor_x &&
-        shared.wasmExports?.restty_active_cursor_y
-      ) {
-        const bx = shared.wasmExports.restty_active_cursor_x(shared.wasmHandle);
-        const by = shared.wasmExports.restty_active_cursor_y(shared.wasmHandle);
-        before = ` cursor=${bx},${by}`;
-      }
-      appendLog(`[key] ${JSON.stringify(normalized)}${before}`);
-    }
     if (
       source === "key" &&
       (interaction.selectionState.active || interaction.selectionState.dragging)
@@ -247,36 +213,18 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     }
     ptyInputRuntime.cancelSyncOutputReset();
     shared.wasm.renderUpdate(shared.wasmHandle);
-    if (
-      source === "key" &&
-      shared.wasmExports?.restty_active_cursor_x &&
-      shared.wasmExports?.restty_active_cursor_y
-    ) {
-      const ax = shared.wasmExports.restty_active_cursor_x(shared.wasmHandle);
-      const ay = shared.wasmExports.restty_active_cursor_y(shared.wasmHandle);
-      appendLog(`[key] after cursor=${ax},${ay}`);
-    }
     writeState({ needsRender: true });
   }
 
   async function copySelectionToClipboard() {
     const text = options.getSelectionText();
     if (!text) return false;
-    const copied = await writeClipboardText(text);
-    if (copied) {
-      appendLog("[ui] selection copied");
-      return true;
-    }
-    appendLog("[ui] copy failed");
-    return false;
+    return writeClipboardText(text);
   }
 
   async function pasteFromClipboard() {
     const text = await readClipboardText();
-    if (text === null) {
-      appendLog("[ui] paste failed");
-      return false;
-    }
+    if (text === null) return false;
     if (text) {
       ptyInputRuntime.sendPasteText(text);
       return true;
@@ -486,7 +434,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
       cancelAnimationFrame(internalState.rafId);
       updateSize();
 
-      log("initializing...");
       await ensureFont();
       if (!isCurrentLifecycleEpoch(initEpoch)) return;
       updateGrid();
@@ -513,7 +460,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
           if (backendEl) backendEl.textContent = "webgpu";
           emitRuntimeEvent({ type: "backend", backend: "webgpu" });
           callbacks?.onBackend?.("webgpu");
-          log("webgpu ready");
           clearWebGLShaderStages();
           destroyWebGLStageTargets();
           gpuState.context.configure({
@@ -551,7 +497,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
           if (backendEl) backendEl.textContent = "webgl2";
           emitRuntimeEvent({ type: "backend", backend: "webgl2" });
           callbacks?.onBackend?.("webgl2");
-          log("webgl2 ready");
           clearWebGPUShaderStages();
           destroyWebGPUStageTargets();
           rebuildWebGLShaderStages(glState);
@@ -569,7 +514,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
       if (backendEl) backendEl.textContent = "none";
       emitRuntimeEvent({ type: "backend", backend: "none" });
       callbacks?.onBackend?.("none");
-      log("no GPU backend available");
       writeState({ activeState: null, currentContextType: null });
       await wasmPromise;
       if (!isCurrentLifecycleEpoch(initEpoch)) return;

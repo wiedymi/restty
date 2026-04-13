@@ -79,7 +79,6 @@ export type LifecycleThemeSizeDeps = {
   getWasmReady: () => boolean;
   getWasm: () => ResttyWasm | null;
   getWasmHandle: () => number;
-  appendLog: (line: string) => void;
   bindCanvasEvents: () => void;
   computeCellMetrics: () => { cellW: number; cellH: number } | null;
   updateGrid: () => void;

@@ -18,8 +18,6 @@ export function buildWebGLTickContext(
     ensureWebGLStageTargets,
     canvas,
     defaultBg,
-    fontError,
-    reportDebugText,
     updateGrid,
     getRenderState,
     fontState,
@@ -69,11 +67,6 @@ export function buildWebGLTickContext(
   );
   gl.clearColor(defaultBg[0], defaultBg[1], defaultBg[2], defaultBg[3]);
   gl.clear(gl.COLOR_BUFFER_BIT);
-
-  if (fontError) {
-    const text = `Font error: ${fontError.message}`;
-    reportDebugText(text);
-  }
 
   updateGrid();
 

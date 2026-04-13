@@ -65,24 +65,16 @@ export type ResttyAppElements = {
   termSizeEl?: HTMLElement | null;
   /** Cursor position display. */
   cursorPosEl?: HTMLElement | null;
-  /** Input sequence debug display. */
-  inputDebugEl?: HTMLElement | null;
-  /** General debug text display. */
-  dbgEl?: HTMLElement | null;
   /** PTY connection status display. */
   ptyStatusEl?: HTMLElement | null;
   /** Mouse mode/status display. */
   mouseStatusEl?: HTMLElement | null;
-  /** Scrollable log output display. */
-  logEl?: HTMLElement | null;
 };
 
 /**
  * Callbacks fired by the app when internal state changes.
  */
 export type ResttyAppCallbacks = {
-  /** A log line was emitted. */
-  onLog?: (line: string) => void;
   /** Renderer backend was determined. */
   onBackend?: (backend: string) => void;
   /** Frame rate updated. */
@@ -99,10 +91,6 @@ export type ResttyAppCallbacks = {
   onTermSize?: (cols: number, rows: number) => void;
   /** Cursor position changed. */
   onCursor?: (col: number, row: number) => void;
-  /** General debug text updated. */
-  onDebug?: (text: string) => void;
-  /** Input sequence debug text updated. */
-  onInputDebug?: (text: string) => void;
   /** PTY connection status changed. */
   onPtyStatus?: (status: string) => void;
   /** Mouse mode/status changed. */

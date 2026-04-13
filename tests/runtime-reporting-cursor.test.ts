@@ -23,7 +23,6 @@ function createReporting(options: {
     callbacks: undefined,
     termSizeEl: null,
     cursorPosEl: null,
-    dbgEl: null,
     setCursorForCpr: () => {},
   });
 }

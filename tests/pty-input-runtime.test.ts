@@ -64,7 +64,6 @@ test("sendKeyInput always routes payloads through PTY key mapper", () => {
       clear: () => {},
     },
     inputHandler: createInputHandlerStub((seq) => `mapped:${seq}`),
-    appendLog: () => {},
     getGridSize: () => ({ cols: 80, rows: 24 }),
     getCursorForCpr: () => ({ row: 1, col: 1 }),
     sendInput: () => {},
@@ -92,7 +91,6 @@ test("sendKeyInput keeps legacy mapper behavior for non-kitty payloads", () => {
       clear: () => {},
     },
     inputHandler: createInputHandlerStub((seq) => `mapped:${seq}`),
-    appendLog: () => {},
     getGridSize: () => ({ cols: 80, rows: 24 }),
     getCursorForCpr: () => ({ row: 1, col: 1 }),
     sendInput: () => {},
@@ -122,7 +120,6 @@ test("setPtyStatus emits deduped runtime pty-status events", () => {
     emitRuntimeEvent: (event) => {
       events.push(event.status);
     },
-    appendLog: () => {},
     getGridSize: () => ({ cols: 80, rows: 24 }),
     getCursorForCpr: () => ({ row: 1, col: 1 }),
     sendInput: () => {},

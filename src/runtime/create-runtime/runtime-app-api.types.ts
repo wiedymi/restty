@@ -91,15 +91,11 @@ export type RuntimeAppApiOptions = {
   callbacks?: ResttyAppCallbacks;
   fpsEl: HTMLElement | null;
   backendEl: HTMLElement | null;
-  inputDebugEl: HTMLElement | null;
   imeInput: HTMLTextAreaElement | null;
   attachWindowEvents: boolean;
   isMacPlatform: boolean;
-  textEncoder: TextEncoder;
   readState: () => RuntimeAppApiSharedState;
   writeState: (patch: Partial<RuntimeAppApiSharedState>) => void;
-  appendLog: (line: string) => void;
-  shouldSuppressWasmLog: (text: string) => boolean;
   runBeforeInputHook: (text: string, source: string) => string | null;
   runBeforeRenderOutputHook: (text: string, source: string) => string | null;
   getSelectionText: () => string;
@@ -120,7 +116,6 @@ export type RuntimeAppApiOptions = {
   applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
   ensureFont: () => Promise<void>;
   updateSize: ResttyRuntimeInteractionApi["updateSize"];
-  log: (line: string) => void;
   replaceCanvas: () => void;
   rebuildWebGPUShaderStages: (state: WebGPUState) => void;
   rebuildWebGLShaderStages: (state: WebGLState) => void;
