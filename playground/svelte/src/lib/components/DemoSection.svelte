@@ -1,16 +1,8 @@
 <script lang="ts">
-  import { RUN_DEMO_EVENT } from "../../../../lib/shell-events.ts";
   import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
+  import { dispatchDemoRun } from "../shell-dispatch.ts";
 
   let demoKind: PlaygroundDemoKind = "basic";
-
-  function runDemo() {
-    window.dispatchEvent(
-      new CustomEvent(RUN_DEMO_EVENT, {
-        detail: { kind: demoKind },
-      }),
-    );
-  }
 </script>
 
 <section class="section">
@@ -22,6 +14,6 @@
       <option value="unicode">Unicode</option>
       <option value="anim">Animation</option>
     </select>
-    <button id="btnRunDemo" type="button" onclick={runDemo}>Run</button>
+    <button id="btnRunDemo" type="button" onclick={() => dispatchDemoRun(demoKind)}>Run</button>
   </div>
 </section>

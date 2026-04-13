@@ -3,9 +3,7 @@
     getConnectionUiState,
     type ConnectionBackend,
   } from "../../../../lib/pty-connection.ts";
-  import {
-    PTY_BUTTON_EVENT,
-  } from "../../../../lib/shell-events.ts";
+  import { dispatchPtyButton } from "../shell-dispatch.ts";
   import { connectionShellState } from "../stores/shell-state.ts";
 
   let connectionBackend: ConnectionBackend = "webcontainer";
@@ -15,9 +13,6 @@
 
   $: connectionUi = getConnectionUiState(connectionBackend);
 
-  function handlePtyButtonClick() {
-    window.dispatchEvent(new CustomEvent(PTY_BUTTON_EVENT));
-  }
 </script>
 
 <section class="section">
@@ -39,7 +34,7 @@
       placeholder="PTY URL"
       disabled={connectionUi.ptyUrlDisabled}
     />
-    <button id="btnPty" type="button" onclick={handlePtyButtonClick}>
+    <button id="btnPty" type="button" onclick={dispatchPtyButton}>
       {$connectionShellState.ptyButtonLabel}
     </button>
   </div>

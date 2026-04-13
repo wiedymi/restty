@@ -4,7 +4,7 @@
   import ConnectionSection from "./lib/components/ConnectionSection.svelte";
   import DemoSection from "./lib/components/DemoSection.svelte";
   import TerminalSection from "./lib/components/TerminalSection.svelte";
-  import { SETTINGS_CLOSE_EVENT, SETTINGS_OPEN_EVENT } from "../../lib/shell-events.ts";
+  import { dispatchSettingsClose, dispatchSettingsOpen } from "./lib/shell-dispatch.ts";
   import { startShellStateBridge } from "./lib/stores/shell-state.ts";
 
   document.documentElement.dataset.playgroundShell = "svelte";
@@ -35,14 +35,14 @@
 
   function openSettings() {
     if (settingsOpen) return;
-    window.dispatchEvent(new CustomEvent(SETTINGS_OPEN_EVENT));
+    dispatchSettingsOpen();
     settingsOpen = true;
   }
 
   function closeSettings() {
     if (!settingsOpen) return;
     settingsOpen = false;
-    window.dispatchEvent(new CustomEvent(SETTINGS_CLOSE_EVENT));
+    dispatchSettingsClose();
   }
 
   function handleDialogClick(event: MouseEvent) {

@@ -1,57 +1,39 @@
 <script lang="ts">
   import {
-    TERMINAL_CLEAR_EVENT,
-    TERMINAL_FONT_SIZE_EVENT,
-    TERMINAL_INIT_EVENT,
-    TERMINAL_PAUSE_EVENT,
-    TERMINAL_RENDERER_EVENT,
     type ShellStringValueDetail,
   } from "../../../../lib/shell-events.ts";
+  import {
+    dispatchTerminalClear,
+    dispatchTerminalFontSizeChange,
+    dispatchTerminalInit,
+    dispatchTerminalPause,
+    dispatchTerminalRendererChange,
+  } from "../shell-dispatch.ts";
   import { terminalShellState } from "../stores/shell-state.ts";
-
-  function dispatchTerminalEvent(type: string) {
-    window.dispatchEvent(new CustomEvent(type));
-  }
 
   function handleFontSizeEvent(event: Event) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(TERMINAL_FONT_SIZE_EVENT, {
-        detail: { value: input.value },
-      }),
-    );
+    dispatchTerminalFontSizeChange(input.value);
   }
 
   function handleRendererEvent(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(TERMINAL_RENDERER_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchTerminalRendererChange(select.value);
   }
 </script>
 
 <section class="section">
   <div class="section-title">Terminal</div>
   <div class="btn-row">
-    <button id="btnInit" type="button" onclick={() => dispatchTerminalEvent(TERMINAL_INIT_EVENT)}>
+    <button id="btnInit" type="button" onclick={dispatchTerminalInit}>
       Init
     </button>
-    <button
-      id="btnPause"
-      type="button"
-      onclick={() => dispatchTerminalEvent(TERMINAL_PAUSE_EVENT)}
-    >
+    <button id="btnPause" type="button" onclick={dispatchTerminalPause}>
       {$terminalShellState.pauseLabel}
     </button>
-    <button
-      id="btnClear"
-      type="button"
-      onclick={() => dispatchTerminalEvent(TERMINAL_CLEAR_EVENT)}
-    >
+    <button id="btnClear" type="button" onclick={dispatchTerminalClear}>
       Clear
     </button>
   </div>

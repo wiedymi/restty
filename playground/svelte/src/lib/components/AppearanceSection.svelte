@@ -1,19 +1,21 @@
 <script lang="ts">
   import { listBuiltinThemeNames } from "../../../../../src/index.ts";
   import {
-    FONT_FAMILY_LOCAL_CHANGE_EVENT,
-    FONT_FAMILY_CHANGE_EVENT,
-    FONT_HINT_TARGET_CHANGE_EVENT,
-    FONT_HINTING_CHANGE_EVENT,
-    FONT_LIGATURES_CHANGE_EVENT,
-    LOAD_LOCAL_FONTS_EVENT,
-    MOUSE_MODE_CHANGE_EVENT,
-    SHADER_PRESET_CHANGE_EVENT,
-    THEME_FILE_CHANGE_EVENT,
     THEME_FILE_RESET_EVENT,
-    THEME_SELECT_CHANGE_EVENT,
   } from "../../../../lib/shell-events.ts";
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
+  import {
+    dispatchFontFamilyChange,
+    dispatchHintingChange,
+    dispatchHintTargetChange,
+    dispatchLigaturesChange,
+    dispatchLoadLocalFonts,
+    dispatchLocalFontFamilyChange,
+    dispatchMouseModeChange,
+    dispatchShaderPresetChange,
+    dispatchThemeFileChange,
+    dispatchThemeSelectChange,
+  } from "../shell-dispatch.ts";
   import { appearanceShellState } from "../stores/shell-state.ts";
 
   const builtinThemeNames = listBuiltinThemeNames();
@@ -22,41 +24,25 @@
   let themeFileInput: HTMLInputElement | null = null;
 
   function handleShaderPresetChange() {
-    window.dispatchEvent(
-      new CustomEvent(SHADER_PRESET_CHANGE_EVENT, {
-        detail: { value: shaderPreset },
-      }),
-    );
+    dispatchShaderPresetChange(shaderPreset);
   }
 
   function handleMouseModeChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(MOUSE_MODE_CHANGE_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchMouseModeChange(select.value);
   }
 
   function handleThemeSelectChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(THEME_SELECT_CHANGE_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchThemeSelectChange(select.value);
   }
 
   function handleThemeFileChange(event: Event) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(THEME_FILE_CHANGE_EVENT, {
-        detail: { file: input.files?.[0] ?? null },
-      }),
-    );
+    dispatchThemeFileChange(input.files?.[0] ?? null);
   }
 
   function handleWindowThemeFileReset() {
@@ -68,55 +54,35 @@
   function handleLigaturesChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(FONT_LIGATURES_CHANGE_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchLigaturesChange(select.value);
   }
 
   function handleFontFamilyChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(FONT_FAMILY_CHANGE_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchFontFamilyChange(select.value);
   }
 
   function handleLocalFontFamilyChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(FONT_FAMILY_LOCAL_CHANGE_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchLocalFontFamilyChange(select.value);
   }
 
   function handleHintingChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(FONT_HINTING_CHANGE_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchHintingChange(select.value);
   }
 
   function handleHintTargetChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    window.dispatchEvent(
-      new CustomEvent(FONT_HINT_TARGET_CHANGE_EVENT, {
-        detail: { value: select.value },
-      }),
-    );
+    dispatchHintTargetChange(select.value);
   }
 
   function handleLoadLocalFonts() {
-    window.dispatchEvent(new CustomEvent(LOAD_LOCAL_FONTS_EVENT));
+    dispatchLoadLocalFonts();
   }
 </script>
 
