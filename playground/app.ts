@@ -1,8 +1,8 @@
 import { Restty, listBuiltinThemeNames } from "../src/index.ts";
 import { createDemoController, type PlaygroundDemoKind } from "./lib/demos.ts";
+import { createConnectionController } from "./lib/connection-controller.ts";
 import {
   DEFAULT_FONT_FAMILY,
-  FONT_FAMILY_LOCAL_PREFIX,
   getDefaultLocalFontHintText,
   supportsLocalFontPicker,
 } from "./lib/font-controls.ts";
@@ -10,8 +10,6 @@ import { createPaneAppearanceController } from "./lib/appearance-controller.ts";
 import {
   createAdaptivePtyTransport,
   getConnectionBackend,
-  getConnectionBackendForValue,
-  getConnectUrlForState,
   syncConnectionUi,
 } from "./lib/pty-connection.ts";
 import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
@@ -38,7 +36,6 @@ import {
   FONT_LIGATURES_CHANGE_EVENT,
   LOAD_LOCAL_FONTS_EVENT,
   MOUSE_MODE_CHANGE_EVENT,
-  MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_EVENT,
   PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
@@ -120,10 +117,10 @@ const usesSvelteShell = document.documentElement.dataset.playgroundShell === "sv
 const initialShaderPreset = usesSvelteShell
   ? "none"
   : ((shaderPresetEl?.value as ShaderPreset | undefined) ?? "none");
-let selectedConnectionBackend = getConnectionBackend(connectionBackendEl);
-let selectedPtyUrl = ptyUrlInput?.value ?? "ws://localhost:8787/pty";
-let selectedWebContainerCommand = wcCommandInput?.value?.trim() || "jsh";
-let selectedWebContainerCwd = wcCwdInput?.value?.trim() || "/";
+const initialConnectionBackend = getConnectionBackend(connectionBackendEl);
+const initialPtyUrl = ptyUrlInput?.value ?? "ws://localhost:8787/pty";
+const initialWebContainerCommand = wcCommandInput?.value?.trim() || "jsh";
+const initialWebContainerCwd = wcCwdInput?.value?.trim() || "/";
 const initialRendererDefault: RendererChoice = isRendererChoice(rendererSelect?.value)
   ? rendererSelect.value
   : "auto";
@@ -218,6 +215,7 @@ function getActivePane(): ManagedPane | null {
 }
 
 let appearanceController: ReturnType<typeof createPaneAppearanceController>;
+let connectionController: ReturnType<typeof createConnectionController>;
 
 const paneShellSync = createPaneShellSync({
   usesSvelteShell,
@@ -237,7 +235,7 @@ const paneShellSync = createPaneShellSync({
     fontHintTargetSelect,
     mouseModeEl,
   },
-  getSelectedConnectionBackend: () => selectedConnectionBackend,
+  getSelectedConnectionBackend: () => connectionController.getBackend(),
   getSelectedFontFamily: () => appearanceController.getFontFamily(),
   getSelectedLocalFontMatcher: () => appearanceController.getLocalFontMatcher(),
   getDetectedLocalFontOptions: () => appearanceController.getDetectedLocalFontOptions(),
@@ -250,6 +248,30 @@ const paneShellSync = createPaneShellSync({
   },
 });
 
+connectionController = createConnectionController({
+  getActivePane: () => getActivePane(),
+  getPanes: () => restty.getPanes(),
+  connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
+  syncConnectionUi: usesSvelteShell
+    ? undefined
+    : () => {
+        syncConnectionUi({
+          connectionBackendEl,
+          ptyUrlInput,
+          wcCommandInput,
+          wcCwdInput,
+          connectionHintEl,
+        });
+      },
+  syncPtyButton: (pane) => {
+    paneShellSync.syncPtyButton(pane);
+  },
+  initialBackend: initialConnectionBackend,
+  initialPtyUrl,
+  initialWebContainerCommand,
+  initialWebContainerCwd,
+});
+
 const paneLifecycle = createPaneLifecycleController({
   getPaneById: (id) => restty.getPaneById(id),
   getActivePane: () => getActivePane(),
@@ -258,8 +280,8 @@ const paneLifecycle = createPaneLifecycleController({
     paneStates.set(id, state);
   },
   getActivePaneId: () => activePaneId,
-  getSelectedConnectionBackend: () => selectedConnectionBackend,
-  getSelectedPtyUrl: () => selectedPtyUrl,
+  getSelectedConnectionBackend: () => connectionController.getBackend(),
+  getSelectedPtyUrl: () => connectionController.getPtyUrl(),
   syncPauseButton: (state) => {
     paneShellSync.syncPauseButton(state);
   },
@@ -378,7 +400,7 @@ restty = new Restty({
     },
     defaultContextMenu: {
       canOpen: () => !isSettingsDialogOpen(),
-      getPtyUrl: () => getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl),
+      getPtyUrl: () => connectionController.getConnectUrl(),
     },
     shortcuts: {
       enabled: true,
@@ -413,10 +435,10 @@ restty = new Restty({
   },
   services: ({ id }) => ({
     ptyTransport: createAdaptivePtyTransport({
-      getConnectionBackend: () => selectedConnectionBackend,
-      getPtyUrl: () => getConnectUrlForState(selectedConnectionBackend, selectedPtyUrl),
-      getWebContainerCommand: () => selectedWebContainerCommand,
-      getWebContainerCwd: () => selectedWebContainerCwd,
+      getConnectionBackend: () => connectionController.getBackend(),
+      getPtyUrl: () => connectionController.getConnectUrl(),
+      getWebContainerCommand: () => connectionController.getWebContainerCommand(),
+      getWebContainerCwd: () => connectionController.getWebContainerCwd(),
     }),
     callbacks: {},
   }),
@@ -465,71 +487,43 @@ window.addEventListener("resize", () => {
   queueResizeAllPanes();
 });
 
-function applyConnectionBackend(value: string | null | undefined) {
-  selectedConnectionBackend = getConnectionBackendForValue(value);
-  if (!usesSvelteShell) {
-    syncConnectionUi({
-      connectionBackendEl,
-      ptyUrlInput,
-      wcCommandInput,
-      wcCwdInput,
-      connectionHintEl,
-    });
-  }
-  for (const pane of restty.getPanes()) {
-    if (pane.runtime.io.isPtyConnected()) {
-      pane.runtime.io.disconnectPty();
-    }
-  }
-  if (selectedConnectionBackend === "webcontainer") {
-    for (const pane of restty.getPanes()) {
-      paneLifecycle.connectPaneIfNeeded(pane);
-    }
-  }
-
-  const activePane = getActivePane();
-  if (activePane) {
-    paneShellSync.syncPtyButton(activePane);
-  }
-}
-
 if (usesSvelteShell) {
   window.addEventListener(CONNECTION_BACKEND_CHANGE_EVENT, (event) => {
-    applyConnectionBackend((event as FontControlChangeEvent).detail?.value);
+    connectionController.applyConnectionBackend((event as FontControlChangeEvent).detail?.value);
   });
   window.addEventListener(PTY_URL_CHANGE_EVENT, (event) => {
-    selectedPtyUrl = (event as FontControlChangeEvent).detail?.value ?? selectedPtyUrl;
+    connectionController.setPtyUrl((event as FontControlChangeEvent).detail?.value);
   });
   window.addEventListener(WC_COMMAND_CHANGE_EVENT, (event) => {
-    selectedWebContainerCommand = (event as FontControlChangeEvent).detail?.value?.trim() || "jsh";
+    connectionController.setWebContainerCommand((event as FontControlChangeEvent).detail?.value);
   });
   window.addEventListener(WC_CWD_CHANGE_EVENT, (event) => {
-    selectedWebContainerCwd = (event as FontControlChangeEvent).detail?.value?.trim() || "/";
+    connectionController.setWebContainerCwd((event as FontControlChangeEvent).detail?.value);
   });
 } else {
   connectionBackendEl?.addEventListener("change", () => {
-    selectedPtyUrl = ptyUrlInput?.value ?? selectedPtyUrl;
-    selectedWebContainerCommand = wcCommandInput?.value?.trim() || "jsh";
-    selectedWebContainerCwd = wcCwdInput?.value?.trim() || "/";
-    applyConnectionBackend(connectionBackendEl?.value);
+    connectionController.setPtyUrl(ptyUrlInput?.value);
+    connectionController.setWebContainerCommand(wcCommandInput?.value);
+    connectionController.setWebContainerCwd(wcCwdInput?.value);
+    connectionController.applyConnectionBackend(connectionBackendEl?.value);
   });
   ptyUrlInput?.addEventListener("input", () => {
-    selectedPtyUrl = ptyUrlInput.value;
+    connectionController.setPtyUrl(ptyUrlInput.value);
   });
   ptyUrlInput?.addEventListener("change", () => {
-    selectedPtyUrl = ptyUrlInput.value;
+    connectionController.setPtyUrl(ptyUrlInput.value);
   });
   wcCommandInput?.addEventListener("input", () => {
-    selectedWebContainerCommand = wcCommandInput.value.trim() || "jsh";
+    connectionController.setWebContainerCommand(wcCommandInput.value);
   });
   wcCommandInput?.addEventListener("change", () => {
-    selectedWebContainerCommand = wcCommandInput.value.trim() || "jsh";
+    connectionController.setWebContainerCommand(wcCommandInput.value);
   });
   wcCwdInput?.addEventListener("input", () => {
-    selectedWebContainerCwd = wcCwdInput.value.trim() || "/";
+    connectionController.setWebContainerCwd(wcCwdInput.value);
   });
   wcCwdInput?.addEventListener("change", () => {
-    selectedWebContainerCwd = wcCwdInput.value.trim() || "/";
+    connectionController.setWebContainerCwd(wcCwdInput.value);
   });
 }
 
