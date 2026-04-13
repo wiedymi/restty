@@ -197,7 +197,7 @@ export type { GhosttyTheme, ThemeColor, ResttyBuiltinThemeName } from "./theme";
 
 // App / high-level integration
 export { Restty } from "./surface/restty";
-export type { ResttyConfig } from "./surface/restty";
+export type { ResttyConfig, ResttySurfaceConfig, ResttySurfaceEvents } from "./surface/restty";
 export type {
   ResttyManagedAppPane,
   ResttyPaneDomDefaults,

@@ -249,7 +249,9 @@ const { RESTTY_PLUGIN_API_VERSION, Restty } = await import("../src/surface/restt
 function createRestty(): InstanceType<typeof Restty> {
   return new Restty({
     root: {} as any,
-    createInitialPane: false,
+    surface: {
+      createInitialPane: false,
+    },
   });
 }
 
@@ -292,13 +294,17 @@ test("restty onDesktopNotification callback receives paneId and preserves pane c
   const resttyNotifications: Array<{ paneId: number; title: string; source: string }> = [];
   const restty = new Restty({
     root: {} as any,
-    createInitialPane: false,
-    onDesktopNotification: (notification) => {
-      resttyNotifications.push({
-        paneId: notification.paneId,
-        title: notification.title,
-        source: notification.source,
-      });
+    surface: {
+      createInitialPane: false,
+      events: {
+        onDesktopNotification: (notification) => {
+          resttyNotifications.push({
+            paneId: notification.paneId,
+            title: notification.title,
+            source: notification.source,
+          });
+        },
+      },
     },
     terminal: ({ id }) => ({
       callbacks: {

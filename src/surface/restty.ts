@@ -75,20 +75,47 @@ export type {
   ResttyPlugin,
 } from "./restty-plugin-types";
 
+export type ResttySurfaceEvents = Pick<
+  CreateResttyAppPaneManagerOptions,
+  "onPaneCreated" | "onPaneClosed" | "onPaneSplit" | "onActivePaneChange" | "onLayoutChanged"
+> & {
+  /** Global handler for desktop notifications emitted by any pane. */
+  onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
+};
+
+export type ResttySurfaceConfig = Omit<
+  CreateResttyAppPaneManagerOptions,
+  | "root"
+  | "session"
+  | "appOptions"
+  | "onPaneCreated"
+  | "onPaneClosed"
+  | "onPaneSplit"
+  | "onActivePaneChange"
+  | "onLayoutChanged"
+> & {
+  /** Whether to create the first pane automatically (default true). */
+  createInitialPane?: boolean | { focus?: boolean };
+  /** Surface lifecycle and pane-layout event handlers. */
+  events?: ResttySurfaceEvents;
+};
+
 /**
  * Top-level configuration for creating a Restty instance.
  */
-export type ResttyConfig = Omit<CreateResttyAppPaneManagerOptions, "appOptions"> & {
+export type ResttyConfig = {
+  /** Root element that will contain the Restty surface. */
+  root: CreateResttyAppPaneManagerOptions["root"];
+  /** Shared session for WASM/WebGPU resources. */
+  session?: CreateResttyAppPaneManagerOptions["session"];
+  /** Surface shell and pane manager behavior. */
+  surface?: ResttySurfaceConfig;
   /** Per-pane terminal config, static or factory. */
   terminal?: CreateResttyAppPaneManagerOptions["appOptions"];
   /** Font sources applied to every pane. */
   fontSources?: ResttyTerminalConfig["fontSources"];
   /** Global shader stages synchronized to all panes. */
   shaderStages?: ResttyShaderStage[];
-  /** Global handler for desktop notifications emitted by any pane. */
-  onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
-  /** Whether to create the first pane automatically (default true). */
-  createInitialPane?: boolean | { focus?: boolean };
 };
 
 /**
@@ -104,19 +131,16 @@ export class Restty extends ResttyActivePaneApi {
 
   constructor(options: ResttyConfig) {
     super();
+    const { root, session, surface, terminal, fontSources, shaderStages } = options;
+    const { createInitialPane = true, events, ...paneManagerOptions } = surface ?? {};
     const {
-      createInitialPane = true,
-      terminal,
-      fontSources,
-      shaderStages,
-      onDesktopNotification,
       onPaneCreated,
       onPaneClosed,
       onPaneSplit,
       onActivePaneChange,
       onLayoutChanged,
-      ...paneManagerOptions
-    } = options;
+      onDesktopNotification,
+    } = events ?? {};
 
     this.fontSources = fontSources ? [...fontSources] : undefined;
     this.shaderOps = new ResttyShaderOps(
@@ -156,6 +180,8 @@ export class Restty extends ResttyActivePaneApi {
     });
 
     this.paneManager = createResttyAppPaneManager({
+      root,
+      session,
       ...paneManagerOptions,
       appOptions: mergedAppOptions,
       ...paneManagerEventHandlers,

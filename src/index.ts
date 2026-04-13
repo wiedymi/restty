@@ -8,6 +8,8 @@ export {
 } from "./surface/restty";
 export type {
   ResttyConfig,
+  ResttySurfaceConfig,
+  ResttySurfaceEvents,
   ResttyPaneApi,
   ResttyPluginApiRange,
   ResttyPlugin,

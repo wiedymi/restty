@@ -979,22 +979,63 @@ const defaultThemeName = builtinThemeNames.includes(DEFAULT_THEME_NAME) ? DEFAUL
 
 restty = new Restty({
   root: paneRoot,
-  createInitialPane: false,
-  autoInit: false,
-  onDesktopNotification: handleDesktopNotification,
-  paneStyles: {
-    inactivePaneOpacity: 0.9,
-  },
-  searchUi: {
-    styles: {
-      offsetTopPx: 14,
-      offsetRightPx: 14,
-      maxWidthPx: 400,
-      borderRadiusPx: 14,
-      panelBackground: "rgba(14, 14, 14, 0.92)",
-      panelBorderColor: "rgba(255, 255, 255, 0.14)",
-      buttonHoverBackground: "rgba(255, 255, 255, 0.18)",
-      statusActiveTextColor: "#e0bc72",
+  surface: {
+    createInitialPane: false,
+    autoInit: false,
+    paneStyles: {
+      inactivePaneOpacity: 0.9,
+    },
+    searchUi: {
+      styles: {
+        offsetTopPx: 14,
+        offsetRightPx: 14,
+        maxWidthPx: 400,
+        borderRadiusPx: 14,
+        panelBackground: "rgba(14, 14, 14, 0.92)",
+        panelBorderColor: "rgba(255, 255, 255, 0.14)",
+        buttonHoverBackground: "rgba(255, 255, 255, 0.18)",
+        statusActiveTextColor: "#e0bc72",
+      },
+    },
+    events: {
+      onPaneCreated: (pane) => {
+        const state = paneStates.get(pane.id);
+        if (!state) return;
+
+        pane.paused = state.paused;
+        pane.setPaused = (value: boolean) => {
+          setPanePaused(pane.id, value);
+        };
+
+        state.demos = createDemoController(pane.app);
+        pane.app.setMouseMode(state.mouseMode);
+        void initPaneApp(pane, state);
+      },
+      onPaneClosed: (pane) => {
+        const state = paneStates.get(pane.id);
+        state?.demos?.stop();
+        paneStates.delete(pane.id);
+      },
+      onActivePaneChange: (pane) => {
+        activePaneId = pane?.id ?? null;
+        if (!pane) return;
+        const state = paneStates.get(pane.id);
+        if (!state) return;
+        renderActivePaneStatus(pane, state);
+        renderActivePaneControls(pane, state);
+      },
+      onLayoutChanged: () => {
+        queueResizeAllPanes();
+      },
+      onDesktopNotification: handleDesktopNotification,
+    },
+    defaultContextMenu: {
+      canOpen: () => !isSettingsDialogOpen(),
+      getPtyUrl: () => getConnectUrl(),
+    },
+    shortcuts: {
+      enabled: true,
+      canHandleEvent: () => !isSettingsDialogOpen(),
     },
   },
   terminal: ({ id, sourcePane }) => {
@@ -1034,43 +1075,6 @@ restty = new Restty({
         },
       },
     };
-  },
-  onPaneCreated: (pane) => {
-    const state = paneStates.get(pane.id);
-    if (!state) return;
-
-    pane.paused = state.paused;
-    pane.setPaused = (value: boolean) => {
-      setPanePaused(pane.id, value);
-    };
-
-    state.demos = createDemoController(pane.app);
-    pane.app.setMouseMode(state.mouseMode);
-    void initPaneApp(pane, state);
-  },
-  onPaneClosed: (pane) => {
-    const state = paneStates.get(pane.id);
-    state?.demos?.stop();
-    paneStates.delete(pane.id);
-  },
-  onActivePaneChange: (pane) => {
-    activePaneId = pane?.id ?? null;
-    if (!pane) return;
-    const state = paneStates.get(pane.id);
-    if (!state) return;
-    renderActivePaneStatus(pane, state);
-    renderActivePaneControls(pane, state);
-  },
-  onLayoutChanged: () => {
-    queueResizeAllPanes();
-  },
-  defaultContextMenu: {
-    canOpen: () => !isSettingsDialogOpen(),
-    getPtyUrl: () => getConnectUrl(),
-  },
-  shortcuts: {
-    enabled: true,
-    canHandleEvent: () => !isSettingsDialogOpen(),
   },
 });
 applyShaderPreset();
