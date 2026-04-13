@@ -105,6 +105,8 @@ const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
 const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
 const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 const TERMINAL_STATE_EVENT = "restty:playground-terminal-state";
+const PTY_BUTTON_EVENT = "restty:playground-pty-button";
+const PTY_BUTTON_STATE_EVENT = "restty:playground-pty-button-state";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
@@ -245,6 +247,19 @@ function syncTerminalControlValues(state: PaneState) {
 }
 
 function syncPtyButton(pane: ManagedPane) {
+  if (usesSvelteShell) {
+    const label = pane.runtime.io.isPtyConnected()
+      ? "Disconnect"
+      : getConnectionBackend(connectionBackendEl) === "webcontainer"
+        ? "Start WebContainer"
+        : "Connect PTY";
+    window.dispatchEvent(
+      new CustomEvent(PTY_BUTTON_STATE_EVENT, {
+        detail: { label },
+      }),
+    );
+    return;
+  }
   if (!ptyBtn) return;
   if (pane.runtime.io.isPtyConnected()) {
     ptyBtn.textContent = "Disconnect";
@@ -575,7 +590,7 @@ if (usesSvelteShell) {
   });
 }
 
-ptyBtn?.addEventListener("click", () => {
+function handlePtyButtonClick() {
   const pane = getActivePane();
   if (!pane) return;
   if (pane.runtime.io.isPtyConnected()) {
@@ -584,7 +599,13 @@ ptyBtn?.addEventListener("click", () => {
     pane.runtime.io.connectPty(getConnectUrl(connectionBackendEl, ptyUrlInput));
   }
   syncPtyButton(pane);
-});
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(PTY_BUTTON_EVENT, handlePtyButtonClick);
+} else {
+  ptyBtn?.addEventListener("click", handlePtyButtonClick);
+}
 
 function applyRendererChoice(value: string | null | undefined) {
   const pane = getActivePane();

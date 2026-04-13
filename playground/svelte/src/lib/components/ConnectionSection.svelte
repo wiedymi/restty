@@ -4,13 +4,30 @@
     type ConnectionBackend,
   } from "../../../../lib/pty-connection.ts";
 
+  const PTY_BUTTON_EVENT = "restty:playground-pty-button";
+  const PTY_BUTTON_STATE_EVENT = "restty:playground-pty-button-state";
+
   let connectionBackend: ConnectionBackend = "webcontainer";
+  let ptyButtonLabel = "Connect PTY";
   let ptyUrl = "ws://localhost:8787/pty";
   let wcCommand = "jsh";
   let wcCwd = "/";
 
   $: connectionUi = getConnectionUiState(connectionBackend);
+
+  function handlePtyButtonClick() {
+    window.dispatchEvent(new CustomEvent(PTY_BUTTON_EVENT));
+  }
+
+  function handleWindowPtyButtonState(event: Event) {
+    const detail = (event as CustomEvent<{ label?: string }>).detail;
+    if (typeof detail?.label === "string") {
+      ptyButtonLabel = detail.label;
+    }
+  }
 </script>
+
+<svelte:window on:restty:playground-pty-button-state={handleWindowPtyButtonState} />
 
 <section class="section">
   <div class="section-title">Connection</div>
@@ -31,7 +48,7 @@
       placeholder="PTY URL"
       disabled={connectionUi.ptyUrlDisabled}
     />
-    <button id="btnPty">Connect</button>
+    <button id="btnPty" type="button" onclick={handlePtyButtonClick}>{ptyButtonLabel}</button>
   </div>
   <div class="field-row">
     <input
