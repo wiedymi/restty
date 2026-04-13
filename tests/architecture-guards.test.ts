@@ -299,6 +299,24 @@ test("surface manager options contracts are split from implementation", () => {
   expect(managerOptions).toContain("./manager-options.types");
 });
 
+test("surface managed pane creation and runtime contracts are split from implementation", () => {
+  const managedPaneCreate = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-create.ts"),
+    "utf8",
+  );
+  const managedPaneRuntime = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-runtime.ts"),
+    "utf8",
+  );
+
+  expect(managedPaneCreate).not.toContain("export type ManagedPaneDomClassNames =");
+  expect(managedPaneCreate).not.toContain("export type CreateManagedPaneOptions =");
+  expect(managedPaneCreate).toContain("./managed-pane-create.types");
+
+  expect(managedPaneRuntime).not.toContain("export type CreateManagedPaneRuntimeOptions =");
+  expect(managedPaneRuntime).toContain("./managed-pane-runtime.types");
+});
+
 test("surface plugin runtime and dispatcher contracts are split from implementation", () => {
   const pluginRuntime = readFileSync(resolve(surfaceRoot, "plugins/runtime.ts"), "utf8");
   const pluginDispatcher = readFileSync(resolve(surfaceRoot, "plugins/dispatcher.ts"), "utf8");

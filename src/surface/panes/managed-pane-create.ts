@@ -1,28 +1,7 @@
 import { createManagedPaneDom } from "./managed-pane-dom";
 import { createManagedPaneRuntime } from "./managed-pane-runtime";
-import type { ResttyRuntimeCallbacks, ResttyRuntimeSession } from "../../runtime/core/resources";
-import type {
-  ResttyManagedPane,
-  ResttyRuntimeServicesConfigInput,
-  ResttyTerminalConfigInput,
-} from "./managed-pane-types";
-
-export type ManagedPaneDomClassNames = {
-  paneClassName: string;
-  canvasClassName: string;
-  imeInputClassName: string;
-};
-
-export type CreateManagedPaneOptions = {
-  id: number;
-  sourcePane: ResttyManagedPane | null;
-  dom: ManagedPaneDomClassNames;
-  terminal?: ResttyTerminalConfigInput;
-  services?: ResttyRuntimeServicesConfigInput;
-  session: ResttyRuntimeSession;
-  autoInit?: boolean;
-  onSearchState?: ResttyRuntimeCallbacks["onSearchState"];
-};
+import type { ResttyManagedPane } from "./managed-pane-types";
+import type { CreateManagedPaneOptions } from "./managed-pane-create.types";
 
 export function createManagedPane(options: CreateManagedPaneOptions): ResttyManagedPane {
   const { container, canvas, imeInput } = createManagedPaneDom(options.dom);
