@@ -159,28 +159,26 @@ test("runtime internals do not use render-tick-webgl-context.ts as a type barrel
 });
 
 test("shader stage runtime contracts do not import render stage types through create-app-types", () => {
+  expect(existsSync(resolve(runtimeCreateRuntimeRoot, "create-app-types.ts"))).toBe(false);
+});
+
+test("shader stage runtime contracts point directly at render-stage-runtime types", () => {
   const source = readFileSync(
     resolve(runtimeCreateRuntimeRoot, "shader-stage-runtime.types.ts"),
     "utf8",
   );
 
-  expect(source).not.toContain("./create-app-types");
   expect(source).toContain("./render-stage-runtime.types");
 });
 
-test("create-app-types is only used by debug-tool setup", () => {
-  const appTypesEntry = resolve(runtimeCreateRuntimeRoot, "create-app-types.ts");
-  const runtimeFiles = listTsFiles(runtimeRoot).filter((file) => file !== appTypesEntry);
-  const offenders = collectResolvedImports(runtimeFiles).filter(({ resolved, file }) => {
-    return (
-      resolved === appTypesEntry &&
-      file !== resolve(runtimeCreateRuntimeRoot, "debug-tools/setup-debug-expose.ts")
-    );
-  });
+test("debug-tool setup uses debug-tools/types for debug window contract", () => {
+  const source = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "debug-tools/setup-debug-expose.ts"),
+    "utf8",
+  );
 
-  expect(
-    offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
-  ).toEqual([]);
+  expect(source).toContain("./types");
+  expect(source).not.toContain("../create-app-types");
 });
 
 test("surface source does not import runtime create-runtime internals", () => {
