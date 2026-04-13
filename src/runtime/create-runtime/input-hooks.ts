@@ -1,23 +1,10 @@
-import type { ResttyAppInputPayload } from "../core/models";
+import type {
+  RuntimeInputHook,
+  RuntimeInputHooks,
+  RuntimeInputHooksOptions,
+} from "./input-hooks.types";
 
-type RuntimeInputHook =
-  | ((payload: ResttyAppInputPayload) => string | null | void)
-  | null
-  | undefined;
-
-export type CreateRuntimeInputHooksOptions = {
-  beforeInputHook?: RuntimeInputHook;
-  beforeRenderOutputHook?: RuntimeInputHook;
-};
-
-export type RuntimeInputHooks = {
-  runBeforeInputHook: (text: string, source: string) => string | null;
-  runBeforeRenderOutputHook: (text: string, source: string) => string | null;
-};
-
-export function createRuntimeInputHooks(
-  options: CreateRuntimeInputHooksOptions,
-): RuntimeInputHooks {
+export function createRuntimeInputHooks(options: RuntimeInputHooksOptions): RuntimeInputHooks {
   const { beforeInputHook, beforeRenderOutputHook } = options;
 
   function runHook(
