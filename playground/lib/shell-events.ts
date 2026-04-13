@@ -7,6 +7,7 @@ export const SETTINGS_CLOSE_EVENT = "restty:playground-settings-close";
 export const RUN_DEMO_EVENT = "restty:playground-demo-run";
 export const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
 export const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
+export const FONT_FAMILY_STATE_EVENT = "restty:playground-font-family-state";
 export const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
 export const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
 export const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";

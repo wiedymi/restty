@@ -50,6 +50,7 @@ import {
 import {
   FONT_FAMILY_LOCAL_CHANGE_EVENT,
   FONT_FAMILY_CHANGE_EVENT,
+  FONT_FAMILY_STATE_EVENT,
   FONT_HINT_TARGET_CHANGE_EVENT,
   FONT_HINTING_CHANGE_EVENT,
   FONT_LIGATURES_CHANGE_EVENT,
@@ -299,8 +300,9 @@ function syncThemeSelectValue(value: string) {
 
 function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
   syncTerminalControlValues(state);
+  syncFontFamilyValue();
   syncFontFamilyControls({
-    fontFamilySelect,
+    fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
     fontFamilyLocalSelect,
     btnLoadLocalFonts,
     selectedFontFamily,
@@ -322,6 +324,20 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
     mouseModeEl.value = hasOption ? state.mouseMode : "auto";
   }
   syncThemeSelectValue(state.theme.selectValue);
+}
+
+function syncFontFamilyValue() {
+  if (usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(FONT_FAMILY_STATE_EVENT, {
+        detail: { value: selectedFontFamily },
+      }),
+    );
+    return;
+  }
+  if (fontFamilySelect) {
+    fontFamilySelect.value = selectedFontFamily;
+  }
 }
 
 function setPanePaused(id: number, value: boolean) {
@@ -878,8 +894,9 @@ if (usesSvelteShell) {
 if (fontFamilySelect) {
   const applyFontFamilySelection = (value: string | null | undefined) => {
     selectedFontFamily = value || DEFAULT_FONT_FAMILY;
+    syncFontFamilyValue();
     syncFontFamilyControls({
-      fontFamilySelect,
+      fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
       fontFamilyLocalSelect,
       btnLoadLocalFonts,
       selectedFontFamily,
@@ -971,13 +988,14 @@ if (!usesSvelteShell) {
   });
 }
 syncFontFamilyControls({
-  fontFamilySelect,
+  fontFamilySelect: usesSvelteShell ? null : fontFamilySelect,
   fontFamilyLocalSelect,
   btnLoadLocalFonts,
   selectedFontFamily,
   selectedLocalFontMatcher,
   supportsLocalFontPicker: supportsLocalFontPicker(),
 });
+syncFontFamilyValue();
 syncHintingControls({
   ligaturesSelect,
   fontHintingSelect,

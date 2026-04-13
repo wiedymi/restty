@@ -2,6 +2,7 @@
   import {
     FONT_FAMILY_LOCAL_CHANGE_EVENT,
     FONT_FAMILY_CHANGE_EVENT,
+    FONT_FAMILY_STATE_EVENT,
     FONT_HINT_TARGET_CHANGE_EVENT,
     FONT_HINTING_CHANGE_EVENT,
     FONT_LIGATURES_CHANGE_EVENT,
@@ -20,6 +21,7 @@
 
   let mouseMode = "auto";
   let ligatures = "on";
+  let fontFamily = "fira-code";
   let fontHinting = "off";
   let fontHintTarget = "auto";
   let shaderPreset: ShaderPreset = "none";
@@ -65,6 +67,13 @@
         detail: { value: select.value },
       }),
     );
+  }
+
+  function handleWindowFontFamilyState(event: Event) {
+    const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
+    if (typeof detail?.value === "string") {
+      fontFamily = detail.value;
+    }
   }
 
   function handleThemeFileChange(event: Event) {
@@ -147,6 +156,7 @@
 </script>
 
 <svelte:window
+  on:restty:playground-font-family-state={handleWindowFontFamilyState}
   on:restty:playground-font-rendering-state={handleWindowFontRenderingState}
   on:restty:playground-mouse-mode-state={handleWindowMouseModeState}
   on:restty:playground-theme-select-state={handleWindowThemeSelectState}
@@ -155,8 +165,8 @@
 <section class="section">
   <div class="section-title">Appearance</div>
   <div class="field-row">
-    <select id="fontFamily" onchange={handleFontFamilyChange}>
-      <option value="fira-code" selected>Base Font: Fira Code (default)</option>
+    <select id="fontFamily" bind:value={fontFamily} onchange={handleFontFamilyChange}>
+      <option value="fira-code">Base Font: Fira Code (default)</option>
       <option value="jetbrains">Base Font: JetBrains Mono</option>
     </select>
   </div>
