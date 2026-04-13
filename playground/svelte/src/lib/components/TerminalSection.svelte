@@ -3,6 +3,7 @@
   const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
   const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
   const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
+  const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 
   function dispatchTerminalEvent(type: string) {
     window.dispatchEvent(new CustomEvent(type));
@@ -14,6 +15,16 @@
     window.dispatchEvent(
       new CustomEvent(TERMINAL_FONT_SIZE_EVENT, {
         detail: { value: input.value },
+      }),
+    );
+  }
+
+  function handleRendererEvent(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(TERMINAL_RENDERER_EVENT, {
+        detail: { value: select.value },
       }),
     );
   }
@@ -43,7 +54,7 @@
   <div class="field-row">
     <label>
       <span>Renderer</span>
-      <select id="rendererSelect">
+      <select id="rendererSelect" onchange={handleRendererEvent}>
         <option value="auto">Auto</option>
         <option value="webgpu">WebGPU</option>
         <option value="webgl2">WebGL2</option>

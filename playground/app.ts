@@ -92,11 +92,13 @@ const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
 const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
 const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
 const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
+const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
 type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
 type FontSizeChangeEvent = CustomEvent<{ value?: string }>;
+type RendererChangeEvent = CustomEvent<{ value?: RendererChoice | string }>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
@@ -543,15 +545,24 @@ ptyBtn?.addEventListener("click", () => {
   syncPtyButton(pane);
 });
 
-rendererSelect?.addEventListener("change", () => {
+function applyRendererChoice(value: string | null | undefined) {
   const pane = getActivePane();
   const state = getActivePaneState(paneStates, activePaneId);
   if (!pane || !state) return;
-  const value = rendererSelect.value;
   if (!isRendererChoice(value)) return;
   state.renderer = value;
   pane.runtime.terminal.setRenderer(value);
-});
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(TERMINAL_RENDERER_EVENT, (event) => {
+    applyRendererChoice((event as RendererChangeEvent).detail?.value);
+  });
+} else {
+  rendererSelect?.addEventListener("change", () => {
+    applyRendererChoice(rendererSelect.value);
+  });
+}
 
 if (themeFileInput) {
   themeFileInput.addEventListener("change", () => {
