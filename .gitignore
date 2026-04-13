@@ -4,6 +4,7 @@ node_modules/
 # Build outputs and temp
 .tmp/
 dist/
+playground/dist-svelte/
 coverage/
 *.log
 
