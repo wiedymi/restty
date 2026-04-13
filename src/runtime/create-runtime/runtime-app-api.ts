@@ -13,6 +13,7 @@ import type {
   ResttyRuntime,
   ResttyAppCallbacks,
   ResttyAppSession,
+  ResttyRuntimeEvent,
   ResttyRuntimeLifecycleState,
 } from "../types";
 import type { PtyInputRuntime } from "./pty-input-runtime";
@@ -184,9 +185,26 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
 
   let lifecycleState: ResttyRuntimeLifecycleState = "created";
   let lifecycleEpoch = 0;
+  const eventListeners = new Set<(event: ResttyRuntimeEvent) => void>();
 
   const isCurrentLifecycleEpoch = (epoch: number) =>
     lifecycleState !== "destroyed" && epoch === lifecycleEpoch;
+
+  const emitRuntimeEvent = (event: ResttyRuntimeEvent) => {
+    for (const listener of eventListeners) {
+      try {
+        listener(event);
+      } catch {
+        // Ignore runtime event listener errors.
+      }
+    }
+  };
+
+  const setLifecycleState = (next: ResttyRuntimeLifecycleState) => {
+    if (lifecycleState === next) return;
+    lifecycleState = next;
+    emitRuntimeEvent({ type: "state", state: next });
+  };
 
   const internalState: RuntimeInternalState = {
     paused: false,
@@ -583,7 +601,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     if (lifecycleState === "destroyed") return;
     lifecycleEpoch += 1;
     const initEpoch = lifecycleEpoch;
-    lifecycleState = "initializing";
+    setLifecycleState("initializing");
 
     try {
       cancelAnimationFrame(internalState.rafId);
@@ -628,7 +646,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
           updateGrid();
           await wasmPromise;
           if (!isCurrentLifecycleEpoch(initEpoch)) return;
-          lifecycleState = "ready";
+          setLifecycleState("ready");
           internalState.rafId = requestAnimationFrame(() => loop(gpuState));
           return;
         }
@@ -660,7 +678,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
           updateGrid();
           await wasmPromise;
           if (!isCurrentLifecycleEpoch(initEpoch)) return;
-          lifecycleState = "ready";
+          setLifecycleState("ready");
           internalState.rafId = requestAnimationFrame(() => loop(glState));
           return;
         }
@@ -673,10 +691,10 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       writeState({ activeState: null, currentContextType: null });
       await wasmPromise;
       if (!isCurrentLifecycleEpoch(initEpoch)) return;
-      lifecycleState = "ready";
+      setLifecycleState("ready");
     } catch (error) {
       if (!isCurrentLifecycleEpoch(initEpoch)) return;
-      lifecycleState = "failed";
+      setLifecycleState("failed");
       throw error;
     }
   }
@@ -684,7 +702,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
   function destroy() {
     if (lifecycleState === "destroyed") return;
     lifecycleEpoch += 1;
-    lifecycleState = "destroyed";
+    setLifecycleState("destroyed");
     cancelAnimationFrame(internalState.rafId);
     internalState.backend = "none";
     lifecycleThemeSizeRuntime.cancelScheduledSizeUpdate();
@@ -750,6 +768,17 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       init,
       destroy,
       getLifecycleState: () => lifecycleState,
+      subscribe: (listener) => {
+        eventListeners.add(listener);
+        try {
+          listener({ type: "state", state: lifecycleState });
+        } catch {
+          // Ignore runtime event listener errors.
+        }
+        return () => {
+          eventListeners.delete(listener);
+        };
+      },
       setRenderer,
       setPaused,
       togglePause,

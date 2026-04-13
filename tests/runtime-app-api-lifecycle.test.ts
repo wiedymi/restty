@@ -191,6 +191,11 @@ function createTestRuntimeApp(options: { ensureFont?: () => Promise<void> } = {}
 
 test("runtime app api lifecycle state flows from created to ready to destroyed", async () => {
   const { app, sharedState } = createTestRuntimeApp();
+  const states: string[] = [];
+
+  const dispose = app.subscribe((event) => {
+    if (event.type === "state") states.push(event.state);
+  });
 
   expect(app.getLifecycleState()).toBe("created");
 
@@ -203,6 +208,8 @@ test("runtime app api lifecycle state flows from created to ready to destroyed",
   app.destroy();
   expect(app.getLifecycleState()).toBe("destroyed");
   expect(sharedState.wasmHandle).toBe(0);
+  expect(states).toEqual(["created", "initializing", "ready", "destroyed"]);
+  dispose();
 });
 
 test("runtime app api lifecycle state stays destroyed when init finishes late", async () => {
@@ -212,6 +219,11 @@ test("runtime app api lifecycle state stays destroyed when init finishes late", 
       new Promise<void>((resolve) => {
         resolveFont = resolve;
       }),
+  });
+  const states: string[] = [];
+
+  const dispose = app.subscribe((event) => {
+    if (event.type === "state") states.push(event.state);
   });
 
   const initPromise = app.init();
@@ -225,4 +237,6 @@ test("runtime app api lifecycle state stays destroyed when init finishes late", 
 
   expect(app.getLifecycleState()).toBe("destroyed");
   expect(sharedState.wasmHandle).toBe(0);
+  expect(states).toEqual(["created", "initializing", "destroyed"]);
+  dispose();
 });

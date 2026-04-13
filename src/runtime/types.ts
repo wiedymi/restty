@@ -359,6 +359,14 @@ export type ResttyRuntimeLifecycleState =
   | "destroyed";
 
 /**
+ * Event emitted by a single runtime instance.
+ */
+export type ResttyRuntimeEvent = {
+  type: "state";
+  state: ResttyRuntimeLifecycleState;
+};
+
+/**
  * Public API for a single terminal runtime instance.
  */
 export type ResttyRuntime = {
@@ -368,6 +376,8 @@ export type ResttyRuntime = {
   destroy: () => void;
   /** Get the current runtime lifecycle state. */
   getLifecycleState: () => ResttyRuntimeLifecycleState;
+  /** Subscribe to runtime lifecycle events. */
+  subscribe: (listener: (event: ResttyRuntimeEvent) => void) => () => void;
   /** Switch the renderer backend at runtime. */
   setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
   /** Pause or resume rendering. */

@@ -17,6 +17,7 @@ export type {
   ResttyWasmLogListener,
   ResttyAppSession,
   ResttyAppInputPayload,
+  ResttyRuntimeEvent,
   ResttyRuntimeLifecycleState,
   ResttyRuntimeConfig,
   ResttyRuntime,
