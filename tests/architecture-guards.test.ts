@@ -142,6 +142,22 @@ test("runtime internals do not use interaction-runtime.ts as a type barrel", () 
   ).toEqual([]);
 });
 
+test("runtime internals do not use render-tick-webgl-context.ts as a type barrel", () => {
+  const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
+    return (
+      file !== resolve(runtimeCreateRuntimeRoot, "render-tick-webgl-context.ts") &&
+      file !== resolve(runtimeCreateRuntimeRoot, "render-tick-webgl.ts")
+    );
+  });
+  const offenders = collectResolvedImports(runtimeFiles).filter(({ resolved }) => {
+    return resolved === resolve(runtimeCreateRuntimeRoot, "render-tick-webgl-context.ts");
+  });
+
+  expect(
+    offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
+  ).toEqual([]);
+});
+
 test("surface source does not import runtime create-runtime internals", () => {
   const surfaceFiles = listTsFiles(surfaceRoot);
   const offenders = collectResolvedImports(surfaceFiles).filter(({ resolved }) => {

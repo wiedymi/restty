@@ -1,5 +1,5 @@
 import type { Color } from "../../renderer";
-import type { WebGLTickContext } from "./render-tick-webgl-context";
+import type { WebGLTickContext } from "./render-tick-webgl.types";
 
 export function populateWebGLOverlays(ctx: WebGLTickContext) {
   const {
