@@ -87,6 +87,7 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const RUN_DEMO_EVENT = "restty:playground-demo-run";
+const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
 const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
 const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
@@ -96,6 +97,7 @@ const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
+type MouseModeChangeEvent = CustomEvent<{ value?: string }>;
 type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
 type FontSizeChangeEvent = CustomEvent<{ value?: string }>;
 type RendererChangeEvent = CustomEvent<{ value?: RendererChoice | string }>;
@@ -626,17 +628,24 @@ if (themeSelect) {
   });
 }
 
-if (mouseModeEl) {
+function applyMouseMode(value: string | null | undefined) {
+  const pane = getActivePane();
+  const state = getActivePaneState(paneStates, activePaneId);
+  if (!pane || !state) return;
+  pane.runtime.interaction.setMouseMode(value ?? "auto");
+  state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
+  if (pane.id === activePaneId && mouseModeEl) {
+    mouseModeEl.value = state.mouseMode;
+  }
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(MOUSE_MODE_CHANGE_EVENT, (event) => {
+    applyMouseMode((event as MouseModeChangeEvent).detail?.value);
+  });
+} else if (mouseModeEl) {
   mouseModeEl.addEventListener("change", () => {
-    const pane = getActivePane();
-    const state = getActivePaneState(paneStates, activePaneId);
-    if (!pane || !state) return;
-    const value = mouseModeEl.value;
-    pane.runtime.interaction.setMouseMode(value);
-    state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
-    if (pane.id === activePaneId) {
-      mouseModeEl.value = state.mouseMode;
-    }
+    applyMouseMode(mouseModeEl.value);
   });
 }
 

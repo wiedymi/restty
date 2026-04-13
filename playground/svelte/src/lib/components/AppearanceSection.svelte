@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
 
+  const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
   const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
   let shaderPreset: ShaderPreset = "none";
@@ -9,6 +10,16 @@
     window.dispatchEvent(
       new CustomEvent(SHADER_PRESET_CHANGE_EVENT, {
         detail: { value: shaderPreset },
+      }),
+    );
+  }
+
+  function handleMouseModeChange(event: Event) {
+    const select = event.currentTarget;
+    if (!(select instanceof HTMLSelectElement)) return;
+    window.dispatchEvent(
+      new CustomEvent(MOUSE_MODE_CHANGE_EVENT, {
+        detail: { value: select.value },
       }),
     );
   }
@@ -59,7 +70,7 @@
     </label>
   </div>
   <div class="field-row">
-    <select id="mouseMode">
+    <select id="mouseMode" onchange={handleMouseModeChange}>
       <option value="auto" selected>Mouse: Auto</option>
       <option value="on">Mouse: On</option>
       <option value="off">Mouse: Off</option>
