@@ -60,6 +60,10 @@ type DemoShellState = {
   kind: PlaygroundDemoKind;
 };
 
+type SettingsShellState = {
+  open: boolean;
+};
+
 const initialTerminalShellState: TerminalShellState = {
   pauseLabel: "Pause",
   renderer: DEFAULT_TERMINAL_RENDERER,
@@ -79,16 +83,22 @@ const initialDemoShellState: DemoShellState = {
   kind: DEFAULT_DEMO_KIND,
 };
 
+const initialSettingsShellState: SettingsShellState = {
+  open: false,
+};
+
 export const terminalShellState = writable<TerminalShellState>(initialTerminalShellState);
 export const connectionShellState = writable<ConnectionShellState>(initialConnectionShellState);
 export const appearanceShellState = writable<AppearanceShellState>(initialAppearanceShellState);
 export const demoShellState = writable<DemoShellState>(initialDemoShellState);
+export const settingsShellState = writable<SettingsShellState>(initialSettingsShellState);
 
 export function resetShellState() {
   terminalShellState.set(initialTerminalShellState);
   connectionShellState.set(initialConnectionShellState);
   appearanceShellState.set(initialAppearanceShellState);
   demoShellState.set(initialDemoShellState);
+  settingsShellState.set(initialSettingsShellState);
 }
 
 export function startShellStateBridge(target: EventTarget = window) {

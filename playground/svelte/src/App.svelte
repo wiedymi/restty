@@ -5,16 +5,15 @@
   import DemoSection from "./lib/components/DemoSection.svelte";
   import TerminalSection from "./lib/components/TerminalSection.svelte";
   import { dispatchSettingsClose, dispatchSettingsOpen } from "./lib/shell-dispatch.ts";
-  import { startShellStateBridge } from "./lib/stores/shell-state.ts";
+  import { settingsShellState, startShellStateBridge } from "./lib/stores/shell-state.ts";
 
   document.documentElement.dataset.playgroundShell = "svelte";
 
   let settingsDialog: HTMLDialogElement | null = null;
-  let settingsOpen = false;
 
   function syncSettingsDialog() {
     if (!settingsDialog) return;
-    if (settingsOpen) {
+    if ($settingsShellState.open) {
       if (!settingsDialog.open) {
         if (typeof settingsDialog.showModal === "function") {
           settingsDialog.showModal();
@@ -34,14 +33,14 @@
   }
 
   function openSettings() {
-    if (settingsOpen) return;
+    if ($settingsShellState.open) return;
     dispatchSettingsOpen();
-    settingsOpen = true;
+    settingsShellState.set({ open: true });
   }
 
   function closeSettings() {
-    if (!settingsOpen) return;
-    settingsOpen = false;
+    if (!$settingsShellState.open) return;
+    settingsShellState.set({ open: false });
     dispatchSettingsClose();
   }
 
@@ -56,7 +55,7 @@
   }
 
   function handleWindowKeydown(event: KeyboardEvent) {
-    if (!settingsOpen || event.key !== "Escape") return;
+    if (!$settingsShellState.open || event.key !== "Escape") return;
     event.preventDefault();
     closeSettings();
   }

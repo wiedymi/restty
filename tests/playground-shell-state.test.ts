@@ -17,6 +17,7 @@ import {
   connectionShellState,
   demoShellState,
   resetShellState,
+  settingsShellState,
   startShellStateBridge,
   terminalShellState,
 } from "../playground/svelte/src/lib/stores/shell-state.ts";
@@ -157,8 +158,10 @@ test("stop bridge removes listeners", () => {
 
 test("resetShellState restores the demo shell default", () => {
   demoShellState.set({ kind: "unicode" });
+  settingsShellState.set({ open: true });
 
   resetShellState();
 
   expect(get(demoShellState)).toEqual({ kind: "basic" });
+  expect(get(settingsShellState)).toEqual({ open: false });
 });
