@@ -5,6 +5,7 @@ import { dirname, join, relative, resolve } from "node:path";
 const repoRoot = process.cwd();
 const runtimeRoot = resolve(repoRoot, "src/runtime");
 const runtimeCreateRuntimeRoot = resolve(repoRoot, "src/runtime/create-runtime");
+const runtimeTypesEntry = resolve(runtimeRoot, "types.ts");
 const surfaceRoot = resolve(repoRoot, "src/surface");
 const playgroundRoot = resolve(repoRoot, "playground");
 const playgroundPublicRoot = resolve(playgroundRoot, "public");
@@ -107,6 +108,19 @@ test("runtime source does not import surface modules", () => {
   const runtimeFiles = listTsFiles(runtimeRoot);
   const offenders = collectResolvedImports(runtimeFiles).filter(({ resolved }) => {
     return resolved === surfaceRoot || resolved.startsWith(`${surfaceRoot}/`);
+  });
+
+  expect(
+    offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
+  ).toEqual([]);
+});
+
+test("runtime internals do not import src/runtime/types.ts", () => {
+  const runtimeFiles = listTsFiles(runtimeRoot).filter((file) => {
+    return file !== runtimeTypesEntry && file !== resolve(runtimeRoot, "create-runtime.ts");
+  });
+  const offenders = collectResolvedImports(runtimeFiles).filter(({ resolved }) => {
+    return resolved === runtimeTypesEntry;
   });
 
   expect(
