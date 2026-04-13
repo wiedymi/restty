@@ -12,8 +12,8 @@ import type {
 } from "../core/api";
 import type { ResttyRuntimeEventHub } from "../core/runtime-events";
 import type { ResttyAppCallbacks, ResttyAppSession } from "../core/resources";
+import type { RuntimeInteraction } from "./interaction-runtime/types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
-import type { RuntimeInteraction } from "./interaction-runtime";
 
 export type RuntimeAppApiSharedState = {
   wasm: ResttyWasm | null;
