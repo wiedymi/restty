@@ -10,21 +10,23 @@ import { createScrollbarRuntime } from "./scrollbar-runtime";
 import type {
   BindCanvasEventsOptions,
   CreateRuntimeInteractionOptions,
+  RuntimeInteraction,
+} from "./runtime.types";
+import type {
   RuntimeCell,
   RuntimeDesktopSelectionState,
   RuntimeImeState,
-  RuntimeInteraction,
   RuntimeLinkState,
   RuntimeScrollbarState,
   RuntimeTouchSelectionState,
-} from "./types";
+} from "./state.types";
 
 export type {
   BindCanvasEventsOptions,
   CreateRuntimeInteractionOptions,
-  RuntimeCell,
   RuntimeInteraction,
-} from "./types";
+} from "./runtime.types";
+export type { RuntimeCell } from "./state.types";
 
 export function createRuntimeInteraction(
   options: CreateRuntimeInteractionOptions,

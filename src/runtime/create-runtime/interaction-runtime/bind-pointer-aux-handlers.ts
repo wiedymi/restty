@@ -5,7 +5,7 @@ import type {
   RuntimeGridState,
   RuntimeSelectionState,
   RuntimeTouchSelectionState,
-} from "./types";
+} from "./state.types";
 
 type CreatePointerAuxHandlersOptions = {
   inputHandler: InputHandler;

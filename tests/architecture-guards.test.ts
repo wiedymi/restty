@@ -142,6 +142,24 @@ test("runtime internals do not use interaction-runtime/index.ts as a type barrel
   ).toEqual([]);
 });
 
+test("legacy mixed interaction-runtime types barrel is removed", () => {
+  expect(existsSync(resolve(runtimeCreateRuntimeRoot, "interaction-runtime/types.ts"))).toBe(false);
+});
+
+test("runtime controller and reporting point at split interaction contracts", () => {
+  const controllerTypes = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"),
+    "utf8",
+  );
+  const reportingTypes = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-reporting.types.ts"),
+    "utf8",
+  );
+
+  expect(controllerTypes).toContain("./interaction-runtime/runtime.types");
+  expect(reportingTypes).toContain("./interaction-runtime/state.types");
+});
+
 test("runtime internals do not use render-tick-webgl-context.ts as a type barrel", () => {
   const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
     return (

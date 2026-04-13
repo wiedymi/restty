@@ -1,14 +1,14 @@
 import { createPointerAuxHandlers } from "./bind-pointer-aux-handlers";
 import { createPointerUpHandler } from "./bind-pointer-up-handler";
+import type { BindCanvasEventsOptions } from "./runtime.types";
 import type {
-  BindCanvasEventsOptions,
   RuntimeCell,
   RuntimeDesktopSelectionState,
   RuntimeGridState,
   RuntimeLinkState,
   RuntimeSelectionState,
   RuntimeTouchSelectionState,
-} from "./types";
+} from "./state.types";
 
 export type BindPointerEventsOptions = {
   canvas: HTMLCanvasElement;

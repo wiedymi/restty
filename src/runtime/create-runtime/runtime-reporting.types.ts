@@ -1,6 +1,6 @@
 import type { RenderState, ResttyWasm, ResttyWasmExports } from "../../wasm";
 import type { ResttyRuntimeEvent } from "../core/runtime-events";
-import type { RuntimeSelectionState } from "./interaction-runtime/types";
+import type { RuntimeSelectionState } from "./interaction-runtime/state.types";
 
 export type RuntimeReportingOptions = {
   selectionState: RuntimeSelectionState;

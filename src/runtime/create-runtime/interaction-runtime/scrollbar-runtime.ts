@@ -1,6 +1,6 @@
 import { clamp } from "../../../grid";
 import { createNativeScrollbarHost } from "../native-scrollbar-host";
-import type { CreateScrollbarRuntimeOptions, ScrollbarRuntime } from "./types";
+import type { CreateScrollbarRuntimeOptions, ScrollbarRuntime } from "./state.types";
 
 export function createScrollbarRuntime(options: CreateScrollbarRuntimeOptions): ScrollbarRuntime {
   const {

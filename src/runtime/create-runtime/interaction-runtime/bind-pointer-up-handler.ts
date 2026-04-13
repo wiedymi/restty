@@ -5,7 +5,7 @@ import type {
   RuntimeLinkState,
   RuntimeSelectionState,
   RuntimeTouchSelectionState,
-} from "./types";
+} from "./state.types";
 
 type CreatePointerUpHandlerOptions = {
   inputHandler: InputHandler;
