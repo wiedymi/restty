@@ -17,7 +17,7 @@ export type {
   CreateDefaultResttyPaneContextMenuItemsOptions,
 } from "../surface/panes-types";
 
-export { createResttyManagedPaneManager } from "../surface/pane-app-manager";
+export { createResttyManagedPaneManager } from "../surface/managed-pane-manager";
 export type {
   CreateResttyManagedPaneManagerOptions,
   ResttyManagedPaneManager,

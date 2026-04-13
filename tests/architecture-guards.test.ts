@@ -7,7 +7,7 @@ const runtimeRoot = resolve(repoRoot, "src/runtime");
 const runtimeCreateRuntimeRoot = resolve(repoRoot, "src/runtime/create-runtime");
 const runtimeTypesEntry = resolve(runtimeRoot, "types.ts");
 const surfaceRoot = resolve(repoRoot, "src/surface");
-const paneAppManagerEntry = resolve(surfaceRoot, "pane-app-manager.ts");
+const managedPaneManagerEntry = resolve(surfaceRoot, "managed-pane-manager.ts");
 const playgroundRoot = resolve(repoRoot, "playground");
 const playgroundPublicRoot = resolve(playgroundRoot, "public");
 const playgroundDistRoot = resolve(playgroundRoot, "dist");
@@ -212,7 +212,7 @@ test("surface config helpers do not depend on manager option indexed access type
   expect(offenders).toEqual([]);
 });
 
-test("surface restty helpers do not import pane-app-manager for type access", () => {
+test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty-pane-handle.ts"),
     resolve(surfaceRoot, "restty/active-pane-api.ts"),
@@ -222,7 +222,7 @@ test("surface restty helpers do not import pane-app-manager for type access", ()
     resolve(surfaceRoot, "restty/shader-ops.ts"),
   ];
   const offenders = collectResolvedImports(helperFiles).filter(({ resolved }) => {
-    return resolved === paneAppManagerEntry;
+    return resolved === managedPaneManagerEntry;
   });
 
   expect(
@@ -230,26 +230,26 @@ test("surface restty helpers do not import pane-app-manager for type access", ()
   ).toEqual([]);
 });
 
-test("surface restty facade imports pane-app-manager for factory only", () => {
+test("surface restty facade imports managed-pane-manager for factory only", () => {
   const resttyFile = resolve(surfaceRoot, "restty.ts");
   const source = readFileSync(resttyFile, "utf8");
 
   expect(source).not.toMatch(/createResttyManagedPaneManager,\s*type\s+/);
   expect(source).toMatch(
-    /import\s+\{\s*createResttyManagedPaneManager\s*,?\s*\}\s+from\s+"\.\/pane-app-manager"/,
+    /import\s+\{\s*createResttyManagedPaneManager\s*,?\s*\}\s+from\s+"\.\/managed-pane-manager"/,
   );
 });
 
-test("surface public entrypoints do not use pane-app-manager as a type barrel", () => {
+test("surface public entrypoints do not use managed-pane-manager as a type barrel", () => {
   const indexSource = readFileSync(resolve(repoRoot, "src/index.ts"), "utf8");
   const internalSurfaceSource = readFileSync(resolve(internalRoot, "surface.ts"), "utf8");
 
-  expect(indexSource).not.toContain("./surface/pane-app-manager");
+  expect(indexSource).not.toContain("./surface/managed-pane-manager");
   expect(internalSurfaceSource).not.toMatch(
-    /export\s+type\s*\{[^}]+\}\s+from\s+"..\/surface\/pane-app-manager"/s,
+    /export\s+type\s*\{[^}]+\}\s+from\s+"..\/surface\/managed-pane-manager"/s,
   );
   expect(internalSurfaceSource).toContain(
-    'createResttyManagedPaneManager } from "../surface/pane-app-manager"',
+    'createResttyManagedPaneManager } from "../surface/managed-pane-manager"',
   );
 });
 

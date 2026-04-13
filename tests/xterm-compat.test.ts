@@ -255,7 +255,7 @@ function createFakeManager(options: any): FakeManager {
   };
 }
 
-mock.module("../src/surface/pane-app-manager", () => ({
+mock.module("../src/surface/managed-pane-manager", () => ({
   createResttyManagedPaneManager: (options: any) => createFakeManager(options),
 }));
 

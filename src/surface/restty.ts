@@ -1,4 +1,4 @@
-import { createResttyManagedPaneManager } from "./pane-app-manager";
+import { createResttyManagedPaneManager } from "./managed-pane-manager";
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
 import type {
   ResttyManagedPaneManager,
