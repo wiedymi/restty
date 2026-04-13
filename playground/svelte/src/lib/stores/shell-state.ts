@@ -12,11 +12,9 @@ import {
 import {
   ACTIVE_PANE_STATE_EVENT,
   CONNECTION_STATE_EVENT,
-  PTY_BUTTON_STATE_EVENT,
   type ActivePaneAppearanceStateDetail,
   type ActivePaneStateDetail,
   type ConnectionStateDetail,
-  type PtyButtonStateDetail,
 } from "../../../../lib/shell-events.ts";
 
 type TerminalShellState = {
@@ -94,15 +92,6 @@ export function resetShellState() {
 }
 
 export function startShellStateBridge(target: EventTarget = window) {
-  const handlePtyButtonState: EventListener = (event) => {
-    const detail = (event as CustomEvent<PtyButtonStateDetail>).detail;
-    if (typeof detail?.label !== "string") return;
-    connectionShellState.update((state) => ({
-      ...state,
-      ptyButtonLabel: detail.label!,
-    }));
-  };
-
   const handleConnectionState: EventListener = (event) => {
     const detail = (event as CustomEvent<ConnectionStateDetail>).detail;
     if (!detail) return;
@@ -113,6 +102,8 @@ export function startShellStateBridge(target: EventTarget = window) {
           ? getConnectionBackendForValue(detail.backend)
           : state.backend,
       ptyUrl: typeof detail.ptyUrl === "string" ? detail.ptyUrl : state.ptyUrl,
+      ptyButtonLabel:
+        typeof detail.ptyButtonLabel === "string" ? detail.ptyButtonLabel : state.ptyButtonLabel,
       webContainerCommand:
         typeof detail.webContainerCommand === "string"
           ? detail.webContainerCommand
@@ -188,12 +179,10 @@ export function startShellStateBridge(target: EventTarget = window) {
   };
 
   target.addEventListener(ACTIVE_PANE_STATE_EVENT, handleActivePaneState);
-  target.addEventListener(PTY_BUTTON_STATE_EVENT, handlePtyButtonState);
   target.addEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
 
   return () => {
     target.removeEventListener(ACTIVE_PANE_STATE_EVENT, handleActivePaneState);
-    target.removeEventListener(PTY_BUTTON_STATE_EVENT, handlePtyButtonState);
     target.removeEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
   };
 }

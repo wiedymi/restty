@@ -30,7 +30,6 @@ export const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
 export const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
 export const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
 export const PTY_BUTTON_EVENT = "restty:playground-pty-button";
-export const PTY_BUTTON_STATE_EVENT = "restty:playground-pty-button-state";
 
 export type ShellStringValueDetail = {
   value?: string;
@@ -43,6 +42,7 @@ export type DemoRunDetail = {
 export type ConnectionStateDetail = {
   backend?: ConnectionBackend | string;
   ptyUrl?: string;
+  ptyButtonLabel?: string;
   webContainerCommand?: string;
   webContainerCwd?: string;
 };
@@ -73,10 +73,6 @@ export type LocalFontStateDetail = {
   selectDisabled?: boolean;
   loadDisabled?: boolean;
   options?: LocalFontOption[];
-};
-
-export type PtyButtonStateDetail = {
-  label?: string;
 };
 
 export type RendererChangeDetail = {

@@ -17,9 +17,9 @@ import { createPlaygroundShellAdapter } from "./lib/shell-adapter.ts";
 import { getActivePaneState, type PaneState } from "./lib/pane-state.ts";
 import { DEFAULT_CONNECTION_BACKEND } from "./lib/shell-defaults.ts";
 import {
-  CONNECTION_STATE_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
+  type ConnectionStateDetail,
 } from "./lib/shell-events.ts";
 import { resolvePlaygroundStartupDefaults } from "./lib/startup-defaults.ts";
 import { bootstrapPlaygroundSurface } from "./lib/surface-bootstrap.ts";
@@ -115,6 +115,24 @@ function getActivePane(): ManagedPane | null {
   return restty.getActivePane();
 }
 
+function getPtyButtonLabel() {
+  const pane = getActivePane();
+  if (pane?.runtime.io.isPtyConnected()) return "Disconnect";
+  return connectionController.getBackend() === "webcontainer"
+    ? "Start WebContainer"
+    : "Connect PTY";
+}
+
+function getConnectionShellStateDetail(): ConnectionStateDetail {
+  return {
+    backend: connectionController.getBackend(),
+    ptyUrl: connectionController.getPtyUrl(),
+    ptyButtonLabel: getPtyButtonLabel(),
+    webContainerCommand: connectionController.getWebContainerCommand(),
+    webContainerCwd: connectionController.getWebContainerCwd(),
+  };
+}
+
 const shellAdapter = createPlaygroundShellAdapter({
   usesSvelteShell,
   target: window,
@@ -131,23 +149,6 @@ const shellAdapter = createPlaygroundShellAdapter({
 
 let appearanceController: ReturnType<typeof createPaneAppearanceController>;
 let connectionController: ReturnType<typeof createConnectionController>;
-
-function syncConnectionShellState() {
-  if (usesSvelteShell) {
-    window.dispatchEvent(
-      new CustomEvent(CONNECTION_STATE_EVENT, {
-        detail: {
-          backend: connectionController.getBackend(),
-          ptyUrl: connectionController.getPtyUrl(),
-          webContainerCommand: connectionController.getWebContainerCommand(),
-          webContainerCwd: connectionController.getWebContainerCwd(),
-        },
-      }),
-    );
-    return;
-  }
-  shellAdapter.syncConnectionUiState();
-}
 
 const paneShellSync = createPaneShellSync({
   usesSvelteShell,
@@ -186,7 +187,9 @@ connectionController = createConnectionController({
   getActivePane: () => getActivePane(),
   getPanes: () => restty.getPanes(),
   connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
-  syncConnectionState: syncConnectionShellState,
+  syncConnectionState: () => {
+    shellAdapter.syncConnectionState(getConnectionShellStateDetail());
+  },
   syncPtyButton: (pane) => {
     paneShellSync.syncPtyButton(pane);
   },
@@ -371,7 +374,7 @@ bindAppearanceControls({
   },
 });
 
-syncConnectionShellState();
+shellAdapter.syncConnectionState(getConnectionShellStateDetail());
 paneShellSync.syncFontFamilyValue();
 paneShellSync.syncLocalFontControls();
 paneShellSync.syncFontRenderingControls();

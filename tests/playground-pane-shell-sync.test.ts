@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import { createPaneShellSync } from "../playground/lib/pane-shell-sync.ts";
 import type { PaneState } from "../playground/lib/pane-state.ts";
-import { ACTIVE_PANE_STATE_EVENT, PTY_BUTTON_STATE_EVENT } from "../playground/lib/shell-events.ts";
+import { ACTIVE_PANE_STATE_EVENT, CONNECTION_STATE_EVENT } from "../playground/lib/shell-events.ts";
 
 function createPaneState(overrides: Partial<PaneState> = {}): PaneState {
   return {
@@ -43,7 +43,7 @@ test("pane shell sync dispatches active pane state through shell events", () => 
   };
 
   target.addEventListener(ACTIVE_PANE_STATE_EVENT, record(ACTIVE_PANE_STATE_EVENT));
-  target.addEventListener(PTY_BUTTON_STATE_EVENT, record(PTY_BUTTON_STATE_EVENT));
+  target.addEventListener(CONNECTION_STATE_EVENT, record(CONNECTION_STATE_EVENT));
 
   const syncedStates: PaneState[] = [];
   const sync = createPaneShellSync({
@@ -117,8 +117,8 @@ test("pane shell sync dispatches active pane state through shell events", () => 
       },
     },
     {
-      type: PTY_BUTTON_STATE_EVENT,
-      detail: { label: "Start WebContainer" },
+      type: CONNECTION_STATE_EVENT,
+      detail: { ptyButtonLabel: "Start WebContainer" },
     },
   ]);
 });

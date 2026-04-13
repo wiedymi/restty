@@ -1,11 +1,7 @@
 import { beforeEach, expect, test } from "bun:test";
 import { get } from "svelte/store";
 import type { LocalFontOption } from "../playground/lib/font-controls.ts";
-import {
-  ACTIVE_PANE_STATE_EVENT,
-  CONNECTION_STATE_EVENT,
-  PTY_BUTTON_STATE_EVENT,
-} from "../playground/lib/shell-events.ts";
+import { ACTIVE_PANE_STATE_EVENT, CONNECTION_STATE_EVENT } from "../playground/lib/shell-events.ts";
 import {
   appearanceShellState,
   connectionShellState,
@@ -36,17 +32,11 @@ test("startShellStateBridge syncs terminal and connection state from shell event
     }),
   );
   target.dispatchEvent(
-    new CustomEvent(PTY_BUTTON_STATE_EVENT, {
-      detail: {
-        label: "Disconnect",
-      },
-    }),
-  );
-  target.dispatchEvent(
     new CustomEvent(CONNECTION_STATE_EVENT, {
       detail: {
         backend: "ws",
         ptyUrl: "ws://example.test/pty",
+        ptyButtonLabel: "Disconnect",
         webContainerCommand: "bash",
         webContainerCwd: "/tmp",
       },
@@ -60,6 +50,40 @@ test("startShellStateBridge syncs terminal and connection state from shell event
   });
   expect(get(connectionShellState)).toEqual({
     backend: "ws",
+    ptyUrl: "ws://example.test/pty",
+    webContainerCommand: "bash",
+    webContainerCwd: "/tmp",
+    ptyButtonLabel: "Disconnect",
+  });
+
+  stop();
+});
+
+test("startShellStateBridge merges partial connection updates", () => {
+  const target = new EventTarget();
+  const stop = startShellStateBridge(target);
+
+  target.dispatchEvent(
+    new CustomEvent(CONNECTION_STATE_EVENT, {
+      detail: {
+        backend: "webcontainer",
+        ptyUrl: "ws://example.test/pty",
+        ptyButtonLabel: "Start WebContainer",
+        webContainerCommand: "bash",
+        webContainerCwd: "/tmp",
+      },
+    }),
+  );
+  target.dispatchEvent(
+    new CustomEvent(CONNECTION_STATE_EVENT, {
+      detail: {
+        ptyButtonLabel: "Disconnect",
+      },
+    }),
+  );
+
+  expect(get(connectionShellState)).toEqual({
+    backend: "webcontainer",
     ptyUrl: "ws://example.test/pty",
     webContainerCommand: "bash",
     webContainerCwd: "/tmp",

@@ -10,7 +10,7 @@ import type { PaneState } from "./pane-state.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
 import {
   ACTIVE_PANE_STATE_EVENT,
-  PTY_BUTTON_STATE_EVENT,
+  CONNECTION_STATE_EVENT,
   type ActivePaneStateDetail,
   type LocalFontStateDetail,
 } from "./shell-events.ts";
@@ -132,7 +132,7 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
         ? "Start WebContainer"
         : "Connect PTY";
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, PTY_BUTTON_STATE_EVENT, { label });
+      dispatchStateEvent(target, CONNECTION_STATE_EVENT, { ptyButtonLabel: label });
       return;
     }
     if (options.elements.ptyBtn) {

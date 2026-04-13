@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { createPlaygroundShellAdapter } from "../playground/lib/shell-adapter.ts";
-import { THEME_FILE_RESET_EVENT } from "../playground/lib/shell-events.ts";
+import { CONNECTION_STATE_EVENT, THEME_FILE_RESET_EVENT } from "../playground/lib/shell-events.ts";
 
 function createHost() {
   const calls: string[] = [];
@@ -49,8 +49,12 @@ function createDialog() {
 test("shell adapter dispatches theme reset and handles settings focus in svelte mode", () => {
   const target = new EventTarget();
   const seen: string[] = [];
+  let connectionState: unknown = null;
   target.addEventListener(THEME_FILE_RESET_EVENT, () => {
     seen.push("reset");
+  });
+  target.addEventListener(CONNECTION_STATE_EVENT, (event) => {
+    connectionState = (event as CustomEvent).detail;
   });
   const { host, calls } = createHost();
 
@@ -69,11 +73,24 @@ test("shell adapter dispatches theme reset and handles settings focus in svelte 
   });
 
   adapter.resetThemeFileInput();
+  adapter.syncConnectionState({
+    backend: "ws",
+    ptyUrl: "ws://example.test/pty",
+    ptyButtonLabel: "Disconnect",
+    webContainerCommand: "bash",
+    webContainerCwd: "/tmp",
+  });
   adapter.openSettings(host);
   adapter.closeSettings(host);
-  adapter.syncConnectionUiState();
 
   expect(seen).toEqual(["reset"]);
+  expect(connectionState).toEqual({
+    backend: "ws",
+    ptyUrl: "ws://example.test/pty",
+    ptyButtonLabel: "Disconnect",
+    webContainerCommand: "bash",
+    webContainerCwd: "/tmp",
+  });
   expect(calls).toEqual(["hide", "focus"]);
 });
 
@@ -101,7 +118,13 @@ test("shell adapter drives legacy settings and connection ui directly", () => {
     },
   });
 
-  adapter.syncConnectionUiState();
+  adapter.syncConnectionState({
+    backend: "ws",
+    ptyUrl: "ws://localhost:8787/pty",
+    ptyButtonLabel: "Connect PTY",
+    webContainerCommand: "jsh",
+    webContainerCwd: "/",
+  });
   adapter.openSettings(host);
   expect(dialog.open).toBe(true);
   expect(calls).toEqual(["hide"]);

@@ -7,7 +7,11 @@ import {
   type SettingsDialogElement,
   type SettingsDialogHost,
 } from "./settings-dialog.ts";
-import { THEME_FILE_RESET_EVENT } from "./shell-events.ts";
+import {
+  CONNECTION_STATE_EVENT,
+  THEME_FILE_RESET_EVENT,
+  type ConnectionStateDetail,
+} from "./shell-events.ts";
 
 type ConnectionUiElements = {
   connectionBackendEl: HTMLSelectElement | null;
@@ -44,8 +48,15 @@ export function createPlaygroundShellAdapter({
     }
   }
 
-  function syncConnectionUiState() {
-    if (usesSvelteShell) return;
+  function syncConnectionState(detail: ConnectionStateDetail) {
+    if (usesSvelteShell) {
+      target.dispatchEvent(
+        new CustomEvent(CONNECTION_STATE_EVENT, {
+          detail,
+        }),
+      );
+      return;
+    }
     syncConnectionUiImpl(connectionUi);
   }
 
@@ -70,7 +81,7 @@ export function createPlaygroundShellAdapter({
     usesSvelteShell,
     isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog),
     resetThemeFileInput,
-    syncConnectionUiState,
+    syncConnectionState,
     openSettings,
     closeSettings,
   };
