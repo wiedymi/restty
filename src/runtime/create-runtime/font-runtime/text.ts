@@ -5,19 +5,9 @@ import {
   isNerdSymbolFont,
   type Font,
   type FontEntry,
-  type FontManagerState,
 } from "../../../fonts";
 import { isCoverageIgnorableCodepoint, resolvePresentationPreference } from "../codepoint-utils";
-import type { GlyphBufferToShapedGlyphsFn, ShapeFn, UnicodeBufferCtor } from "./types";
-
-type CreateFontRuntimeTextHelpersOptions = {
-  fontState: FontManagerState;
-  glyphShapeCacheLimit: number;
-  fontPickCacheLimit: number;
-  UnicodeBuffer: UnicodeBufferCtor;
-  shape: ShapeFn;
-  glyphBufferToShapedGlyphs: GlyphBufferToShapedGlyphsFn;
-};
+import type { CreateFontRuntimeTextHelpersOptions } from "./text.types";
 
 function setBoundedMap<K, V>(map: Map<K, V>, key: K, value: V, limit: number): void {
   if (map.has(key)) {

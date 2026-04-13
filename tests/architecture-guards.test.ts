@@ -195,6 +195,16 @@ test("font runtime webgpu atlas contract is split from implementation", () => {
   expect(webgpuAtlas).toContain("./webgpu-atlas.types");
 });
 
+test("font runtime text helper contract is split from implementation", () => {
+  const textHelpers = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "font-runtime/text.ts"),
+    "utf8",
+  );
+
+  expect(textHelpers).not.toContain("type CreateFontRuntimeTextHelpersOptions =");
+  expect(textHelpers).toContain("./text.types");
+});
+
 test("runtime internals do not use render-tick-webgl-context.ts as a type barrel", () => {
   const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
     return (
