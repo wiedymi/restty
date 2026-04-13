@@ -14,6 +14,13 @@ import {
   getConnectionBackend,
   syncConnectionUi,
 } from "./lib/pty-connection.ts";
+import {
+  createPaneState,
+  getActivePaneState,
+  type PaneState,
+  type RendererChoice,
+  withPanePaused,
+} from "./lib/pane-state.ts";
 
 const paneRoot = document.getElementById("paneRoot") as HTMLElement | null;
 if (!paneRoot) {
@@ -78,7 +85,6 @@ const FONT_URL_OPENMOJI =
 const FONT_URL_NOTO_CJK_SC =
   "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf";
 
-type RendererChoice = "auto" | "webgpu" | "webgl2";
 type ShaderPreset = "none" | "scanline" | "aurora" | "crt-lite" | "mono-green";
 type FontHintTarget = "auto" | "light" | "normal";
 type FontPresetKey = "fira-code" | "jetbrains";
@@ -89,22 +95,6 @@ type LocalFontVariant = {
 type FontPresetConfig = {
   localVariants: LocalFontVariant[];
   bundledFaces?: Array<{ label: string; url: string }>;
-};
-
-type PaneThemeState = {
-  selectValue: string;
-  sourceLabel: string;
-  theme: GhosttyTheme | null;
-};
-
-type PaneState = {
-  id: number;
-  renderer: RendererChoice;
-  fontSize: number;
-  mouseMode: string;
-  paused: boolean;
-  theme: PaneThemeState;
-  demos: ReturnType<typeof createDemoController> | null;
 };
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
@@ -676,40 +666,8 @@ function waitForAnimationFrame(): Promise<void> {
   });
 }
 
-function createPaneState(id: number, sourcePane: ManagedPane | null): PaneState {
-  const sourceState = sourcePane ? paneStates.get(sourcePane.id) : null;
-  return {
-    id,
-    renderer:
-      sourceState?.renderer ??
-      (isRendererChoice(rendererSelect?.value) ? rendererSelect.value : "auto"),
-    fontSize:
-      sourceState?.fontSize ??
-      parseFontSize(fontSizeInput?.value, Number.isFinite(initialFontSize) ? initialFontSize : 18),
-    mouseMode: sourceState?.mouseMode ?? (mouseModeEl?.value || "auto"),
-    paused: sourceState?.paused ?? false,
-    theme: sourceState
-      ? {
-          selectValue: sourceState.theme.selectValue,
-          sourceLabel: sourceState.theme.sourceLabel,
-          theme: sourceState.theme.theme,
-        }
-      : {
-          selectValue: defaultThemeName,
-          sourceLabel: defaultThemeName ? "default theme" : "",
-          theme: null,
-        },
-    demos: null,
-  };
-}
-
 function getActivePane(): ManagedPane | null {
   return restty.getActivePane();
-}
-
-function getActivePaneState(): PaneState | null {
-  if (activePaneId === null) return null;
-  return paneStates.get(activePaneId) ?? null;
 }
 
 function syncPauseButton(state: PaneState) {
@@ -749,11 +707,12 @@ function setPanePaused(id: number, value: boolean) {
   const pane = restty.getPaneById(id);
   const state = paneStates.get(id);
   if (!pane || !state) return;
-  state.paused = Boolean(value);
-  pane.paused = state.paused;
-  pane.runtime.terminal.setPaused(state.paused);
+  const nextState = withPanePaused(state, value);
+  paneStates.set(id, nextState);
+  pane.paused = nextState.paused;
+  pane.runtime.terminal.setPaused(nextState.paused);
   if (id === activePaneId) {
-    syncPauseButton(state);
+    syncPauseButton(nextState);
   }
 }
 
@@ -932,7 +891,17 @@ restty = new Restty({
     },
   },
   terminal: ({ id, sourcePane }) => {
-    const paneState = createPaneState(id, sourcePane);
+    const paneState = createPaneState({
+      id,
+      sourceState: sourcePane ? (paneStates.get(sourcePane.id) ?? null) : null,
+      renderer: isRendererChoice(rendererSelect?.value) ? rendererSelect.value : "auto",
+      fontSize: parseFontSize(
+        fontSizeInput?.value,
+        Number.isFinite(initialFontSize) ? initialFontSize : 18,
+      ),
+      mouseMode: mouseModeEl?.value || "auto",
+      defaultThemeName,
+    });
     paneStates.set(id, paneState);
     return {
       renderer: paneState.renderer,
@@ -1019,7 +988,7 @@ connectionBackendEl?.addEventListener("change", () => {
 btnInit?.addEventListener("click", () => {
   const pane = getActivePane();
   if (!pane) return;
-  const state = getActivePaneState();
+  const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
   setPanePaused(pane.id, false);
   state.demos?.stop();
@@ -1029,7 +998,7 @@ btnInit?.addEventListener("click", () => {
 btnPause?.addEventListener("click", () => {
   const pane = getActivePane();
   if (!pane) return;
-  const state = getActivePaneState();
+  const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
   setPanePaused(pane.id, !state.paused);
 });
@@ -1037,14 +1006,14 @@ btnPause?.addEventListener("click", () => {
 btnClear?.addEventListener("click", () => {
   const pane = getActivePane();
   if (!pane) return;
-  const state = getActivePaneState();
+  const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
   state.demos?.stop();
   pane.runtime.terminal.clearScreen();
 });
 
 btnRunDemo?.addEventListener("click", () => {
-  const state = getActivePaneState();
+  const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
   state.demos?.run((demoSelect?.value as PlaygroundDemoKind | string) ?? "basic");
 });
@@ -1062,7 +1031,7 @@ ptyBtn?.addEventListener("click", () => {
 
 rendererSelect?.addEventListener("change", () => {
   const pane = getActivePane();
-  const state = getActivePaneState();
+  const state = getActivePaneState(paneStates, activePaneId);
   if (!pane || !state) return;
   const value = rendererSelect.value;
   if (!isRendererChoice(value)) return;
@@ -1073,7 +1042,7 @@ rendererSelect?.addEventListener("change", () => {
 if (themeFileInput) {
   themeFileInput.addEventListener("change", () => {
     const pane = getActivePane();
-    const state = getActivePaneState();
+    const state = getActivePaneState(paneStates, activePaneId);
     const file = themeFileInput.files?.[0];
     if (!pane || !state || !file) return;
     file
@@ -1096,7 +1065,7 @@ if (themeFileInput) {
 if (themeSelect) {
   themeSelect.addEventListener("change", () => {
     const pane = getActivePane();
-    const state = getActivePaneState();
+    const state = getActivePaneState(paneStates, activePaneId);
     if (!pane || !state) return;
     const name = themeSelect.value;
     if (!name) {
@@ -1110,7 +1079,7 @@ if (themeSelect) {
 if (mouseModeEl) {
   mouseModeEl.addEventListener("change", () => {
     const pane = getActivePane();
-    const state = getActivePaneState();
+    const state = getActivePaneState(paneStates, activePaneId);
     if (!pane || !state) return;
     const value = mouseModeEl.value;
     pane.runtime.interaction.setMouseMode(value);
@@ -1143,7 +1112,7 @@ if (shaderPresetEl) {
 if (fontSizeInput) {
   const applyFontSize = () => {
     const pane = getActivePane();
-    const state = getActivePaneState();
+    const state = getActivePaneState(paneStates, activePaneId);
     if (!pane || !state) return;
     const value = Number(fontSizeInput.value);
     if (!Number.isFinite(value)) return;
