@@ -71,6 +71,7 @@ import {
   TERMINAL_STATE_EVENT,
   THEME_FILE_CHANGE_EVENT,
   THEME_SELECT_CHANGE_EVENT,
+  THEME_SELECT_STATE_EVENT,
   type DemoRunDetail,
   type FontRenderingStateDetail,
   type PtyButtonStateDetail,
@@ -282,6 +283,20 @@ function syncPtyButton(pane: ManagedPane) {
       : "Connect PTY";
 }
 
+function syncThemeSelectValue(value: string) {
+  if (usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(THEME_SELECT_STATE_EVENT, {
+        detail: { value },
+      }),
+    );
+    return;
+  }
+  if (themeSelect) {
+    themeSelect.value = value;
+  }
+}
+
 function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
   syncTerminalControlValues(state);
   syncFontFamilyControls({
@@ -306,7 +321,7 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
     );
     mouseModeEl.value = hasOption ? state.mouseMode : "auto";
   }
-  if (themeSelect) themeSelect.value = state.theme.selectValue;
+  syncThemeSelectValue(state.theme.selectValue);
 }
 
 function setPanePaused(id: number, value: boolean) {
@@ -339,8 +354,6 @@ async function initPaneApp(pane: ManagedPane, state: PaneState) {
     applySavedThemeForPane({
       pane,
       state,
-      activePaneId,
-      themeSelect,
     }),
   );
   await waitForAnimationFrame();
@@ -650,11 +663,12 @@ function applyUploadedThemeFile(file: File | null | undefined) {
         state,
         theme,
         sourceLabel: file.name || "theme file",
-        activePaneId,
-        themeSelect,
       });
       if (nextState) {
         paneStates.set(pane.id, nextState);
+        if (pane.id === activePaneId) {
+          syncThemeSelectValue(nextState.theme.selectValue);
+        }
       }
     })
     .catch((err) => {
@@ -687,21 +701,23 @@ function applyThemeSelection(name: string | null | undefined) {
       resetThemeForPane({
         pane,
         state,
-        activePaneId,
-        themeSelect,
       }),
     );
+    if (pane.id === activePaneId) {
+      syncThemeSelectValue("");
+    }
     return;
   }
   const nextState = applyBuiltinThemeToPane({
     pane,
     state,
     name,
-    activePaneId,
-    themeSelect,
   });
   if (nextState) {
     paneStates.set(pane.id, nextState);
+    if (pane.id === activePaneId) {
+      syncThemeSelectValue(nextState.theme.selectValue);
+    }
   }
 }
 

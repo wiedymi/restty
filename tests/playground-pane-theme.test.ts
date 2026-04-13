@@ -53,10 +53,9 @@ function createPane(id = 1) {
   return { pane, events };
 }
 
-test("applyThemeToPane updates state and active theme select", () => {
+test("applyThemeToPane updates state without mutating shell select state", () => {
   const theme = createTheme("custom");
   const state = createState();
-  const themeSelect = { value: "old" };
   const { pane, events } = createPane(7);
 
   const nextState = applyThemeToPane({
@@ -65,8 +64,6 @@ test("applyThemeToPane updates state and active theme select", () => {
     theme,
     sourceLabel: "theme file",
     selectValue: "custom-file",
-    activePaneId: 7,
-    themeSelect,
   });
 
   expect(nextState).not.toBeNull();
@@ -75,7 +72,6 @@ test("applyThemeToPane updates state and active theme select", () => {
     sourceLabel: "theme file",
     theme,
   });
-  expect(themeSelect.value).toBe("custom-file");
   expect(events).toEqual([{ type: "apply", theme, sourceLabel: "theme file" }]);
 });
 
@@ -87,25 +83,21 @@ test("applyBuiltinThemeToPane resolves a builtin theme and stores the selected n
   expect(builtinTheme).toBeTruthy();
 
   const state = createState();
-  const themeSelect = { value: "" };
   const { pane, events } = createPane(3);
 
   const nextState = applyBuiltinThemeToPane({
     pane,
     state,
     name: builtinName!,
-    activePaneId: 3,
-    themeSelect,
   });
 
   expect(nextState?.theme.selectValue).toBe(builtinName);
   expect(nextState?.theme.sourceLabel).toBe(builtinName);
   expect(nextState?.theme.theme).toBe(builtinTheme);
-  expect(themeSelect.value).toBe(builtinName);
   expect(events).toEqual([{ type: "apply", theme: builtinTheme, sourceLabel: builtinName }]);
 });
 
-test("resetThemeForPane clears stored theme and active select", () => {
+test("resetThemeForPane clears stored theme without mutating shell select state", () => {
   const state = createState({
     theme: {
       selectValue: "custom",
@@ -113,14 +105,11 @@ test("resetThemeForPane clears stored theme and active select", () => {
       theme: createTheme("custom"),
     },
   });
-  const themeSelect = { value: "custom" };
   const { pane, events } = createPane(5);
 
   const nextState = resetThemeForPane({
     pane,
     state,
-    activePaneId: 5,
-    themeSelect,
   });
 
   expect(nextState.theme).toEqual({
@@ -128,7 +117,6 @@ test("resetThemeForPane clears stored theme and active select", () => {
     sourceLabel: "",
     theme: null,
   });
-  expect(themeSelect.value).toBe("");
   expect(events).toEqual([{ type: "reset" }]);
 });
 
@@ -156,14 +144,10 @@ test("applySavedThemeForPane restores saved builtin and custom themes", () => {
   const restoredBuiltinState = applySavedThemeForPane({
     pane: builtinPane.pane,
     state: builtinState,
-    activePaneId: 1,
-    themeSelect: { value: "" },
   });
   const restoredCustomState = applySavedThemeForPane({
     pane: customPane.pane,
     state: customState,
-    activePaneId: 2,
-    themeSelect: { value: "" },
   });
 
   expect(restoredBuiltinState.theme.selectValue).toBe(builtinName);

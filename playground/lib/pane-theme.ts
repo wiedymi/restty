@@ -1,10 +1,6 @@
 import { getBuiltinTheme, type GhosttyTheme } from "../../src/index.ts";
 import type { PaneState } from "./pane-state.ts";
 
-type ThemeSelectElement = {
-  value: string;
-} | null;
-
 export type PaneThemeTarget = {
   id: number;
   runtime: {
@@ -18,20 +14,7 @@ export type PaneThemeTarget = {
 type PaneThemeOptions = {
   pane: PaneThemeTarget;
   state: PaneState;
-  activePaneId: number | null;
-  themeSelect: ThemeSelectElement;
 };
-
-function syncThemeSelect(
-  paneId: number,
-  activePaneId: number | null,
-  themeSelect: ThemeSelectElement,
-  value: string,
-) {
-  if (paneId === activePaneId && themeSelect) {
-    themeSelect.value = value;
-  }
-}
 
 function withPaneTheme(
   state: PaneState,
@@ -75,12 +58,6 @@ export function applyThemeToPane(
       options.sourceLabel,
       options.selectValue ?? "",
     );
-    syncThemeSelect(
-      options.pane.id,
-      options.activePaneId,
-      options.themeSelect,
-      nextState.theme.selectValue,
-    );
     return nextState;
   } catch (err) {
     console.error("theme apply failed", err);
@@ -106,9 +83,7 @@ export function applyBuiltinThemeToPane(
 
 export function resetThemeForPane(options: PaneThemeOptions): PaneState {
   options.pane.runtime.terminal.resetTheme();
-  const nextState = withoutPaneTheme(options.state);
-  syncThemeSelect(options.pane.id, options.activePaneId, options.themeSelect, "");
-  return nextState;
+  return withoutPaneTheme(options.state);
 }
 
 export function applySavedThemeForPane(options: PaneThemeOptions): PaneState {

@@ -16,6 +16,7 @@ export const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
 export const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
 export const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
 export const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
+export const THEME_SELECT_STATE_EVENT = "restty:playground-theme-select-state";
 export const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 export const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
 export const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";

@@ -12,11 +12,9 @@
     SHADER_PRESET_CHANGE_EVENT,
     THEME_FILE_CHANGE_EVENT,
     THEME_SELECT_CHANGE_EVENT,
+    THEME_SELECT_STATE_EVENT,
     type FontRenderingStateDetail,
-    type MouseModeStateDetail,
-    type ShaderPresetChangeDetail,
     type ShellStringValueDetail,
-    type ThemeFileChangeDetail,
   } from "../../../../lib/shell-events.ts";
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
 
@@ -25,6 +23,7 @@
   let fontHinting = "off";
   let fontHintTarget = "auto";
   let shaderPreset: ShaderPreset = "none";
+  let themeSelectValue = "";
 
   function handleShaderPresetChange() {
     window.dispatchEvent(
@@ -48,6 +47,13 @@
     const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
     if (typeof detail?.value === "string") {
       mouseMode = detail.value;
+    }
+  }
+
+  function handleWindowThemeSelectState(event: Event) {
+    const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
+    if (typeof detail?.value === "string") {
+      themeSelectValue = detail.value;
     }
   }
 
@@ -143,6 +149,7 @@
 <svelte:window
   on:restty:playground-font-rendering-state={handleWindowFontRenderingState}
   on:restty:playground-mouse-mode-state={handleWindowMouseModeState}
+  on:restty:playground-theme-select-state={handleWindowThemeSelectState}
 />
 
 <section class="section">
@@ -183,7 +190,7 @@
     Main font family for all panes. Use Detect Local to add system fonts.
   </div>
   <div class="field-row">
-    <select id="themeSelect" onchange={handleThemeSelectChange}>
+    <select id="themeSelect" bind:value={themeSelectValue} onchange={handleThemeSelectChange}>
       <option value="">Default Theme</option>
     </select>
     <label class="file-input">
