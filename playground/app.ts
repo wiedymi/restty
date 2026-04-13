@@ -19,7 +19,6 @@ if (!paneRoot) {
 }
 
 const backendEl = document.getElementById("backend");
-const fpsEl = document.getElementById("fps");
 const termSizeEl = document.getElementById("termSize");
 const ptyStatusEl = document.getElementById("ptyStatus");
 
@@ -96,8 +95,6 @@ type FontPresetConfig = {
 };
 
 type PaneUiState = {
-  backend: string;
-  fps: string;
   termSize: string;
   ptyStatus: string;
 };
@@ -116,6 +113,7 @@ type PaneState = {
   paused: boolean;
   theme: PaneThemeState;
   demos: ReturnType<typeof createDemoController> | null;
+  disposeRuntimeEvents: (() => void) | null;
   ui: PaneUiState;
 };
 
@@ -755,8 +753,6 @@ function closeSettingsDialog() {
 
 function createDefaultPaneUi(): PaneUiState {
   return {
-    backend: "-",
-    fps: "0",
     termSize: "0x0",
     ptyStatus: "disconnected",
   };
@@ -792,6 +788,7 @@ function createPaneState(id: number, sourcePane: ManagedPane | null): PaneState 
           theme: null,
         },
     demos: null,
+    disposeRuntimeEvents: null,
     ui: createDefaultPaneUi(),
   };
 }
@@ -821,8 +818,7 @@ function syncPtyButton(pane: ManagedPane, state: PaneState) {
 }
 
 function renderActivePaneStatus(pane: ManagedPane, state: PaneState) {
-  setText(backendEl, state.ui.backend);
-  setText(fpsEl, state.ui.fps);
+  setText(backendEl, pane.app.render.getBackend());
   setText(termSizeEl, state.ui.termSize);
   setText(ptyStatusEl, state.ui.ptyStatus);
   syncPtyButton(pane, state);
@@ -899,6 +895,9 @@ async function initPaneApp(pane: ManagedPane, state: PaneState) {
   await waitForAnimationFrame();
   pane.app.interaction.updateSize(true);
   connectPaneIfNeeded(pane);
+  if (pane.id === activePaneId) {
+    renderActivePaneStatus(pane, state);
+  }
   pane.canvas.focus({ preventScroll: true });
 }
 
@@ -1009,11 +1008,16 @@ restty = new Restty({
         };
 
         state.demos = createDemoController(pane.app);
+        state.disposeRuntimeEvents = pane.app.events.subscribe((event) => {
+          if (event.type !== "backend") return;
+          updatePaneUi(pane.id, () => undefined);
+        });
         pane.app.interaction.setMouseMode(state.mouseMode);
         void initPaneApp(pane, state);
       },
       onPaneClosed: (pane) => {
         const state = paneStates.get(pane.id);
+        state?.disposeRuntimeEvents?.();
         state?.demos?.stop();
         paneStates.delete(pane.id);
       },
@@ -1057,16 +1061,6 @@ restty = new Restty({
   services: ({ id }) => ({
     ptyTransport: createAdaptivePtyTransport(),
     callbacks: {
-      onBackend: (backend) => {
-        updatePaneUi(id, (state) => {
-          state.ui.backend = backend;
-        });
-      },
-      onFps: (fps) => {
-        updatePaneUi(id, (state) => {
-          state.ui.fps = `${Math.round(fps)}`;
-        });
-      },
       onTermSize: (cols, rows) => {
         updatePaneUi(id, (state) => {
           state.ui.termSize = `${cols}x${rows}`;

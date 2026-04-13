@@ -237,8 +237,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
 
   let canvas = canvasInput;
   let currentContextType: "webgpu" | "webgl2" | null = null;
-  const backendEl = elements?.backendEl ?? null;
-  const fpsEl = elements?.fpsEl ?? null;
   const dprEl = elements?.dprEl ?? null;
   const sizeEl = elements?.sizeEl ?? null;
   const gridEl = elements?.gridEl ?? null;
@@ -1156,9 +1154,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     lifecycleThemeSizeRuntime,
     cleanupFns,
     cleanupCanvasFns,
-    callbacks,
-    fpsEl,
-    backendEl,
     imeInput,
     attachWindowEvents,
     isMacPlatform,

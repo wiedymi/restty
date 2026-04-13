@@ -11,7 +11,7 @@ import type {
   ResttyRuntimeTerminalApi,
 } from "../core/api";
 import type { ResttyRuntimeEventHub } from "../core/runtime-events";
-import type { ResttyAppCallbacks, ResttyAppSession } from "../core/resources";
+import type { ResttyAppSession } from "../core/resources";
 import type { RuntimeInteraction } from "./interaction-runtime/types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
 
@@ -37,8 +37,6 @@ export type RuntimeInternalState = {
   backend: RuntimeBackend;
   preferredRenderer: PreferredRenderer;
   rafId: number;
-  frameCount: number;
-  lastFpsTime: number;
   nextBlinkTime: number;
 };
 
@@ -88,9 +86,6 @@ export type RuntimeAppApiOptions = {
   lifecycleThemeSizeRuntime: LifecycleThemeRuntime;
   cleanupFns: Array<() => void>;
   cleanupCanvasFns: Array<() => void>;
-  callbacks?: ResttyAppCallbacks;
-  fpsEl: HTMLElement | null;
-  backendEl: HTMLElement | null;
   imeInput: HTMLTextAreaElement | null;
   attachWindowEvents: boolean;
   isMacPlatform: boolean;

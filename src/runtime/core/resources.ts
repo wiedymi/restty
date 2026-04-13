@@ -49,10 +49,6 @@ export type ResttyAppSession = {
  * Optional DOM elements for status displays.
  */
 export type ResttyAppElements = {
-  /** Renderer backend name display. */
-  backendEl?: HTMLElement | null;
-  /** Frames-per-second counter display. */
-  fpsEl?: HTMLElement | null;
   /** Device pixel ratio display. */
   dprEl?: HTMLElement | null;
   /** Canvas pixel size display. */
@@ -75,10 +71,6 @@ export type ResttyAppElements = {
  * Callbacks fired by the app when internal state changes.
  */
 export type ResttyAppCallbacks = {
-  /** Renderer backend was determined. */
-  onBackend?: (backend: string) => void;
-  /** Frame rate updated. */
-  onFps?: (fps: number) => void;
   /** Device pixel ratio changed. */
   onDpr?: (dpr: number) => void;
   /** Canvas pixel dimensions changed. */

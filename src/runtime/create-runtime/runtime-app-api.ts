@@ -28,9 +28,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     lifecycleThemeSizeRuntime,
     cleanupFns,
     cleanupCanvasFns,
-    callbacks,
-    fpsEl,
-    backendEl,
     imeInput,
     attachWindowEvents,
     isMacPlatform,
@@ -85,23 +82,9 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     backend: "none",
     preferredRenderer: options.initialPreferredRenderer,
     rafId: 0,
-    frameCount: 0,
-    lastFpsTime: performance.now(),
     nextBlinkTime: performance.now() + CURSOR_BLINK_MS,
   };
   const maxScrollbackBytes = resolveMaxScrollbackBytes(options);
-
-  function updateFps() {
-    internalState.frameCount += 1;
-    const now = performance.now();
-    if (now - internalState.lastFpsTime >= 500) {
-      const fps = Math.round((internalState.frameCount * 1000) / (now - internalState.lastFpsTime));
-      if (fpsEl) fpsEl.textContent = `${fps}`;
-      callbacks?.onFps?.(fps);
-      internalState.frameCount = 0;
-      internalState.lastFpsTime = now;
-    }
-  }
 
   function canRenderFrame(shared: RuntimeAppApiSharedState): boolean {
     return Boolean(shared.wasmReady && shared.wasm && shared.wasmHandle);
@@ -134,7 +117,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
           if (internalState.backend === "webgpu" && "device" in state) tickWebGPU(state);
           if (internalState.backend === "webgl2" && "gl" in state) tickWebGL(state);
           writeState({ lastRenderTime: now, needsRender: false });
-          updateFps();
         }
       }
     }
@@ -457,9 +439,7 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
             currentContextType: "webgpu",
             needsRender: true,
           });
-          if (backendEl) backendEl.textContent = "webgpu";
           emitRuntimeEvent({ type: "backend", backend: "webgpu" });
-          callbacks?.onBackend?.("webgpu");
           clearWebGLShaderStages();
           destroyWebGLStageTargets();
           gpuState.context.configure({
@@ -494,9 +474,7 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
             currentContextType: "webgl2",
             needsRender: true,
           });
-          if (backendEl) backendEl.textContent = "webgl2";
           emitRuntimeEvent({ type: "backend", backend: "webgl2" });
-          callbacks?.onBackend?.("webgl2");
           clearWebGPUShaderStages();
           destroyWebGPUStageTargets();
           rebuildWebGLShaderStages(glState);
@@ -511,9 +489,7 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
       }
 
       internalState.backend = "none";
-      if (backendEl) backendEl.textContent = "none";
       emitRuntimeEvent({ type: "backend", backend: "none" });
-      callbacks?.onBackend?.("none");
       writeState({ activeState: null, currentContextType: null });
       await wasmPromise;
       if (!isCurrentLifecycleEpoch(initEpoch)) return;
@@ -535,7 +511,6 @@ export function createRuntimeAppApi(options: RuntimeAppApiOptions): RuntimeAppAp
     ptyInputRuntime.cancelSyncOutputReset();
     ptyInputRuntime.disconnectPty();
     ptyTransport.destroy?.();
-    if (backendEl) backendEl.textContent = "none";
     const shared = readState();
     if (shared.wasm && shared.wasmHandle) {
       destroyWasmHandle(shared.wasm, shared.wasmHandle);
