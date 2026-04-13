@@ -1,28 +1,6 @@
 import type { ResttyWasm, SearchStatus, SearchViewportMatch } from "../../wasm";
 import type { ResttySearchState } from "../core/models";
-import type { ResttyAppCallbacks } from "../core/resources";
-import type { ResttyRuntimeEvent } from "../core/runtime-events";
-
-type CreateRuntimeSearchOptions = {
-  callbacks?: ResttyAppCallbacks;
-  cleanupFns: Array<() => void>;
-  emitRuntimeEvent?: (event: Extract<ResttyRuntimeEvent, { type: "search-state" }>) => void;
-  getWasmReady: () => boolean;
-  getWasm: () => ResttyWasm | null;
-  getWasmHandle: () => number;
-  markNeedsRender: () => void;
-};
-
-type RuntimeSearch = {
-  setQuery: (query: string) => void;
-  clear: () => void;
-  next: () => void;
-  previous: () => void;
-  getState: () => ResttySearchState;
-  getViewportMatches: () => SearchViewportMatch[];
-  markDirty: () => void;
-  handleWasmReset: () => void;
-};
+import type { RuntimeSearch, RuntimeSearchOptions } from "./search-runtime.types";
 
 const SEARCH_STEP_BUDGET = 64;
 
@@ -38,7 +16,7 @@ function sortViewportMatches(matches: SearchViewportMatch[]): SearchViewportMatc
   return matches;
 }
 
-export function createRuntimeSearch(options: CreateRuntimeSearchOptions): RuntimeSearch {
+export function createRuntimeSearch(options: RuntimeSearchOptions): RuntimeSearch {
   let rafId = 0;
   let pendingSync = false;
   let viewportDirty = false;
