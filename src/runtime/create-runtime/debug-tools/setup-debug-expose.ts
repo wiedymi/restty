@@ -1,4 +1,4 @@
-import type { ResttyDebugWindow } from "../../create-app-types";
+import type { ResttyDebugWindow } from "../create-app-types";
 import type { FontAtlasGlyphMetrics } from "../../../fonts";
 import type { CreateRuntimeDebugToolsOptions } from "./types";
 import { createDumpGlyphRender } from "./create-dump-glyph-render";

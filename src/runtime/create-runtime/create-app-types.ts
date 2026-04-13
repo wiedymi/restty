@@ -1,4 +1,4 @@
-import type { ResttyShaderStage } from "./types";
+import type { ResttyShaderStage } from "../types";
 
 export type LocalFontsPermissionDescriptor = PermissionDescriptor & { name: "local-fonts" };
 

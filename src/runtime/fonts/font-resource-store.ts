@@ -4,7 +4,7 @@ import type {
   GlobalWithLocalFontAccess,
   LocalFontFaceData,
   NavigatorWithLocalFontAccess,
-} from "../create-app-types";
+} from "../create-runtime/create-app-types";
 import type {
   ResttyFontResourceFace,
   ResttyFontResourceLease,

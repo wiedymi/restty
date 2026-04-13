@@ -3,7 +3,7 @@ import type {
   WebGPUStageTargets,
   CompiledWebGLShaderStage,
   WebGLStageTargets,
-} from "./create-app-types";
+} from "./create-runtime/create-app-types";
 import type { ResttyShaderStage } from "./types";
 import { packShaderStageUniforms } from "./shader-stages";
 import {

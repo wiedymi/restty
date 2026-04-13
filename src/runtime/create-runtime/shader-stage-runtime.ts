@@ -4,7 +4,7 @@ import type {
   WebGPUStageTargets,
   CompiledWebGLShaderStage,
   WebGLStageTargets,
-} from "../create-app-types";
+} from "./create-app-types";
 import type { ResttyShaderStage } from "../types";
 import {
   cloneShaderStages,
