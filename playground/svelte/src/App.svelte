@@ -1,4 +1,5 @@
 <script lang="ts">
+  import DemoSection from "./lib/components/DemoSection.svelte";
   import {
     getConnectionUiState,
     type ConnectionBackend,
@@ -261,17 +262,6 @@
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-title">Demo</div>
-      <div class="field-row">
-        <select id="demoSelect">
-          <option value="basic">Basics</option>
-          <option value="palette">Palette</option>
-          <option value="unicode">Unicode</option>
-          <option value="anim">Animation</option>
-        </select>
-        <button id="btnRunDemo">Run</button>
-      </div>
-    </section>
+    <DemoSection />
   </div>
 </dialog>

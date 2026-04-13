@@ -86,8 +86,10 @@ const settingsDialog = document.getElementById("settingsDialog") as HTMLDialogEl
 const settingsClose = document.getElementById("settingsClose") as HTMLButtonElement | null;
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
+const RUN_DEMO_EVENT = "restty:playground-demo-run";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
+type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
@@ -496,11 +498,21 @@ btnClear?.addEventListener("click", () => {
   pane.runtime.terminal.clearScreen();
 });
 
-btnRunDemo?.addEventListener("click", () => {
+function runSelectedDemo(kind: PlaygroundDemoKind | string | null | undefined) {
   const state = getActivePaneState(paneStates, activePaneId);
   if (!state) return;
-  state.demos?.run((demoSelect?.value as PlaygroundDemoKind | string) ?? "basic");
-});
+  state.demos?.run(kind ?? "basic");
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(RUN_DEMO_EVENT, (event) => {
+    runSelectedDemo((event as DemoRunEvent).detail?.kind);
+  });
+} else {
+  btnRunDemo?.addEventListener("click", () => {
+    runSelectedDemo(demoSelect?.value);
+  });
+}
 
 ptyBtn?.addEventListener("click", () => {
   const pane = getActivePane();
