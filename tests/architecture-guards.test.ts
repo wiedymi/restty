@@ -160,6 +160,21 @@ test("runtime controller and reporting point at split interaction contracts", ()
   expect(reportingTypes).toContain("./interaction-runtime/state.types");
 });
 
+test("scrollbar runtime contract is split from generic interaction state", () => {
+  const interactionStateTypes = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "interaction-runtime/state.types.ts"),
+    "utf8",
+  );
+  const scrollbarRuntime = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "interaction-runtime/scrollbar-runtime.ts"),
+    "utf8",
+  );
+
+  expect(interactionStateTypes).not.toContain("CreateScrollbarRuntimeOptions");
+  expect(interactionStateTypes).not.toContain("ScrollbarRuntime");
+  expect(scrollbarRuntime).toContain("./scrollbar-runtime.types");
+});
+
 test("runtime internals do not use render-tick-webgl-context.ts as a type barrel", () => {
   const runtimeFiles = listTsFiles(runtimeCreateRuntimeRoot).filter((file) => {
     return (
