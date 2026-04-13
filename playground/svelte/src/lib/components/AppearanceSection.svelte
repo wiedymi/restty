@@ -3,41 +3,22 @@
   import {
     FONT_FAMILY_LOCAL_CHANGE_EVENT,
     FONT_FAMILY_CHANGE_EVENT,
-    FONT_FAMILY_STATE_EVENT,
     FONT_HINT_TARGET_CHANGE_EVENT,
     FONT_HINTING_CHANGE_EVENT,
     FONT_LIGATURES_CHANGE_EVENT,
-    FONT_RENDERING_STATE_EVENT,
-    LOCAL_FONT_STATE_EVENT,
     LOAD_LOCAL_FONTS_EVENT,
     MOUSE_MODE_CHANGE_EVENT,
-    MOUSE_MODE_STATE_EVENT,
     SHADER_PRESET_CHANGE_EVENT,
     THEME_FILE_CHANGE_EVENT,
     THEME_FILE_RESET_EVENT,
     THEME_SELECT_CHANGE_EVENT,
-    THEME_SELECT_STATE_EVENT,
-    type FontRenderingStateDetail,
-    type LocalFontStateDetail,
-    type ShellStringValueDetail,
   } from "../../../../lib/shell-events.ts";
-  import type { LocalFontOption } from "../../../../lib/font-controls.ts";
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
+  import { appearanceShellState } from "../stores/shell-state.ts";
 
   const builtinThemeNames = listBuiltinThemeNames();
 
-  let mouseMode = "auto";
-  let ligatures = "on";
-  let fontFamily = "fira-code";
-  let localFontHintText = "Main font family for all panes. Use Detect Local to add system fonts.";
-  let localFontOptions: LocalFontOption[] = [{ value: "", label: "Local Font: None" }];
-  let localFontSelectDisabled = false;
-  let localFontValue = "";
-  let loadLocalFontsDisabled = false;
-  let fontHinting = "off";
-  let fontHintTarget = "auto";
   let shaderPreset: ShaderPreset = "none";
-  let themeSelectValue = "";
   let themeFileInput: HTMLInputElement | null = null;
 
   function handleShaderPresetChange() {
@@ -58,40 +39,6 @@
     );
   }
 
-  function handleWindowMouseModeState(event: Event) {
-    const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
-    if (typeof detail?.value === "string") {
-      mouseMode = detail.value;
-    }
-  }
-
-  function handleWindowThemeSelectState(event: Event) {
-    const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
-    if (typeof detail?.value === "string") {
-      themeSelectValue = detail.value;
-    }
-  }
-
-  function handleWindowLocalFontState(event: Event) {
-    const detail = (event as CustomEvent<LocalFontStateDetail>).detail;
-    if (!detail) return;
-    if (typeof detail.value === "string") {
-      localFontValue = detail.value;
-    }
-    if (typeof detail.hintText === "string") {
-      localFontHintText = detail.hintText;
-    }
-    if (typeof detail.selectDisabled === "boolean") {
-      localFontSelectDisabled = detail.selectDisabled;
-    }
-    if (typeof detail.loadDisabled === "boolean") {
-      loadLocalFontsDisabled = detail.loadDisabled;
-    }
-    if (Array.isArray(detail.options)) {
-      localFontOptions = detail.options;
-    }
-  }
-
   function handleThemeSelectChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
@@ -100,13 +47,6 @@
         detail: { value: select.value },
       }),
     );
-  }
-
-  function handleWindowFontFamilyState(event: Event) {
-    const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
-    if (typeof detail?.value === "string") {
-      fontFamily = detail.value;
-    }
   }
 
   function handleThemeFileChange(event: Event) {
@@ -178,49 +118,40 @@
   function handleLoadLocalFonts() {
     window.dispatchEvent(new CustomEvent(LOAD_LOCAL_FONTS_EVENT));
   }
-
-  function handleWindowFontRenderingState(event: Event) {
-    const detail = (event as CustomEvent<FontRenderingStateDetail>).detail;
-    if (!detail) return;
-    if (typeof detail.ligatures === "string") {
-      ligatures = detail.ligatures;
-    }
-    if (typeof detail.fontHinting === "string") {
-      fontHinting = detail.fontHinting;
-    }
-    if (typeof detail.fontHintTarget === "string") {
-      fontHintTarget = detail.fontHintTarget;
-    }
-  }
 </script>
 
-<svelte:window
-  on:restty:playground-font-family-state={handleWindowFontFamilyState}
-  on:restty:playground-font-rendering-state={handleWindowFontRenderingState}
-  on:restty:playground-local-font-state={handleWindowLocalFontState}
-  on:restty:playground-mouse-mode-state={handleWindowMouseModeState}
-  on:restty:playground-theme-file-reset={handleWindowThemeFileReset}
-  on:restty:playground-theme-select-state={handleWindowThemeSelectState}
-/>
+<svelte:window on:restty:playground-theme-file-reset={handleWindowThemeFileReset} />
 
 <section class="section">
   <div class="section-title">Appearance</div>
   <div class="field-row">
-    <select id="fontFamily" bind:value={fontFamily} onchange={handleFontFamilyChange}>
+    <select id="fontFamily" value={$appearanceShellState.fontFamily} onchange={handleFontFamilyChange}>
       <option value="fira-code">Base Font: Fira Code (default)</option>
       <option value="jetbrains">Base Font: JetBrains Mono</option>
     </select>
   </div>
   <div class="field-row">
-    <select id="ligatures" bind:value={ligatures} onchange={handleLigaturesChange}>
+    <select
+      id="ligatures"
+      value={$appearanceShellState.ligatures}
+      onchange={handleLigaturesChange}
+    >
       <option value="on">Ligatures: On</option>
       <option value="off">Ligatures: Off</option>
     </select>
-    <select id="fontHinting" bind:value={fontHinting} onchange={handleHintingChange}>
+    <select
+      id="fontHinting"
+      value={$appearanceShellState.fontHinting}
+      onchange={handleHintingChange}
+    >
       <option value="off">Hinting: Off</option>
       <option value="on">Hinting: On</option>
     </select>
-    <select id="fontHintTarget" bind:value={fontHintTarget} onchange={handleHintTargetChange}>
+    <select
+      id="fontHintTarget"
+      value={$appearanceShellState.fontHintTarget}
+      onchange={handleHintTargetChange}
+    >
       <option value="auto">Hint Target: Auto</option>
       <option value="light">Hint Target: Light</option>
       <option value="normal">Hint Target: Normal</option>
@@ -232,26 +163,30 @@
   <div class="field-row">
     <select
       id="fontFamilyLocal"
-      bind:value={localFontValue}
-      disabled={localFontSelectDisabled}
+      value={$appearanceShellState.localFontValue}
+      disabled={$appearanceShellState.localFontSelectDisabled}
       onchange={handleLocalFontFamilyChange}
     >
-      {#each localFontOptions as option}
+      {#each $appearanceShellState.localFontOptions as option}
         <option value={option.value}>{option.label}</option>
       {/each}
     </select>
     <button
       id="btnLoadLocalFonts"
       type="button"
-      disabled={loadLocalFontsDisabled}
+      disabled={$appearanceShellState.loadLocalFontsDisabled}
       onclick={handleLoadLocalFonts}
     >
       Detect Local
     </button>
   </div>
-  <div id="fontFamilyHint" class="hint">{localFontHintText}</div>
+  <div id="fontFamilyHint" class="hint">{$appearanceShellState.localFontHintText}</div>
   <div class="field-row">
-    <select id="themeSelect" bind:value={themeSelectValue} onchange={handleThemeSelectChange}>
+    <select
+      id="themeSelect"
+      value={$appearanceShellState.themeSelectValue}
+      onchange={handleThemeSelectChange}
+    >
       <option value="">Default Theme</option>
       {#each builtinThemeNames as name}
         <option value={name}>{name}</option>
@@ -269,7 +204,7 @@
     </label>
   </div>
   <div class="field-row">
-    <select id="mouseMode" bind:value={mouseMode} onchange={handleMouseModeChange}>
+    <select id="mouseMode" value={$appearanceShellState.mouseMode} onchange={handleMouseModeChange}>
       <option value="auto">Mouse: Auto</option>
       <option value="on">Mouse: On</option>
       <option value="off">Mouse: Off</option>

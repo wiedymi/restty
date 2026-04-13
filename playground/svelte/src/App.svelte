@@ -1,9 +1,11 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import AppearanceSection from "./lib/components/AppearanceSection.svelte";
   import ConnectionSection from "./lib/components/ConnectionSection.svelte";
   import DemoSection from "./lib/components/DemoSection.svelte";
   import TerminalSection from "./lib/components/TerminalSection.svelte";
   import { SETTINGS_CLOSE_EVENT, SETTINGS_OPEN_EVENT } from "../../lib/shell-events.ts";
+  import { startShellStateBridge } from "./lib/stores/shell-state.ts";
 
   document.documentElement.dataset.playgroundShell = "svelte";
 
@@ -58,6 +60,8 @@
     event.preventDefault();
     closeSettings();
   }
+
+  onMount(() => startShellStateBridge());
 
   $: syncSettingsDialog();
 </script>

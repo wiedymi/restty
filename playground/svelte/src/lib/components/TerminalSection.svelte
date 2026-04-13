@@ -5,14 +5,9 @@
     TERMINAL_INIT_EVENT,
     TERMINAL_PAUSE_EVENT,
     TERMINAL_RENDERER_EVENT,
-    TERMINAL_STATE_EVENT,
     type ShellStringValueDetail,
-    type TerminalStateDetail,
   } from "../../../../lib/shell-events.ts";
-
-  let pauseLabel = "Pause";
-  let renderer = "auto";
-  let fontSize = "18";
+  import { terminalShellState } from "../stores/shell-state.ts";
 
   function dispatchTerminalEvent(type: string) {
     window.dispatchEvent(new CustomEvent(type));
@@ -37,23 +32,7 @@
       }),
     );
   }
-
-  function handleWindowTerminalState(event: Event) {
-    const detail = (event as CustomEvent<TerminalStateDetail>).detail;
-    if (!detail) return;
-    if (typeof detail.pauseLabel === "string") {
-      pauseLabel = detail.pauseLabel;
-    }
-    if (typeof detail.renderer === "string") {
-      renderer = detail.renderer;
-    }
-    if (detail.fontSize !== undefined && detail.fontSize !== null) {
-      fontSize = String(detail.fontSize);
-    }
-  }
 </script>
-
-<svelte:window on:restty:playground-terminal-state={handleWindowTerminalState} />
 
 <section class="section">
   <div class="section-title">Terminal</div>
@@ -66,7 +45,7 @@
       type="button"
       onclick={() => dispatchTerminalEvent(TERMINAL_PAUSE_EVENT)}
     >
-      {pauseLabel}
+      {$terminalShellState.pauseLabel}
     </button>
     <button
       id="btnClear"
@@ -79,7 +58,7 @@
   <div class="field-row">
     <label>
       <span>Renderer</span>
-      <select id="rendererSelect" bind:value={renderer} onchange={handleRendererEvent}>
+      <select id="rendererSelect" value={$terminalShellState.renderer} onchange={handleRendererEvent}>
         <option value="auto">Auto</option>
         <option value="webgpu">WebGPU</option>
         <option value="webgl2">WebGL2</option>
@@ -93,7 +72,7 @@
         min="10"
         max="64"
         step="1"
-        bind:value={fontSize}
+        value={$terminalShellState.fontSize}
         oninput={handleFontSizeEvent}
         onchange={handleFontSizeEvent}
       />
