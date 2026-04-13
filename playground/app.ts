@@ -66,7 +66,6 @@ const settingsFab = document.getElementById("settingsFab") as HTMLButtonElement 
 const settingsDialog = document.getElementById("settingsDialog") as HTMLDialogElement | null;
 const settingsClose = document.getElementById("settingsClose") as HTMLButtonElement | null;
 
-const DEFAULT_THEME_NAME = "Aizen Dark";
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 
 const paneStates = new Map<number, PaneState>();
@@ -76,22 +75,14 @@ let restty: Restty;
 let notificationPermissionRequest: Promise<NotificationPermission> | null = null;
 const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
 const initialConnectionBackend = getConnectionBackend(connectionBackendEl);
+const builtinThemeNames = listBuiltinThemeNames();
 const {
-  initialShaderPreset,
   initialPtyUrl,
   initialWebContainerCommand,
   initialWebContainerCwd,
-  initialRendererDefault,
-  initialFontSizeDefault,
-  initialMouseModeDefault,
   initialFontSize,
-  initialFontFamily,
-  initialLocalFontMatcher,
-  initialDetectedLocalFontOptions,
-  initialLocalFontHintText,
-  initialLigatures,
-  initialFontHinting,
-  initialFontHintTarget,
+  defaultThemeName,
+  appearanceInitialState,
 } = resolvePlaygroundStartupDefaults({
   usesSvelteShell,
   shaderPresetValue: shaderPresetEl?.value,
@@ -105,6 +96,7 @@ const {
   locationSearch: window.location.search,
   localFontPickerSupported:
     typeof window === "object" && window !== null && "queryLocalFonts" in window,
+  builtinThemeNames,
 });
 
 function handleDesktopNotification(notification: {
@@ -247,9 +239,6 @@ function queueResizeAllPanes() {
   });
 }
 
-const builtinThemeNames = listBuiltinThemeNames();
-const defaultThemeName = builtinThemeNames.includes(DEFAULT_THEME_NAME) ? DEFAULT_THEME_NAME : "";
-
 appearanceController = createPaneAppearanceController({
   host: {
     getPanes: () => restty.getPanes(),
@@ -276,19 +265,7 @@ appearanceController = createPaneAppearanceController({
       themeFileInput.value = "";
     }
   },
-  initialState: {
-    detectedLocalFontOptions: initialDetectedLocalFontOptions,
-    fontFamily: initialFontFamily,
-    fontHintTarget: initialFontHintTarget,
-    fontHinting: initialFontHinting,
-    fontSizeDefault: initialFontSizeDefault,
-    ligatures: initialLigatures,
-    localFontHintText: initialLocalFontHintText,
-    localFontMatcher: initialLocalFontMatcher,
-    mouseModeDefault: initialMouseModeDefault,
-    rendererDefault: initialRendererDefault,
-    shaderPreset: initialShaderPreset,
-  },
+  initialState: appearanceInitialState,
 });
 
 restty = new Restty({

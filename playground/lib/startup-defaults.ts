@@ -11,23 +11,29 @@ const DEFAULT_FONT_SIZE = 18;
 const DEFAULT_PTY_URL = "ws://localhost:8787/pty";
 const DEFAULT_WEB_CONTAINER_COMMAND = "jsh";
 const DEFAULT_WEB_CONTAINER_CWD = "/";
+const DEFAULT_THEME_NAME = "Aizen Dark";
+
+export type PlaygroundAppearanceInitialState = {
+  detectedLocalFontOptions: LocalFontOption[];
+  fontFamily: string;
+  fontHintTarget: FontHintTarget;
+  fontHinting: boolean;
+  fontSizeDefault: number;
+  ligatures: boolean;
+  localFontHintText: string;
+  localFontMatcher: string;
+  mouseModeDefault: string;
+  rendererDefault: RendererChoice;
+  shaderPreset: ShaderPreset;
+};
 
 export type PlaygroundStartupDefaults = {
-  initialShaderPreset: ShaderPreset;
   initialPtyUrl: string;
   initialWebContainerCommand: string;
   initialWebContainerCwd: string;
-  initialRendererDefault: RendererChoice;
-  initialFontSizeDefault: number;
-  initialMouseModeDefault: string;
   initialFontSize: number;
-  initialFontFamily: string;
-  initialLocalFontMatcher: string;
-  initialDetectedLocalFontOptions: LocalFontOption[];
-  initialLocalFontHintText: string;
-  initialLigatures: boolean;
-  initialFontHinting: boolean;
-  initialFontHintTarget: FontHintTarget;
+  defaultThemeName: string;
+  appearanceInitialState: PlaygroundAppearanceInitialState;
 };
 
 type ResolvePlaygroundStartupDefaultsOptions = {
@@ -42,6 +48,8 @@ type ResolvePlaygroundStartupDefaultsOptions = {
   fontFamilyValue: string | null | undefined;
   locationSearch?: string | null | undefined;
   localFontPickerSupported: boolean;
+  builtinThemeNames: string[];
+  preferredThemeName?: string;
 };
 
 function isTruthyQueryParam(value: string | null | undefined) {
@@ -91,26 +99,42 @@ export function resolvePlaygroundStartupDefaults({
   fontFamilyValue,
   locationSearch,
   localFontPickerSupported,
+  builtinThemeNames,
+  preferredThemeName = DEFAULT_THEME_NAME,
 }: ResolvePlaygroundStartupDefaultsOptions): PlaygroundStartupDefaults {
   const searchParams = locationSearch ? new URLSearchParams(locationSearch) : null;
+  const initialShaderPreset =
+    usesSvelteShell || !isShaderPreset(shaderPresetValue) ? "none" : shaderPresetValue;
+  const initialRendererDefault = isRendererChoice(rendererValue) ? rendererValue : "auto";
+  const initialFontSizeDefault = parseFontSize(fontSizeValue);
+  const initialMouseModeDefault = mouseModeValue || "auto";
   const initialFontSize = fontSizeValue ? Number(fontSizeValue) : DEFAULT_FONT_SIZE;
+  const initialFontFamily = fontFamilyValue ?? DEFAULT_FONT_FAMILY;
+  const initialLocalFontMatcher = "";
+  const initialDetectedLocalFontOptions: LocalFontOption[] = [];
+  const initialLocalFontHintText = getDefaultLocalFontHintText(localFontPickerSupported);
+  const initialLigatures = !isFalsyQueryParam(searchParams?.get("ligatures"));
+  const initialFontHinting = isTruthyQueryParam(searchParams?.get("hinting"));
+  const initialFontHintTarget = resolveFontHintTarget(searchParams?.get("hintTarget"));
 
   return {
-    initialShaderPreset:
-      usesSvelteShell || !isShaderPreset(shaderPresetValue) ? "none" : shaderPresetValue,
     initialPtyUrl: ptyUrlValue ?? DEFAULT_PTY_URL,
     initialWebContainerCommand: webContainerCommandValue?.trim() || DEFAULT_WEB_CONTAINER_COMMAND,
     initialWebContainerCwd: webContainerCwdValue?.trim() || DEFAULT_WEB_CONTAINER_CWD,
-    initialRendererDefault: isRendererChoice(rendererValue) ? rendererValue : "auto",
-    initialFontSizeDefault: parseFontSize(fontSizeValue),
-    initialMouseModeDefault: mouseModeValue || "auto",
     initialFontSize,
-    initialFontFamily: fontFamilyValue ?? DEFAULT_FONT_FAMILY,
-    initialLocalFontMatcher: "",
-    initialDetectedLocalFontOptions: [],
-    initialLocalFontHintText: getDefaultLocalFontHintText(localFontPickerSupported),
-    initialLigatures: !isFalsyQueryParam(searchParams?.get("ligatures")),
-    initialFontHinting: isTruthyQueryParam(searchParams?.get("hinting")),
-    initialFontHintTarget: resolveFontHintTarget(searchParams?.get("hintTarget")),
+    defaultThemeName: builtinThemeNames.includes(preferredThemeName) ? preferredThemeName : "",
+    appearanceInitialState: {
+      detectedLocalFontOptions: initialDetectedLocalFontOptions,
+      fontFamily: initialFontFamily,
+      fontHintTarget: initialFontHintTarget,
+      fontHinting: initialFontHinting,
+      fontSizeDefault: initialFontSizeDefault,
+      ligatures: initialLigatures,
+      localFontHintText: initialLocalFontHintText,
+      localFontMatcher: initialLocalFontMatcher,
+      mouseModeDefault: initialMouseModeDefault,
+      rendererDefault: initialRendererDefault,
+      shaderPreset: initialShaderPreset,
+    },
   };
 }

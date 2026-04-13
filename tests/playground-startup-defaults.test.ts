@@ -19,25 +19,29 @@ test("resolvePlaygroundStartupDefaults honors shell defaults and query params", 
     fontFamilyValue: undefined,
     locationSearch: "?ligatures=off&hinting=on&hintTarget=normal",
     localFontPickerSupported: false,
+    builtinThemeNames: ["Aizen Dark", "GitHub Dark"],
   });
 
   expect(startup).toMatchObject({
-    initialShaderPreset: "none",
     initialPtyUrl: "ws://localhost:8787/pty",
     initialWebContainerCommand: "jsh",
     initialWebContainerCwd: "/workspace",
-    initialRendererDefault: "webgpu",
-    initialFontSizeDefault: 20,
-    initialMouseModeDefault: "sgr",
     initialFontSize: 20,
-    initialFontFamily: DEFAULT_FONT_FAMILY,
-    initialLocalFontMatcher: "",
-    initialLocalFontHintText: UNSUPPORTED_LOCAL_FONT_HINT,
-    initialLigatures: false,
-    initialFontHinting: true,
-    initialFontHintTarget: "normal",
+    defaultThemeName: "Aizen Dark",
+    appearanceInitialState: {
+      shaderPreset: "none",
+      rendererDefault: "webgpu",
+      fontSizeDefault: 20,
+      mouseModeDefault: "sgr",
+      fontFamily: DEFAULT_FONT_FAMILY,
+      localFontMatcher: "",
+      localFontHintText: UNSUPPORTED_LOCAL_FONT_HINT,
+      ligatures: false,
+      fontHinting: true,
+      fontHintTarget: "normal",
+    },
   });
-  expect(startup.initialDetectedLocalFontOptions).toEqual([]);
+  expect(startup.appearanceInitialState.detectedLocalFontOptions).toEqual([]);
 });
 
 test("resolvePlaygroundStartupDefaults falls back for invalid control values", () => {
@@ -53,21 +57,25 @@ test("resolvePlaygroundStartupDefaults falls back for invalid control values", (
     fontFamilyValue: "jetbrains",
     locationSearch: "?hinting=0&hintTarget=weird",
     localFontPickerSupported: true,
+    builtinThemeNames: ["GitHub Dark"],
   });
 
   expect(startup).toMatchObject({
-    initialShaderPreset: "none",
     initialPtyUrl: "ws://localhost:8787/pty",
     initialWebContainerCommand: "jsh",
     initialWebContainerCwd: "/",
-    initialRendererDefault: "auto",
-    initialFontSizeDefault: 18,
-    initialMouseModeDefault: "auto",
-    initialFontFamily: "jetbrains",
-    initialLocalFontHintText: DEFAULT_LOCAL_FONT_HINT,
-    initialLigatures: true,
-    initialFontHinting: false,
-    initialFontHintTarget: "auto",
+    defaultThemeName: "",
+    appearanceInitialState: {
+      shaderPreset: "none",
+      rendererDefault: "auto",
+      fontSizeDefault: 18,
+      mouseModeDefault: "auto",
+      fontFamily: "jetbrains",
+      localFontHintText: DEFAULT_LOCAL_FONT_HINT,
+      ligatures: true,
+      fontHinting: false,
+      fontHintTarget: "auto",
+    },
   });
   expect(Number.isNaN(startup.initialFontSize)).toBe(true);
 });
