@@ -1,7 +1,4 @@
-type RuntimeLogFilter = {
-  re: RegExp;
-  note: string;
-};
+import type { RuntimeLogFilter, RuntimeLogger, RuntimeLoggerOptions } from "./runtime-logger.types";
 
 const DEFAULT_LOG_LIMIT = 200;
 const DEFAULT_WASM_LOG_FILTERS: RuntimeLogFilter[] = [
@@ -15,20 +12,7 @@ const DEFAULT_WASM_LOG_FILTERS: RuntimeLogFilter[] = [
   },
 ];
 
-export type CreateRuntimeLoggerOptions = {
-  logEl?: HTMLElement | null;
-  onLog?: ((entry: string) => void) | null;
-  logLimit?: number;
-  wasmLogFilters?: RuntimeLogFilter[];
-};
-
-export type RuntimeLogger = {
-  log: (msg: string) => void;
-  appendLog: (line: string) => void;
-  shouldSuppressWasmLog: (text: string) => boolean;
-};
-
-export function createRuntimeLogger(options: CreateRuntimeLoggerOptions): RuntimeLogger {
+export function createRuntimeLogger(options: RuntimeLoggerOptions): RuntimeLogger {
   const logEl = options.logEl ?? null;
   const onLog = options.onLog ?? null;
   const logLimit = options.logLimit ?? DEFAULT_LOG_LIMIT;
