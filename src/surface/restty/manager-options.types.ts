@@ -1,7 +1,8 @@
 import type { DesktopNotification } from "../../input";
 import type { ResttyFontSource } from "../../runtime/core/models";
 import type { ResttyPluginHost } from "../plugins/host";
-import type { ResttyPluginEvents, ResttyRenderHookPayload } from "../plugins/types";
+import type { ResttyRenderHookPayload } from "../plugins/context.types";
+import type { ResttyPluginEvents } from "../plugins/types";
 import type {
   ResttyManagedPane,
   ResttyRuntimeServicesConfigInput,

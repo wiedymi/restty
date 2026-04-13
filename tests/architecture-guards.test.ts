@@ -311,6 +311,16 @@ test("surface plugin runtime and dispatcher contracts are split from implementat
   expect(pluginDispatcher).toContain("./dispatcher.types");
 });
 
+test("surface plugin context contracts are split from the plugin barrel", () => {
+  const pluginTypes = readFileSync(resolve(surfaceRoot, "plugins/types.ts"), "utf8");
+
+  expect(pluginTypes).not.toContain("export type ResttyPluginContext =");
+  expect(pluginTypes).not.toContain("export type ResttyPlugin =");
+  expect(pluginTypes).not.toContain("export type ResttyRenderStageHandle =");
+  expect(pluginTypes).not.toContain("export type ResttyPluginDisposable =");
+  expect(pluginTypes).toContain("./context.types");
+});
+
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty/pane-handle.ts"),

@@ -1,5 +1,5 @@
 import type { ResttyManagedPane } from "../panes/managed-pane-types";
-import type { ResttyRenderStageHandle } from "../plugins/types";
+import type { ResttyRenderStageHandle } from "../plugins/context.types";
 import type { ResttyShaderStage } from "../../runtime/core/models";
 import type { ResttyManagedShaderStage } from "../plugins/runtime.types";
 import {

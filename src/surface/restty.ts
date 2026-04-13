@@ -24,21 +24,23 @@ import {
   type ResttyPluginLoadStatus,
   type ResttyPluginLoadResult,
   type ResttyPluginEvents,
-  type ResttyPluginDisposable,
-  type ResttyPluginCleanup,
-  type ResttyInputInterceptorPayload,
-  type ResttyOutputInterceptorPayload,
-  type ResttyInputInterceptor,
-  type ResttyOutputInterceptor,
-  type ResttyLifecycleHookPayload,
-  type ResttyLifecycleHook,
-  type ResttyRenderHookPayload,
-  type ResttyRenderHook,
-  type ResttyInterceptorOptions,
-  type ResttyRenderStageHandle,
-  type ResttyPluginContext,
-  type ResttyPlugin,
 } from "./plugins/types";
+import type {
+  ResttyPluginDisposable,
+  ResttyPluginCleanup,
+  ResttyInputInterceptorPayload,
+  ResttyOutputInterceptorPayload,
+  ResttyInputInterceptor,
+  ResttyOutputInterceptor,
+  ResttyLifecycleHookPayload,
+  ResttyLifecycleHook,
+  ResttyRenderHookPayload,
+  ResttyRenderHook,
+  ResttyInterceptorOptions,
+  ResttyRenderStageHandle,
+  ResttyPluginContext,
+  ResttyPlugin,
+} from "./plugins/context.types";
 import { ResttyPluginHost } from "./plugins/host";
 import type { ResttyConfig } from "./restty/config";
 import * as paneOps from "./restty/pane-ops";

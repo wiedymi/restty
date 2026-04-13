@@ -5,10 +5,10 @@ import {
   type ResttyLifecycleHookPayload,
   type ResttyOutputInterceptor,
   type ResttyPluginContext,
-  type ResttyPluginEvents,
   type ResttyRenderHook,
   type ResttyRenderHookPayload,
-} from "./types";
+} from "./context.types";
+import type { ResttyPluginEvents } from "./types";
 import {
   type ResttyPluginRuntimeDisposerKind,
   type ResttyPluginRuntime,

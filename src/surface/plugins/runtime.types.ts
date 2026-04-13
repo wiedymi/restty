@@ -1,11 +1,6 @@
 import type { ResttyShaderStage } from "../../runtime/core/models";
-import type {
-  ResttyInterceptorOptions,
-  ResttyPlugin,
-  ResttyPluginEvents,
-  ResttyPluginInfo,
-  ResttyPluginRequires,
-} from "./types";
+import type { ResttyInterceptorOptions, ResttyPlugin } from "./context.types";
+import type { ResttyPluginEvents, ResttyPluginInfo, ResttyPluginRequires } from "./types";
 
 export type ResttyPluginRuntimeDisposerKind =
   | "event"

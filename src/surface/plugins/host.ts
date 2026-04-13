@@ -1,14 +1,16 @@
 import {
   RESTTY_PLUGIN_API_VERSION,
-  type ResttyLifecycleHookPayload,
-  type ResttyPlugin,
   type ResttyPluginEvents,
   type ResttyPluginInfo,
   type ResttyPluginLoadResult,
   type ResttyPluginManifestEntry,
   type ResttyPluginRegistry,
-  type ResttyRenderHookPayload,
 } from "./types";
+import type {
+  ResttyLifecycleHookPayload,
+  ResttyPlugin,
+  ResttyRenderHookPayload,
+} from "./context.types";
 import {
   type ResttyPluginRuntime,
   type ResttyPluginDiagnostic,
