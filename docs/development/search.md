@@ -96,8 +96,8 @@ Why this design:
 
 Add a small runtime search controller in `src/runtime/create-runtime/`, for example:
 
-- `search-runtime.ts`
-- `search-runtime.types.ts`
+- `search-runtime/index.ts`
+- `search-runtime/types.ts`
 
 Responsibilities:
 
@@ -215,7 +215,7 @@ Files:
 
 - `src/runtime/create-runtime/runtime-controller.ts`
 - `src/runtime/create-runtime.ts`
-- new `src/runtime/create-runtime/search-runtime.ts`
+- new `src/runtime/create-runtime/search-runtime/index.ts`
 
 Work:
 

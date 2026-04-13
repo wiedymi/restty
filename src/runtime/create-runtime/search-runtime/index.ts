@@ -1,6 +1,6 @@
 import type { ResttyWasm, SearchStatus, SearchViewportMatch } from "../../wasm";
 import type { ResttySearchState } from "../core/models";
-import type { RuntimeSearch, RuntimeSearchOptions } from "./search-runtime.types";
+import type { RuntimeSearch, RuntimeSearchOptions } from "./types";
 
 const SEARCH_STEP_BUDGET = 64;
 

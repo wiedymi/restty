@@ -535,7 +535,7 @@ src/
       clipboard-paste.ts
       input-hooks.ts
     search/
-      search-runtime.ts
+      search-runtime/index.ts
       search-highlight-utils.ts
     telemetry/
       runtime-reporting.ts
