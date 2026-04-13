@@ -503,6 +503,26 @@ test("playground source does not import src/internal.ts", () => {
   ).toEqual([]);
 });
 
+test("playground no longer ships legacy runtime status or log widgets", () => {
+  const playgroundApp = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+  const playgroundIndex = readFileSync(resolve(playgroundPublicRoot, "index.html"), "utf8");
+  const webcontainerPty = readFileSync(resolve(playgroundRoot, "lib/webcontainer-pty.ts"), "utf8");
+
+  expect(playgroundApp).not.toContain('getElementById("backend")');
+  expect(playgroundApp).not.toContain('getElementById("termSize")');
+  expect(playgroundApp).not.toContain('getElementById("ptyStatus")');
+  expect(playgroundApp).not.toContain("pane.runtime.events.subscribe(");
+
+  expect(playgroundIndex).not.toContain('id="backend"');
+  expect(playgroundIndex).not.toContain('id="termSize"');
+  expect(playgroundIndex).not.toContain('id="ptyStatus"');
+  expect(playgroundIndex).not.toContain('class="status-bar"');
+  expect(playgroundIndex).not.toContain('class="pty-status"');
+
+  expect(webcontainerPty).not.toContain("onLog?:");
+  expect(webcontainerPty).not.toContain("[webcontainer]");
+});
+
 test("src/internal.ts does not import runtime or surface modules directly", () => {
   const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
     return (

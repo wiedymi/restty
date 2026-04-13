@@ -18,10 +18,6 @@ if (!paneRoot) {
   throw new Error("missing #paneRoot element");
 }
 
-const backendEl = document.getElementById("backend");
-const termSizeEl = document.getElementById("termSize");
-const ptyStatusEl = document.getElementById("ptyStatus");
-
 const btnInit = document.getElementById("btnInit");
 const btnPause = document.getElementById("btnPause");
 const btnClear = document.getElementById("btnClear");
@@ -94,11 +90,6 @@ type FontPresetConfig = {
   bundledFaces?: Array<{ label: string; url: string }>;
 };
 
-type PaneUiState = {
-  termSize: string;
-  ptyStatus: string;
-};
-
 type PaneThemeState = {
   selectValue: string;
   sourceLabel: string;
@@ -113,8 +104,6 @@ type PaneState = {
   paused: boolean;
   theme: PaneThemeState;
   demos: ReturnType<typeof createDemoController> | null;
-  disposeRuntimeEvents: (() => void) | null;
-  ui: PaneUiState;
 };
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
@@ -207,10 +196,6 @@ const resolveFontHintTarget = (value: string | null | undefined): FontHintTarget
   return "auto";
 };
 let selectedFontHintTarget = resolveFontHintTarget(searchParams?.get("hintTarget"));
-
-function setText(el: HTMLElement | null, value: string) {
-  if (el) el.textContent = value;
-}
 
 function isRendererChoice(value: string | null | undefined): value is RendererChoice {
   return value === "auto" || value === "webgpu" || value === "webgl2";
@@ -751,13 +736,6 @@ function closeSettingsDialog() {
   restoreTerminalFocus();
 }
 
-function createDefaultPaneUi(): PaneUiState {
-  return {
-    termSize: "0x0",
-    ptyStatus: "disconnected",
-  };
-}
-
 function waitForAnimationFrame(): Promise<void> {
   return new Promise((resolve) => {
     requestAnimationFrame(() => resolve());
@@ -788,8 +766,6 @@ function createPaneState(id: number, sourcePane: ManagedPane | null): PaneState 
           theme: null,
         },
     demos: null,
-    disposeRuntimeEvents: null,
-    ui: createDefaultPaneUi(),
   };
 }
 
@@ -806,7 +782,7 @@ function syncPauseButton(state: PaneState) {
   if (btnPause) btnPause.textContent = state.paused ? "Resume" : "Pause";
 }
 
-function syncPtyButton(pane: ManagedPane, state: PaneState) {
+function syncPtyButton(pane: ManagedPane) {
   if (!ptyBtn) return;
   if (pane.runtime.io.isPtyConnected()) {
     ptyBtn.textContent = "Disconnect";
@@ -814,14 +790,6 @@ function syncPtyButton(pane: ManagedPane, state: PaneState) {
   }
   ptyBtn.textContent =
     getConnectionBackend() === "webcontainer" ? "Start WebContainer" : "Connect PTY";
-  setText(ptyStatusEl, state.ui.ptyStatus);
-}
-
-function renderActivePaneStatus(pane: ManagedPane, state: PaneState) {
-  setText(backendEl, pane.runtime.render.getBackend());
-  setText(termSizeEl, state.ui.termSize);
-  setText(ptyStatusEl, state.ui.ptyStatus);
-  syncPtyButton(pane, state);
 }
 
 function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
@@ -839,17 +807,6 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
   }
   if (shaderPresetEl) shaderPresetEl.value = selectedShaderPreset;
   if (themeSelect) themeSelect.value = state.theme.selectValue;
-}
-
-function updatePaneUi(id: number, update: (state: PaneState) => void) {
-  const state = paneStates.get(id);
-  if (!state) return;
-  update(state);
-  if (id !== activePaneId) return;
-  const pane = restty.getPaneById(id);
-  if (!pane) return;
-  renderActivePaneStatus(pane, state);
-  renderActivePaneControls(pane, state);
 }
 
 function setPanePaused(id: number, value: boolean) {
@@ -896,7 +853,7 @@ async function initPaneApp(pane: ManagedPane, state: PaneState) {
   pane.runtime.interaction.updateSize(true);
   connectPaneIfNeeded(pane);
   if (pane.id === activePaneId) {
-    renderActivePaneStatus(pane, state);
+    syncPtyButton(pane);
   }
   pane.canvas.focus({ preventScroll: true });
 }
@@ -1008,29 +965,11 @@ restty = new Restty({
         };
 
         state.demos = createDemoController(pane.runtime);
-        state.disposeRuntimeEvents = pane.runtime.events.subscribe((event) => {
-          if (event.type === "backend") {
-            updatePaneUi(pane.id, () => undefined);
-            return;
-          }
-          if (event.type === "pty-status") {
-            updatePaneUi(pane.id, (next) => {
-              next.ui.ptyStatus = event.status;
-            });
-            return;
-          }
-          if (event.type === "term-size") {
-            updatePaneUi(pane.id, (next) => {
-              next.ui.termSize = `${event.cols}x${event.rows}`;
-            });
-          }
-        });
         pane.runtime.interaction.setMouseMode(state.mouseMode);
         void initPaneApp(pane, state);
       },
       onPaneClosed: (pane) => {
         const state = paneStates.get(pane.id);
-        state?.disposeRuntimeEvents?.();
         state?.demos?.stop();
         paneStates.delete(pane.id);
       },
@@ -1039,7 +978,7 @@ restty = new Restty({
         if (!pane) return;
         const state = paneStates.get(pane.id);
         if (!state) return;
-        renderActivePaneStatus(pane, state);
+        syncPtyButton(pane);
         renderActivePaneControls(pane, state);
       },
       onLayoutChanged: () => {
@@ -1125,9 +1064,8 @@ connectionBackendEl?.addEventListener("change", () => {
   }
 
   const activePane = getActivePane();
-  const activeState = getActivePaneState();
-  if (activePane && activeState) {
-    syncPtyButton(activePane, activeState);
+  if (activePane) {
+    syncPtyButton(activePane);
   }
 });
 
@@ -1172,6 +1110,7 @@ ptyBtn?.addEventListener("click", () => {
   } else {
     pane.runtime.io.connectPty(getConnectUrl());
   }
+  syncPtyButton(pane);
 });
 
 rendererSelect?.addEventListener("change", () => {
@@ -1336,7 +1275,7 @@ const firstPane = restty.createInitialPane({ focus: true });
 activePaneId = firstPane.id;
 const firstState = paneStates.get(firstPane.id);
 if (firstState) {
-  renderActivePaneStatus(firstPane, firstState);
+  syncPtyButton(firstPane);
   renderActivePaneControls(firstPane, firstState);
 }
 queueResizeAllPanes();

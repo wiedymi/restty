@@ -47,10 +47,6 @@
       <div class="panel settings-panel">
         <header>
           <h1>restty</h1>
-          <div class="status-bar">
-            <span id="backend">-</span>
-            <span id="termSize">0x0</span>
-          </div>
           <button id="settingsClose" class="settings-close" type="button" aria-label="Close settings">✕</button>
         </header>
 
@@ -97,7 +93,6 @@
             <input id="wcCwd" type="text" value="/" placeholder="WebContainer cwd" />
           </div>
           <div id="connectionHint" class="hint">Using in-browser WebContainer process</div>
-          <div class="pty-status"><span id="ptyStatus">disconnected</span></div>
         </section>
 
         <section class="section">
@@ -124,7 +119,7 @@
             </select>
           </div>
           <div class="hint">
-            Bundled Fira Code is available for ligature debugging in the playground.
+            Bundled Fira Code is available in the playground for ligatures and fallback checks.
           </div>
           <div class="field-row">
             <select id="fontFamilyLocal">

@@ -10,7 +10,6 @@ type WebContainerPtyOptions = {
   getCommand?: () => string;
   getCwd?: () => string;
   getEnv?: () => Record<string, string>;
-  onLog?: (line: string) => void;
 };
 
 type CommandSpec = {
@@ -287,10 +286,6 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
   let connectionToken = 0;
   let activeCommand = "";
 
-  const log = (line: string) => {
-    options.onLog?.(`[webcontainer] ${line}`);
-  };
-
   const resetStreams = () => {
     try {
       inputWriter?.releaseLock();
@@ -422,7 +417,6 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
 
         cb.onConnect?.();
         cb.onStatus?.(spec.label || spec.command);
-        log(`connected (${spec.label || spec.command})`);
         if (spec.command === "jsh") {
           cb.onData?.(WEB_CONTAINER_WELCOME);
         }
@@ -454,7 +448,6 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
     disconnect: () => {
       if (!proc && !connected) return;
       stopProcess(true);
-      log("disconnected");
     },
     sendInput: (data: string) => {
       if (!connected || !inputWriter) return false;

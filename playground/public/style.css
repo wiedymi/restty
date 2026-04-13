@@ -193,19 +193,6 @@ header h1 {
   color: #fff;
 }
 
-.status-bar {
-  display: flex;
-  gap: 8px;
-  font-size: 10px;
-  color: #666;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.status-bar span:first-child {
-  color: #4a9eff;
-}
-
 /* Sections */
 .section {
   padding: 10px 12px;
@@ -282,12 +269,6 @@ header h1 {
   border-radius: 3px;
   background: #1e1e1e;
   color: #ccc;
-}
-
-.pty-status {
-  margin-top: 6px;
-  color: #888;
-  font-size: 10px;
 }
 
 /* Controls */
