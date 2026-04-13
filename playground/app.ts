@@ -1,17 +1,19 @@
 import {
   Restty,
-  createWebSocketPtyTransport,
   listBuiltinThemeNames,
   getBuiltinTheme,
   parseGhosttyTheme,
   type GhosttyTheme,
-  type PtyResizeMeta,
-  type PtyTransport,
   type ResttyFontSource,
   type ResttyShaderStage,
 } from "../src/index.ts";
 import { createDemoController, type PlaygroundDemoKind } from "./lib/demos.ts";
-import { createWebContainerPtyTransport } from "./lib/webcontainer-pty.ts";
+import {
+  createAdaptivePtyTransport,
+  getConnectUrl,
+  getConnectionBackend,
+  syncConnectionUi,
+} from "./lib/pty-connection.ts";
 
 const paneRoot = document.getElementById("paneRoot") as HTMLElement | null;
 if (!paneRoot) {
@@ -77,7 +79,6 @@ const FONT_URL_NOTO_CJK_SC =
   "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf";
 
 type RendererChoice = "auto" | "webgpu" | "webgl2";
-type ConnectionBackend = "ws" | "webcontainer";
 type ShaderPreset = "none" | "scanline" | "aurora" | "crt-lite" | "mono-green";
 type FontHintTarget = "auto" | "light" | "normal";
 type FontPresetKey = "fira-code" | "jetbrains";
@@ -597,73 +598,6 @@ async function detectLocalFonts() {
   }
 }
 
-function getConnectionBackend(): ConnectionBackend {
-  const value = connectionBackendEl?.value;
-  return value === "webcontainer" ? "webcontainer" : "ws";
-}
-
-function getConnectUrl(): string {
-  if (getConnectionBackend() === "webcontainer") return "";
-  return ptyUrlInput?.value?.trim() ?? "";
-}
-
-function syncConnectionUi() {
-  const backend = getConnectionBackend();
-  const webcontainerMode = backend === "webcontainer";
-  if (ptyUrlInput) ptyUrlInput.disabled = webcontainerMode;
-  if (wcCommandInput) wcCommandInput.disabled = !webcontainerMode;
-  if (wcCwdInput) wcCwdInput.disabled = !webcontainerMode;
-  if (connectionHintEl) {
-    connectionHintEl.textContent = webcontainerMode
-      ? "Using in-browser WebContainer process"
-      : "Using WebSocket PTY URL";
-  }
-}
-
-function createAdaptivePtyTransport(): PtyTransport {
-  const wsTransport = createWebSocketPtyTransport();
-  const webContainerTransport = createWebContainerPtyTransport({
-    getCommand: () => wcCommandInput?.value?.trim() || "jsh",
-    getCwd: () => wcCwdInput?.value?.trim() || "/",
-  });
-
-  let activeTransport: PtyTransport | null = null;
-  const pickTransport = () =>
-    getConnectionBackend() === "webcontainer" ? webContainerTransport : wsTransport;
-
-  return {
-    connect: (options) => {
-      const nextTransport = pickTransport();
-      if (activeTransport && activeTransport !== nextTransport) {
-        activeTransport.disconnect();
-      }
-      activeTransport = nextTransport;
-      return nextTransport.connect(options);
-    },
-    disconnect: () => {
-      activeTransport?.disconnect();
-      wsTransport.disconnect();
-      webContainerTransport.disconnect();
-      activeTransport = null;
-    },
-    sendInput: (data: string) => {
-      return activeTransport?.sendInput(data) ?? false;
-    },
-    resize: (cols: number, rows: number, meta?: PtyResizeMeta) => {
-      return activeTransport?.resize(cols, rows, meta) ?? false;
-    },
-    isConnected: () => {
-      return activeTransport?.isConnected() ?? false;
-    },
-    destroy: () => {
-      activeTransport?.disconnect();
-      wsTransport.destroy?.();
-      webContainerTransport.destroy?.();
-      activeTransport = null;
-    },
-  };
-}
-
 function handleDesktopNotification(notification: {
   title: string;
   body: string;
@@ -789,7 +723,9 @@ function syncPtyButton(pane: ManagedPane) {
     return;
   }
   ptyBtn.textContent =
-    getConnectionBackend() === "webcontainer" ? "Start WebContainer" : "Connect PTY";
+    getConnectionBackend(connectionBackendEl) === "webcontainer"
+      ? "Start WebContainer"
+      : "Connect PTY";
 }
 
 function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
@@ -822,10 +758,10 @@ function setPanePaused(id: number, value: boolean) {
 }
 
 function connectPaneIfNeeded(pane: ManagedPane) {
-  if (getConnectionBackend() !== "webcontainer") return;
+  if (getConnectionBackend(connectionBackendEl) !== "webcontainer") return;
   if (pane.runtime.io.isPtyConnected()) return;
   pane.runtime.interaction.updateSize(true);
-  pane.runtime.io.connectPty(getConnectUrl());
+  pane.runtime.io.connectPty(getConnectUrl(connectionBackendEl, ptyUrlInput));
   requestAnimationFrame(() => {
     pane.runtime.interaction.updateSize(true);
   });
@@ -988,7 +924,7 @@ restty = new Restty({
     },
     defaultContextMenu: {
       canOpen: () => !isSettingsDialogOpen(),
-      getPtyUrl: () => getConnectUrl(),
+      getPtyUrl: () => getConnectUrl(connectionBackendEl, ptyUrlInput),
     },
     shortcuts: {
       enabled: true,
@@ -1011,7 +947,12 @@ restty = new Restty({
     };
   },
   services: ({ id }) => ({
-    ptyTransport: createAdaptivePtyTransport(),
+    ptyTransport: createAdaptivePtyTransport({
+      getConnectionBackend: () => getConnectionBackend(connectionBackendEl),
+      getPtyUrl: () => getConnectUrl(connectionBackendEl, ptyUrlInput),
+      getWebContainerCommand: () => wcCommandInput?.value?.trim() || "jsh",
+      getWebContainerCwd: () => wcCwdInput?.value?.trim() || "/",
+    }),
     callbacks: {},
   }),
 });
@@ -1051,13 +992,19 @@ window.addEventListener("resize", () => {
 });
 
 connectionBackendEl?.addEventListener("change", () => {
-  syncConnectionUi();
+  syncConnectionUi({
+    connectionBackendEl,
+    ptyUrlInput,
+    wcCommandInput,
+    wcCwdInput,
+    connectionHintEl,
+  });
   for (const pane of restty.getPanes()) {
     if (pane.runtime.io.isPtyConnected()) {
       pane.runtime.io.disconnectPty();
     }
   }
-  if (getConnectionBackend() === "webcontainer") {
+  if (getConnectionBackend(connectionBackendEl) === "webcontainer") {
     for (const pane of restty.getPanes()) {
       connectPaneIfNeeded(pane);
     }
@@ -1108,7 +1055,7 @@ ptyBtn?.addEventListener("click", () => {
   if (pane.runtime.io.isPtyConnected()) {
     pane.runtime.io.disconnectPty();
   } else {
-    pane.runtime.io.connectPty(getConnectUrl());
+    pane.runtime.io.connectPty(getConnectUrl(connectionBackendEl, ptyUrlInput));
   }
   syncPtyButton(pane);
 });
@@ -1262,7 +1209,13 @@ if (btnLoadLocalFonts) {
   });
 }
 
-syncConnectionUi();
+syncConnectionUi({
+  connectionBackendEl,
+  ptyUrlInput,
+  wcCommandInput,
+  wcCwdInput,
+  connectionHintEl,
+});
 syncFontFamilyControls();
 syncHintingControls();
 if (supportsLocalFontPicker()) {
