@@ -1,14 +1,14 @@
 import { expect, test } from "bun:test";
-import { createMergedPaneAppOptions } from "../src/surface/restty/manager-options";
+import { createMergedPaneServicesConfig } from "../src/surface/restty/manager-options";
 
-test("createMergedPaneAppOptions captures paneId snapshot for callbacks and hooks", () => {
+test("createMergedPaneServicesConfig captures paneId snapshot for callbacks and hooks", () => {
   const inputPaneIds: number[] = [];
   const outputPaneIds: number[] = [];
   const renderPaneIds: number[] = [];
   const notifyPaneIds: number[] = [];
 
-  const mergedFactory = createMergedPaneAppOptions({
-    appOptions: {
+  const mergedFactory = createMergedPaneServicesConfig({
+    services: {
       callbacks: {
         onDesktopNotification: () => {
           // keep user callback wired

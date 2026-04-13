@@ -10,14 +10,18 @@ type PaneManagerEventHandlers = Pick<
   "onPaneCreated" | "onPaneClosed" | "onPaneSplit" | "onActivePaneChange" | "onLayoutChanged"
 >;
 
-type MergedPaneAppOptionsDeps = {
-  appOptions: CreateResttyAppPaneManagerOptions["appOptions"] | undefined;
+type MergedPaneTerminalConfigDeps = {
+  terminal: CreateResttyAppPaneManagerOptions["terminal"] | undefined;
   getFontSources: () => ResttyFontSource[] | undefined;
-  onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
   shaderOps: Pick<
     ResttyShaderOps,
     "normalizePaneShaderStages" | "setPaneBaseShaderStages" | "buildMergedShaderStages"
   >;
+};
+
+type MergedPaneServicesConfigDeps = {
+  services: CreateResttyAppPaneManagerOptions["services"] | undefined;
+  onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
   pluginOps: Pick<ResttyPluginOps, "applyInputInterceptors" | "applyOutputInterceptors">;
   runRenderHooks: (payload: ResttyRenderHookPayload) => void;
 };
@@ -30,16 +34,13 @@ type PaneManagerCallbacksDeps = PaneManagerEventHandlers & {
   ) => void;
 };
 
-export function createMergedPaneAppOptions(
-  deps: MergedPaneAppOptionsDeps,
-): CreateResttyAppPaneManagerOptions["appOptions"] {
+export function createMergedPaneTerminalConfig(
+  deps: MergedPaneTerminalConfigDeps,
+): CreateResttyAppPaneManagerOptions["terminal"] {
   return (context) => {
     const paneId = context.id;
     const resolved =
-      typeof deps.appOptions === "function" ? deps.appOptions(context) : (deps.appOptions ?? {});
-    const resolvedBeforeInput = resolved.beforeInput;
-    const resolvedBeforeRenderOutput = resolved.beforeRenderOutput;
-    const resolvedCallbacks = resolved.callbacks;
+      typeof deps.terminal === "function" ? deps.terminal(context) : (deps.terminal ?? {});
     const paneBaseStages = deps.shaderOps.normalizePaneShaderStages(resolved.shaderStages, paneId);
     deps.shaderOps.setPaneBaseShaderStages(paneId, paneBaseStages);
 
@@ -48,6 +49,22 @@ export function createMergedPaneAppOptions(
       ...resolved,
       ...(fontSources ? { fontSources } : {}),
       shaderStages: deps.shaderOps.buildMergedShaderStages(paneBaseStages),
+    };
+  };
+}
+
+export function createMergedPaneServicesConfig(
+  deps: MergedPaneServicesConfigDeps,
+): CreateResttyAppPaneManagerOptions["services"] {
+  return (context) => {
+    const paneId = context.id;
+    const resolved =
+      typeof deps.services === "function" ? deps.services(context) : (deps.services ?? {});
+    const resolvedBeforeInput = resolved.beforeInput;
+    const resolvedBeforeRenderOutput = resolved.beforeRenderOutput;
+    const resolvedCallbacks = resolved.callbacks;
+    return {
+      ...resolved,
       callbacks:
         deps.onDesktopNotification || resolvedCallbacks?.onDesktopNotification
           ? {

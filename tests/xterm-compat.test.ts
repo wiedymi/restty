@@ -97,16 +97,17 @@ function createFakeManager(options: any): FakeManager {
   const createPane = (): FakePane => {
     const id = nextId;
     nextId += 1;
-    const appOptions =
-      typeof options.appOptions === "function"
-        ? options.appOptions({
-            id,
-            sourcePane: null,
-            canvas: {},
-            imeInput: {},
-            termDebugEl: {},
-          })
-        : (options.appOptions ?? {});
+    const context = {
+      id,
+      sourcePane: null,
+      canvas: {},
+      imeInput: {},
+      termDebugEl: {},
+    };
+    const terminal =
+      typeof options.terminal === "function" ? options.terminal(context) : (options.terminal ?? {});
+    const services =
+      typeof options.services === "function" ? options.services(context) : (options.services ?? {});
 
     let ptyConnected = false;
 
@@ -121,11 +122,11 @@ function createFakeManager(options: any): FakeManager {
         if (!text) return;
         let nextText = text;
         if (source === "pty") {
-          const intercepted = appOptions.beforeRenderOutput?.({ text, source });
+          const intercepted = services.beforeRenderOutput?.({ text, source });
           if (intercepted === null) return;
           if (typeof intercepted === "string") nextText = intercepted;
         } else {
-          const intercepted = appOptions.beforeInput?.({ text, source });
+          const intercepted = services.beforeInput?.({ text, source });
           if (intercepted === null) return;
           if (typeof intercepted === "string") nextText = intercepted;
         }
@@ -133,7 +134,7 @@ function createFakeManager(options: any): FakeManager {
       },
       sendKeyInput: (text: string, source = "key") => {
         if (!text) return;
-        const intercepted = appOptions.beforeInput?.({ text, source });
+        const intercepted = services.beforeInput?.({ text, source });
         if (intercepted === null) return;
         state.writes.push({ text: typeof intercepted === "string" ? intercepted : text, source });
       },
@@ -164,7 +165,10 @@ function createFakeManager(options: any): FakeManager {
       updateSize: () => {},
       getBackend: () => "test",
       setShaderStages: (_stages: Array<Record<string, unknown>>) => {},
-      getShaderStages: () => [],
+      getShaderStages: () =>
+        Array.isArray(terminal.shaderStages)
+          ? terminal.shaderStages.map((stage) => ({ ...stage }))
+          : [],
     };
 
     const pane: FakePane = {

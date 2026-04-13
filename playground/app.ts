@@ -1051,31 +1051,33 @@ restty = new Restty({
       fontSizeMode: "em",
       alphaBlending: "native",
       fontSources: getCurrentFontSources(),
-      ptyTransport: createAdaptivePtyTransport(),
-      callbacks: {
-        onBackend: (backend) => {
-          updatePaneUi(id, (state) => {
-            state.ui.backend = backend;
-          });
-        },
-        onFps: (fps) => {
-          updatePaneUi(id, (state) => {
-            state.ui.fps = `${Math.round(fps)}`;
-          });
-        },
-        onTermSize: (cols, rows) => {
-          updatePaneUi(id, (state) => {
-            state.ui.termSize = `${cols}x${rows}`;
-          });
-        },
-        onPtyStatus: (status) => {
-          updatePaneUi(id, (state) => {
-            state.ui.ptyStatus = status;
-          });
-        },
-      },
     };
   },
+  services: ({ id }) => ({
+    ptyTransport: createAdaptivePtyTransport(),
+    callbacks: {
+      onBackend: (backend) => {
+        updatePaneUi(id, (state) => {
+          state.ui.backend = backend;
+        });
+      },
+      onFps: (fps) => {
+        updatePaneUi(id, (state) => {
+          state.ui.fps = `${Math.round(fps)}`;
+        });
+      },
+      onTermSize: (cols, rows) => {
+        updatePaneUi(id, (state) => {
+          state.ui.termSize = `${cols}x${rows}`;
+        });
+      },
+      onPtyStatus: (status) => {
+        updatePaneUi(id, (state) => {
+          state.ui.ptyStatus = status;
+        });
+      },
+    },
+  }),
 });
 applyShaderPreset();
 

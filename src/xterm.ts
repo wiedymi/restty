@@ -1,5 +1,5 @@
 import { createRestty, type Restty, type ResttyConfig } from "./surface/restty";
-import { createCompatAppOptions } from "./xterm/app-options";
+import { createCompatServicesConfig } from "./xterm/app-options";
 import { normalizeDimension } from "./xterm/dimensions";
 import { addListener, emitWithGuard } from "./xterm/listeners";
 
@@ -39,8 +39,9 @@ export type TerminalOptions = Omit<ResttyConfig, "root"> & {
  * This intentionally implements a focused subset needed for migration.
  */
 export class Terminal {
-  private readonly resttyOptionsBase: Omit<ResttyConfig, "root" | "terminal">;
+  private readonly resttyOptionsBase: Omit<ResttyConfig, "root" | "terminal" | "services">;
   private readonly userTerminalConfig: ResttyConfig["terminal"];
+  private readonly userServicesConfig: ResttyConfig["services"];
   private readonly addons = new Set<TerminalAddon>();
   private readonly pendingOutput: string[] = [];
   private readonly dataListeners = new Set<(data: string) => void>();
@@ -57,9 +58,13 @@ export class Terminal {
   rows: number;
 
   constructor(options: TerminalOptions = {}) {
-    const { cols, rows, terminal, ...resttyOptionsBase } = options;
-    this.resttyOptionsBase = resttyOptionsBase as Omit<ResttyConfig, "root" | "terminal">;
+    const { cols, rows, terminal, services, ...resttyOptionsBase } = options;
+    this.resttyOptionsBase = resttyOptionsBase as Omit<
+      ResttyConfig,
+      "root" | "terminal" | "services"
+    >;
     this.userTerminalConfig = terminal;
+    this.userServicesConfig = services;
     this.optionValues = { ...options };
     delete this.optionValues.cols;
     delete this.optionValues.rows;
@@ -104,7 +109,8 @@ export class Terminal {
     this.elementRef = parent;
     this.resttyInstance = createRestty({
       ...this.resttyOptionsBase,
-      terminal: createCompatAppOptions(this.userTerminalConfig, (data) => {
+      terminal: this.userTerminalConfig,
+      services: createCompatServicesConfig(this.userServicesConfig, (data) => {
         emitWithGuard(this.dataListeners, data, "onData");
       }),
       root: parent,

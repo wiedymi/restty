@@ -197,7 +197,12 @@ export type { GhosttyTheme, ThemeColor, ResttyBuiltinThemeName } from "./theme";
 
 // App / high-level integration
 export { Restty } from "./surface/restty";
-export type { ResttyConfig, ResttySurfaceConfig, ResttySurfaceEvents } from "./surface/restty";
+export type {
+  ResttyConfig,
+  ResttyServicesConfig,
+  ResttySurfaceConfig,
+  ResttySurfaceEvents,
+} from "./surface/restty";
 export type {
   ResttyManagedAppPane,
   ResttyPaneDomDefaults,
@@ -205,7 +210,9 @@ export type {
   ResttyManagedPaneStylesOptions,
   ResttyManagedPaneSearchUiOptions,
   ResttyManagedPaneSearchUiStyleOptions,
-  ResttyTerminalConfig,
+  ResttyPaneRuntimeContext,
+  ResttyTerminalConfigInput,
+  ResttyRuntimeServicesConfigInput,
 } from "./surface/pane-app-manager";
 export type {
   ResttyPaneSearchUiOpenOptions,
@@ -217,6 +224,9 @@ export type {
   ResttyUrlFontSource,
   ResttyBufferFontSource,
   ResttyLocalFontSource,
+  ResttyTerminalConfig,
+  ResttyRuntimeMountConfig,
+  ResttyRuntimeServicesConfig,
   ResttyRuntimeConfig,
   ResttyShaderStage,
   ResttyShaderStageMode,

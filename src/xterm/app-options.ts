@@ -1,14 +1,14 @@
 import type { ResttyConfig } from "../surface/restty";
 
-export function createCompatAppOptions(
-  userTerminalConfig: ResttyConfig["terminal"],
+export function createCompatServicesConfig(
+  userServicesConfig: ResttyConfig["services"],
   emitData: (data: string) => void,
-): ResttyConfig["terminal"] {
+): ResttyConfig["services"] {
   return (context) => {
     const resolved =
-      typeof userTerminalConfig === "function"
-        ? userTerminalConfig(context)
-        : (userTerminalConfig ?? {});
+      typeof userServicesConfig === "function"
+        ? userServicesConfig(context)
+        : (userServicesConfig ?? {});
     const userBeforeInput = resolved.beforeInput;
     return {
       ...resolved,

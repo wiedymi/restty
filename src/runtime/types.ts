@@ -227,19 +227,45 @@ export type ResttyShaderStage = {
 };
 
 /**
- * Configuration for creating a Restty runtime instance.
+ * DOM/session fields required to mount a runtime instance.
  */
-export type ResttyRuntimeConfig = {
+export type ResttyRuntimeMountConfig = {
   /** Target canvas element for terminal rendering. */
   canvas: HTMLCanvasElement;
   /** Shared session for WASM/WebGPU resource reuse across panes. */
   session?: ResttyAppSession;
   /** Hidden textarea for IME composition input. */
   imeInput?: HTMLTextAreaElement | null;
+};
+
+/**
+ * Advanced runtime service hooks and adapters.
+ */
+export type ResttyRuntimeServicesConfig = {
   /** Optional DOM elements for debug/status displays. */
   elements?: ResttyAppElements;
   /** Callbacks for state-change notifications. */
   callbacks?: ResttyAppCallbacks;
+  /** PTY transport layer for terminal I/O. */
+  ptyTransport?: PtyTransport;
+  /** Expose internal state on the window object for debugging. */
+  debugExpose?: boolean;
+  /**
+   * Optional hook to transform or suppress terminal/program input
+   * before it is written to the terminal core.
+   */
+  beforeInput?: (payload: ResttyAppInputPayload) => string | null | void;
+  /**
+   * Optional hook to transform or suppress PTY output before it is
+   * queued for rendering.
+   */
+  beforeRenderOutput?: (payload: ResttyAppInputPayload) => string | null | void;
+};
+
+/**
+ * Terminal behavior/config shared across panes and runtime creation.
+ */
+export type ResttyTerminalConfig = {
   /** Renderer backend preference (default "auto"). */
   renderer?: "auto" | "webgpu" | "webgl2";
   /** Font size in CSS pixels. */
@@ -301,20 +327,6 @@ export type ResttyRuntimeConfig = {
    * canceled and touch pan-scroll takes priority.
    */
   touchSelectionMoveThresholdPx?: number;
-  /** Expose internal state on the window object for debugging. */
-  debugExpose?: boolean;
-  /** PTY transport layer for terminal I/O. */
-  ptyTransport?: PtyTransport;
-  /**
-   * Optional hook to transform or suppress terminal/program input
-   * before it is written to the terminal core.
-   */
-  beforeInput?: (payload: ResttyAppInputPayload) => string | null | void;
-  /**
-   * Optional hook to transform or suppress PTY output before it is
-   * queued for rendering.
-   */
-  beforeRenderOutput?: (payload: ResttyAppInputPayload) => string | null | void;
   /** Optional render-stage shader chain. */
   shaderStages?: ResttyShaderStage[];
   /**
@@ -328,6 +340,13 @@ export type ResttyRuntimeConfig = {
    */
   maxScrollback?: number;
 };
+
+/**
+ * Configuration for creating a Restty runtime instance.
+ */
+export type ResttyRuntimeConfig = ResttyRuntimeMountConfig &
+  ResttyRuntimeServicesConfig &
+  ResttyTerminalConfig;
 
 /**
  * Public API for a single terminal runtime instance.

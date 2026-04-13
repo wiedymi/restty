@@ -6,13 +6,20 @@ import {
   type ResttyManagedAppPane,
   type ResttyManagedPaneStyleOptions,
   type ResttyManagedPaneSearchUiStyleOptions,
+  type ResttyPaneRuntimeContext,
+  type ResttyTerminalConfigInput,
 } from "./pane-app-manager";
 import type { ResttyPaneSplitDirection } from "./panes-types";
-import type { ResttyFontSource, ResttyShaderStage } from "../runtime/types";
+import type {
+  ResttyFontSource,
+  ResttyRuntimeServicesConfig,
+  ResttyShaderStage,
+} from "../runtime/types";
 import { ResttyPaneHandle } from "./restty-pane-handle";
 import { ResttyActivePaneApi } from "./restty/active-pane-api";
 import {
-  createMergedPaneAppOptions,
+  createMergedPaneServicesConfig,
+  createMergedPaneTerminalConfig,
   createPaneManagerEventHandlers,
 } from "./restty/manager-options";
 import {
@@ -86,7 +93,8 @@ export type ResttySurfaceConfig = Omit<
   CreateResttyAppPaneManagerOptions,
   | "root"
   | "session"
-  | "appOptions"
+  | "terminal"
+  | "services"
   | "onPaneCreated"
   | "onPaneClosed"
   | "onPaneSplit"
@@ -99,6 +107,11 @@ export type ResttySurfaceConfig = Omit<
   events?: ResttySurfaceEvents;
 };
 
+export type ResttyServicesConfig = ResttyRuntimeServicesConfig;
+export type ResttyServicesConfigInput =
+  | ResttyServicesConfig
+  | ((context: ResttyPaneRuntimeContext) => ResttyServicesConfig);
+
 /**
  * Top-level configuration for creating a Restty instance.
  */
@@ -109,8 +122,10 @@ export type ResttyConfig = {
   session?: CreateResttyAppPaneManagerOptions["session"];
   /** Surface shell and pane manager behavior. */
   surface?: ResttySurfaceConfig;
-  /** Per-pane terminal config, static or factory. */
-  terminal?: CreateResttyAppPaneManagerOptions["appOptions"];
+  /** Per-pane terminal behavior config, static or factory. */
+  terminal?: ResttyTerminalConfigInput;
+  /** Per-pane services/hooks config, static or factory. */
+  services?: ResttyServicesConfigInput;
 };
 
 /**
@@ -126,7 +141,7 @@ export class Restty extends ResttyActivePaneApi {
 
   constructor(options: ResttyConfig) {
     super();
-    const { root, session, surface, terminal } = options;
+    const { root, session, surface, terminal, services } = options;
     const { createInitialPane = true, events, ...paneManagerOptions } = surface ?? {};
     const {
       onPaneCreated,
@@ -152,11 +167,14 @@ export class Restty extends ResttyActivePaneApi {
         this.shaderOps.addManagedShaderStage(stage, ownerPluginId),
     });
 
-    const mergedAppOptions = createMergedPaneAppOptions({
-      appOptions: terminal,
+    const mergedTerminalConfig = createMergedPaneTerminalConfig({
+      terminal,
       getFontSources: () => this.fontSources,
-      onDesktopNotification,
       shaderOps: this.shaderOps,
+    });
+    const mergedServicesConfig = createMergedPaneServicesConfig({
+      services,
+      onDesktopNotification,
       pluginOps: this.pluginOps,
       runRenderHooks: (payload) => this.runRenderHooks(payload),
     });
@@ -175,7 +193,8 @@ export class Restty extends ResttyActivePaneApi {
       root,
       session,
       ...paneManagerOptions,
-      appOptions: mergedAppOptions,
+      terminal: mergedTerminalConfig,
+      services: mergedServicesConfig,
       ...paneManagerEventHandlers,
     });
 

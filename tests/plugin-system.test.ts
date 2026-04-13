@@ -90,18 +90,19 @@ function createFakeManager(options: any): FakeManager {
   const createPane = (sourcePane: FakePane | null): FakePane => {
     const id = nextId;
     nextId += 1;
-    const appOptions =
-      typeof options.appOptions === "function"
-        ? options.appOptions({
-            id,
-            sourcePane,
-            canvas: {},
-            imeInput: {},
-            termDebugEl: {},
-          })
-        : (options.appOptions ?? {});
-    let paneShaderStages: Array<Record<string, unknown>> = Array.isArray(appOptions.shaderStages)
-      ? appOptions.shaderStages.map((stage: Record<string, unknown>) => ({ ...stage }))
+    const context = {
+      id,
+      sourcePane,
+      canvas: {},
+      imeInput: {},
+      termDebugEl: {},
+    };
+    const terminal =
+      typeof options.terminal === "function" ? options.terminal(context) : (options.terminal ?? {});
+    const services =
+      typeof options.services === "function" ? options.services(context) : (options.services ?? {});
+    let paneShaderStages: Array<Record<string, unknown>> = Array.isArray(terminal.shaderStages)
+      ? terminal.shaderStages.map((stage: Record<string, unknown>) => ({ ...stage }))
       : [];
     let ptyConnected = false;
     const writes: Array<{ kind: "input" | "key"; text: string; source: string }> = [];
@@ -116,11 +117,11 @@ function createFakeManager(options: any): FakeManager {
         if (!text) return;
         let nextText = text;
         if (source === "pty") {
-          const intercepted = appOptions.beforeRenderOutput?.({ text: nextText, source });
+          const intercepted = services.beforeRenderOutput?.({ text: nextText, source });
           if (intercepted === null) return;
           if (typeof intercepted === "string") nextText = intercepted;
         } else {
-          const intercepted = appOptions.beforeInput?.({ text: nextText, source });
+          const intercepted = services.beforeInput?.({ text: nextText, source });
           if (intercepted === null) return;
           if (typeof intercepted === "string") nextText = intercepted;
           nextText = normalizeNewlines(nextText);
@@ -130,7 +131,7 @@ function createFakeManager(options: any): FakeManager {
       sendKeyInput: (text: string, source = "key") => {
         if (!text) return;
         let nextText = text;
-        const intercepted = appOptions.beforeInput?.({ text: nextText, source });
+        const intercepted = services.beforeInput?.({ text: nextText, source });
         if (intercepted === null) return;
         if (typeof intercepted === "string") nextText = intercepted;
         writes.push({ kind: "key", text: nextText, source });
@@ -170,7 +171,7 @@ function createFakeManager(options: any): FakeManager {
       app,
       __writes: writes,
       __callbacks: {
-        onDesktopNotification: appOptions.callbacks?.onDesktopNotification,
+        onDesktopNotification: services.callbacks?.onDesktopNotification,
       },
       __shaderStages: paneShaderStages.map((stage) => ({ ...stage })),
     };
@@ -306,7 +307,7 @@ test("restty onDesktopNotification callback receives paneId and preserves pane c
         },
       },
     },
-    terminal: ({ id }) => ({
+    services: ({ id }) => ({
       callbacks: {
         onDesktopNotification: (notification) => {
           paneNotifications.push({

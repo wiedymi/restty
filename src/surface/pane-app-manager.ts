@@ -10,7 +10,13 @@ import { createDefaultResttyPaneContextMenuItems } from "./panes/default-context
 import { createResttyPaneManager } from "./panes/manager";
 import { getDefaultResttyAppSession } from "../runtime/session";
 import { createResttyRuntime } from "./app-factory";
-import type { ResttyAppCallbacks, ResttyRuntimeConfig, ResttyAppSession } from "../runtime/types";
+import type {
+  ResttyAppCallbacks,
+  ResttyAppSession,
+  ResttyRuntimeConfig,
+  ResttyRuntimeServicesConfig,
+  ResttyTerminalConfig,
+} from "../runtime/types";
 import {
   createPaneSearchUiController,
   type PaneSearchUiController,
@@ -52,8 +58,24 @@ export type ResttyManagedPaneSearchUiStyleOptions = ResttyPaneSearchUiStyleOptio
 /** Built-in pane search UI configuration. */
 export type ResttyManagedPaneSearchUiOptions = ResttyPaneSearchUiOptions;
 
-/** Terminal config minus the DOM/session fields that the pane manager provides. */
-export type ResttyTerminalConfig = Omit<ResttyRuntimeConfig, "canvas" | "imeInput" | "session">;
+/** Pane context passed to per-pane config factories. */
+export type ResttyPaneRuntimeContext = {
+  id: number;
+  sourcePane: ResttyManagedAppPane | null;
+  canvas: HTMLCanvasElement;
+  imeInput: HTMLTextAreaElement;
+  termDebugEl: HTMLPreElement;
+};
+
+/** Static or factory terminal behavior config for one pane. */
+export type ResttyTerminalConfigInput =
+  | ResttyTerminalConfig
+  | ((context: ResttyPaneRuntimeContext) => ResttyTerminalConfig);
+
+/** Static or factory runtime services config for one pane. */
+export type ResttyRuntimeServicesConfigInput =
+  | ResttyRuntimeServicesConfig
+  | ((context: ResttyPaneRuntimeContext) => ResttyRuntimeServicesConfig);
 
 export type ResttyAppPaneManager = ResttyPaneManager<ResttyManagedAppPane> & {
   openPaneSearch: (id: number, options?: ResttyPaneSearchUiOpenOptions) => void;
@@ -90,16 +112,10 @@ export type CreateResttyAppPaneManagerOptions = {
   root: HTMLElement;
   /** Shared session for WASM/WebGPU resources (defaults to the global session). */
   session?: ResttyAppSession;
-  /** Per-pane app options, static object or factory receiving pane context. */
-  appOptions?:
-    | ResttyTerminalConfig
-    | ((context: {
-        id: number;
-        sourcePane: ResttyManagedAppPane | null;
-        canvas: HTMLCanvasElement;
-        imeInput: HTMLTextAreaElement;
-        termDebugEl: HTMLPreElement;
-      }) => ResttyTerminalConfig);
+  /** Per-pane terminal behavior config, static object or factory. */
+  terminal?: ResttyTerminalConfigInput;
+  /** Per-pane runtime services config, static object or factory. */
+  services?: ResttyRuntimeServicesConfigInput;
   /** Override default CSS class names for pane DOM elements. */
   paneDom?: ResttyPaneDomDefaults;
   /** Automatically call app.init() after pane creation (default true). */
@@ -262,31 +278,38 @@ export function createResttyAppPaneManager(
 
       container.append(canvas, imeInput, termDebugEl);
 
-      const baseOptions =
-        typeof options.appOptions === "function"
-          ? options.appOptions({ id, sourcePane, canvas, imeInput, termDebugEl })
-          : (options.appOptions ?? {});
+      const context = { id, sourcePane, canvas, imeInput, termDebugEl };
+      const baseTerminal =
+        typeof options.terminal === "function"
+          ? options.terminal(context)
+          : (options.terminal ?? {});
+      const baseServices =
+        typeof options.services === "function"
+          ? options.services(context)
+          : (options.services ?? {});
 
       const mergedElements = {
-        ...baseOptions.elements,
-        termDebugEl: baseOptions.elements?.termDebugEl ?? termDebugEl,
+        ...baseServices.elements,
+        termDebugEl: baseServices.elements?.termDebugEl ?? termDebugEl,
       };
       const mergedCallbacks: ResttyAppCallbacks = {
-        ...baseOptions.callbacks,
+        ...baseServices.callbacks,
         onSearchState: (state) => {
-          baseOptions.callbacks?.onSearchState?.(state);
+          baseServices.callbacks?.onSearchState?.(state);
           searchUiController.handleSearchState(id, state);
         },
       };
-
-      const app = createResttyRuntime({
-        ...baseOptions,
+      const runtimeOptions: ResttyRuntimeConfig = {
+        ...baseTerminal,
+        ...baseServices,
         canvas,
         imeInput,
         session,
         elements: mergedElements,
         callbacks: mergedCallbacks,
-      });
+      };
+
+      const app = createResttyRuntime(runtimeOptions);
 
       if (autoInit) {
         void app.init();
