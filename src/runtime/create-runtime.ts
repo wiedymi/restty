@@ -111,7 +111,7 @@ import {
 } from "./create-runtime/atlas-bitmap-utils";
 import { formatCodepoint } from "./create-runtime/format-utils";
 import { createShaderStageRuntime } from "./create-runtime/shader-stage-runtime";
-import { createColorGlyphAtlasHelpers } from "./create-runtime/color-glyph-atlas";
+import { createColorGlyphAtlasHelpers } from "./create-runtime/font-runtime/color-glyph-atlas";
 import { createRuntimeInputHooks } from "./create-runtime/input-hooks";
 import { createPtyInputRuntime } from "./create-runtime/pty-input-runtime";
 import { createRuntimeInteraction } from "./create-runtime/interaction-runtime";
