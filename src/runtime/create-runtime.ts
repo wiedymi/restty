@@ -142,6 +142,7 @@ export type {
   ResttyShaderStageMode,
   ResttyShaderStageBackend,
   ResttyShaderStageSource,
+  ResttyRuntimeLifecycleState,
   ResttyRuntimeConfig,
   ResttyRuntime,
 } from "./types";

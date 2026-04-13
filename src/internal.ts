@@ -228,6 +228,7 @@ export type {
   ResttyRuntimeMountConfig,
   ResttyRuntimeServicesConfig,
   ResttyRuntimeConfig,
+  ResttyRuntimeLifecycleState,
   ResttyShaderStage,
   ResttyShaderStageMode,
   ResttyShaderStageBackend,

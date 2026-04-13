@@ -9,7 +9,12 @@ import {
 import type { ResttyWasm, ResttyWasmExports } from "../../wasm";
 import { normalizeNewlines } from "../create-app-io-utils";
 import { resolveMaxScrollbackBytes } from "../max-scrollback";
-import type { ResttyRuntime, ResttyAppCallbacks, ResttyAppSession } from "../types";
+import type {
+  ResttyRuntime,
+  ResttyAppCallbacks,
+  ResttyAppSession,
+  ResttyRuntimeLifecycleState,
+} from "../types";
 import type { PtyInputRuntime } from "./pty-input-runtime";
 import type { RuntimeInteraction } from "./interaction-runtime";
 
@@ -177,6 +182,12 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     handleSearchWasmReset,
   } = options;
 
+  let lifecycleState: ResttyRuntimeLifecycleState = "created";
+  let lifecycleEpoch = 0;
+
+  const isCurrentLifecycleEpoch = (epoch: number) =>
+    lifecycleState !== "destroyed" && epoch === lifecycleEpoch;
+
   const internalState: RuntimeInternalState = {
     paused: false,
     backend: "none",
@@ -248,10 +259,19 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     cleanupFns.push(() => session.removeWasmLogListener?.(onWasmLog));
   }
 
-  async function initWasm() {
+  function destroyWasmHandle(instance: ResttyWasm, handle: number) {
+    try {
+      instance.destroy(handle);
+    } catch {
+      // ignore wasm destroy errors
+    }
+  }
+
+  async function initWasm(initEpoch: number) {
     const shared = readState();
     if (shared.wasmReady && shared.wasm) return shared.wasm;
     const instance = await session.getWasm();
+    if (!isCurrentLifecycleEpoch(initEpoch)) return null;
     writeState({
       wasm: instance,
       wasmExports: instance.exports,
@@ -505,128 +525,176 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     cleanupFns.push(() => window.removeEventListener("keyup", onKeyUp));
   }
 
-  async function initWasmHarness() {
+  async function initWasmHarness(initEpoch: number) {
     try {
-      const instance = await initWasm();
+      const instance = await initWasm(initEpoch);
+      if (!instance || !isCurrentLifecycleEpoch(initEpoch)) return;
       const shared = readState();
       if (shared.wasmHandle) {
-        instance.destroy(shared.wasmHandle);
+        destroyWasmHandle(instance, shared.wasmHandle);
+        if (!isCurrentLifecycleEpoch(initEpoch)) return;
         writeState({ wasmHandle: 0 });
       }
       updateGrid();
+      if (!isCurrentLifecycleEpoch(initEpoch)) return;
       const cols = gridState.cols || 80;
       const rows = gridState.rows || 24;
       const wasmHandle = instance.create(cols, rows, maxScrollbackBytes);
       if (!wasmHandle) {
         throw new Error("restty create failed (restty_create returned 0)");
       }
+      if (!isCurrentLifecycleEpoch(initEpoch)) {
+        destroyWasmHandle(instance, wasmHandle);
+        return;
+      }
       const canvas = getCanvas();
       instance.setPixelSize(wasmHandle, canvas.width, canvas.height);
+      if (!isCurrentLifecycleEpoch(initEpoch)) {
+        destroyWasmHandle(instance, wasmHandle);
+        return;
+      }
       const activeTheme = lifecycleThemeSizeRuntime.getActiveTheme();
-      if (activeTheme) {
+      if (activeTheme && isCurrentLifecycleEpoch(initEpoch)) {
         applyTheme(activeTheme, activeTheme.name ?? "cached theme");
+      }
+      if (!isCurrentLifecycleEpoch(initEpoch)) {
+        destroyWasmHandle(instance, wasmHandle);
+        return;
       }
       instance.renderUpdate(wasmHandle);
       writeState({ wasmHandle, needsRender: true });
+      if (!isCurrentLifecycleEpoch(initEpoch)) {
+        destroyWasmHandle(instance, wasmHandle);
+        if (readState().wasmHandle === wasmHandle) {
+          writeState({ wasmHandle: 0 });
+        }
+        return;
+      }
       handleSearchWasmReset();
     } catch (err) {
+      if (!isCurrentLifecycleEpoch(initEpoch)) return;
       const message = err instanceof Error ? err.message : String(err);
       console.error(`restty error: ${message}`);
+      throw err;
     }
   }
 
   async function init() {
-    cancelAnimationFrame(internalState.rafId);
-    updateSize();
+    if (lifecycleState === "destroyed") return;
+    lifecycleEpoch += 1;
+    const initEpoch = lifecycleEpoch;
+    lifecycleState = "initializing";
 
-    log("initializing...");
-    await ensureFont();
-    updateGrid();
-    const wasmPromise = initWasmHarness();
+    try {
+      cancelAnimationFrame(internalState.rafId);
+      updateSize();
 
-    const shared = readState();
-    if (internalState.preferredRenderer !== "webgl2") {
-      if (shared.currentContextType === "webgl2") {
-        replaceCanvas();
+      log("initializing...");
+      await ensureFont();
+      if (!isCurrentLifecycleEpoch(initEpoch)) return;
+      updateGrid();
+      const wasmPromise = initWasmHarness(initEpoch);
+
+      const shared = readState();
+      if (internalState.preferredRenderer !== "webgl2") {
+        if (shared.currentContextType === "webgl2") {
+          replaceCanvas();
+          if (!isCurrentLifecycleEpoch(initEpoch)) return;
+        }
+        const canvas = getCanvas();
+        const gpuCore = await session.getWebGPUCore(canvas);
+        if (!isCurrentLifecycleEpoch(initEpoch)) return;
+        const gpuState = gpuCore ? await initWebGPU(canvas, { core: gpuCore }) : null;
+        if (!isCurrentLifecycleEpoch(initEpoch)) return;
+        if (gpuState) {
+          internalState.backend = "webgpu";
+          writeState({
+            activeState: gpuState,
+            currentContextType: "webgpu",
+            needsRender: true,
+          });
+          if (backendEl) backendEl.textContent = "webgpu";
+          callbacks?.onBackend?.("webgpu");
+          log("webgpu ready");
+          clearWebGLShaderStages();
+          destroyWebGLStageTargets();
+          gpuState.context.configure({
+            device: gpuState.device,
+            format: gpuState.format,
+            alphaMode: "opaque",
+          });
+          rebuildWebGPUShaderStages(gpuState);
+          setShaderStagesDirty(false);
+          updateGrid();
+          await wasmPromise;
+          if (!isCurrentLifecycleEpoch(initEpoch)) return;
+          lifecycleState = "ready";
+          internalState.rafId = requestAnimationFrame(() => loop(gpuState));
+          return;
+        }
       }
-      const canvas = getCanvas();
-      const gpuCore = await session.getWebGPUCore(canvas);
-      const gpuState = gpuCore ? await initWebGPU(canvas, { core: gpuCore }) : null;
-      if (gpuState) {
-        internalState.backend = "webgpu";
-        writeState({
-          activeState: gpuState,
-          currentContextType: "webgpu",
-          needsRender: true,
-        });
-        if (backendEl) backendEl.textContent = "webgpu";
-        callbacks?.onBackend?.("webgpu");
-        log("webgpu ready");
-        clearWebGLShaderStages();
-        destroyWebGLStageTargets();
-        gpuState.context.configure({
-          device: gpuState.device,
-          format: gpuState.format,
-          alphaMode: "opaque",
-        });
-        rebuildWebGPUShaderStages(gpuState);
-        setShaderStagesDirty(false);
-        updateGrid();
-        await wasmPromise;
-        internalState.rafId = requestAnimationFrame(() => loop(gpuState));
-        return;
+
+      if (internalState.preferredRenderer !== "webgpu") {
+        const nextShared = readState();
+        if (nextShared.currentContextType === "webgpu") {
+          replaceCanvas();
+          if (!isCurrentLifecycleEpoch(initEpoch)) return;
+        }
+        const canvas = getCanvas();
+        const glState = initWebGL(canvas);
+        if (!isCurrentLifecycleEpoch(initEpoch)) return;
+        if (glState) {
+          internalState.backend = "webgl2";
+          writeState({
+            activeState: glState,
+            currentContextType: "webgl2",
+            needsRender: true,
+          });
+          if (backendEl) backendEl.textContent = "webgl2";
+          callbacks?.onBackend?.("webgl2");
+          log("webgl2 ready");
+          clearWebGPUShaderStages();
+          destroyWebGPUStageTargets();
+          rebuildWebGLShaderStages(glState);
+          setShaderStagesDirty(false);
+          updateGrid();
+          await wasmPromise;
+          if (!isCurrentLifecycleEpoch(initEpoch)) return;
+          lifecycleState = "ready";
+          internalState.rafId = requestAnimationFrame(() => loop(glState));
+          return;
+        }
       }
+
+      internalState.backend = "none";
+      if (backendEl) backendEl.textContent = "none";
+      callbacks?.onBackend?.("none");
+      log("no GPU backend available");
+      writeState({ activeState: null, currentContextType: null });
+      await wasmPromise;
+      if (!isCurrentLifecycleEpoch(initEpoch)) return;
+      lifecycleState = "ready";
+    } catch (error) {
+      if (!isCurrentLifecycleEpoch(initEpoch)) return;
+      lifecycleState = "failed";
+      throw error;
     }
-
-    if (internalState.preferredRenderer !== "webgpu") {
-      const nextShared = readState();
-      if (nextShared.currentContextType === "webgpu") {
-        replaceCanvas();
-      }
-      const canvas = getCanvas();
-      const glState = initWebGL(canvas);
-      if (glState) {
-        internalState.backend = "webgl2";
-        writeState({
-          activeState: glState,
-          currentContextType: "webgl2",
-          needsRender: true,
-        });
-        if (backendEl) backendEl.textContent = "webgl2";
-        callbacks?.onBackend?.("webgl2");
-        log("webgl2 ready");
-        clearWebGPUShaderStages();
-        destroyWebGPUStageTargets();
-        rebuildWebGLShaderStages(glState);
-        setShaderStagesDirty(false);
-        updateGrid();
-        await wasmPromise;
-        internalState.rafId = requestAnimationFrame(() => loop(glState));
-        return;
-      }
-    }
-
-    internalState.backend = "none";
-    if (backendEl) backendEl.textContent = "none";
-    callbacks?.onBackend?.("none");
-    log("no GPU backend available");
-    writeState({ activeState: null });
-    await wasmPromise;
   }
 
   function destroy() {
+    if (lifecycleState === "destroyed") return;
+    lifecycleEpoch += 1;
+    lifecycleState = "destroyed";
     cancelAnimationFrame(internalState.rafId);
+    internalState.backend = "none";
     lifecycleThemeSizeRuntime.cancelScheduledSizeUpdate();
     ptyInputRuntime.cancelSyncOutputReset();
     ptyInputRuntime.disconnectPty();
     ptyTransport.destroy?.();
+    if (backendEl) backendEl.textContent = "none";
     const shared = readState();
     if (shared.wasm && shared.wasmHandle) {
-      try {
-        shared.wasm.destroy(shared.wasmHandle);
-      } catch {
-        // ignore wasm destroy errors
-      }
+      destroyWasmHandle(shared.wasm, shared.wasmHandle);
       writeState({ wasmHandle: 0 });
     }
     clearWebGPUShaderStages();
@@ -639,6 +707,11 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       clearWebGLShaderStages();
       destroyWebGLStageTargets();
     }
+    writeState({
+      activeState: null,
+      currentContextType: null,
+      needsRender: false,
+    });
     for (const cleanup of cleanupCanvasFns) cleanup();
     cleanupCanvasFns.length = 0;
     for (const cleanup of cleanupFns) cleanup();
@@ -646,6 +719,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
   }
 
   function setRenderer(value: "auto" | "webgpu" | "webgl2") {
+    if (lifecycleState === "destroyed") return;
     if (value !== "auto" && value !== "webgpu" && value !== "webgl2") return;
     internalState.preferredRenderer = value;
     void init();
@@ -675,6 +749,7 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     return {
       init,
       destroy,
+      getLifecycleState: () => lifecycleState,
       setRenderer,
       setPaused,
       togglePause,

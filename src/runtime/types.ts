@@ -349,6 +349,16 @@ export type ResttyRuntimeConfig = ResttyRuntimeMountConfig &
   ResttyTerminalConfig;
 
 /**
+ * Lifecycle state for a single runtime instance.
+ */
+export type ResttyRuntimeLifecycleState =
+  | "created"
+  | "initializing"
+  | "ready"
+  | "failed"
+  | "destroyed";
+
+/**
  * Public API for a single terminal runtime instance.
  */
 export type ResttyRuntime = {
@@ -356,6 +366,8 @@ export type ResttyRuntime = {
   init: () => Promise<void>;
   /** Tear down all resources and event listeners. */
   destroy: () => void;
+  /** Get the current runtime lifecycle state. */
+  getLifecycleState: () => ResttyRuntimeLifecycleState;
   /** Switch the renderer backend at runtime. */
   setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
   /** Pause or resume rendering. */
