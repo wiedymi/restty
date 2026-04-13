@@ -329,6 +329,17 @@ test("surface managed pane runtime config contract is split from implementation"
   expect(managedPaneRuntimeConfig).toContain("./managed-pane-runtime-config.types");
 });
 
+test("surface managed pane option resolution uses a narrow local contract", () => {
+  const managedPaneOptions = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-options.ts"),
+    "utf8",
+  );
+
+  expect(managedPaneOptions).not.toContain('CreateResttyManagedPaneManagerOptions["shortcuts"]');
+  expect(managedPaneOptions).not.toContain("Pick<CreateResttyManagedPaneManagerOptions");
+  expect(managedPaneOptions).toContain("./managed-pane-options.types");
+});
+
 test("surface plugin runtime and dispatcher contracts are split from implementation", () => {
   const pluginRuntime = readFileSync(resolve(surfaceRoot, "plugins/runtime.ts"), "utf8");
   const pluginDispatcher = readFileSync(resolve(surfaceRoot, "plugins/dispatcher.ts"), "utf8");
