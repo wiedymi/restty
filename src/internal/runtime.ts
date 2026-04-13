@@ -24,11 +24,13 @@ export type {
 } from "../runtime/create-runtime";
 
 export type {
-  ResttyTerminalConfig,
-  ResttyRuntimeMountConfig,
-  ResttyRuntimeServicesConfig,
   ResttyShaderStage,
   ResttyShaderStageMode,
   ResttyShaderStageBackend,
   ResttyShaderStageSource,
-} from "../runtime/types";
+} from "../runtime/core/models";
+export type {
+  ResttyTerminalConfig,
+  ResttyRuntimeMountConfig,
+  ResttyRuntimeServicesConfig,
+} from "../runtime/core/config";

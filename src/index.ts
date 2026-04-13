@@ -61,17 +61,18 @@ export type {
   ResttyBufferFontSource,
   ResttyLocalFontSource,
   ResttyFontPreset,
-  ResttyTerminalConfig,
-  ResttyRuntimeMountConfig,
-  ResttyRuntimeServicesConfig,
-  ResttyRuntimeConfig,
-  ResttyRuntimeEvent,
-  ResttyRuntimeLifecycleState,
   ResttyShaderStage,
   ResttyShaderStageMode,
   ResttyShaderStageBackend,
   ResttyShaderStageSource,
-} from "./runtime/types";
+} from "./runtime/core/models";
+export type {
+  ResttyTerminalConfig,
+  ResttyRuntimeMountConfig,
+  ResttyRuntimeServicesConfig,
+  ResttyRuntimeConfig,
+} from "./runtime/core/config";
+export type { ResttyRuntimeEvent, ResttyRuntimeLifecycleState } from "./runtime/types";
 
 export { createWebSocketPtyTransport } from "./pty";
 export type { PtyCallbacks, PtyConnectOptions, PtyResizeMeta, PtyTransport } from "./pty";
