@@ -81,7 +81,7 @@ export type ResttyDefaultPaneContextMenuOptions = {
   /** Whether the default context menu is enabled (default true). */
   enabled?: boolean;
   /** Guard predicate; return false to suppress the menu for a given event. */
-  canOpen?: (event: MouseEvent, pane: ResttyManagedPane) => boolean;
+  canOpen?: (event: MouseEvent, pane: ResttyPaneWithRuntime) => boolean;
   /** Override the modifier key label shown in shortcut hints. */
   modKeyLabel?: string;
   /** Provide the PTY WebSocket URL for the connect/disconnect menu item. */

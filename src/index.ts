@@ -11,6 +11,7 @@ export type {
   ResttyServicesConfig,
   ResttySurfaceConfig,
   ResttySurfaceEvents,
+  ResttySurfacePane,
   ResttyPaneApi,
   ResttyPluginApiRange,
   ResttyPlugin,

@@ -44,6 +44,7 @@ import type {
 } from "./plugins/context.types";
 import { ResttyPluginHost } from "./plugins/host";
 import type { ResttyConfig } from "./restty/config";
+import type { ResttySurfacePane } from "./restty/events";
 import * as paneOps from "./restty/pane-ops";
 import { ResttyShaderOps } from "./restty/shader-ops";
 
@@ -82,7 +83,7 @@ export type {
   ResttyServicesConfigInput,
   ResttySurfaceConfig,
 } from "./restty/config";
-export type { ResttySurfaceEvents } from "./restty/events";
+export type { ResttySurfaceEvents, ResttySurfacePane } from "./restty/events";
 
 /**
  * Main entry point for the restty terminal widget. Manages a set of
@@ -181,19 +182,19 @@ export class Restty extends ResttyActivePaneApi {
     }
   }
 
-  getPanes(): ResttyManagedPane[] {
+  getPanes(): ResttySurfacePane[] {
     return this.paneManager.getPanes();
   }
 
-  getPaneById(id: number): ResttyManagedPane | null {
+  getPaneById(id: number): ResttySurfacePane | null {
     return this.paneManager.getPaneById(id);
   }
 
-  getActivePane(): ResttyManagedPane | null {
+  getActivePane(): ResttySurfacePane | null {
     return this.paneManager.getActivePane();
   }
 
-  getFocusedPane(): ResttyManagedPane | null {
+  getFocusedPane(): ResttySurfacePane | null {
     return this.paneManager.getFocusedPane();
   }
 
@@ -243,11 +244,11 @@ export class Restty extends ResttyActivePaneApi {
     return this.shaderOps.removeShaderStage(id);
   }
 
-  createInitialPane(options?: { focus?: boolean }): ResttyManagedPane {
+  createInitialPane(options?: { focus?: boolean }): ResttySurfacePane {
     return paneOps.createInitialPane(this.paneManager, this.lifecycleHooks(), options);
   }
 
-  splitActivePane(direction: ResttyPaneSplitDirection): ResttyManagedPane | null {
+  splitActivePane(direction: ResttyPaneSplitDirection): ResttySurfacePane | null {
     return paneOps.splitActivePane(
       this.paneManager,
       this.paneLookup(),
@@ -256,7 +257,7 @@ export class Restty extends ResttyActivePaneApi {
     );
   }
 
-  splitPane(id: number, direction: ResttyPaneSplitDirection): ResttyManagedPane | null {
+  splitPane(id: number, direction: ResttyPaneSplitDirection): ResttySurfacePane | null {
     return paneOps.splitPane(this.paneManager, this.lifecycleHooks(), id, direction);
   }
 

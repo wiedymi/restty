@@ -340,6 +340,30 @@ test("surface managed pane option resolution uses a narrow local contract", () =
   expect(managedPaneOptions).toContain("./managed-pane-options.types");
 });
 
+test("surface public config and events do not expose ResttyManagedPane", () => {
+  const surfaceConfig = readFileSync(resolve(surfaceRoot, "restty/config.ts"), "utf8");
+  const surfaceEvents = readFileSync(resolve(surfaceRoot, "restty/events.ts"), "utf8");
+  const surfaceRestty = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
+  const managedPaneTypes = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-types.ts"),
+    "utf8",
+  );
+
+  expect(surfaceConfig).not.toContain("ResttyPaneContextMenuOptions<ResttyManagedPane>");
+  expect(surfaceEvents).not.toContain("onPaneCreated?: (pane: ResttyManagedPane)");
+  expect(surfaceEvents).not.toContain("onPaneClosed?: (pane: ResttyManagedPane)");
+  expect(surfaceEvents).not.toContain("sourcePane: ResttyManagedPane");
+  expect(surfaceEvents).not.toContain("createdPane: ResttyManagedPane");
+  expect(surfaceEvents).not.toContain("onActivePaneChange?: (pane: ResttyManagedPane | null)");
+  expect(surfaceEvents).toContain("export type ResttySurfacePane = ResttyPaneWithRuntime;");
+  expect(managedPaneTypes).not.toContain("canOpen?: (event: MouseEvent, pane: ResttyManagedPane)");
+  expect(surfaceRestty).toContain('type { ResttySurfacePane } from "./restty/events"');
+  expect(surfaceRestty).not.toContain("getPanes(): ResttyManagedPane[]");
+  expect(surfaceRestty).not.toContain("getPaneById(id: number): ResttyManagedPane | null");
+  expect(surfaceRestty).not.toContain("getActivePane(): ResttyManagedPane | null");
+  expect(surfaceRestty).not.toContain("getFocusedPane(): ResttyManagedPane | null");
+});
+
 test("surface plugin runtime and dispatcher contracts are split from implementation", () => {
   const pluginRuntime = readFileSync(resolve(surfaceRoot, "plugins/runtime.ts"), "utf8");
   const pluginDispatcher = readFileSync(resolve(surfaceRoot, "plugins/dispatcher.ts"), "utf8");
