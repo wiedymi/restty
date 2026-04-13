@@ -73,8 +73,6 @@ export type ResttyAppElements = {
   ptyStatusEl?: HTMLElement | null;
   /** Mouse mode/status display. */
   mouseStatusEl?: HTMLElement | null;
-  /** Terminal internal debug display. */
-  termDebugEl?: HTMLElement | null;
   /** Scrollable log output display. */
   logEl?: HTMLElement | null;
 };

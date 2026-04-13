@@ -19,7 +19,6 @@ export function buildWebGLTickContext(
     canvas,
     defaultBg,
     fontError,
-    termDebug,
     reportDebugText,
     updateGrid,
     getRenderState,
@@ -73,7 +72,6 @@ export function buildWebGLTickContext(
 
   if (fontError) {
     const text = `Font error: ${fontError.message}`;
-    if (termDebug) termDebug.textContent = text;
     reportDebugText(text);
   }
 

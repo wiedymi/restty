@@ -250,7 +250,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const dbgEl = elements?.dbgEl ?? null;
   const ptyStatusEl = elements?.ptyStatusEl ?? null;
   const mouseStatusEl = elements?.mouseStatusEl ?? null;
-  const termDebug = elements?.termDebugEl ?? null;
   const logEl = elements?.logEl ?? null;
 
   const DEFAULT_BG_BASE: Color = [0.08, 0.09, 0.1, 1.0];
@@ -978,7 +977,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     get fontError() {
       return fontError;
     },
-    termDebug,
     reportDebugText,
     updateGrid,
     getRenderState,

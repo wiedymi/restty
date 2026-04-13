@@ -12,7 +12,6 @@ export function tickWebGPU(deps: RuntimeTickDeps, state: WebGPUState) {
     getCompiledWebGPUShaderStages,
     ensureWebGPUStageTargets,
     fontError,
-    termDebug,
     reportDebugText,
     updateGrid,
     getRenderState,
@@ -52,7 +51,6 @@ export function tickWebGPU(deps: RuntimeTickDeps, state: WebGPUState) {
 
   if (fontError) {
     const text = `Font error: ${fontError.message}`;
-    if (termDebug) termDebug.textContent = text;
     reportDebugText(text);
   }
 

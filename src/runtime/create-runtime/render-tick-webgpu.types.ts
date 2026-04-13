@@ -337,7 +337,6 @@ export type RuntimeTickDeps = SharedTickDeps & {
   getCompiledWebGPUShaderStages: () => CompiledWebGPUShaderStage[];
   ensureWebGPUStageTargets: (state: WebGPUState) => WebGPUStageTargets | null;
   fontError: Error | null;
-  termDebug: HTMLElement | null;
   reportDebugText: (text: string) => void;
   updateGrid: () => void;
   getRenderState: () => RenderState | null;
