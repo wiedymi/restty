@@ -195,15 +195,48 @@ export {
 } from "./theme";
 export type { GhosttyTheme, ThemeColor, ResttyBuiltinThemeName } from "./theme";
 
-// App / high-level integration
-export { Restty } from "./surface/restty";
+// Power-user runtime/surface entrypoints
+export {
+  createResttyRuntime,
+  createResttyAppSession,
+  getDefaultResttyAppSession,
+  createResttyPaneManager,
+  createDefaultResttyPaneContextMenuItems,
+  getResttyShortcutModifierLabel,
+} from "./runtime/create-runtime";
 export type {
-  ResttyConfig,
-  ResttyServicesConfig,
-  ResttySurfaceConfig,
-  ResttySurfaceEvents,
-} from "./surface/restty";
+  ResttyAppElements,
+  ResttyAppCallbacks,
+  FontSource,
+  ResttyFontHintTarget,
+  ResttyFontSource,
+  ResttyTouchSelectionMode,
+  ResttyUrlFontSource,
+  ResttyBufferFontSource,
+  ResttyLocalFontSource,
+  ResttyWasmLogListener,
+  ResttyAppSession,
+  ResttyAppInputPayload,
+  ResttyRuntimeLifecycleState,
+  ResttyRuntimeConfig,
+  ResttyRuntime,
+  ResttyPaneSplitDirection,
+  ResttyPaneContextMenuItem,
+  ResttyPaneDefinition,
+  ResttyPaneStyleOptions,
+  ResttyPaneStylesOptions,
+  ResttyPaneShortcutsOptions,
+  ResttyPaneContextMenuOptions,
+  CreateResttyPaneManagerOptions,
+  ResttyPaneManager,
+  ResttyPaneWithApp,
+  CreateDefaultResttyPaneContextMenuItemsOptions,
+} from "./runtime/create-runtime";
+export { createResttyAppPaneManager } from "./surface/pane-app-manager";
 export type {
+  CreateResttyAppPaneManagerOptions,
+  ResttyAppPaneManager,
+  ResttyDefaultPaneContextMenuOptions,
   ResttyManagedAppPane,
   ResttyPaneDomDefaults,
   ResttyManagedPaneStyleOptions,
@@ -219,16 +252,9 @@ export type {
   ResttyPaneSearchUiCloseOptions,
 } from "./surface/pane-search-ui";
 export type {
-  ResttyFontHintTarget,
-  ResttyFontSource,
-  ResttyUrlFontSource,
-  ResttyBufferFontSource,
-  ResttyLocalFontSource,
   ResttyTerminalConfig,
   ResttyRuntimeMountConfig,
   ResttyRuntimeServicesConfig,
-  ResttyRuntimeConfig,
-  ResttyRuntimeLifecycleState,
   ResttyShaderStage,
   ResttyShaderStageMode,
   ResttyShaderStageBackend,
