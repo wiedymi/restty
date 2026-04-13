@@ -9,6 +9,8 @@ type BundleEntry = {
 const entries: BundleEntry[] = [
   { input: "./src/index.ts", outputName: "restty.esm.js" },
   { input: "./src/internal.ts", outputName: "internal.esm.js" },
+  { input: "./src/internal/runtime.ts", outputName: "internal/runtime.esm.js" },
+  { input: "./src/internal/surface.ts", outputName: "internal/surface.esm.js" },
   { input: "./src/xterm.ts", outputName: "xterm.esm.js" },
 ];
 

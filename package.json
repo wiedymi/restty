@@ -47,6 +47,16 @@
       "import": "./dist/internal.js",
       "default": "./dist/internal.js"
     },
+    "./internal/runtime": {
+      "types": "./dist/internal/runtime.d.ts",
+      "import": "./dist/internal/runtime.js",
+      "default": "./dist/internal/runtime.js"
+    },
+    "./internal/surface": {
+      "types": "./dist/internal/surface.d.ts",
+      "import": "./dist/internal/surface.js",
+      "default": "./dist/internal/surface.js"
+    },
     "./xterm": {
       "types": "./dist/xterm.d.ts",
       "import": "./dist/xterm.js",
@@ -61,6 +71,16 @@
       "types": "./dist/internal.d.ts",
       "import": "./dist/internal.esm.js",
       "default": "./dist/internal.esm.js"
+    },
+    "./esm/internal/runtime": {
+      "types": "./dist/internal/runtime.d.ts",
+      "import": "./dist/internal/runtime.esm.js",
+      "default": "./dist/internal/runtime.esm.js"
+    },
+    "./esm/internal/surface": {
+      "types": "./dist/internal/surface.d.ts",
+      "import": "./dist/internal/surface.esm.js",
+      "default": "./dist/internal/surface.esm.js"
     },
     "./esm/xterm": {
       "types": "./dist/xterm.d.ts",

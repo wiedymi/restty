@@ -4,6 +4,8 @@ import { relative, resolve } from "node:path";
 const entrypoints = [
   "./src/index.ts",
   "./src/internal.ts",
+  "./src/internal/runtime.ts",
+  "./src/internal/surface.ts",
   "./src/xterm.ts",
 ];
 
