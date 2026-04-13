@@ -5,7 +5,6 @@ export {
 } from "../runtime/create-runtime";
 
 export type {
-  ResttyAppElements,
   ResttyAppCallbacks,
   FontSource,
   ResttyFontHintTarget,

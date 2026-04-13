@@ -7,7 +7,7 @@ import type {
   ResttyShaderStage,
   ResttyTouchSelectionMode,
 } from "./models";
-import type { ResttyAppCallbacks, ResttyAppElements, ResttyAppSession } from "./resources";
+import type { ResttyAppCallbacks, ResttyAppSession } from "./resources";
 
 /**
  * DOM/session fields required to mount a runtime instance.
@@ -25,8 +25,6 @@ export type ResttyRuntimeMountConfig = {
  * Advanced runtime service hooks and adapters.
  */
 export type ResttyRuntimeServicesConfig = {
-  /** Optional DOM elements for status displays. */
-  elements?: ResttyAppElements;
   /** Callbacks for state-change notifications. */
   callbacks?: ResttyAppCallbacks;
   /** PTY transport layer for terminal I/O. */
@@ -130,6 +128,6 @@ export type ResttyRuntimeConfig = {
   mount: ResttyRuntimeMountConfig;
   /** Terminal behavior/config applied to the runtime instance. */
   terminal?: ResttyTerminalConfig;
-  /** Service hooks, adapters, and status surfaces used by the runtime. */
+  /** Service hooks and adapters used by the runtime. */
   services?: ResttyRuntimeServicesConfig;
 };

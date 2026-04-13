@@ -60,7 +60,6 @@ import type { ResttyRuntimeConfig } from "./core/config";
 import type { ResttyFontHintTarget, ResttyFontSource } from "./core/models";
 import type {
   ResttyAppCallbacks,
-  ResttyAppElements,
   ResttyAppSession,
   ResttyFontResourceLease,
 } from "./core/resources";
@@ -133,7 +132,6 @@ export { createResttyAppSession, getDefaultResttyAppSession } from "./core/sessi
 export type { ResttyRuntime } from "./core/api";
 export type { ResttyRuntimeConfig } from "./core/config";
 export type {
-  ResttyAppElements,
   ResttyAppCallbacks,
   FontSource,
   ResttyFontHintTarget,
@@ -180,7 +178,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const terminal = options.terminal ?? {};
   const services = options.services ?? {};
   const { canvas: canvasInput, imeInput: imeInputInput } = mount;
-  const { elements, callbacks } = services;
+  const { callbacks } = services;
   const beforeInputHook = services.beforeInput;
   const beforeRenderOutputHook = services.beforeRenderOutput;
   const { runBeforeInputHook, runBeforeRenderOutputHook } = createRuntimeInputHooks({

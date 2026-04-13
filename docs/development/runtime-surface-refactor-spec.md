@@ -44,7 +44,7 @@ The current `ResttyOptions` is effectively a modified pane-manager config instea
 
 ### 2. Runtime options are too broad
 
-The current runtime config mixes mount requirements, rendering options, fonts, PTY transport, interaction settings, callbacks, hooks, optional status DOM elements, and scrollback tuning in one flat shape. This makes the type harder to read, harder to document, and easier to misuse.
+The current runtime config mixes mount requirements, rendering options, fonts, PTY transport, interaction settings, callbacks, hooks, and scrollback tuning in one flat shape. This makes the type harder to read, harder to document, and easier to misuse.
 
 ### 3. Naming is too generic
 
@@ -673,7 +673,7 @@ The following files are the clearest candidates for relocation or splitting base
 
 - `src/runtime/types.ts`
   Split over time.
-  It currently holds session, status elements, callbacks, font-source types, shader-stage types, runtime config, and runtime API.
+  It currently holds session, callbacks, font-source types, shader-stage types, runtime config, and runtime API.
   Target:
   - `runtime/core/types.ts`
   - `runtime/core/config.ts`

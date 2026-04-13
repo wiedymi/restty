@@ -46,11 +46,6 @@ export type ResttyAppSession = {
 };
 
 /**
- * Optional DOM elements for status displays.
- */
-export type ResttyAppElements = {};
-
-/**
  * Callbacks fired by the app when internal state changes.
  */
 export type ResttyAppCallbacks = {

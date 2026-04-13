@@ -20,7 +20,6 @@ export type {
 } from "./core/models";
 export type {
   ResttyAppCallbacks,
-  ResttyAppElements,
   ResttyAppSession,
   ResttyFontResourceFace,
   ResttyFontResourceLease,
