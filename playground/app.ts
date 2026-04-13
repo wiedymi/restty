@@ -87,17 +87,21 @@ const settingsClose = document.getElementById("settingsClose") as HTMLButtonElem
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
 const RUN_DEMO_EVENT = "restty:playground-demo-run";
+const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
+type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
 let resizeRaf = 0;
 let restty: Restty;
 let notificationPermissionRequest: Promise<NotificationPermission> | null = null;
-let selectedShaderPreset = (shaderPresetEl?.value as ShaderPreset | undefined) ?? "none";
 const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
+let selectedShaderPreset = usesSvelteShell
+  ? "none"
+  : ((shaderPresetEl?.value as ShaderPreset | undefined) ?? "none");
 
 const initialFontSize = fontSizeInput?.value ? Number(fontSizeInput.value) : 18;
 let selectedFontFamily = fontFamilySelect?.value ?? DEFAULT_FONT_FAMILY;
@@ -228,7 +232,6 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
     );
     mouseModeEl.value = hasOption ? state.mouseMode : "auto";
   }
-  if (shaderPresetEl) shaderPresetEl.value = selectedShaderPreset;
   if (themeSelect) themeSelect.value = state.theme.selectValue;
 }
 
@@ -611,22 +614,28 @@ if (mouseModeEl) {
   });
 }
 
-if (shaderPresetEl) {
+function applySelectedShaderPreset(value: ShaderPreset | string | null | undefined) {
+  if (
+    value !== "none" &&
+    value !== "scanline" &&
+    value !== "aurora" &&
+    value !== "crt-lite" &&
+    value !== "mono-green"
+  ) {
+    selectedShaderPreset = "none";
+  } else {
+    selectedShaderPreset = value;
+  }
+  applyShaderPreset();
+}
+
+if (usesSvelteShell) {
+  window.addEventListener(SHADER_PRESET_CHANGE_EVENT, (event) => {
+    applySelectedShaderPreset((event as ShaderPresetChangeEvent).detail?.value);
+  });
+} else if (shaderPresetEl) {
   shaderPresetEl.addEventListener("change", () => {
-    const value = shaderPresetEl.value;
-    if (
-      value !== "none" &&
-      value !== "scanline" &&
-      value !== "aurora" &&
-      value !== "crt-lite" &&
-      value !== "mono-green"
-    ) {
-      selectedShaderPreset = "none";
-      shaderPresetEl.value = "none";
-    } else {
-      selectedShaderPreset = value;
-    }
-    applyShaderPreset();
+    applySelectedShaderPreset(shaderPresetEl.value);
   });
 }
 

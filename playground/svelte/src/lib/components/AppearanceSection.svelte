@@ -1,3 +1,19 @@
+<script lang="ts">
+  import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
+
+  const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
+
+  let shaderPreset: ShaderPreset = "none";
+
+  function handleShaderPresetChange() {
+    window.dispatchEvent(
+      new CustomEvent(SHADER_PRESET_CHANGE_EVENT, {
+        detail: { value: shaderPreset },
+      }),
+    );
+  }
+</script>
+
 <section class="section">
   <div class="section-title">Appearance</div>
   <div class="field-row">
@@ -50,8 +66,8 @@
     </select>
   </div>
   <div class="field-row">
-    <select id="shaderPreset">
-      <option value="none" selected>Shader: None</option>
+    <select id="shaderPreset" bind:value={shaderPreset} onchange={handleShaderPresetChange}>
+      <option value="none">Shader: None</option>
       <option value="scanline">Shader: Scanline</option>
       <option value="aurora">Shader: Aurora</option>
       <option value="crt-lite">Shader: CRT Lite</option>
