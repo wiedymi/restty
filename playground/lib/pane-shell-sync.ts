@@ -143,6 +143,20 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
     }
   }
 
+  function syncMouseModeValue(value: string) {
+    if (options.usesSvelteShell) {
+      dispatchStateEvent(target, MOUSE_MODE_STATE_EVENT, {
+        value,
+      });
+      return;
+    }
+    if (!options.elements.mouseModeEl) return;
+    const hasOption = Array.from(options.elements.mouseModeEl.options).some(
+      (option) => option.value === value,
+    );
+    options.elements.mouseModeEl.value = hasOption ? value : "auto";
+  }
+
   function syncFontFamilyValue() {
     const value = options.getSelectedFontFamily();
     if (options.usesSvelteShell) {
@@ -215,16 +229,7 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
     syncLocalFontControls();
     syncFontRenderingControls();
     state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
-    if (options.usesSvelteShell) {
-      dispatchStateEvent(target, MOUSE_MODE_STATE_EVENT, {
-        value: state.mouseMode,
-      });
-    } else if (options.elements.mouseModeEl) {
-      const hasOption = Array.from(options.elements.mouseModeEl.options).some(
-        (option) => option.value === state.mouseMode,
-      );
-      options.elements.mouseModeEl.value = hasOption ? state.mouseMode : "auto";
-    }
+    syncMouseModeValue(state.mouseMode);
     syncThemeSelectValue(state.theme.selectValue);
   }
 
@@ -233,6 +238,7 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
     syncFontFamilyValue,
     syncFontRenderingControls,
     syncLocalFontControls,
+    syncMouseModeValue,
     syncPauseButton,
     syncPtyButton,
     syncTerminalControlValues,
