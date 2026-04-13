@@ -1,5 +1,5 @@
 import type { DesktopNotification } from "../../input";
-import type { ResttyManagedAppPane } from "../pane-app-manager";
+import type { ResttyManagedAppPane } from "../panes/managed-pane-types";
 import type { ResttyPaneSplitDirection } from "../panes-types";
 
 export type ResttySurfaceEvents = {

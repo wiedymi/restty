@@ -7,6 +7,7 @@ const runtimeRoot = resolve(repoRoot, "src/runtime");
 const runtimeCreateRuntimeRoot = resolve(repoRoot, "src/runtime/create-runtime");
 const runtimeTypesEntry = resolve(runtimeRoot, "types.ts");
 const surfaceRoot = resolve(repoRoot, "src/surface");
+const paneAppManagerEntry = resolve(surfaceRoot, "pane-app-manager.ts");
 const playgroundRoot = resolve(repoRoot, "playground");
 const playgroundPublicRoot = resolve(playgroundRoot, "public");
 const playgroundDistRoot = resolve(playgroundRoot, "dist");
@@ -153,6 +154,23 @@ test("surface config helpers do not depend on manager option indexed access type
   });
 
   expect(offenders).toEqual([]);
+});
+
+test("surface restty helpers do not import pane-app-manager for type access", () => {
+  const helperFiles = [
+    resolve(surfaceRoot, "restty/active-pane-api.ts"),
+    resolve(surfaceRoot, "restty/config.ts"),
+    resolve(surfaceRoot, "restty/events.ts"),
+    resolve(surfaceRoot, "restty/pane-ops.ts"),
+    resolve(surfaceRoot, "restty/shader-ops.ts"),
+  ];
+  const offenders = collectResolvedImports(helperFiles).filter(({ resolved }) => {
+    return resolved === paneAppManagerEntry;
+  });
+
+  expect(
+    offenders.map(({ file, specifier }) => `${relative(repoRoot, file)} -> ${specifier}`),
+  ).toEqual([]);
 });
 
 test("playground source does not import src/internal.ts", () => {

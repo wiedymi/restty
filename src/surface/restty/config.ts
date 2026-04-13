@@ -8,7 +8,7 @@ import type {
   ResttyPaneDomDefaults,
   ResttyPaneRuntimeContext,
   ResttyTerminalConfigInput,
-} from "../pane-app-manager";
+} from "../panes/managed-pane-types";
 import type { ResttyPaneContextMenuOptions, ResttyPaneShortcutsOptions } from "../panes-types";
 import type { ResttySurfaceEvents } from "./events";
 

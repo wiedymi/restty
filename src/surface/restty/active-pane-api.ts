@@ -10,7 +10,7 @@ import type {
   ResttyPaneSearchUiCloseOptions,
   ResttyPaneSearchUiOpenOptions,
 } from "../pane-search-ui";
-import type { ResttyManagedPaneSearchUiStyleOptions } from "../pane-app-manager";
+import type { ResttyManagedPaneSearchUiStyleOptions } from "../panes/managed-pane-types";
 
 export abstract class ResttyActivePaneApi {
   protected abstract requireActivePaneHandle(): ResttyPaneHandle;

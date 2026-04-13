@@ -3,7 +3,7 @@ import type {
   ResttyManagedAppPane,
   ResttyManagedPaneStyleOptions,
   ResttyManagedPaneSearchUiStyleOptions,
-} from "../pane-app-manager";
+} from "../panes/managed-pane-types";
 import type { ResttyPaneManager, ResttyPaneSplitDirection } from "../panes-types";
 import { ResttyPaneHandle } from "../restty-pane-handle";
 import type { ResttyLifecycleHookPayload, ResttyPluginEvents } from "../plugins/types";

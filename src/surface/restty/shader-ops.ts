@@ -1,4 +1,4 @@
-import type { ResttyManagedAppPane } from "../pane-app-manager";
+import type { ResttyManagedAppPane } from "../panes/managed-pane-types";
 import type { ResttyRenderStageHandle } from "../plugins/types";
 import type { ResttyShaderStage } from "../../runtime/core/models";
 import type { ResttyManagedShaderStage } from "../plugins/runtime";
