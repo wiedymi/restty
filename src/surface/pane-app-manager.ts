@@ -8,13 +8,8 @@ import {
 import { getDefaultResttyAppSession } from "../runtime/session";
 import { createResttyRuntime } from "./app-factory";
 import type { ResttyAppCallbacks, ResttyRuntimeConfig } from "../runtime/types";
-import {
-  createPaneSearchUiController,
-  type PaneSearchUiController,
-  type ResttyPaneSearchUiCloseOptions,
-  type ResttyPaneSearchUiOpenOptions,
-  type ResttyPaneSearchUiStyleOptions,
-} from "./pane-search-ui";
+import type { PaneSearchUiController } from "./pane-search-ui";
+import { createManagedPaneSearchUiController } from "./panes/managed-pane-search-ui";
 import type {
   CreateResttyAppPaneManagerOptions,
   ResttyAppPaneManager,
@@ -55,19 +50,9 @@ export function createResttyAppPaneManager(
   const shortcuts = resolveManagedPaneShortcuts(options.shortcuts);
 
   let manager: ResttyPaneManager<ResttyManagedAppPane>;
-  const searchUiConfig =
-    typeof options.searchUi === "object" && options.searchUi ? options.searchUi : undefined;
-  const searchUiController: PaneSearchUiController = createPaneSearchUiController({
+  const searchUiController: PaneSearchUiController = createManagedPaneSearchUiController({
     root: options.root,
-    enabled: options.searchUi === false ? false : (searchUiConfig?.enabled ?? true),
-    placeholder: searchUiConfig?.placeholder,
-    previousButtonText: searchUiConfig?.previousButtonText,
-    nextButtonText: searchUiConfig?.nextButtonText,
-    clearButtonText: searchUiConfig?.clearButtonText,
-    closeButtonText: searchUiConfig?.closeButtonText,
-    statusFormatter: searchUiConfig?.statusFormatter,
-    shortcut: searchUiConfig?.shortcut,
-    styles: searchUiConfig?.styles,
+    searchUi: options.searchUi,
     getActivePane: () => manager.getActivePane(),
     getFocusedPane: () => manager.getFocusedPane(),
   });
