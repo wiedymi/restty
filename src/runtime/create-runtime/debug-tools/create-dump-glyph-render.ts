@@ -1,4 +1,4 @@
-import type { GlyphConstraintMeta } from "../../atlas-builder";
+import type { GlyphConstraintMeta } from "../../fonts/atlas-builder";
 import type { CreateRuntimeDebugToolsOptions } from "./types";
 import { readTextureToImageData } from "./read-texture-to-image-data";
 

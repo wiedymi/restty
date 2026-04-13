@@ -11,7 +11,7 @@ import type {
 } from "../../../fonts";
 import type { clamp as clampFn, fontHeightUnits as fontHeightUnitsFn } from "../../../grid";
 import type { WebGLState, WebGPUState } from "../../../renderer";
-import type { GlyphConstraintMeta, AtlasConstraintContext } from "../../atlas-builder";
+import type { GlyphConstraintMeta, AtlasConstraintContext } from "../../fonts/atlas-builder";
 import type { NerdMetrics } from "../render-tick-webgpu.types";
 
 export type GridState = {

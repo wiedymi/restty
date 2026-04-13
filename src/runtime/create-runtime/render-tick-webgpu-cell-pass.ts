@@ -1,6 +1,6 @@
 import type { Color } from "../../renderer";
 import type { Font, FontEntry } from "../../fonts";
-import type { GlyphConstraintMeta } from "../atlas-builder";
+import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
 import { resolveLigatureRun, resolveRenderableLigatureRun } from "./ligature-runs";
 import type { CollectWebGPUCellPassParams, GlyphQueueItem } from "./render-tick-webgpu.types";
 import {

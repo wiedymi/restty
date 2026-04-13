@@ -1,6 +1,6 @@
 import type { Color, WebGLState } from "../../renderer";
 import type { Font, FontEntry } from "../../fonts";
-import type { GlyphConstraintMeta } from "../atlas-builder";
+import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
 import type { GlyphQueueItem } from "./render-tick-webgpu.types";
 import type { WebGLTickContext, WebGLTickDeps } from "./render-tick-webgl.types";
 

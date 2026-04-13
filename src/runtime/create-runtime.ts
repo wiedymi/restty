@@ -51,7 +51,7 @@ import {
   copyToClipboard as writeClipboardText,
   pasteFromClipboard as readClipboardText,
 } from "../selection";
-import { buildFontAtlasIfNeeded } from "./atlas-builder";
+import { buildFontAtlasIfNeeded } from "./fonts/atlas-builder";
 import { normalizeFontSources } from "./fonts/font-sources";
 import * as bundledTextShaper from "text-shaper";
 import type {

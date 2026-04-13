@@ -1,4 +1,4 @@
-import type { Font, FontAtlas, FontEntry, FontSizeMode } from "../fonts";
+import type { Font, FontAtlas, FontEntry, FontSizeMode } from "../../fonts";
 import type {
   AtlasOptions,
   GlyphRasterizeOptions,

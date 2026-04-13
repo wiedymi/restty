@@ -9,7 +9,7 @@ import {
   buildFontAtlasIfNeeded,
   type AtlasConstraintContext,
   type GlyphConstraintMeta,
-} from "../atlas-builder";
+} from "../fonts/atlas-builder";
 import { buildGlyphAtlasWithConstraints } from "../font-atlas-utils/glyph-atlas-builder";
 import { nerdConstraintSignature } from "../font-atlas-utils/nerd-metrics-utils";
 import type { ResttyFontHintTarget } from "../types";

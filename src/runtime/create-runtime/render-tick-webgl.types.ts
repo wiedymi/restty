@@ -6,7 +6,7 @@ import type {
   BuildFontAtlasParams,
   BuildFontAtlasResult,
   GlyphConstraintMeta,
-} from "../atlas-builder";
+} from "../fonts/atlas-builder";
 import type { AlphaBlendingMode } from "./blend-utils";
 import type {
   CursorPosition,
