@@ -4,7 +4,12 @@ import type {
   ResttyManagedAppPane,
   ResttyManagedPaneSearchUiStyleOptions,
 } from "./pane-app-manager";
-import type { ResttySearchState, ResttyShaderStage } from "../runtime/types";
+import type {
+  ResttyFontHintTarget,
+  ResttyFontSource,
+  ResttySearchState,
+  ResttyShaderStage,
+} from "../runtime/types";
 import type {
   ResttyPaneSearchUiCloseOptions,
   ResttyPaneSearchUiOpenOptions,
@@ -31,6 +36,10 @@ export type ResttyPaneApi = {
   setPaused: (value: boolean) => void;
   togglePause: () => void;
   setFontSize: (value: number) => void;
+  setLigatures: (value: boolean) => void;
+  setFontHinting: (value: boolean) => void;
+  setFontHintTarget: (value: ResttyFontHintTarget) => void;
+  setFontSources: (sources: ResttyFontSource[]) => Promise<void>;
   applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
   resetTheme: () => void;
   sendInput: (text: string, source?: string) => void;
@@ -98,6 +107,22 @@ export class ResttyPaneHandle implements ResttyPaneApi {
 
   setFontSize(value: number): void {
     this.resolvePane().app.setFontSize(value);
+  }
+
+  setLigatures(value: boolean): void {
+    this.resolvePane().app.setLigatures(value);
+  }
+
+  setFontHinting(value: boolean): void {
+    this.resolvePane().app.setFontHinting(value);
+  }
+
+  setFontHintTarget(value: ResttyFontHintTarget): void {
+    this.resolvePane().app.setFontHintTarget(value);
+  }
+
+  setFontSources(sources: ResttyFontSource[]): Promise<void> {
+    return this.resolvePane().app.setFontSources(sources);
   }
 
   applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {

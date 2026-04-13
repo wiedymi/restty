@@ -1,5 +1,10 @@
 import type { InputHandler, MouseMode } from "../../input";
 import type { GhosttyTheme } from "../../theme";
+import type {
+  ResttyFontHintTarget,
+  ResttyFontSource,
+  ResttySearchState,
+} from "../../runtime/types";
 import type { ResttyPaneHandle } from "../restty-pane-handle";
 import type {
   ResttyPaneSearchUiCloseOptions,
@@ -30,6 +35,22 @@ export abstract class ResttyActivePaneApi {
     this.requireActivePaneHandle().setFontSize(value);
   }
 
+  setLigatures(value: boolean): void {
+    this.requireActivePaneHandle().setLigatures(value);
+  }
+
+  setFontHinting(value: boolean): void {
+    this.requireActivePaneHandle().setFontHinting(value);
+  }
+
+  setFontHintTarget(value: ResttyFontHintTarget): void {
+    this.requireActivePaneHandle().setFontHintTarget(value);
+  }
+
+  setFontSources(sources: ResttyFontSource[]): Promise<void> {
+    return this.requireActivePaneHandle().setFontSources(sources);
+  }
+
   applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {
     this.requireActivePaneHandle().applyTheme(theme, sourceLabel);
   }
@@ -50,6 +71,14 @@ export abstract class ResttyActivePaneApi {
     this.requireActivePaneHandle().clearScreen();
   }
 
+  connectPty(url = ""): void {
+    this.requireActivePaneHandle().connectPty(url);
+  }
+
+  disconnectPty(): void {
+    this.requireActivePaneHandle().disconnectPty();
+  }
+
   setMouseMode(value: MouseMode): void {
     this.requireActivePaneHandle().setMouseMode(value);
   }
@@ -64,6 +93,30 @@ export abstract class ResttyActivePaneApi {
 
   pasteFromClipboard(): Promise<boolean> {
     return this.requireActivePaneHandle().pasteFromClipboard();
+  }
+
+  selectWordAtClientPoint(clientX: number, clientY: number): boolean {
+    return this.requireActivePaneHandle().selectWordAtClientPoint(clientX, clientY);
+  }
+
+  setSearchQuery(query: string): void {
+    this.requireActivePaneHandle().setSearchQuery(query);
+  }
+
+  clearSearch(): void {
+    this.requireActivePaneHandle().clearSearch();
+  }
+
+  searchNext(): void {
+    this.requireActivePaneHandle().searchNext();
+  }
+
+  searchPrevious(): void {
+    this.requireActivePaneHandle().searchPrevious();
+  }
+
+  getSearchState(): ResttySearchState {
+    return this.requireActivePaneHandle().getSearchState();
   }
 
   openSearch(options?: ResttyPaneSearchUiOpenOptions): void {
@@ -88,6 +141,14 @@ export abstract class ResttyActivePaneApi {
 
   setSearchUiStyleOptions(options: ResttyManagedPaneSearchUiStyleOptions): void {
     this.requireActivePaneHandle().setSearchUiStyleOptions(options);
+  }
+
+  setShaderStages(stages: ReturnType<ResttyPaneHandle["getShaderStages"]>): void {
+    this.requireActivePaneHandle().setShaderStages(stages);
+  }
+
+  getShaderStages(): ReturnType<ResttyPaneHandle["getShaderStages"]> {
+    return this.requireActivePaneHandle().getShaderStages();
   }
 
   dumpAtlasForCodepoint(cp: number): void {
