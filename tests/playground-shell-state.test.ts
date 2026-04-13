@@ -2,15 +2,9 @@ import { beforeEach, expect, test } from "bun:test";
 import { get } from "svelte/store";
 import type { LocalFontOption } from "../playground/lib/font-controls.ts";
 import {
+  ACTIVE_PANE_STATE_EVENT,
   CONNECTION_STATE_EVENT,
-  FONT_FAMILY_STATE_EVENT,
-  FONT_RENDERING_STATE_EVENT,
-  LOCAL_FONT_STATE_EVENT,
-  MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_STATE_EVENT,
-  SHADER_PRESET_STATE_EVENT,
-  TERMINAL_STATE_EVENT,
-  THEME_SELECT_STATE_EVENT,
 } from "../playground/lib/shell-events.ts";
 import {
   appearanceShellState,
@@ -31,11 +25,13 @@ test("startShellStateBridge syncs terminal and connection state from shell event
   const stop = startShellStateBridge(target);
 
   target.dispatchEvent(
-    new CustomEvent(TERMINAL_STATE_EVENT, {
+    new CustomEvent(ACTIVE_PANE_STATE_EVENT, {
       detail: {
-        pauseLabel: "Resume",
-        renderer: "webgpu",
-        fontSize: 24,
+        terminal: {
+          pauseLabel: "Resume",
+          renderer: "webgpu",
+          fontSize: 24,
+        },
       },
     }),
   );
@@ -82,42 +78,26 @@ test("startShellStateBridge syncs appearance state from shell events", () => {
   ];
 
   target.dispatchEvent(
-    new CustomEvent(FONT_RENDERING_STATE_EVENT, {
+    new CustomEvent(ACTIVE_PANE_STATE_EVENT, {
       detail: {
-        ligatures: "off",
-        fontHinting: "on",
-        fontHintTarget: "light",
-      },
-    }),
-  );
-  target.dispatchEvent(
-    new CustomEvent(MOUSE_MODE_STATE_EVENT, {
-      detail: { value: "on" },
-    }),
-  );
-  target.dispatchEvent(
-    new CustomEvent(THEME_SELECT_STATE_EVENT, {
-      detail: { value: "Aizen Dark" },
-    }),
-  );
-  target.dispatchEvent(
-    new CustomEvent(SHADER_PRESET_STATE_EVENT, {
-      detail: { value: "aurora" },
-    }),
-  );
-  target.dispatchEvent(
-    new CustomEvent(FONT_FAMILY_STATE_EVENT, {
-      detail: { value: "jetbrains" },
-    }),
-  );
-  target.dispatchEvent(
-    new CustomEvent(LOCAL_FONT_STATE_EVENT, {
-      detail: {
-        value: "local:fira%20code",
-        hintText: "Detected 1 local font families.",
-        selectDisabled: false,
-        loadDisabled: false,
-        options,
+        appearance: {
+          mouseMode: "on",
+          fontFamily: "jetbrains",
+          localFont: {
+            value: "local:fira%20code",
+            hintText: "Detected 1 local font families.",
+            selectDisabled: false,
+            loadDisabled: false,
+            options,
+          },
+          fontRendering: {
+            ligatures: "off",
+            fontHinting: "on",
+            fontHintTarget: "light",
+          },
+          shaderPreset: "aurora",
+          themeSelectValue: "Aizen Dark",
+        },
       },
     }),
   );
@@ -140,15 +120,66 @@ test("startShellStateBridge syncs appearance state from shell events", () => {
   stop();
 });
 
+test("startShellStateBridge merges partial active pane updates", () => {
+  const target = new EventTarget();
+  const stop = startShellStateBridge(target);
+
+  target.dispatchEvent(
+    new CustomEvent(ACTIVE_PANE_STATE_EVENT, {
+      detail: {
+        terminal: {
+          pauseLabel: "Resume",
+          renderer: "webgl2",
+          fontSize: 20,
+        },
+        appearance: {
+          fontFamily: "jetbrains",
+          mouseMode: "auto",
+          shaderPreset: "aurora",
+          themeSelectValue: "Aizen Dark",
+        },
+      },
+    }),
+  );
+  target.dispatchEvent(
+    new CustomEvent(ACTIVE_PANE_STATE_EVENT, {
+      detail: {
+        terminal: {
+          pauseLabel: "Pause",
+        },
+        appearance: {
+          mouseMode: "drag",
+        },
+      },
+    }),
+  );
+
+  expect(get(terminalShellState)).toEqual({
+    pauseLabel: "Pause",
+    renderer: "webgl2",
+    fontSize: "20",
+  });
+  expect(get(appearanceShellState)).toMatchObject({
+    fontFamily: "jetbrains",
+    mouseMode: "drag",
+    shaderPreset: "aurora",
+    themeSelectValue: "Aizen Dark",
+  });
+
+  stop();
+});
+
 test("stop bridge removes listeners", () => {
   const target = new EventTarget();
   const stop = startShellStateBridge(target);
 
   stop();
   target.dispatchEvent(
-    new CustomEvent(TERMINAL_STATE_EVENT, {
+    new CustomEvent(ACTIVE_PANE_STATE_EVENT, {
       detail: {
-        pauseLabel: "Resume",
+        terminal: {
+          pauseLabel: "Resume",
+        },
       },
     }),
   );

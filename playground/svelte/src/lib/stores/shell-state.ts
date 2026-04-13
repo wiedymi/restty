@@ -10,21 +10,13 @@ import {
   DEFAULT_TERMINAL_RENDERER,
 } from "../../../../lib/shell-defaults.ts";
 import {
+  ACTIVE_PANE_STATE_EVENT,
   CONNECTION_STATE_EVENT,
-  FONT_FAMILY_STATE_EVENT,
-  FONT_RENDERING_STATE_EVENT,
-  LOCAL_FONT_STATE_EVENT,
-  MOUSE_MODE_STATE_EVENT,
   PTY_BUTTON_STATE_EVENT,
-  SHADER_PRESET_STATE_EVENT,
-  TERMINAL_STATE_EVENT,
-  THEME_SELECT_STATE_EVENT,
+  type ActivePaneAppearanceStateDetail,
+  type ActivePaneStateDetail,
   type ConnectionStateDetail,
-  type FontRenderingStateDetail,
-  type LocalFontStateDetail,
   type PtyButtonStateDetail,
-  type ShellStringValueDetail,
-  type TerminalStateDetail,
 } from "../../../../lib/shell-events.ts";
 
 type TerminalShellState = {
@@ -102,19 +94,6 @@ export function resetShellState() {
 }
 
 export function startShellStateBridge(target: EventTarget = window) {
-  const handleTerminalState: EventListener = (event) => {
-    const detail = (event as CustomEvent<TerminalStateDetail>).detail;
-    if (!detail) return;
-    terminalShellState.update((state) => ({
-      pauseLabel: typeof detail.pauseLabel === "string" ? detail.pauseLabel : state.pauseLabel,
-      renderer: typeof detail.renderer === "string" ? detail.renderer : state.renderer,
-      fontSize:
-        detail.fontSize !== undefined && detail.fontSize !== null
-          ? String(detail.fontSize)
-          : state.fontSize,
-    }));
-  };
-
   const handlePtyButtonState: EventListener = (event) => {
     const detail = (event as CustomEvent<PtyButtonStateDetail>).detail;
     if (typeof detail?.label !== "string") return;
@@ -143,73 +122,78 @@ export function startShellStateBridge(target: EventTarget = window) {
     }));
   };
 
-  const handleFontRenderingState: EventListener = (event) => {
-    const detail = (event as CustomEvent<FontRenderingStateDetail>).detail;
-    if (!detail) return;
+  const applyAppearanceState = (detail: ActivePaneAppearanceStateDetail) => {
     appearanceShellState.update((state) => ({
       ...state,
-      ligatures: typeof detail.ligatures === "string" ? detail.ligatures : state.ligatures,
-      fontHinting: typeof detail.fontHinting === "string" ? detail.fontHinting : state.fontHinting,
+      fontFamily: typeof detail.fontFamily === "string" ? detail.fontFamily : state.fontFamily,
+      mouseMode: typeof detail.mouseMode === "string" ? detail.mouseMode : state.mouseMode,
+      shaderPreset:
+        typeof detail.shaderPreset === "string" ? detail.shaderPreset : state.shaderPreset,
+      themeSelectValue:
+        typeof detail.themeSelectValue === "string"
+          ? detail.themeSelectValue
+          : state.themeSelectValue,
+      ligatures:
+        typeof detail.fontRendering?.ligatures === "string"
+          ? detail.fontRendering.ligatures
+          : state.ligatures,
+      fontHinting:
+        typeof detail.fontRendering?.fontHinting === "string"
+          ? detail.fontRendering.fontHinting
+          : state.fontHinting,
       fontHintTarget:
-        typeof detail.fontHintTarget === "string" ? detail.fontHintTarget : state.fontHintTarget,
-    }));
-  };
-
-  const handleStringValue =
-    <K extends keyof AppearanceShellState>(key: K): EventListener =>
-    (event) => {
-      const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
-      if (typeof detail?.value !== "string") return;
-      appearanceShellState.update((state) => ({
-        ...state,
-        [key]: detail.value!,
-      }));
-    };
-
-  const handleLocalFontState: EventListener = (event) => {
-    const detail = (event as CustomEvent<LocalFontStateDetail>).detail;
-    if (!detail) return;
-    appearanceShellState.update((state) => ({
-      ...state,
-      localFontValue: typeof detail.value === "string" ? detail.value : state.localFontValue,
+        typeof detail.fontRendering?.fontHintTarget === "string"
+          ? detail.fontRendering.fontHintTarget
+          : state.fontHintTarget,
+      localFontValue:
+        typeof detail.localFont?.value === "string" ? detail.localFont.value : state.localFontValue,
       localFontHintText:
-        typeof detail.hintText === "string" ? detail.hintText : state.localFontHintText,
+        typeof detail.localFont?.hintText === "string"
+          ? detail.localFont.hintText
+          : state.localFontHintText,
       localFontSelectDisabled:
-        typeof detail.selectDisabled === "boolean"
-          ? detail.selectDisabled
+        typeof detail.localFont?.selectDisabled === "boolean"
+          ? detail.localFont.selectDisabled
           : state.localFontSelectDisabled,
       loadLocalFontsDisabled:
-        typeof detail.loadDisabled === "boolean"
-          ? detail.loadDisabled
+        typeof detail.localFont?.loadDisabled === "boolean"
+          ? detail.localFont.loadDisabled
           : state.loadLocalFontsDisabled,
-      localFontOptions: Array.isArray(detail.options) ? detail.options : state.localFontOptions,
+      localFontOptions: Array.isArray(detail.localFont?.options)
+        ? detail.localFont.options
+        : state.localFontOptions,
     }));
   };
 
-  const handleMouseModeState = handleStringValue("mouseMode");
-  const handleShaderPresetState = handleStringValue("shaderPreset");
-  const handleThemeSelectState = handleStringValue("themeSelectValue");
-  const handleFontFamilyState = handleStringValue("fontFamily");
+  const handleActivePaneState: EventListener = (event) => {
+    const detail = (event as CustomEvent<ActivePaneStateDetail>).detail;
+    if (!detail) return;
+    if (detail.terminal) {
+      terminalShellState.update((state) => ({
+        pauseLabel:
+          typeof detail.terminal?.pauseLabel === "string"
+            ? detail.terminal.pauseLabel
+            : state.pauseLabel,
+        renderer:
+          typeof detail.terminal?.renderer === "string" ? detail.terminal.renderer : state.renderer,
+        fontSize:
+          detail.terminal?.fontSize !== undefined && detail.terminal.fontSize !== null
+            ? String(detail.terminal.fontSize)
+            : state.fontSize,
+      }));
+    }
+    if (detail.appearance) {
+      applyAppearanceState(detail.appearance);
+    }
+  };
 
-  target.addEventListener(TERMINAL_STATE_EVENT, handleTerminalState);
+  target.addEventListener(ACTIVE_PANE_STATE_EVENT, handleActivePaneState);
   target.addEventListener(PTY_BUTTON_STATE_EVENT, handlePtyButtonState);
   target.addEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
-  target.addEventListener(FONT_RENDERING_STATE_EVENT, handleFontRenderingState);
-  target.addEventListener(MOUSE_MODE_STATE_EVENT, handleMouseModeState);
-  target.addEventListener(SHADER_PRESET_STATE_EVENT, handleShaderPresetState);
-  target.addEventListener(THEME_SELECT_STATE_EVENT, handleThemeSelectState);
-  target.addEventListener(FONT_FAMILY_STATE_EVENT, handleFontFamilyState);
-  target.addEventListener(LOCAL_FONT_STATE_EVENT, handleLocalFontState);
 
   return () => {
-    target.removeEventListener(TERMINAL_STATE_EVENT, handleTerminalState);
+    target.removeEventListener(ACTIVE_PANE_STATE_EVENT, handleActivePaneState);
     target.removeEventListener(PTY_BUTTON_STATE_EVENT, handlePtyButtonState);
     target.removeEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
-    target.removeEventListener(FONT_RENDERING_STATE_EVENT, handleFontRenderingState);
-    target.removeEventListener(MOUSE_MODE_STATE_EVENT, handleMouseModeState);
-    target.removeEventListener(SHADER_PRESET_STATE_EVENT, handleShaderPresetState);
-    target.removeEventListener(THEME_SELECT_STATE_EVENT, handleThemeSelectState);
-    target.removeEventListener(FONT_FAMILY_STATE_EVENT, handleFontFamilyState);
-    target.removeEventListener(LOCAL_FONT_STATE_EVENT, handleLocalFontState);
   };
 }

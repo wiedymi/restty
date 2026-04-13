@@ -1,16 +1,7 @@
 import { expect, test } from "bun:test";
 import { createPaneShellSync } from "../playground/lib/pane-shell-sync.ts";
 import type { PaneState } from "../playground/lib/pane-state.ts";
-import {
-  FONT_FAMILY_STATE_EVENT,
-  FONT_RENDERING_STATE_EVENT,
-  LOCAL_FONT_STATE_EVENT,
-  MOUSE_MODE_STATE_EVENT,
-  PTY_BUTTON_STATE_EVENT,
-  SHADER_PRESET_STATE_EVENT,
-  TERMINAL_STATE_EVENT,
-  THEME_SELECT_STATE_EVENT,
-} from "../playground/lib/shell-events.ts";
+import { ACTIVE_PANE_STATE_EVENT, PTY_BUTTON_STATE_EVENT } from "../playground/lib/shell-events.ts";
 
 function createPaneState(overrides: Partial<PaneState> = {}): PaneState {
   return {
@@ -51,13 +42,7 @@ test("pane shell sync dispatches active pane state through shell events", () => 
     });
   };
 
-  target.addEventListener(TERMINAL_STATE_EVENT, record(TERMINAL_STATE_EVENT));
-  target.addEventListener(FONT_FAMILY_STATE_EVENT, record(FONT_FAMILY_STATE_EVENT));
-  target.addEventListener(LOCAL_FONT_STATE_EVENT, record(LOCAL_FONT_STATE_EVENT));
-  target.addEventListener(FONT_RENDERING_STATE_EVENT, record(FONT_RENDERING_STATE_EVENT));
-  target.addEventListener(MOUSE_MODE_STATE_EVENT, record(MOUSE_MODE_STATE_EVENT));
-  target.addEventListener(SHADER_PRESET_STATE_EVENT, record(SHADER_PRESET_STATE_EVENT));
-  target.addEventListener(THEME_SELECT_STATE_EVENT, record(THEME_SELECT_STATE_EVENT));
+  target.addEventListener(ACTIVE_PANE_STATE_EVENT, record(ACTIVE_PANE_STATE_EVENT));
   target.addEventListener(PTY_BUTTON_STATE_EVENT, record(PTY_BUTTON_STATE_EVENT));
 
   const syncedStates: PaneState[] = [];
@@ -105,41 +90,31 @@ test("pane shell sync dispatches active pane state through shell events", () => 
   expect(syncedStates).toEqual([state]);
   expect(seen).toEqual([
     {
-      type: TERMINAL_STATE_EVENT,
-      detail: { pauseLabel: "Resume", renderer: "webgpu", fontSize: 22 },
-    },
-    {
-      type: FONT_FAMILY_STATE_EVENT,
-      detail: { value: "jetbrains" },
-    },
-    {
-      type: LOCAL_FONT_STATE_EVENT,
+      type: ACTIVE_PANE_STATE_EVENT,
       detail: {
-        value: "local:fira%20code",
-        hintText: "Detected 1 local font families.",
-        loadDisabled: true,
-        selectDisabled: true,
-        options: [
-          { value: "", label: "Local Font: None" },
-          { value: "local:fira%20code", label: "Local Font: Fira Code" },
-        ],
+        terminal: {
+          pauseLabel: "Resume",
+          renderer: "webgpu",
+          fontSize: 22,
+        },
+        appearance: {
+          fontFamily: "jetbrains",
+          localFont: {
+            value: "local:fira%20code",
+            hintText: "Detected 1 local font families.",
+            loadDisabled: true,
+            selectDisabled: true,
+            options: [
+              { value: "", label: "Local Font: None" },
+              { value: "local:fira%20code", label: "Local Font: Fira Code" },
+            ],
+          },
+          fontRendering: { ligatures: "off", fontHinting: "on", fontHintTarget: "light" },
+          mouseMode: "drag",
+          shaderPreset: "aurora",
+          themeSelectValue: "Aizen Dark",
+        },
       },
-    },
-    {
-      type: FONT_RENDERING_STATE_EVENT,
-      detail: { ligatures: "off", fontHinting: "on", fontHintTarget: "light" },
-    },
-    {
-      type: MOUSE_MODE_STATE_EVENT,
-      detail: { value: "drag" },
-    },
-    {
-      type: SHADER_PRESET_STATE_EVENT,
-      detail: { value: "aurora" },
-    },
-    {
-      type: THEME_SELECT_STATE_EVENT,
-      detail: { value: "Aizen Dark" },
     },
     {
       type: PTY_BUTTON_STATE_EVENT,

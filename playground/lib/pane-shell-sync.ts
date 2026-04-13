@@ -9,14 +9,9 @@ import {
 import type { PaneState } from "./pane-state.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
 import {
-  FONT_FAMILY_STATE_EVENT,
-  FONT_RENDERING_STATE_EVENT,
-  LOCAL_FONT_STATE_EVENT,
-  MOUSE_MODE_STATE_EVENT,
+  ACTIVE_PANE_STATE_EVENT,
   PTY_BUTTON_STATE_EVENT,
-  SHADER_PRESET_STATE_EVENT,
-  TERMINAL_STATE_EVENT,
-  THEME_SELECT_STATE_EVENT,
+  type ActivePaneStateDetail,
   type LocalFontStateDetail,
 } from "./shell-events.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
@@ -93,10 +88,16 @@ function dispatchStateEvent(target: EventTarget | undefined, type: string, detai
 export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
   const target = options.target;
 
+  function dispatchActivePaneState(detail: ActivePaneStateDetail) {
+    dispatchStateEvent(target, ACTIVE_PANE_STATE_EVENT, detail);
+  }
+
   function syncPauseButton(state: PaneState) {
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, TERMINAL_STATE_EVENT, {
-        pauseLabel: state.paused ? "Resume" : "Pause",
+      dispatchActivePaneState({
+        terminal: {
+          pauseLabel: state.paused ? "Resume" : "Pause",
+        },
       });
       return;
     }
@@ -107,10 +108,12 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
 
   function syncTerminalControlValues(state: PaneState) {
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, TERMINAL_STATE_EVENT, {
-        pauseLabel: state.paused ? "Resume" : "Pause",
-        renderer: state.renderer,
-        fontSize: state.fontSize,
+      dispatchActivePaneState({
+        terminal: {
+          pauseLabel: state.paused ? "Resume" : "Pause",
+          renderer: state.renderer,
+          fontSize: state.fontSize,
+        },
       });
       return;
     }
@@ -139,7 +142,11 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
 
   function syncThemeSelectValue(value: string) {
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, THEME_SELECT_STATE_EVENT, { value });
+      dispatchActivePaneState({
+        appearance: {
+          themeSelectValue: value,
+        },
+      });
       return;
     }
     if (options.elements.themeSelect) {
@@ -149,7 +156,11 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
 
   function syncShaderPresetValue(value = options.getSelectedShaderPreset()) {
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, SHADER_PRESET_STATE_EVENT, { value });
+      dispatchActivePaneState({
+        appearance: {
+          shaderPreset: value,
+        },
+      });
       return;
     }
     if (options.elements.shaderPresetEl) {
@@ -159,8 +170,10 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
 
   function syncMouseModeValue(value: string) {
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, MOUSE_MODE_STATE_EVENT, {
-        value,
+      dispatchActivePaneState({
+        appearance: {
+          mouseMode: value,
+        },
       });
       return;
     }
@@ -174,7 +187,11 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
   function syncFontFamilyValue() {
     const value = options.getSelectedFontFamily();
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, FONT_FAMILY_STATE_EVENT, { value });
+      dispatchActivePaneState({
+        appearance: {
+          fontFamily: value,
+        },
+      });
       return;
     }
     if (options.elements.fontFamilySelect) {
@@ -198,16 +215,20 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
   function syncLocalFontControls() {
     const supportsPicker = supportsLocalFontPicker();
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, LOCAL_FONT_STATE_EVENT, {
-        value: getLocalFontSelectValue(options.getSelectedLocalFontMatcher()),
-        hintText: options.getLocalFontHintText(),
-        loadDisabled: !supportsPicker,
-        selectDisabled: !supportsPicker,
-        options: [
-          { value: "", label: "Local Font: None" },
-          ...options.getDetectedLocalFontOptions(),
-        ],
-      } satisfies LocalFontStateDetail);
+      dispatchActivePaneState({
+        appearance: {
+          localFont: {
+            value: getLocalFontSelectValue(options.getSelectedLocalFontMatcher()),
+            hintText: options.getLocalFontHintText(),
+            loadDisabled: !supportsPicker,
+            selectDisabled: !supportsPicker,
+            options: [
+              { value: "", label: "Local Font: None" },
+              ...options.getDetectedLocalFontOptions(),
+            ],
+          } satisfies LocalFontStateDetail,
+        },
+      });
       return;
     }
     syncFontFamilyControlState();
@@ -218,10 +239,14 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
 
   function syncFontRenderingControls() {
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, FONT_RENDERING_STATE_EVENT, {
-        ligatures: options.getSelectedLigatures() ? "on" : "off",
-        fontHinting: options.getSelectedFontHinting() ? "on" : "off",
-        fontHintTarget: options.getSelectedFontHintTarget(),
+      dispatchActivePaneState({
+        appearance: {
+          fontRendering: {
+            ligatures: options.getSelectedLigatures() ? "on" : "off",
+            fontHinting: options.getSelectedFontHinting() ? "on" : "off",
+            fontHintTarget: options.getSelectedFontHintTarget(),
+          },
+        },
       });
       return;
     }
@@ -237,12 +262,44 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
 
   function renderActivePaneControls(pane: PaneShellSyncPane, state: PaneState) {
     options.syncSelectedDefaults(state);
+    state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
+    if (options.usesSvelteShell) {
+      const supportsPicker = supportsLocalFontPicker();
+      dispatchActivePaneState({
+        terminal: {
+          pauseLabel: state.paused ? "Resume" : "Pause",
+          renderer: state.renderer,
+          fontSize: state.fontSize,
+        },
+        appearance: {
+          fontFamily: options.getSelectedFontFamily(),
+          localFont: {
+            value: getLocalFontSelectValue(options.getSelectedLocalFontMatcher()),
+            hintText: options.getLocalFontHintText(),
+            loadDisabled: !supportsPicker,
+            selectDisabled: !supportsPicker,
+            options: [
+              { value: "", label: "Local Font: None" },
+              ...options.getDetectedLocalFontOptions(),
+            ],
+          },
+          fontRendering: {
+            ligatures: options.getSelectedLigatures() ? "on" : "off",
+            fontHinting: options.getSelectedFontHinting() ? "on" : "off",
+            fontHintTarget: options.getSelectedFontHintTarget(),
+          },
+          mouseMode: state.mouseMode,
+          shaderPreset: options.getSelectedShaderPreset(),
+          themeSelectValue: state.theme.selectValue,
+        },
+      });
+      return;
+    }
     syncTerminalControlValues(state);
     syncFontFamilyValue();
     syncFontFamilyControlState();
     syncLocalFontControls();
     syncFontRenderingControls();
-    state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
     syncMouseModeValue(state.mouseMode);
     syncShaderPresetValue();
     syncThemeSelectValue(state.theme.selectValue);
