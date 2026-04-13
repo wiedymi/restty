@@ -1,4 +1,4 @@
-import type { ResttyShaderStage } from "../runtime/types";
+import type { ResttyShaderStage } from "../../runtime/core/models";
 import type {
   ResttyInterceptorOptions,
   ResttyPlugin,

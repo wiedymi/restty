@@ -1,6 +1,6 @@
 import { createManagedPaneDom } from "./managed-pane-dom";
 import { createManagedPaneRuntime } from "./managed-pane-runtime";
-import type { ResttyAppCallbacks, ResttyAppSession } from "../../runtime/types";
+import type { ResttyAppCallbacks, ResttyAppSession } from "../../runtime/core/resources";
 import type {
   ResttyManagedAppPane,
   ResttyRuntimeServicesConfigInput,

@@ -1,5 +1,5 @@
 import type { ResttyPaneSplitDirection } from "./panes-types";
-import type { ResttyShaderStage } from "../runtime/types";
+import type { ResttyShaderStage } from "../../runtime/core/models";
 import type { ResttyPaneHandle } from "./restty-pane-handle";
 import type { Restty } from "./restty";
 

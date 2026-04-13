@@ -1,4 +1,5 @@
-import type { ResttyRuntime, ResttyRuntimeConfig } from "../runtime/types";
+import type { ResttyRuntime } from "../runtime/core/api";
+import type { ResttyRuntimeConfig } from "../runtime/core/config";
 import { createResttyRuntime as createResttyRuntimeImpl } from "../runtime/create-runtime";
 
 /** Internal runtime-construction boundary used by pane manager wiring. */

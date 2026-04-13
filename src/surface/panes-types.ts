@@ -1,4 +1,4 @@
-import type { ResttyRuntime } from "../runtime/types";
+import type { ResttyRuntime } from "../runtime/core/api";
 
 /**
  * Direction for splitting a pane.

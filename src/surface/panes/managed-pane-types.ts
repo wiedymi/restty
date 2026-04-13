@@ -6,11 +6,8 @@ import type {
   ResttyPaneStylesOptions,
   ResttyPaneWithApp,
 } from "../panes-types";
-import type {
-  ResttyAppSession,
-  ResttyRuntimeServicesConfig,
-  ResttyTerminalConfig,
-} from "../../runtime/types";
+import type { ResttyRuntimeServicesConfig, ResttyTerminalConfig } from "../../runtime/core/config";
+import type { ResttyAppSession } from "../../runtime/core/resources";
 import type {
   ResttyPaneSearchUiCloseOptions,
   ResttyPaneSearchUiOpenOptions,

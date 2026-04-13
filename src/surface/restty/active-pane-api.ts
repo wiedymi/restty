@@ -4,7 +4,7 @@ import type {
   ResttyFontHintTarget,
   ResttyFontSource,
   ResttySearchState,
-} from "../../runtime/types";
+} from "../../runtime/core/models";
 import type { ResttyPaneHandle } from "../restty-pane-handle";
 import type {
   ResttyPaneSearchUiCloseOptions,

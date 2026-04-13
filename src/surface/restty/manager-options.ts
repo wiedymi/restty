@@ -1,7 +1,7 @@
 import type { DesktopNotification } from "../../input";
 import type { CreateResttyAppPaneManagerOptions, ResttyManagedAppPane } from "../pane-app-manager";
 import type { ResttyPluginEvents, ResttyRenderHookPayload } from "../plugins/types";
-import type { ResttyFontSource } from "../../runtime/types";
+import type { ResttyFontSource } from "../../runtime/core/models";
 import type { ResttyPluginHost } from "../plugins/host";
 import type { ResttyPaneSplitDirection } from "../panes-types";
 import type { ResttyShaderOps } from "./shader-ops";

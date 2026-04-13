@@ -1,4 +1,5 @@
-import type { ResttyAppSession, ResttyRuntimeServicesConfig } from "../../runtime/types";
+import type { ResttyRuntimeServicesConfig } from "../../runtime/core/config";
+import type { ResttyAppSession } from "../../runtime/core/resources";
 import type {
   ResttyDefaultPaneContextMenuOptions,
   ResttyManagedAppPane,

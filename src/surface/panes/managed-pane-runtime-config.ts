@@ -1,8 +1,5 @@
-import type {
-  ResttyAppCallbacks,
-  ResttyAppSession,
-  ResttyRuntimeConfig,
-} from "../../runtime/types";
+import type { ResttyAppCallbacks, ResttyAppSession } from "../../runtime/core/resources";
+import type { ResttyRuntimeConfig } from "../../runtime/core/config";
 import type {
   ResttyPaneRuntimeContext,
   ResttyRuntimeServicesConfigInput,

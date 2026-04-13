@@ -1,6 +1,6 @@
 import type { ResttyManagedAppPane } from "../pane-app-manager";
 import type { ResttyRenderStageHandle } from "../plugins/types";
-import type { ResttyShaderStage } from "../../runtime/types";
+import type { ResttyShaderStage } from "../../runtime/core/models";
 import type { ResttyManagedShaderStage } from "../plugins/runtime";
 import {
   cloneShaderStages,

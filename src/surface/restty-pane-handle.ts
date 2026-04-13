@@ -9,7 +9,7 @@ import type {
   ResttyFontSource,
   ResttySearchState,
   ResttyShaderStage,
-} from "../runtime/types";
+} from "../runtime/core/models";
 import type {
   ResttyPaneSearchUiCloseOptions,
   ResttyPaneSearchUiOpenOptions,

@@ -5,7 +5,7 @@ import {
   type ResttyManagedPaneStyleOptions,
   type ResttyManagedPaneSearchUiStyleOptions,
 } from "./pane-app-manager";
-import type { ResttyFontSource, ResttyShaderStage } from "../runtime/types";
+import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
 import { ResttyPaneHandle } from "./restty-pane-handle";
 import { ResttyActivePaneApi } from "./restty/active-pane-api";
 import {

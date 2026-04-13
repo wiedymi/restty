@@ -1,4 +1,4 @@
-import type { ResttySearchState } from "../../runtime/types";
+import type { ResttySearchState } from "../../runtime/core/models";
 import {
   applySearchUiStyleOptions,
   clearSearchUiStyleOptions,
