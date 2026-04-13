@@ -1,5 +1,6 @@
 import { clamp } from "../../grid";
-import { computeOverlayScrollbarLayout, type OverlayScrollbarLayout } from "./overlay-scrollbar";
+import type { OverlayScrollbarLayout } from "./overlay-scrollbar.types";
+import { computeOverlayScrollbarLayout } from "./overlay-scrollbar";
 import type {
   NativeScrollbarHost,
   NativeScrollbarHostOptions,

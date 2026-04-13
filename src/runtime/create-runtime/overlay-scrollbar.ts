@@ -1,20 +1,9 @@
+import type { OverlayScrollbarLayout } from "./overlay-scrollbar.types";
+
 export const OVERLAY_SCROLLBAR_WIDTH_CSS_PX = 7;
 export const OVERLAY_SCROLLBAR_MARGIN_CSS_PX = 4;
 export const OVERLAY_SCROLLBAR_INSET_Y_CSS_PX = 2;
 export const OVERLAY_SCROLLBAR_MIN_THUMB_CSS_PX = 28;
-
-export type OverlayScrollbarLayout = {
-  total: number;
-  offset: number;
-  len: number;
-  denom: number;
-  width: number;
-  trackX: number;
-  trackY: number;
-  trackH: number;
-  thumbY: number;
-  thumbH: number;
-};
 
 export function computeOverlayScrollbarLayout(
   total: number,
