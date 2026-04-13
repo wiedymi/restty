@@ -130,7 +130,7 @@ export type InputHandlerOptions = {
 };
 
 /**
- * Exposed mouse status for UI debugging.
+ * Exposed mouse status for UI displays.
  */
 export type MouseStatus = {
   mode: MouseMode;

@@ -2,10 +2,10 @@ import { expect, test } from "bun:test";
 import { createRuntimeReporting } from "../src/runtime/create-runtime/runtime-reporting";
 
 function createReporting(options: {
-  debugCursor?: { col: number; row: number };
+  activeCursor?: { col: number; row: number };
   renderCursorBounds?: { cols: number; rows: number };
 }) {
-  const debugCursor = options.debugCursor;
+  const activeCursor = options.activeCursor;
   const renderCursorBounds = options.renderCursorBounds ?? { cols: 80, rows: 24 };
   return createRuntimeReporting({
     selectionState: { active: false, dragging: false, anchor: null, focus: null },
@@ -14,10 +14,10 @@ function createReporting(options: {
     getWasm: () => null,
     getWasmHandle: () => 1,
     getWasmExports: () =>
-      debugCursor
+      activeCursor
         ? ({
-            restty_active_cursor_x: () => debugCursor.col,
-            restty_active_cursor_y: () => debugCursor.row,
+            restty_active_cursor_x: () => activeCursor.col,
+            restty_active_cursor_y: () => activeCursor.row,
           } as never)
         : null,
     callbacks: undefined,
@@ -27,8 +27,8 @@ function createReporting(options: {
   });
 }
 
-test("resolveCursorPosition keeps in-bounds render cursor even if debug differs", () => {
-  const reporting = createReporting({ debugCursor: { col: 12, row: 7 } });
+test("resolveCursorPosition keeps in-bounds render cursor even if active cursor differs", () => {
+  const reporting = createReporting({ activeCursor: { col: 12, row: 7 } });
 
   const resolved = reporting.resolveCursorPosition({
     row: 2,
@@ -43,8 +43,8 @@ test("resolveCursorPosition keeps in-bounds render cursor even if debug differs"
   expect(resolved).toEqual({ col: 3, row: 2, wideTail: false });
 });
 
-test("resolveCursorPosition ignores out-of-bounds debug cursor", () => {
-  const reporting = createReporting({ debugCursor: { col: 999, row: 999 } });
+test("resolveCursorPosition ignores out-of-bounds active cursor", () => {
+  const reporting = createReporting({ activeCursor: { col: 999, row: 999 } });
 
   const resolved = reporting.resolveCursorPosition({
     row: 5,
@@ -60,7 +60,7 @@ test("resolveCursorPosition ignores out-of-bounds debug cursor", () => {
 });
 
 test("resolveCursorPosition keeps last visible cursor when current cursor is hidden", () => {
-  const reporting = createReporting({ debugCursor: { col: 12, row: 7 } });
+  const reporting = createReporting({ activeCursor: { col: 12, row: 7 } });
 
   const visible = reporting.resolveCursorPosition({
     row: 4,
@@ -85,8 +85,8 @@ test("resolveCursorPosition keeps last visible cursor when current cursor is hid
   expect(hidden).toEqual({ col: 9, row: 4, wideTail: false });
 });
 
-test("resolveCursorPosition bootstraps hidden cursor from debug cursor", () => {
-  const reporting = createReporting({ debugCursor: { col: 12, row: 7 } });
+test("resolveCursorPosition bootstraps hidden cursor from active cursor", () => {
+  const reporting = createReporting({ activeCursor: { col: 12, row: 7 } });
 
   const hidden = reporting.resolveCursorPosition({
     row: 0,

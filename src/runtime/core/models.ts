@@ -19,7 +19,7 @@ export type ResttyUrlFontSource = {
   type: "url";
   /** URL to fetch the font file from. */
   url: string;
-  /** Human-readable label for debug/log output. */
+  /** Human-readable label for UI/status output. */
   label?: string;
 };
 
@@ -28,7 +28,7 @@ export type ResttyBufferFontSource = {
   type: "buffer";
   /** Raw font file bytes. */
   data: ResttyFontBufferData;
-  /** Human-readable label for debug/log output. */
+  /** Human-readable label for UI/status output. */
   label?: string;
 };
 
@@ -37,7 +37,7 @@ export type ResttyLocalFontSource = {
   type: "local";
   /** Font family name patterns to match against installed fonts. */
   matchers: string[];
-  /** Human-readable label for debug/log output. */
+  /** Human-readable label for UI/status output. */
   label?: string;
   /** If true, font loading fails when no local match is found. */
   required?: boolean;

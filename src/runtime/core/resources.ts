@@ -9,7 +9,7 @@ export type ResttyWasmLogListener = (message: string) => void;
 
 /** Shared parsed font face reused across panes within a session. */
 export type ResttyFontResourceFace = {
-  /** Human-readable label for debug/log output. */
+  /** Human-readable label for UI/status output. */
   label: string;
   /** Parsed text-shaper font instance. */
   font: TextShaperFont;
@@ -46,7 +46,7 @@ export type ResttyAppSession = {
 };
 
 /**
- * Optional DOM elements for debug/status displays.
+ * Optional DOM elements for status displays.
  */
 export type ResttyAppElements = {
   /** Renderer backend name display. */
