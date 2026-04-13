@@ -8,6 +8,7 @@ import {
 } from "./panes-types";
 import { createDefaultResttyPaneContextMenuItems } from "./panes/default-context-menu-items";
 import { createResttyPaneManager } from "./panes/manager";
+import { createManagedPaneDom } from "./panes/managed-pane-dom";
 import { getDefaultResttyAppSession } from "../runtime/session";
 import { createResttyRuntime } from "./app-factory";
 import type {
@@ -148,33 +149,6 @@ export type CreateResttyAppPaneManagerOptions = {
   onLayoutChanged?: () => void;
 };
 
-function createImeInput(className: string): HTMLTextAreaElement {
-  const imeInput = document.createElement("textarea");
-  imeInput.className = className;
-  imeInput.tabIndex = -1;
-  imeInput.autocapitalize = "off";
-  imeInput.autocomplete = "off";
-  imeInput.autocorrect = "off";
-  imeInput.spellcheck = false;
-  imeInput.style.position = "fixed";
-  imeInput.style.left = "0";
-  imeInput.style.top = "0";
-  imeInput.style.width = "1em";
-  imeInput.style.height = "1em";
-  imeInput.style.padding = "0";
-  imeInput.style.margin = "0";
-  imeInput.style.border = "0";
-  imeInput.style.outline = "none";
-  imeInput.style.background = "transparent";
-  imeInput.style.color = "transparent";
-  imeInput.style.caretColor = "transparent";
-  imeInput.style.overflow = "hidden";
-  imeInput.style.resize = "none";
-  imeInput.style.opacity = "0";
-  imeInput.style.pointerEvents = "none";
-  return imeInput;
-}
-
 function defaultInputTargetPredicate(target: HTMLElement): boolean {
   return (
     target.classList.contains("pane-ime-input") ||
@@ -262,20 +236,12 @@ export function createResttyAppPaneManager(
     shortcuts,
     contextMenu,
     createPane: ({ id, sourcePane }) => {
-      const container = document.createElement("div");
-      container.className = paneClassName;
-
-      const canvas = document.createElement("canvas");
-      canvas.className = canvasClassName;
-      canvas.tabIndex = 0;
-
-      const imeInput = createImeInput(imeInputClassName);
-
-      const termDebugEl = document.createElement("pre");
-      termDebugEl.className = termDebugClassName;
-      termDebugEl.setAttribute("aria-live", "polite");
-
-      container.append(canvas, imeInput, termDebugEl);
+      const { container, canvas, imeInput, termDebugEl } = createManagedPaneDom({
+        paneClassName,
+        canvasClassName,
+        imeInputClassName,
+        termDebugClassName,
+      });
 
       const context = { id, sourcePane, canvas, imeInput, termDebugEl };
       const baseTerminal =
