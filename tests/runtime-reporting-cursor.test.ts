@@ -21,9 +21,7 @@ function createReporting(options: {
             restty_active_cursor_y: () => activeCursor.row,
           } as never)
         : null,
-    callbacks: undefined,
     emitRuntimeEvent: options.emitRuntimeEvent,
-    cursorPosEl: null,
     setCursorForCpr: () => {},
   });
 }

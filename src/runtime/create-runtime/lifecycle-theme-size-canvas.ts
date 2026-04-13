@@ -90,10 +90,6 @@ export function createLifecycleCanvasHandlers(deps: LifecycleThemeSizeDeps) {
     if (!sizeChanged && !force) return;
     canvas.width = nextWidth;
     canvas.height = nextHeight;
-    if (deps.dprEl) deps.dprEl.textContent = dpr.toFixed(2);
-    deps.callbacks?.onDpr?.(dpr);
-    if (deps.sizeEl) deps.sizeEl.textContent = `${canvas.width}x${canvas.height}`;
-    deps.callbacks?.onCanvasSize?.(canvas.width, canvas.height);
     deps.setCurrentDpr(dpr);
     deps.resizeState.dpr = dpr;
     deps.resizeState.active = true;
@@ -116,8 +112,6 @@ export function createLifecycleCanvasHandlers(deps: LifecycleThemeSizeDeps) {
     const dpr = window.devicePixelRatio || 1;
     if (dpr !== deps.getCurrentDpr()) {
       deps.setCurrentDpr(dpr);
-      if (deps.dprEl) deps.dprEl.textContent = dpr.toFixed(2);
-      deps.callbacks?.onDpr?.(dpr);
     }
 
     const metrics = deps.computeCellMetrics();
@@ -126,8 +120,6 @@ export function createLifecycleCanvasHandlers(deps: LifecycleThemeSizeDeps) {
     const canvas = deps.getCanvas();
     canvas.width = Math.max(1, nextCols * metrics.cellW);
     canvas.height = Math.max(1, nextRows * metrics.cellH);
-    if (deps.sizeEl) deps.sizeEl.textContent = `${canvas.width}x${canvas.height}`;
-    deps.callbacks?.onCanvasSize?.(canvas.width, canvas.height);
 
     deps.resizeState.dpr = deps.getCurrentDpr();
     deps.resizeState.active = true;

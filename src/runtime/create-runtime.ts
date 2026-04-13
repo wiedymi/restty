@@ -237,11 +237,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
 
   let canvas = canvasInput;
   let currentContextType: "webgpu" | "webgl2" | null = null;
-  const dprEl = elements?.dprEl ?? null;
-  const sizeEl = elements?.sizeEl ?? null;
-  const gridEl = elements?.gridEl ?? null;
-  const cellEl = elements?.cellEl ?? null;
-  const cursorPosEl = elements?.cursorPosEl ?? null;
 
   const DEFAULT_BG_BASE: Color = [0.08, 0.09, 0.1, 1.0];
   const DEFAULT_FG_BASE: Color = [0.92, 0.93, 0.95, 1.0];
@@ -495,9 +490,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     getWasm: () => wasm,
     getWasmHandle: () => wasmHandle,
     getWasmExports: () => wasmExports,
-    callbacks,
     emitRuntimeEvent: runtimeEvents.emit,
-    cursorPosEl,
     setCursorForCpr: (value) => {
       lastCursorForCpr = value;
     },
@@ -643,9 +636,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     fontState,
     fontConfig,
     gridState,
-    callbacks,
-    gridEl,
-    cellEl,
     getCanvas: () => canvas,
     getCurrentDpr: () => currentDpr,
     getActiveState: () => activeState,
@@ -691,9 +681,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     attachWindowEvents,
     autoResize,
     imeInput,
-    dprEl,
-    sizeEl,
-    callbacks,
     cleanupFns,
     cleanupCanvasFns,
     gridState,

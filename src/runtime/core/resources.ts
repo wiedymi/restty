@@ -48,33 +48,12 @@ export type ResttyAppSession = {
 /**
  * Optional DOM elements for status displays.
  */
-export type ResttyAppElements = {
-  /** Device pixel ratio display. */
-  dprEl?: HTMLElement | null;
-  /** Canvas pixel size display. */
-  sizeEl?: HTMLElement | null;
-  /** Grid column/row count display. */
-  gridEl?: HTMLElement | null;
-  /** Cell pixel dimensions display. */
-  cellEl?: HTMLElement | null;
-  /** Cursor position display. */
-  cursorPosEl?: HTMLElement | null;
-};
+export type ResttyAppElements = {};
 
 /**
  * Callbacks fired by the app when internal state changes.
  */
 export type ResttyAppCallbacks = {
-  /** Device pixel ratio changed. */
-  onDpr?: (dpr: number) => void;
-  /** Canvas pixel dimensions changed. */
-  onCanvasSize?: (width: number, height: number) => void;
-  /** Grid size (cols x rows) changed. */
-  onGridSize?: (cols: number, rows: number) => void;
-  /** Cell pixel dimensions changed. */
-  onCellSize?: (cellW: number, cellH: number) => void;
-  /** Cursor position changed. */
-  onCursor?: (col: number, row: number) => void;
   /** Terminal requested a desktop notification via OSC 9 / OSC 777. */
   onDesktopNotification?: (notification: DesktopNotification) => void;
   /** Terminal search state changed. */

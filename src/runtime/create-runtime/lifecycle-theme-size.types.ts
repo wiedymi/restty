@@ -4,7 +4,6 @@ import type { Color, WebGLState, WebGPUState } from "../../renderer";
 import type { GhosttyTheme } from "../../theme";
 import type { RuntimeTerminalColor } from "./highlight-terminal-color-utils.types";
 import type { ResttyWasm } from "../../wasm";
-import type { ResttyAppCallbacks } from "../core/resources";
 
 export type ActiveState = WebGPUState | WebGLState | null;
 
@@ -40,9 +39,6 @@ export type LifecycleThemeSizeDeps = {
   attachWindowEvents: boolean;
   autoResize: boolean;
   imeInput: HTMLTextAreaElement | null;
-  dprEl: HTMLElement | null;
-  sizeEl: HTMLElement | null;
-  callbacks: ResttyAppCallbacks | undefined;
   cleanupFns: Array<() => void>;
   cleanupCanvasFns: Array<() => void>;
   gridState: GridStateRef;

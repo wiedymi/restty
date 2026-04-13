@@ -3,16 +3,12 @@ import { fontHeightUnits } from "../../grid";
 import type { WebGLState, WebGPUState } from "../../renderer";
 import type { PtyTransport } from "../../pty";
 import type { ResttyWasm } from "../../wasm";
-import type { ResttyAppCallbacks } from "../core/resources";
 import type { CellMetrics, FontConfigRef, GridStateRef } from "./font-runtime-helpers.types";
 
 type CreateFontRuntimeGridHelpersOptions = {
   fontState: FontManagerState;
   fontConfig: FontConfigRef;
   gridState: GridStateRef;
-  callbacks?: ResttyAppCallbacks;
-  gridEl: HTMLElement | null;
-  cellEl: HTMLElement | null;
   getCanvas: () => HTMLCanvasElement;
   getCurrentDpr: () => number;
   getActiveState: () => WebGPUState | WebGLState | null;
@@ -30,9 +26,6 @@ export function createFontRuntimeGridHelpers(options: CreateFontRuntimeGridHelpe
     fontState,
     fontConfig,
     gridState,
-    callbacks,
-    gridEl,
-    cellEl,
     getCanvas,
     getCurrentDpr,
     getActiveState,
@@ -94,14 +87,6 @@ export function createFontRuntimeGridHelpers(options: CreateFontRuntimeGridHelpe
     if (!Number.isFinite(cols) || !Number.isFinite(rows)) return;
     const gridSizeChanged = cols !== gridState.cols || rows !== gridState.rows;
     const cellSizeChanged = metrics.cellW !== gridState.cellW || metrics.cellH !== gridState.cellH;
-    if (gridSizeChanged) {
-      if (gridEl) gridEl.textContent = `${cols}x${rows}`;
-      callbacks?.onGridSize?.(cols, rows);
-    }
-    if (cellSizeChanged) {
-      if (cellEl) cellEl.textContent = `${Math.round(metrics.cellW)}x${Math.round(metrics.cellH)}`;
-      callbacks?.onCellSize?.(metrics.cellW, metrics.cellH);
-    }
     const changed =
       gridSizeChanged || metrics.fontSizePx !== gridState.fontSizePx || cellSizeChanged;
 

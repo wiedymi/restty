@@ -133,11 +133,7 @@ export function createRuntimeReporting(options: RuntimeReportingOptions) {
   function reportCursor(cursorPos: { col: number; row: number } | null): void {
     if (!cursorPos) return;
     const { col, row } = cursorPos;
-    if (options.cursorPosEl && (col !== lastReportedCursorCol || row !== lastReportedCursorRow)) {
-      options.cursorPosEl.textContent = `${col},${row}`;
-    }
     if (col !== lastReportedCursorCol || row !== lastReportedCursorRow) {
-      options.callbacks?.onCursor?.(col, row);
       lastReportedCursorCol = col;
       lastReportedCursorRow = row;
     }

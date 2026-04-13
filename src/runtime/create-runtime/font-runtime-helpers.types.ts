@@ -10,7 +10,6 @@ import type { WebGLState, WebGPUState } from "../../renderer";
 import type { PtyTransport } from "../../pty";
 import type { ResttyWasm } from "../../wasm";
 import type { ResttyFontHintTarget } from "../core/models";
-import type { ResttyAppCallbacks } from "../core/resources";
 import type {
   AtlasOptions,
   GlyphBuffer,
@@ -99,9 +98,6 @@ export type CreateRuntimeFontRuntimeHelpersOptions = {
   fontState: FontManagerState;
   fontConfig: FontConfigRef;
   gridState: GridStateRef;
-  callbacks?: ResttyAppCallbacks;
-  gridEl: HTMLElement | null;
-  cellEl: HTMLElement | null;
   getCanvas: () => HTMLCanvasElement;
   getCurrentDpr: () => number;
   getActiveState: () => WebGPUState | WebGLState | null;
