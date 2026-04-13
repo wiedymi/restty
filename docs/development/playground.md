@@ -16,6 +16,7 @@ Static-file-only option:
 
 - `bun run build:assets`
 - `bun run playground:static`
+- `bun run playground:legacy`
 
 Hinting experiments (playground URL params):
 

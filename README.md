@@ -384,7 +384,8 @@ bun run test:ci       # CI-safe test target
 bun run lint          # lint
 bun run format:check  # formatting check
 bun run build:assets  # static playground bundle (playground/public/playground.js)
-bun run playground    # one-command local dev (PTY + playground dev server)
+bun run playground    # one-command local dev (PTY + Svelte/Vite playground shell)
+bun run playground:legacy  # legacy Bun playground shell
 bun run pty           # PTY websocket server only
 ```
 

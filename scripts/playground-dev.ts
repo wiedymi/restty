@@ -4,7 +4,7 @@ const children = [
     stderr: "inherit",
     stdin: "inherit",
   }),
-  Bun.spawn(["bun", "run", "playground/dev-server.ts"], {
+  Bun.spawn(["bun", "run", "playground:svelte"], {
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",
