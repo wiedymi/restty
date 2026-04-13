@@ -111,26 +111,26 @@ restty.selectWordAtClientPoint(120, 48);
 
 ### Provide custom fonts
 
-By default, restty uses a local-first font preset with CDN fallback. To fully control fonts, disable the preset and pass `fontSources`.
+By default, restty uses a local-first font preset with CDN fallback. To fully control fonts, disable the preset and pass `terminal.fontSources`.
 
 ```ts
 const restty = new Restty({
   root: document.getElementById("terminal") as HTMLElement,
-  appOptions: {
+  terminal: {
     fontPreset: "none",
+    fontSources: [
+      {
+        type: "url",
+        url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
+        label: "JetBrains Mono",
+      },
+      {
+        type: "local",
+        matchers: ["jetbrains mono nerd font", "fira code nerd font"],
+        label: "Local fallback",
+      },
+    ],
   },
-  fontSources: [
-    {
-      type: "url",
-      url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-      label: "JetBrains Mono",
-    },
-    {
-      type: "local",
-      matchers: ["jetbrains mono nerd font", "fira code nerd font"],
-      label: "Local fallback",
-    },
-  ],
 });
 ```
 
@@ -168,7 +168,7 @@ On touch devices, restty defaults to pan-first scrolling with long-press selecti
 ```ts
 const restty = new Restty({
   root: document.getElementById("terminal") as HTMLElement,
-  appOptions: {
+  terminal: {
     // "long-press" (default) | "drag" | "off"
     touchSelectionMode: "long-press",
     // Optional tuning knobs:
@@ -311,7 +311,7 @@ Compatibility scope:
 
 Primary class:
 
-- `new Restty({ root, ...options })`
+- `new Restty({ root, surface?, terminal?, services? })`
 - `createRestty(options)`
 
 Xterm compatibility:
@@ -352,7 +352,7 @@ Shader stages:
 
 Use these only when you need lower-level control:
 
-- `restty/internal`: full internal barrel (unstable; includes low-level modules like WASM/input/pty helpers)
+- `restty/internal`: curated unstable barrel for hackable users
 - `restty/esm`, `restty/esm/internal`, `restty/esm/xterm`: standalone bundled browser ESM entrypoints
 
 ## Local Development
@@ -370,10 +370,10 @@ Open `http://localhost:5173`.
 
 ## Code Layout
 
-- `src/surface/`: public API (`Restty`), pane manager orchestration, plugin host, xterm shim.
+- `src/surface/`: public API (`Restty`), pane orchestration, plugin host, xterm shim.
 - `src/runtime/`: terminal runtime/render loop implementation.
 - `src/renderer/`, `src/input/`, `src/pty/`, `src/fonts/`, `src/theme/`, `src/wasm/`, `src/selection/`: subsystem modules.
-- `src/app/`: compatibility re-export layer while internals are refactored.
+- `src/internal.ts`: unstable power-user barrel.
 
 ## Repository Commands
 

@@ -22,19 +22,20 @@ import { Restty } from "restty";
 const restty = new Restty({
   root: document.getElementById("paneRoot") as HTMLElement,
 
-  // Pane manager behavior
-  createInitialPane: true,
-  shortcuts: true,
-  defaultContextMenu: true,
+  surface: {
+    // Pane manager behavior
+    createInitialPane: true,
+    shortcuts: true,
+    defaultContextMenu: true,
 
-  // Pane visuals
-  paneStyles: {
-    inactivePaneOpacity: 0.82,
-    dividerThicknessPx: 1,
+    // Pane visuals
+    paneStyles: {
+      inactivePaneOpacity: 0.82,
+      dividerThicknessPx: 1,
+    },
   },
 
-  // App defaults for each pane
-  appOptions: {
+  terminal: {
     renderer: "auto", // "auto" | "webgpu" | "webgl2"
     fontSize: 16,
     ligatures: true,
@@ -48,6 +49,11 @@ const restty = new Restty({
     touchSelectionMode: "long-press",
     touchSelectionLongPressMs: 450,
     touchSelectionMoveThresholdPx: 10,
+  },
+
+  services: {
+    ptyTransport: myPtyTransport,
+    // Use this bucket for callbacks and debug hooks too.
   },
 });
 ```
@@ -142,21 +148,21 @@ To fully control font loading:
 ```ts
 const restty = new Restty({
   root: document.getElementById("paneRoot") as HTMLElement,
-  appOptions: {
+  terminal: {
     fontPreset: "none",
+    fontSources: [
+      {
+        type: "url",
+        url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
+        label: "JetBrains Mono",
+      },
+      {
+        type: "local",
+        matchers: ["sf mono", "jetbrains mono nerd font"],
+        required: false,
+      },
+    ],
   },
-  fontSources: [
-    {
-      type: "url",
-      url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-      label: "JetBrains Mono",
-    },
-    {
-      type: "local",
-      matchers: ["sf mono", "jetbrains mono nerd font"],
-      required: false,
-    },
-  ],
 });
 ```
 
@@ -204,7 +210,7 @@ Call `destroy()` when removing the terminal from the page to release GPU/WASM/PT
 
 Use these only if `Restty` is not enough:
 
-- `restty/internal`: full internal barrel (unstable; includes low-level WASM/PTY/input APIs)
+- `restty/internal`: curated unstable barrel for hackable users
 - `restty/esm/internal`: bundled internal barrel for browser ESM use
 
 Low-level example:
