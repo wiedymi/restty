@@ -8,9 +8,8 @@ import {
   type PtyResizeMeta,
   type PtyTransport,
   type ResttyFontSource,
-  type ResttyManagedAppPane,
   type ResttyShaderStage,
-} from "../src/internal.ts";
+} from "../src/index.ts";
 import { createDemoController, type PlaygroundDemoKind } from "./lib/demos.ts";
 import { createWebContainerPtyTransport } from "./lib/webcontainer-pty.ts";
 
@@ -119,6 +118,8 @@ type PaneState = {
   demos: ReturnType<typeof createDemoController> | null;
   ui: PaneUiState;
 };
+
+type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
@@ -767,7 +768,7 @@ function waitForAnimationFrame(): Promise<void> {
   });
 }
 
-function createPaneState(id: number, sourcePane: ResttyManagedAppPane | null): PaneState {
+function createPaneState(id: number, sourcePane: ManagedPane | null): PaneState {
   const sourceState = sourcePane ? paneStates.get(sourcePane.id) : null;
   return {
     id,
@@ -795,7 +796,7 @@ function createPaneState(id: number, sourcePane: ResttyManagedAppPane | null): P
   };
 }
 
-function getActivePane(): ResttyManagedAppPane | null {
+function getActivePane(): ManagedPane | null {
   return restty.getActivePane();
 }
 
@@ -808,7 +809,7 @@ function syncPauseButton(state: PaneState) {
   if (btnPause) btnPause.textContent = state.paused ? "Resume" : "Pause";
 }
 
-function syncPtyButton(pane: ResttyManagedAppPane, state: PaneState) {
+function syncPtyButton(pane: ManagedPane, state: PaneState) {
   if (!ptyBtn) return;
   if (pane.app.isPtyConnected()) {
     ptyBtn.textContent = "Disconnect";
@@ -819,7 +820,7 @@ function syncPtyButton(pane: ResttyManagedAppPane, state: PaneState) {
   setText(ptyStatusEl, state.ui.ptyStatus);
 }
 
-function renderActivePaneStatus(pane: ResttyManagedAppPane, state: PaneState) {
+function renderActivePaneStatus(pane: ManagedPane, state: PaneState) {
   setText(backendEl, state.ui.backend);
   setText(fpsEl, state.ui.fps);
   setText(termSizeEl, state.ui.termSize);
@@ -827,7 +828,7 @@ function renderActivePaneStatus(pane: ResttyManagedAppPane, state: PaneState) {
   syncPtyButton(pane, state);
 }
 
-function renderActivePaneControls(pane: ResttyManagedAppPane, state: PaneState) {
+function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
   syncPauseButton(state);
   if (rendererSelect) rendererSelect.value = state.renderer;
   if (fontSizeInput) fontSizeInput.value = `${state.fontSize}`;
@@ -867,7 +868,7 @@ function setPanePaused(id: number, value: boolean) {
   }
 }
 
-function connectPaneIfNeeded(pane: ResttyManagedAppPane) {
+function connectPaneIfNeeded(pane: ManagedPane) {
   if (getConnectionBackend() !== "webcontainer") return;
   if (pane.app.isPtyConnected()) return;
   pane.app.updateSize(true);
@@ -877,7 +878,7 @@ function connectPaneIfNeeded(pane: ResttyManagedAppPane) {
   });
 }
 
-function applySavedThemeForPane(pane: ResttyManagedAppPane, state: PaneState) {
+function applySavedThemeForPane(pane: ManagedPane, state: PaneState) {
   if (state.theme.selectValue) {
     applyBuiltinThemeToPane(pane, state, state.theme.selectValue, state.theme.sourceLabel);
     return;
@@ -892,7 +893,7 @@ function applySavedThemeForPane(pane: ResttyManagedAppPane, state: PaneState) {
   );
 }
 
-async function initPaneApp(pane: ResttyManagedAppPane, state: PaneState) {
+async function initPaneApp(pane: ManagedPane, state: PaneState) {
   await pane.app.init();
   applySavedThemeForPane(pane, state);
   await waitForAnimationFrame();
@@ -902,7 +903,7 @@ async function initPaneApp(pane: ResttyManagedAppPane, state: PaneState) {
 }
 
 function applyThemeToPane(
-  pane: ResttyManagedAppPane,
+  pane: ManagedPane,
   state: PaneState,
   theme: GhosttyTheme,
   sourceLabel: string,
@@ -926,7 +927,7 @@ function applyThemeToPane(
 }
 
 function applyBuiltinThemeToPane(
-  pane: ResttyManagedAppPane,
+  pane: ManagedPane,
   state: PaneState,
   name: string,
   sourceLabel = name,
@@ -936,7 +937,7 @@ function applyBuiltinThemeToPane(
   return applyThemeToPane(pane, state, theme, sourceLabel, name);
 }
 
-function resetThemeForPane(pane: ResttyManagedAppPane, state: PaneState) {
+function resetThemeForPane(pane: ManagedPane, state: PaneState) {
   pane.app.resetTheme();
   state.theme = {
     selectValue: "",

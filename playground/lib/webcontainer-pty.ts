@@ -4,7 +4,7 @@ import type {
   PtyConnectOptions,
   PtyResizeMeta,
   PtyTransport,
-} from "../../src/internal.ts";
+} from "../../src/index.ts";
 
 type WebContainerPtyOptions = {
   getCommand?: () => string;

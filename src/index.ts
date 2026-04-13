@@ -70,3 +70,6 @@ export type {
   ResttyShaderStageBackend,
   ResttyShaderStageSource,
 } from "./runtime/types";
+
+export { createWebSocketPtyTransport } from "./pty";
+export type { PtyCallbacks, PtyConnectOptions, PtyResizeMeta, PtyTransport } from "./pty";
