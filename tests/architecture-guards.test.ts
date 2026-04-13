@@ -551,6 +551,22 @@ test("webcontainer pty delegates seed script bootstrap", () => {
   expect(seedScripts).toContain("restty demo fallback");
 });
 
+test("webcontainer pty delegates process lifecycle", () => {
+  const webcontainerPty = readFileSync(resolve(playgroundRoot, "lib/webcontainer-pty.ts"), "utf8");
+  const processController = readFileSync(
+    resolve(playgroundRoot, "lib/webcontainer-process.ts"),
+    "utf8",
+  );
+
+  expect(webcontainerPty).toContain('./webcontainer-process.ts"');
+  expect(webcontainerPty).not.toContain("startOutputPump");
+  expect(webcontainerPty).not.toContain("resetStreams");
+  expect(webcontainerPty).not.toContain("handleConnectError =");
+  expect(processController).toContain("startOutputPump");
+  expect(processController).toContain("resetStreams");
+  expect(processController).toContain("handleConnectError");
+});
+
 test("appearance controller delegates theme and shader policy", () => {
   const appearanceController = readFileSync(
     resolve(playgroundRoot, "lib/appearance-controller.ts"),

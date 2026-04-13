@@ -5,6 +5,7 @@ import type {
   PtyResizeMeta,
   PtyTransport,
 } from "../../src/index.ts";
+import { createWebContainerProcessController } from "./webcontainer-process.ts";
 import { ensureWebContainerSeedScripts } from "./webcontainer-seed-scripts.ts";
 
 type WebContainerPtyOptions = {
@@ -86,81 +87,14 @@ function normalizeCwd(cwd: string | undefined): string | undefined {
 }
 
 export function createWebContainerPtyTransport(options: WebContainerPtyOptions = {}): PtyTransport {
-  let proc: WebContainerProcess | null = null;
-  let callbacks: PtyCallbacks | null = null;
-  let inputWriter: WritableStreamDefaultWriter<string> | null = null;
-  let outputReader: ReadableStreamDefaultReader<string> | null = null;
-  let connected = false;
   let connectionToken = 0;
   let activeCommand = "";
-
-  const resetStreams = () => {
-    try {
-      inputWriter?.releaseLock();
-    } catch {
-      // ignore release failures
-    }
-    try {
-      outputReader?.releaseLock();
-    } catch {
-      // ignore release failures
-    }
-    inputWriter = null;
-    outputReader = null;
-  };
+  const processController = createWebContainerProcessController();
 
   const stopProcess = (emitDisconnect: boolean) => {
-    const cb = callbacks;
-    callbacks = null;
-    connected = false;
     connectionToken += 1;
     activeCommand = "";
-
-    try {
-      outputReader?.cancel();
-    } catch {
-      // ignore reader cancel failures
-    }
-    resetStreams();
-
-    if (proc) {
-      try {
-        proc.kill();
-      } catch {
-        // ignore kill failures
-      }
-      proc = null;
-    }
-
-    if (emitDisconnect) cb?.onDisconnect?.();
-  };
-
-  const handleConnectError = (cb: PtyCallbacks, err: unknown) => {
-    connected = false;
-    proc = null;
-    resetStreams();
-    const message = err instanceof Error ? err.message : String(err);
-    cb.onError?.("Failed to start WebContainer process", [message]);
-    cb.onDisconnect?.();
-  };
-
-  const startOutputPump = (token: number, cb: PtyCallbacks) => {
-    const reader = outputReader;
-    if (!reader) return;
-
-    void (async () => {
-      try {
-        while (connectionToken === token) {
-          const { value, done } = await reader.read();
-          if (done || connectionToken !== token) break;
-          if (value) cb.onData?.(value);
-        }
-      } catch (err) {
-        if (connectionToken !== token) return;
-        const message = err instanceof Error ? err.message : String(err);
-        cb.onError?.("WebContainer output stream failed", [message]);
-      }
-    })();
+    processController.stop(emitDisconnect);
   };
 
   const mapInputForCommand = (data: string): string => {
@@ -175,7 +109,6 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
   return {
     connect: async ({ cols = 80, rows = 24, callbacks: cb }: PtyConnectOptions) => {
       stopProcess(false);
-      callbacks = cb;
       const token = connectionToken;
 
       const commandRaw = options.getCommand?.().trim() || "jsh";
@@ -217,64 +150,30 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
           return;
         }
 
-        proc = spawned;
         activeCommand = spec.command;
-        inputWriter = spawned.input.getWriter();
-        outputReader = spawned.output.getReader();
-        connected = true;
-
-        cb.onConnect?.();
-        cb.onStatus?.(spec.label || spec.command);
-        if (spec.command === "jsh") {
-          cb.onData?.(WEB_CONTAINER_WELCOME);
-        }
-
-        startOutputPump(token, cb);
-
-        void spawned.exit
-          .then((code) => {
-            if (connectionToken !== token) return;
-            connected = false;
-            proc = null;
-            resetStreams();
-            cb.onExit?.(code);
-            cb.onDisconnect?.();
-          })
-          .catch((err) => {
-            if (connectionToken !== token) return;
-            connected = false;
-            proc = null;
-            resetStreams();
-            const message = err instanceof Error ? err.message : String(err);
-            cb.onError?.("WebContainer process exited with error", [message]);
-            cb.onDisconnect?.();
-          });
+        processController.attachProcess({
+          callbacks: cb,
+          isTokenActive: (currentToken) => connectionToken === currentToken,
+          process: spawned,
+          statusLabel: spec.label || spec.command,
+          token,
+          welcomeData: spec.command === "jsh" ? WEB_CONTAINER_WELCOME : undefined,
+        });
       } catch (err) {
-        handleConnectError(cb, err);
+        processController.handleConnectError(cb, err);
       }
     },
     disconnect: () => {
-      if (!proc && !connected) return;
+      if (!processController.isConnected()) return;
       stopProcess(true);
     },
     sendInput: (data: string) => {
-      if (!connected || !inputWriter) return false;
-      const payload = mapInputForCommand(data);
-      void inputWriter.write(payload).catch(() => {
-        // ignore async write failures here; lifecycle callbacks handle disconnect
-      });
-      return true;
+      return processController.sendInput(data, mapInputForCommand);
     },
     resize: (cols: number, rows: number, _meta?: PtyResizeMeta) => {
-      if (!connected || !proc) return false;
-      try {
-        proc.resize({ cols, rows });
-        return true;
-      } catch {
-        return false;
-      }
+      return processController.resize(cols, rows);
     },
-    isConnected: () => connected,
+    isConnected: processController.isConnected,
     destroy: () => {
       stopProcess(false);
     },
