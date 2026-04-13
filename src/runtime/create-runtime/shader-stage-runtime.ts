@@ -6,6 +6,7 @@ import type {
   WebGLStageTargets,
 } from "./create-app-types";
 import type { ResttyShaderStage } from "../core/models";
+import type { ShaderStageRuntime, ShaderStageRuntimeOptions } from "./shader-stage-runtime.types";
 import {
   cloneShaderStages,
   isShaderStageEnabledForBackend,
@@ -22,33 +23,7 @@ import {
 
 type ShaderBackend = "webgpu" | "webgl2";
 
-export type CreateShaderStageRuntimeOptions = {
-  appendLog: (line: string) => void;
-  getCanvasSize: () => { width: number; height: number };
-  getActiveWebGLState: () => WebGLState | null;
-  onShaderStagesChanged: () => void;
-};
-
-export type ShaderStageRuntime = {
-  setShaderStages: (stages: ResttyShaderStage[]) => void;
-  getShaderStages: () => ResttyShaderStage[];
-  isShaderStagesDirty: () => boolean;
-  setShaderStagesDirty: (value: boolean) => void;
-  getCompiledWebGPUShaderStages: () => CompiledWebGPUShaderStage[];
-  getCompiledWebGLShaderStages: () => CompiledWebGLShaderStage[];
-  clearWebGPUShaderStages: () => void;
-  clearWebGLShaderStages: (state?: WebGLState | null) => void;
-  destroyWebGPUStageTargets: () => void;
-  destroyWebGLStageTargets: (state?: WebGLState | null) => void;
-  ensureWebGPUStageTargets: (state: WebGPUState) => WebGPUStageTargets | null;
-  ensureWebGLStageTargets: (state: WebGLState) => WebGLStageTargets | null;
-  rebuildWebGPUShaderStages: (state: WebGPUState) => void;
-  rebuildWebGLShaderStages: (state: WebGLState) => void;
-};
-
-export function createShaderStageRuntime(
-  options: CreateShaderStageRuntimeOptions,
-): ShaderStageRuntime {
+export function createShaderStageRuntime(options: ShaderStageRuntimeOptions): ShaderStageRuntime {
   let shaderStages: ResttyShaderStage[] = [];
   let compiledWebGPUShaderStages: CompiledWebGPUShaderStage[] = [];
   let compiledWebGLShaderStages: CompiledWebGLShaderStage[] = [];
