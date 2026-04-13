@@ -2,15 +2,23 @@ import type { DesktopNotification } from "../input";
 import {
   createResttyAppPaneManager,
   type ResttyAppPaneManager,
-  type CreateResttyAppPaneManagerOptions,
   type ResttyManagedAppPane,
+  type ResttyDefaultPaneContextMenuOptions,
+  type ResttyManagedPaneSearchUiOptions,
   type ResttyManagedPaneStyleOptions,
+  type ResttyManagedPaneStylesOptions,
   type ResttyManagedPaneSearchUiStyleOptions,
+  type ResttyPaneDomDefaults,
   type ResttyPaneRuntimeContext,
   type ResttyTerminalConfigInput,
 } from "./pane-app-manager";
-import type { ResttyPaneSplitDirection } from "./panes-types";
 import type {
+  ResttyPaneContextMenuOptions,
+  ResttyPaneShortcutsOptions,
+  ResttyPaneSplitDirection,
+} from "./panes-types";
+import type {
+  ResttyAppSession,
   ResttyFontSource,
   ResttyRuntimeServicesConfig,
   ResttyShaderStage,
@@ -81,26 +89,37 @@ export type {
   ResttyPlugin,
 } from "./plugins/types";
 
-export type ResttySurfaceEvents = Pick<
-  CreateResttyAppPaneManagerOptions,
-  "onPaneCreated" | "onPaneClosed" | "onPaneSplit" | "onActivePaneChange" | "onLayoutChanged"
-> & {
+export type ResttySurfaceEvents = {
+  onPaneCreated?: (pane: ResttyManagedAppPane) => void;
+  onPaneClosed?: (pane: ResttyManagedAppPane) => void;
+  onPaneSplit?: (
+    sourcePane: ResttyManagedAppPane,
+    createdPane: ResttyManagedAppPane,
+    direction: ResttyPaneSplitDirection,
+  ) => void;
+  onActivePaneChange?: (pane: ResttyManagedAppPane | null) => void;
+  onLayoutChanged?: () => void;
   /** Global handler for desktop notifications emitted by any pane. */
   onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
 };
 
-export type ResttySurfaceConfig = Omit<
-  CreateResttyAppPaneManagerOptions,
-  | "root"
-  | "session"
-  | "terminal"
-  | "services"
-  | "onPaneCreated"
-  | "onPaneClosed"
-  | "onPaneSplit"
-  | "onActivePaneChange"
-  | "onLayoutChanged"
-> & {
+export type ResttySurfaceConfig = {
+  /** Override default CSS class names for pane DOM elements. */
+  paneDom?: ResttyPaneDomDefaults;
+  /** Automatically call app.init() after pane creation (default true). */
+  autoInit?: boolean;
+  /** Minimum pane size in pixels during split-resize (default 96). */
+  minPaneSize?: number;
+  /** Enable or configure built-in pane CSS styles. */
+  paneStyles?: boolean | ResttyManagedPaneStylesOptions;
+  /** Enable or configure the built-in pane search UI. */
+  searchUi?: boolean | ResttyManagedPaneSearchUiOptions;
+  /** Enable or configure keyboard shortcuts for splitting. */
+  shortcuts?: boolean | ResttyPaneShortcutsOptions;
+  /** Custom context menu implementation (overrides defaultContextMenu). */
+  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedAppPane> | null;
+  /** Enable or configure the built-in default context menu. */
+  defaultContextMenu?: boolean | ResttyDefaultPaneContextMenuOptions;
   /** Whether to create the first pane automatically (default true). */
   createInitialPane?: boolean | { focus?: boolean };
   /** Surface lifecycle and pane-layout event handlers. */
@@ -117,9 +136,9 @@ export type ResttyServicesConfigInput =
  */
 export type ResttyConfig = {
   /** Root element that will contain the Restty surface. */
-  root: CreateResttyAppPaneManagerOptions["root"];
+  root: HTMLElement;
   /** Shared session for WASM/WebGPU resources. */
-  session?: CreateResttyAppPaneManagerOptions["session"];
+  session?: ResttyAppSession;
   /** Surface shell and pane manager behavior. */
   surface?: ResttySurfaceConfig;
   /** Per-pane terminal behavior config, static or factory. */
@@ -142,7 +161,18 @@ export class Restty extends ResttyActivePaneApi {
   constructor(options: ResttyConfig) {
     super();
     const { root, session, surface, terminal, services } = options;
-    const { createInitialPane = true, events, ...paneManagerOptions } = surface ?? {};
+    const {
+      paneDom,
+      autoInit,
+      minPaneSize,
+      paneStyles,
+      searchUi,
+      shortcuts,
+      contextMenu,
+      defaultContextMenu,
+      createInitialPane = true,
+      events,
+    } = surface ?? {};
     const {
       onPaneCreated,
       onPaneClosed,
@@ -192,7 +222,14 @@ export class Restty extends ResttyActivePaneApi {
     this.paneManager = createResttyAppPaneManager({
       root,
       session,
-      ...paneManagerOptions,
+      paneDom,
+      autoInit,
+      minPaneSize,
+      paneStyles,
+      searchUi,
+      shortcuts,
+      contextMenu,
+      defaultContextMenu,
       terminal: mergedTerminalConfig,
       services: mergedServicesConfig,
       ...paneManagerEventHandlers,
