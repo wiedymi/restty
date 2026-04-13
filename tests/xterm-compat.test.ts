@@ -1,4 +1,5 @@
 import { beforeEach, expect, mock, test } from "bun:test";
+import type { ResttyRuntime, ResttySearchState } from "../src/runtime/types";
 
 type FakeWrite = {
   text: string;
@@ -20,31 +21,7 @@ type FakePane = {
   focusTarget: null;
   paused: boolean;
   setPaused: (value: boolean) => void;
-  app: {
-    setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
-    setPaused: (value: boolean) => void;
-    togglePause: () => void;
-    setFontSize: (value: number) => void;
-    applyTheme: () => void;
-    resetTheme: () => void;
-    sendInput: (text: string, source?: string) => void;
-    sendKeyInput: (text: string, source?: string) => void;
-    clearScreen: () => void;
-    connectPty: () => void;
-    disconnectPty: () => void;
-    isPtyConnected: () => boolean;
-    setMouseMode: () => void;
-    getMouseStatus: () => { mode: string; active: boolean; detail: string; enabled: boolean };
-    copySelectionToClipboard: () => Promise<boolean>;
-    pasteFromClipboard: () => Promise<boolean>;
-    resize: (cols: number, rows: number) => void;
-    focus: () => void;
-    blur: () => void;
-    updateSize: () => void;
-    getBackend: () => string;
-    setShaderStages: (stages: Array<Record<string, unknown>>) => void;
-    getShaderStages: () => Array<Record<string, unknown>>;
-  };
+  app: ResttyRuntime;
 };
 
 type FakeManager = {
@@ -109,64 +86,120 @@ function createFakeManager(options: any): FakeManager {
       typeof options.services === "function" ? options.services(context) : (options.services ?? {});
 
     let ptyConnected = false;
+    let searchState: ResttySearchState = {
+      query: "",
+      active: false,
+      pending: false,
+      complete: true,
+      total: 0,
+      selectedIndex: null,
+    };
 
-    const app = {
-      setRenderer: (_value: "auto" | "webgpu" | "webgl2") => {},
-      setPaused: (_value: boolean) => {},
-      togglePause: () => {},
-      setFontSize: (_value: number) => {},
-      applyTheme: () => {},
-      resetTheme: () => {},
-      sendInput: (text: string, source = "program") => {
-        if (!text) return;
-        let nextText = text;
-        if (source === "pty") {
-          const intercepted = services.beforeRenderOutput?.({ text, source });
-          if (intercepted === null) return;
-          if (typeof intercepted === "string") nextText = intercepted;
-        } else {
-          const intercepted = services.beforeInput?.({ text, source });
-          if (intercepted === null) return;
-          if (typeof intercepted === "string") nextText = intercepted;
-        }
-        state.writes.push({ text: nextText, source });
-      },
-      sendKeyInput: (text: string, source = "key") => {
-        if (!text) return;
+    const sendInput = (text: string, source = "program") => {
+      if (!text) return;
+      let nextText = text;
+      if (source === "pty") {
+        const intercepted = services.beforeRenderOutput?.({ text, source });
+        if (intercepted === null) return;
+        if (typeof intercepted === "string") nextText = intercepted;
+      } else {
         const intercepted = services.beforeInput?.({ text, source });
         if (intercepted === null) return;
-        state.writes.push({ text: typeof intercepted === "string" ? intercepted : text, source });
+        if (typeof intercepted === "string") nextText = intercepted;
+      }
+      state.writes.push({ text: nextText, source });
+    };
+    const sendKeyInput = (text: string, source = "key") => {
+      if (!text) return;
+      const intercepted = services.beforeInput?.({ text, source });
+      if (intercepted === null) return;
+      state.writes.push({ text: typeof intercepted === "string" ? intercepted : text, source });
+    };
+    const app: ResttyRuntime = {
+      lifecycle: {
+        init: async () => undefined,
+        destroy: () => undefined,
+        state: () => "ready",
       },
-      clearScreen: () => {
-        state.clearCount += 1;
+      events: {
+        subscribe: () => () => undefined,
       },
-      connectPty: () => {
-        ptyConnected = true;
+      terminal: {
+        setRenderer: (_value: "auto" | "webgpu" | "webgl2") => {},
+        setPaused: (_value: boolean) => {},
+        togglePause: () => {},
+        setFontSize: (_value: number) => {},
+        setLigatures: (_value: boolean) => {},
+        setFontHinting: (_value: boolean) => {},
+        setFontHintTarget: (_value: string) => {},
+        setFontSources: async () => undefined,
+        applyTheme: () => {},
+        resetTheme: () => {},
+        clearScreen: () => {
+          state.clearCount += 1;
+        },
       },
-      disconnectPty: () => {
-        ptyConnected = false;
+      io: {
+        sendInput,
+        sendKeyInput,
+        connectPty: () => {
+          ptyConnected = true;
+        },
+        disconnectPty: () => {
+          ptyConnected = false;
+        },
+        isPtyConnected: () => ptyConnected,
       },
-      isPtyConnected: () => ptyConnected,
-      setMouseMode: () => {},
-      getMouseStatus: () => ({ mode: "auto", active: false, detail: "sgr", enabled: true }),
-      copySelectionToClipboard: async () => true,
-      pasteFromClipboard: async () => true,
-      resize: (cols: number, rows: number) => {
-        state.resizes.push({ cols, rows });
+      interaction: {
+        setMouseMode: () => {},
+        getMouseStatus: () => ({ mode: "auto", active: false, detail: "sgr", enabled: true }),
+        copySelectionToClipboard: async () => true,
+        pasteFromClipboard: async () => true,
+        selectWordAtClientPoint: () => false,
+        resize: (cols: number, rows: number) => {
+          state.resizes.push({ cols, rows });
+        },
+        focus: () => {
+          state.focusCount += 1;
+        },
+        blur: () => {
+          state.blurCount += 1;
+        },
+        updateSize: () => {},
       },
-      focus: () => {
-        state.focusCount += 1;
+      search: {
+        setQuery: (query: string) => {
+          searchState = {
+            query,
+            active: query.length > 0,
+            pending: false,
+            complete: true,
+            total: 0,
+            selectedIndex: null,
+          };
+        },
+        clear: () => {
+          searchState = {
+            query: "",
+            active: false,
+            pending: false,
+            complete: true,
+            total: 0,
+            selectedIndex: null,
+          };
+        },
+        next: () => undefined,
+        previous: () => undefined,
+        getState: () => searchState,
       },
-      blur: () => {
-        state.blurCount += 1;
+      render: {
+        getBackend: () => "test",
+        setShaderStages: (_stages: Array<Record<string, unknown>>) => {},
+        getShaderStages: () =>
+          Array.isArray(terminal.shaderStages)
+            ? terminal.shaderStages.map((stage) => ({ ...stage }))
+            : [],
       },
-      updateSize: () => {},
-      getBackend: () => "test",
-      setShaderStages: (_stages: Array<Record<string, unknown>>) => {},
-      getShaderStages: () =>
-        Array.isArray(terminal.shaderStages)
-          ? terminal.shaderStages.map((stage) => ({ ...stage }))
-          : [],
     };
 
     const pane: FakePane = {

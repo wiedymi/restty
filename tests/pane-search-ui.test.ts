@@ -377,25 +377,27 @@ function setupController() {
     container: container as unknown as HTMLDivElement,
     focusTarget: focusTarget as unknown as HTMLElement,
     app: {
-      setSearchQuery: (query) => {
-        calls.push(`set:${query}`);
-        searchState = createSearchState({
-          query,
-          active: query.length > 0,
-          pending: query.length > 0,
-        });
+      search: {
+        setQuery: (query) => {
+          calls.push(`set:${query}`);
+          searchState = createSearchState({
+            query,
+            active: query.length > 0,
+            pending: query.length > 0,
+          });
+        },
+        clear: () => {
+          calls.push("clear");
+          searchState = createSearchState();
+        },
+        next: () => {
+          calls.push("next");
+        },
+        previous: () => {
+          calls.push("prev");
+        },
+        getState: () => searchState,
       },
-      clearSearch: () => {
-        calls.push("clear");
-        searchState = createSearchState();
-      },
-      searchNext: () => {
-        calls.push("next");
-      },
-      searchPrevious: () => {
-        calls.push("prev");
-      },
-      getSearchState: () => searchState,
     },
   };
 

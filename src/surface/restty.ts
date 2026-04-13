@@ -283,7 +283,7 @@ export class Restty extends ResttyActivePaneApi {
     const panes = this.getPanes();
     const updates: Array<Promise<void>> = new Array(panes.length);
     for (let i = 0; i < panes.length; i += 1) {
-      updates[i] = panes[i].app.setFontSources(this.fontSources ?? []);
+      updates[i] = panes[i].app.terminal.setFontSources(this.fontSources ?? []);
     }
     await Promise.all(updates);
   }

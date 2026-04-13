@@ -59,11 +59,11 @@ type RuntimePublicApiOptions = {
   setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
   setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
   resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
-  setSearchQuery: ResttyRuntimeSearchApi["setSearchQuery"];
-  clearSearch: ResttyRuntimeSearchApi["clearSearch"];
-  searchNext: ResttyRuntimeSearchApi["searchNext"];
-  searchPrevious: ResttyRuntimeSearchApi["searchPrevious"];
-  getSearchState: ResttyRuntimeSearchApi["getSearchState"];
+  setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
+  clearSearch: ResttyRuntimeSearchApi["clear"];
+  searchNext: ResttyRuntimeSearchApi["next"];
+  searchPrevious: ResttyRuntimeSearchApi["previous"];
+  getSearchState: ResttyRuntimeSearchApi["getState"];
   resize: ResttyRuntimeInteractionApi["resize"];
   focus: ResttyRuntimeInteractionApi["focus"];
   blur: ResttyRuntimeInteractionApi["blur"];
@@ -121,9 +121,9 @@ type CreateRuntimeAppApiOptions = {
   updateGrid: () => void;
   gridState: { cols: number; rows: number };
   getCanvas: () => HTMLCanvasElement;
-  applyTheme: ResttyRuntime["applyTheme"];
+  applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
   ensureFont: () => Promise<void>;
-  updateSize: ResttyRuntime["updateSize"];
+  updateSize: ResttyRuntimeInteractionApi["updateSize"];
   log: (line: string) => void;
   replaceCanvas: () => void;
   rebuildWebGPUShaderStages: (state: WebGPUState) => void;
@@ -765,21 +765,12 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
     ptyInputRuntime.setPtyStatus("disconnected");
     ptyInputRuntime.updateMouseStatus();
 
-    return {
+    const lifecycle = {
       init,
       destroy,
-      getLifecycleState: () => lifecycleState,
-      events: {
-        subscribe: (listener) => {
-          const dispose = options.runtimeEvents.subscribe(listener);
-          try {
-            listener({ type: "state", state: lifecycleState });
-          } catch {
-            // Ignore runtime event listener errors.
-          }
-          return dispose;
-        },
-      },
+      state: () => lifecycleState,
+    };
+    const terminal = {
       setRenderer,
       setPaused,
       togglePause,
@@ -790,29 +781,58 @@ export function createRuntimeAppApi(options: CreateRuntimeAppApiOptions): Runtim
       setFontSources: publicApiOptions.setFontSources,
       applyTheme,
       resetTheme: publicApiOptions.resetTheme,
+      clearScreen,
+    };
+    const io = {
       sendInput,
       sendKeyInput: ptyInputRuntime.sendKeyInput,
-      clearScreen,
       connectPty: ptyInputRuntime.connectPty,
       disconnectPty: ptyInputRuntime.disconnectPty,
       isPtyConnected: () => ptyTransport.isConnected(),
+    };
+    const interactionApi = {
       setMouseMode,
       getMouseStatus,
       copySelectionToClipboard,
       pasteFromClipboard,
       selectWordAtClientPoint: interaction.selectWordAtClientPoint,
-      setSearchQuery: publicApiOptions.setSearchQuery,
-      clearSearch: publicApiOptions.clearSearch,
-      searchNext: publicApiOptions.searchNext,
-      searchPrevious: publicApiOptions.searchPrevious,
-      getSearchState: publicApiOptions.getSearchState,
       resize: publicApiOptions.resize,
       focus: publicApiOptions.focus,
       blur: publicApiOptions.blur,
       updateSize: publicApiOptions.updateSize,
+    };
+    const search = {
+      setQuery: publicApiOptions.setSearchQuery,
+      clear: publicApiOptions.clearSearch,
+      next: publicApiOptions.searchNext,
+      previous: publicApiOptions.searchPrevious,
+      getState: publicApiOptions.getSearchState,
+    };
+    const render = {
       getBackend: () => internalState.backend,
       setShaderStages: publicApiOptions.setShaderStages,
       getShaderStages: publicApiOptions.getShaderStages,
+    };
+    const events = {
+      subscribe: (listener: (event: ResttyRuntimeEvent) => void) => {
+        const dispose = options.runtimeEvents.subscribe(listener);
+        try {
+          listener({ type: "state", state: lifecycleState });
+        } catch {
+          // Ignore runtime event listener errors.
+        }
+        return dispose;
+      },
+    };
+
+    return {
+      lifecycle,
+      events,
+      terminal,
+      io,
+      interaction: interactionApi,
+      search,
+      render,
     };
   }
 

@@ -92,107 +92,107 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setRenderer(value: "auto" | "webgpu" | "webgl2"): void {
-    this.resolvePane().app.setRenderer(value);
+    this.resolvePane().app.terminal.setRenderer(value);
   }
 
   setPaused(value: boolean): void {
-    this.resolvePane().app.setPaused(value);
+    this.resolvePane().app.terminal.setPaused(value);
   }
 
   togglePause(): void {
-    this.resolvePane().app.togglePause();
+    this.resolvePane().app.terminal.togglePause();
   }
 
   setFontSize(value: number): void {
-    this.resolvePane().app.setFontSize(value);
+    this.resolvePane().app.terminal.setFontSize(value);
   }
 
   setLigatures(value: boolean): void {
-    this.resolvePane().app.setLigatures(value);
+    this.resolvePane().app.terminal.setLigatures(value);
   }
 
   setFontHinting(value: boolean): void {
-    this.resolvePane().app.setFontHinting(value);
+    this.resolvePane().app.terminal.setFontHinting(value);
   }
 
   setFontHintTarget(value: ResttyFontHintTarget): void {
-    this.resolvePane().app.setFontHintTarget(value);
+    this.resolvePane().app.terminal.setFontHintTarget(value);
   }
 
   setFontSources(sources: ResttyFontSource[]): Promise<void> {
-    return this.resolvePane().app.setFontSources(sources);
+    return this.resolvePane().app.terminal.setFontSources(sources);
   }
 
   applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {
-    this.resolvePane().app.applyTheme(theme, sourceLabel);
+    this.resolvePane().app.terminal.applyTheme(theme, sourceLabel);
   }
 
   resetTheme(): void {
-    this.resolvePane().app.resetTheme();
+    this.resolvePane().app.terminal.resetTheme();
   }
 
   sendInput(text: string, source?: string): void {
-    this.resolvePane().app.sendInput(text, source);
+    this.resolvePane().app.io.sendInput(text, source);
   }
 
   sendKeyInput(text: string, source?: string): void {
-    this.resolvePane().app.sendKeyInput(text, source);
+    this.resolvePane().app.io.sendKeyInput(text, source);
   }
 
   clearScreen(): void {
-    this.resolvePane().app.clearScreen();
+    this.resolvePane().app.terminal.clearScreen();
   }
 
   connectPty(url = ""): void {
-    this.resolvePane().app.connectPty(url);
+    this.resolvePane().app.io.connectPty(url);
   }
 
   disconnectPty(): void {
-    this.resolvePane().app.disconnectPty();
+    this.resolvePane().app.io.disconnectPty();
   }
 
   isPtyConnected(): boolean {
-    return this.resolvePane().app.isPtyConnected();
+    return this.resolvePane().app.io.isPtyConnected();
   }
 
   setMouseMode(value: MouseMode): void {
-    this.resolvePane().app.setMouseMode(value);
+    this.resolvePane().app.interaction.setMouseMode(value);
   }
 
   getMouseStatus(): ReturnType<InputHandler["getMouseStatus"]> {
-    return this.resolvePane().app.getMouseStatus();
+    return this.resolvePane().app.interaction.getMouseStatus();
   }
 
   copySelectionToClipboard(): Promise<boolean> {
-    return this.resolvePane().app.copySelectionToClipboard();
+    return this.resolvePane().app.interaction.copySelectionToClipboard();
   }
 
   pasteFromClipboard(): Promise<boolean> {
-    return this.resolvePane().app.pasteFromClipboard();
+    return this.resolvePane().app.interaction.pasteFromClipboard();
   }
 
   selectWordAtClientPoint(clientX: number, clientY: number): boolean {
-    return this.resolvePane().app.selectWordAtClientPoint(clientX, clientY);
+    return this.resolvePane().app.interaction.selectWordAtClientPoint(clientX, clientY);
   }
 
   setSearchQuery(query: string): void {
-    this.resolvePane().app.setSearchQuery(query);
+    this.resolvePane().app.search.setQuery(query);
   }
 
   clearSearch(): void {
-    this.resolvePane().app.clearSearch();
+    this.resolvePane().app.search.clear();
   }
 
   searchNext(): void {
-    this.resolvePane().app.searchNext();
+    this.resolvePane().app.search.next();
   }
 
   searchPrevious(): void {
-    this.resolvePane().app.searchPrevious();
+    this.resolvePane().app.search.previous();
   }
 
   getSearchState(): ResttySearchState {
-    return this.resolvePane().app.getSearchState();
+    return this.resolvePane().app.search.getState();
   }
 
   openSearch(options?: ResttyPaneSearchUiOpenOptions): void {
@@ -212,23 +212,23 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   resize(cols: number, rows: number): void {
-    this.resolvePane().app.resize(cols, rows);
+    this.resolvePane().app.interaction.resize(cols, rows);
   }
 
   focus(): void {
-    this.resolvePane().app.focus();
+    this.resolvePane().app.interaction.focus();
   }
 
   blur(): void {
-    this.resolvePane().app.blur();
+    this.resolvePane().app.interaction.blur();
   }
 
   updateSize(force?: boolean): void {
-    this.resolvePane().app.updateSize(force);
+    this.resolvePane().app.interaction.updateSize(force);
   }
 
   getBackend(): string {
-    return this.resolvePane().app.getBackend();
+    return this.resolvePane().app.render.getBackend();
   }
 
   getSearchUiStyleOptions(): Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>> {
@@ -240,10 +240,10 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setShaderStages(stages: ResttyShaderStage[]): void {
-    this.resolvePane().app.setShaderStages(stages);
+    this.resolvePane().app.render.setShaderStages(stages);
   }
 
   getShaderStages(): ResttyShaderStage[] {
-    return this.resolvePane().app.getShaderStages();
+    return this.resolvePane().app.render.getShaderStages();
   }
 }

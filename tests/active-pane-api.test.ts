@@ -20,10 +20,13 @@ describe("ResttyPaneHandle", () => {
     const pane = {
       id: 1,
       app: {
-        setLigatures: (value: boolean) => void calls.push(["setLigatures", value]),
-        setFontHinting: (value: boolean) => void calls.push(["setFontHinting", value]),
-        setFontHintTarget: (value: string) => void calls.push(["setFontHintTarget", value]),
-        setFontSources: async (sources: unknown[]) => void calls.push(["setFontSources", sources]),
+        terminal: {
+          setLigatures: (value: boolean) => void calls.push(["setLigatures", value]),
+          setFontHinting: (value: boolean) => void calls.push(["setFontHinting", value]),
+          setFontHintTarget: (value: string) => void calls.push(["setFontHintTarget", value]),
+          setFontSources: async (sources: unknown[]) =>
+            void calls.push(["setFontSources", sources]),
+        },
       },
     } as any;
 

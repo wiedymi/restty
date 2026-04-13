@@ -201,16 +201,16 @@ test("runtime app api lifecycle state flows from created to ready to destroyed",
     if (event.type === "backend") backends.push(event.backend);
   });
 
-  expect(app.getLifecycleState()).toBe("created");
+  expect(app.lifecycle.state()).toBe("created");
 
-  const initPromise = app.init();
-  expect(app.getLifecycleState()).toBe("initializing");
+  const initPromise = app.lifecycle.init();
+  expect(app.lifecycle.state()).toBe("initializing");
 
   await initPromise;
-  expect(app.getLifecycleState()).toBe("ready");
+  expect(app.lifecycle.state()).toBe("ready");
 
-  app.destroy();
-  expect(app.getLifecycleState()).toBe("destroyed");
+  app.lifecycle.destroy();
+  expect(app.lifecycle.state()).toBe("destroyed");
   expect(sharedState.wasmHandle).toBe(0);
   expect(states).toEqual(["created", "initializing", "ready", "destroyed"]);
   expect(backends).toEqual(["none"]);
@@ -231,16 +231,16 @@ test("runtime app api lifecycle state stays destroyed when init finishes late", 
     if (event.type === "state") states.push(event.state);
   });
 
-  const initPromise = app.init();
-  expect(app.getLifecycleState()).toBe("initializing");
+  const initPromise = app.lifecycle.init();
+  expect(app.lifecycle.state()).toBe("initializing");
 
-  app.destroy();
-  expect(app.getLifecycleState()).toBe("destroyed");
+  app.lifecycle.destroy();
+  expect(app.lifecycle.state()).toBe("destroyed");
 
   resolveFont();
   await initPromise;
 
-  expect(app.getLifecycleState()).toBe("destroyed");
+  expect(app.lifecycle.state()).toBe("destroyed");
   expect(sharedState.wasmHandle).toBe(0);
   expect(states).toEqual(["created", "initializing", "destroyed"]);
   dispose();

@@ -359,12 +359,9 @@ export type ResttyRuntimeConfig = ResttyRuntimeMountConfig &
  * Public API for a single terminal runtime instance.
  */
 export type ResttyRuntimeLifecycleApi = {
-  /** Initialize the renderer, fonts, and terminal state. */
   init: () => Promise<void>;
-  /** Tear down all resources and event listeners. */
   destroy: () => void;
-  /** Get the current runtime lifecycle state. */
-  getLifecycleState: () => ResttyRuntimeLifecycleState;
+  state: () => ResttyRuntimeLifecycleState;
 };
 
 export type ResttyRuntimeEventsApi = {
@@ -403,8 +400,6 @@ export type ResttyRuntimeIoApi = {
   sendInput: (text: string, source?: string) => void;
   /** Encode and send a key sequence to the terminal PTY. */
   sendKeyInput: (text: string, source?: string) => void;
-  /** Clear the visible screen and scrollback. */
-  clearScreen: () => void;
   /** Open a PTY connection, optionally to a specific URL. */
   connectPty: (url?: string) => void;
   /** Close the active PTY connection. */
@@ -436,15 +431,15 @@ export type ResttyRuntimeInteractionApi = {
 
 export type ResttyRuntimeSearchApi = {
   /** Update the active terminal search query. */
-  setSearchQuery: (query: string) => void;
+  setQuery: (query: string) => void;
   /** Clear terminal search state and visible highlights. */
-  clearSearch: () => void;
+  clear: () => void;
   /** Navigate to the next terminal search match. */
-  searchNext: () => void;
+  next: () => void;
   /** Navigate to the previous terminal search match. */
-  searchPrevious: () => void;
+  previous: () => void;
   /** Get the current terminal search state. */
-  getSearchState: () => ResttySearchState;
+  getState: () => ResttySearchState;
 };
 
 export type ResttyRuntimeRenderApi = {
@@ -456,10 +451,21 @@ export type ResttyRuntimeRenderApi = {
   getShaderStages: () => ResttyShaderStage[];
 };
 
-export type ResttyRuntime = ResttyRuntimeLifecycleApi &
-  ResttyRuntimeEventsApi &
-  ResttyRuntimeTerminalApi &
-  ResttyRuntimeIoApi &
-  ResttyRuntimeInteractionApi &
-  ResttyRuntimeSearchApi &
-  ResttyRuntimeRenderApi;
+export type ResttyRuntimeLifecycleView = {
+  init: ResttyRuntimeLifecycleApi["init"];
+  destroy: ResttyRuntimeLifecycleApi["destroy"];
+  state: ResttyRuntimeLifecycleApi["state"];
+};
+
+export type ResttyRuntimeEventsView = ResttyRuntimeEventsApi["events"];
+
+export type ResttyRuntimeGroupedApi = {
+  lifecycle: ResttyRuntimeLifecycleView;
+  events: ResttyRuntimeEventsView;
+  terminal: ResttyRuntimeTerminalApi;
+  io: ResttyRuntimeIoApi;
+  interaction: ResttyRuntimeInteractionApi;
+  search: ResttyRuntimeSearchApi;
+  render: ResttyRuntimeRenderApi;
+};
+export type ResttyRuntime = ResttyRuntimeGroupedApi;

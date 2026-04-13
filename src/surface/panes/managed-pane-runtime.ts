@@ -44,7 +44,7 @@ export function createManagedPaneRuntime(options: CreateManagedPaneRuntimeOption
   });
 
   if (autoInit) {
-    void app.init();
+    void app.lifecycle.init();
   }
 
   return app;

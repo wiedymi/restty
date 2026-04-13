@@ -141,11 +141,11 @@ test("runtime app api exposes search controls on the public Restty app", () => {
     getShaderStages: () => [],
   });
 
-  app.setSearchQuery("foo");
-  app.searchNext();
-  app.searchPrevious();
-  app.clearSearch();
+  app.search.setQuery("foo");
+  app.search.next();
+  app.search.previous();
+  app.search.clear();
 
   expect(calls).toEqual(["set:foo", "next", "prev", "clear"]);
-  expect(app.getSearchState()).toEqual(expectedState);
+  expect(app.search.getState()).toEqual(expectedState);
 });
