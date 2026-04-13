@@ -30,6 +30,11 @@ import {
   resetThemeForPane,
 } from "./lib/pane-theme.ts";
 import {
+  closeSettingsDialog,
+  isSettingsDialogOpen,
+  openSettingsDialog,
+} from "./lib/settings-dialog.ts";
+import {
   createPaneState,
   getActivePaneState,
   type PaneState,
@@ -345,36 +350,6 @@ function handleDesktopNotification(notification: {
   }
 }
 
-function isSettingsDialogOpen() {
-  return Boolean(settingsDialog?.open);
-}
-
-function restoreTerminalFocus() {
-  const pane = restty.getFocusedPane() ?? restty.getActivePane() ?? restty.getPanes()[0] ?? null;
-  if (!pane) return;
-  pane.canvas.focus({ preventScroll: true });
-}
-
-function openSettingsDialog() {
-  restty.hideContextMenu();
-  if (!settingsDialog || settingsDialog.open) return;
-  if (typeof settingsDialog.showModal === "function") {
-    settingsDialog.showModal();
-    return;
-  }
-  settingsDialog.setAttribute("open", "");
-}
-
-function closeSettingsDialog() {
-  if (!settingsDialog || !settingsDialog.open) return;
-  if (typeof settingsDialog.close === "function") {
-    settingsDialog.close();
-  } else {
-    settingsDialog.removeAttribute("open");
-  }
-  restoreTerminalFocus();
-}
-
 function waitForAnimationFrame(): Promise<void> {
   return new Promise((resolve) => {
     requestAnimationFrame(() => resolve());
@@ -603,29 +578,29 @@ restty = new Restty({
 applyShaderPreset();
 
 settingsFab?.addEventListener("click", () => {
-  openSettingsDialog();
+  openSettingsDialog({ host: restty, settingsDialog });
 });
 
 settingsClose?.addEventListener("click", () => {
-  closeSettingsDialog();
+  closeSettingsDialog({ host: restty, settingsDialog });
 });
 
 settingsDialog?.addEventListener("click", (event) => {
   if (event.target !== settingsDialog) return;
-  closeSettingsDialog();
+  closeSettingsDialog({ host: restty, settingsDialog });
 });
 
 settingsDialog?.addEventListener("cancel", (event) => {
   event.preventDefault();
-  closeSettingsDialog();
+  closeSettingsDialog({ host: restty, settingsDialog });
 });
 
 window.addEventListener(
   "keydown",
   (event) => {
-    if (isSettingsDialogOpen() && event.key === "Escape") {
+    if (isSettingsDialogOpen(settingsDialog) && event.key === "Escape") {
       event.preventDefault();
-      closeSettingsDialog();
+      closeSettingsDialog({ host: restty, settingsDialog });
     }
   },
   { capture: true },
