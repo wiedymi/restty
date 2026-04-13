@@ -1,28 +1,11 @@
-import type { DesktopNotification } from "../input";
 import {
   createResttyAppPaneManager,
   type ResttyAppPaneManager,
   type ResttyManagedAppPane,
-  type ResttyDefaultPaneContextMenuOptions,
-  type ResttyManagedPaneSearchUiOptions,
   type ResttyManagedPaneStyleOptions,
-  type ResttyManagedPaneStylesOptions,
   type ResttyManagedPaneSearchUiStyleOptions,
-  type ResttyPaneDomDefaults,
-  type ResttyPaneRuntimeContext,
-  type ResttyTerminalConfigInput,
 } from "./pane-app-manager";
-import type {
-  ResttyPaneContextMenuOptions,
-  ResttyPaneShortcutsOptions,
-  ResttyPaneSplitDirection,
-} from "./panes-types";
-import type {
-  ResttyAppSession,
-  ResttyFontSource,
-  ResttyRuntimeServicesConfig,
-  ResttyShaderStage,
-} from "../runtime/types";
+import type { ResttyFontSource, ResttyShaderStage } from "../runtime/types";
 import { ResttyPaneHandle } from "./restty-pane-handle";
 import { ResttyActivePaneApi } from "./restty/active-pane-api";
 import {
@@ -57,6 +40,7 @@ import {
   type ResttyPlugin,
 } from "./plugins/types";
 import { ResttyPluginHost } from "./plugins/host";
+import type { ResttyConfig } from "./restty/config";
 import * as paneOps from "./restty/pane-ops";
 import { ResttyShaderOps } from "./restty/shader-ops";
 
@@ -88,64 +72,13 @@ export type {
   ResttyPluginContext,
   ResttyPlugin,
 } from "./plugins/types";
-
-export type ResttySurfaceEvents = {
-  onPaneCreated?: (pane: ResttyManagedAppPane) => void;
-  onPaneClosed?: (pane: ResttyManagedAppPane) => void;
-  onPaneSplit?: (
-    sourcePane: ResttyManagedAppPane,
-    createdPane: ResttyManagedAppPane,
-    direction: ResttyPaneSplitDirection,
-  ) => void;
-  onActivePaneChange?: (pane: ResttyManagedAppPane | null) => void;
-  onLayoutChanged?: () => void;
-  /** Global handler for desktop notifications emitted by any pane. */
-  onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
-};
-
-export type ResttySurfaceConfig = {
-  /** Override default CSS class names for pane DOM elements. */
-  paneDom?: ResttyPaneDomDefaults;
-  /** Automatically call app.init() after pane creation (default true). */
-  autoInit?: boolean;
-  /** Minimum pane size in pixels during split-resize (default 96). */
-  minPaneSize?: number;
-  /** Enable or configure built-in pane CSS styles. */
-  paneStyles?: boolean | ResttyManagedPaneStylesOptions;
-  /** Enable or configure the built-in pane search UI. */
-  searchUi?: boolean | ResttyManagedPaneSearchUiOptions;
-  /** Enable or configure keyboard shortcuts for splitting. */
-  shortcuts?: boolean | ResttyPaneShortcutsOptions;
-  /** Custom context menu implementation (overrides defaultContextMenu). */
-  contextMenu?: ResttyPaneContextMenuOptions<ResttyManagedAppPane> | null;
-  /** Enable or configure the built-in default context menu. */
-  defaultContextMenu?: boolean | ResttyDefaultPaneContextMenuOptions;
-  /** Whether to create the first pane automatically (default true). */
-  createInitialPane?: boolean | { focus?: boolean };
-  /** Surface lifecycle and pane-layout event handlers. */
-  events?: ResttySurfaceEvents;
-};
-
-export type ResttyServicesConfig = ResttyRuntimeServicesConfig;
-export type ResttyServicesConfigInput =
-  | ResttyServicesConfig
-  | ((context: ResttyPaneRuntimeContext) => ResttyServicesConfig);
-
-/**
- * Top-level configuration for creating a Restty instance.
- */
-export type ResttyConfig = {
-  /** Root element that will contain the Restty surface. */
-  root: HTMLElement;
-  /** Shared session for WASM/WebGPU resources. */
-  session?: ResttyAppSession;
-  /** Surface shell and pane manager behavior. */
-  surface?: ResttySurfaceConfig;
-  /** Per-pane terminal behavior config, static or factory. */
-  terminal?: ResttyTerminalConfigInput;
-  /** Per-pane services/hooks config, static or factory. */
-  services?: ResttyServicesConfigInput;
-};
+export type {
+  ResttyConfig,
+  ResttyServicesConfig,
+  ResttyServicesConfigInput,
+  ResttySurfaceConfig,
+} from "./restty/config";
+export type { ResttySurfaceEvents } from "./restty/events";
 
 /**
  * Main entry point for the restty terminal widget. Manages a set of
