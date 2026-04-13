@@ -1,7 +1,6 @@
 import {
   Restty,
   listBuiltinThemeNames,
-  getBuiltinTheme,
   parseGhosttyTheme,
   type GhosttyTheme,
   type ResttyFontSource,
@@ -14,6 +13,12 @@ import {
   getConnectionBackend,
   syncConnectionUi,
 } from "./lib/pty-connection.ts";
+import {
+  applyBuiltinThemeToPane,
+  applySavedThemeForPane,
+  applyThemeToPane,
+  resetThemeForPane,
+} from "./lib/pane-theme.ts";
 import {
   createPaneState,
   getActivePaneState,
@@ -726,24 +731,17 @@ function connectPaneIfNeeded(pane: ManagedPane) {
   });
 }
 
-function applySavedThemeForPane(pane: ManagedPane, state: PaneState) {
-  if (state.theme.selectValue) {
-    applyBuiltinThemeToPane(pane, state, state.theme.selectValue, state.theme.sourceLabel);
-    return;
-  }
-  if (!state.theme.theme) return;
-  applyThemeToPane(
-    pane,
-    state,
-    state.theme.theme,
-    state.theme.sourceLabel || "pane theme",
-    state.theme.selectValue,
-  );
-}
-
 async function initPaneApp(pane: ManagedPane, state: PaneState) {
   await pane.runtime.lifecycle.init();
-  applySavedThemeForPane(pane, state);
+  paneStates.set(
+    pane.id,
+    applySavedThemeForPane({
+      pane,
+      state,
+      activePaneId,
+      themeSelect,
+    }),
+  );
   await waitForAnimationFrame();
   pane.runtime.interaction.updateSize(true);
   connectPaneIfNeeded(pane);
@@ -751,53 +749,6 @@ async function initPaneApp(pane: ManagedPane, state: PaneState) {
     syncPtyButton(pane);
   }
   pane.canvas.focus({ preventScroll: true });
-}
-
-function applyThemeToPane(
-  pane: ManagedPane,
-  state: PaneState,
-  theme: GhosttyTheme,
-  sourceLabel: string,
-  selectValue = "",
-): boolean {
-  try {
-    pane.runtime.terminal.applyTheme(theme, sourceLabel);
-    state.theme = {
-      selectValue,
-      sourceLabel,
-      theme,
-    };
-    if (pane.id === activePaneId && themeSelect) {
-      themeSelect.value = selectValue;
-    }
-    return true;
-  } catch (err) {
-    console.error("theme apply failed", err);
-    return false;
-  }
-}
-
-function applyBuiltinThemeToPane(
-  pane: ManagedPane,
-  state: PaneState,
-  name: string,
-  sourceLabel = name,
-): boolean {
-  const theme = getBuiltinTheme(name);
-  if (!theme) return false;
-  return applyThemeToPane(pane, state, theme, sourceLabel, name);
-}
-
-function resetThemeForPane(pane: ManagedPane, state: PaneState) {
-  pane.runtime.terminal.resetTheme();
-  state.theme = {
-    selectValue: "",
-    sourceLabel: "",
-    theme: null,
-  };
-  if (pane.id === activePaneId && themeSelect) {
-    themeSelect.value = "";
-  }
 }
 
 function queueResizeAllPanes() {
@@ -1049,8 +1000,16 @@ if (themeFileInput) {
       .text()
       .then((text) => {
         const theme: GhosttyTheme = parseGhosttyTheme(text);
-        if (applyThemeToPane(pane, state, theme, file.name || "theme file", "") && themeSelect) {
-          themeSelect.value = "";
+        const nextState = applyThemeToPane({
+          pane,
+          state,
+          theme,
+          sourceLabel: file.name || "theme file",
+          activePaneId,
+          themeSelect,
+        });
+        if (nextState) {
+          paneStates.set(pane.id, nextState);
         }
       })
       .catch((err) => {
@@ -1069,10 +1028,27 @@ if (themeSelect) {
     if (!pane || !state) return;
     const name = themeSelect.value;
     if (!name) {
-      resetThemeForPane(pane, state);
+      paneStates.set(
+        pane.id,
+        resetThemeForPane({
+          pane,
+          state,
+          activePaneId,
+          themeSelect,
+        }),
+      );
       return;
     }
-    applyBuiltinThemeToPane(pane, state, name);
+    const nextState = applyBuiltinThemeToPane({
+      pane,
+      state,
+      name,
+      activePaneId,
+      themeSelect,
+    });
+    if (nextState) {
+      paneStates.set(pane.id, nextState);
+    }
   });
 }
 
