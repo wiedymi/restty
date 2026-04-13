@@ -24,6 +24,8 @@ wasm/zig-out/
 
 # Generated bundles (can be re-built via npm scripts)
 playground/public/app.js
+playground/public/playground.js
+playground/public/playground.js.map
 playground/public/restty-input.js
 playground/public/restty-input.js.map
 playground/public/restty-wasm.js
