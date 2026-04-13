@@ -1,18 +1,24 @@
 <script lang="ts">
+  import {
+    FONT_FAMILY_LOCAL_CHANGE_EVENT,
+    FONT_FAMILY_CHANGE_EVENT,
+    FONT_HINT_TARGET_CHANGE_EVENT,
+    FONT_HINTING_CHANGE_EVENT,
+    FONT_LIGATURES_CHANGE_EVENT,
+    FONT_RENDERING_STATE_EVENT,
+    LOAD_LOCAL_FONTS_EVENT,
+    MOUSE_MODE_CHANGE_EVENT,
+    MOUSE_MODE_STATE_EVENT,
+    SHADER_PRESET_CHANGE_EVENT,
+    THEME_FILE_CHANGE_EVENT,
+    THEME_SELECT_CHANGE_EVENT,
+    type FontRenderingStateDetail,
+    type MouseModeStateDetail,
+    type ShaderPresetChangeDetail,
+    type ShellStringValueDetail,
+    type ThemeFileChangeDetail,
+  } from "../../../../lib/shell-events.ts";
   import type { ShaderPreset } from "../../../../lib/shader-presets.ts";
-
-  const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
-  const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
-  const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
-  const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
-  const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
-  const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
-  const FONT_RENDERING_STATE_EVENT = "restty:playground-font-rendering-state";
-  const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
-  const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
-  const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
-  const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
-  const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
   let mouseMode = "auto";
   let ligatures = "on";
@@ -39,7 +45,7 @@
   }
 
   function handleWindowMouseModeState(event: Event) {
-    const detail = (event as CustomEvent<{ value?: string }>).detail;
+    const detail = (event as CustomEvent<ShellStringValueDetail>).detail;
     if (typeof detail?.value === "string") {
       mouseMode = detail.value;
     }
@@ -120,13 +126,7 @@
   }
 
   function handleWindowFontRenderingState(event: Event) {
-    const detail = (
-      event as CustomEvent<{
-        ligatures?: string;
-        fontHinting?: string;
-        fontHintTarget?: string;
-      }>
-    ).detail;
+    const detail = (event as CustomEvent<FontRenderingStateDetail>).detail;
     if (!detail) return;
     if (typeof detail.ligatures === "string") {
       ligatures = detail.ligatures;

@@ -47,6 +47,39 @@ import {
   type RendererChoice,
   withPanePaused,
 } from "./lib/pane-state.ts";
+import {
+  FONT_FAMILY_LOCAL_CHANGE_EVENT,
+  FONT_FAMILY_CHANGE_EVENT,
+  FONT_HINT_TARGET_CHANGE_EVENT,
+  FONT_HINTING_CHANGE_EVENT,
+  FONT_LIGATURES_CHANGE_EVENT,
+  FONT_RENDERING_STATE_EVENT,
+  LOAD_LOCAL_FONTS_EVENT,
+  MOUSE_MODE_CHANGE_EVENT,
+  MOUSE_MODE_STATE_EVENT,
+  PTY_BUTTON_EVENT,
+  PTY_BUTTON_STATE_EVENT,
+  RUN_DEMO_EVENT,
+  SETTINGS_CLOSE_EVENT,
+  SETTINGS_OPEN_EVENT,
+  SHADER_PRESET_CHANGE_EVENT,
+  TERMINAL_CLEAR_EVENT,
+  TERMINAL_FONT_SIZE_EVENT,
+  TERMINAL_INIT_EVENT,
+  TERMINAL_PAUSE_EVENT,
+  TERMINAL_RENDERER_EVENT,
+  TERMINAL_STATE_EVENT,
+  THEME_FILE_CHANGE_EVENT,
+  THEME_SELECT_CHANGE_EVENT,
+  type DemoRunDetail,
+  type FontRenderingStateDetail,
+  type PtyButtonStateDetail,
+  type RendererChangeDetail,
+  type ShaderPresetChangeDetail,
+  type ShellStringValueDetail,
+  type TerminalStateDetail,
+  type ThemeFileChangeDetail,
+} from "./lib/shell-events.ts";
 
 const paneRoot = document.getElementById("paneRoot") as HTMLElement | null;
 if (!paneRoot) {
@@ -86,38 +119,16 @@ const settingsDialog = document.getElementById("settingsDialog") as HTMLDialogEl
 const settingsClose = document.getElementById("settingsClose") as HTMLButtonElement | null;
 
 const DEFAULT_THEME_NAME = "Aizen Dark";
-const RUN_DEMO_EVENT = "restty:playground-demo-run";
-const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
-const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
-const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
-const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
-const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
-const FONT_RENDERING_STATE_EVENT = "restty:playground-font-rendering-state";
-const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
-const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
-const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
-const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
-const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
-const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
-const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
-const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
-const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
-const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
-const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
-const TERMINAL_STATE_EVENT = "restty:playground-terminal-state";
-const PTY_BUTTON_EVENT = "restty:playground-pty-button";
-const PTY_BUTTON_STATE_EVENT = "restty:playground-pty-button-state";
-
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
-type DemoRunEvent = CustomEvent<{ kind?: PlaygroundDemoKind | string }>;
-type FontControlChangeEvent = CustomEvent<{ value?: string }>;
-type LocalFontControlChangeEvent = CustomEvent<{ value?: string }>;
-type MouseModeChangeEvent = CustomEvent<{ value?: string }>;
-type ThemeFileChangeEvent = CustomEvent<{ file?: File | null }>;
-type ThemeSelectChangeEvent = CustomEvent<{ value?: string }>;
-type ShaderPresetChangeEvent = CustomEvent<{ value?: ShaderPreset | string }>;
-type FontSizeChangeEvent = CustomEvent<{ value?: string }>;
-type RendererChangeEvent = CustomEvent<{ value?: RendererChoice | string }>;
+type DemoRunEvent = CustomEvent<DemoRunDetail>;
+type FontControlChangeEvent = CustomEvent<ShellStringValueDetail>;
+type LocalFontControlChangeEvent = CustomEvent<ShellStringValueDetail>;
+type MouseModeChangeEvent = CustomEvent<ShellStringValueDetail>;
+type ThemeFileChangeEvent = CustomEvent<ThemeFileChangeDetail>;
+type ThemeSelectChangeEvent = CustomEvent<ShellStringValueDetail>;
+type ShaderPresetChangeEvent = CustomEvent<ShaderPresetChangeDetail>;
+type FontSizeChangeEvent = CustomEvent<ShellStringValueDetail>;
+type RendererChangeEvent = CustomEvent<RendererChangeDetail>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
@@ -469,10 +480,10 @@ restty = new Restty({
 applyShaderPreset();
 
 if (usesSvelteShell) {
-  window.addEventListener("restty:playground-settings-open", () => {
+  window.addEventListener(SETTINGS_OPEN_EVENT, () => {
     restty.hideContextMenu();
   });
-  window.addEventListener("restty:playground-settings-close", () => {
+  window.addEventListener(SETTINGS_CLOSE_EVENT, () => {
     restoreTerminalFocus(restty);
   });
 } else {

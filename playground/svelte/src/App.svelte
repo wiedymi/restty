@@ -3,9 +3,7 @@
   import ConnectionSection from "./lib/components/ConnectionSection.svelte";
   import DemoSection from "./lib/components/DemoSection.svelte";
   import TerminalSection from "./lib/components/TerminalSection.svelte";
-
-  const SETTINGS_OPEN_EVENT = "restty:playground-settings-open";
-  const SETTINGS_CLOSE_EVENT = "restty:playground-settings-close";
+  import { SETTINGS_CLOSE_EVENT, SETTINGS_OPEN_EVENT } from "../../lib/shell-events.ts";
 
   document.documentElement.dataset.playgroundShell = "svelte";
 

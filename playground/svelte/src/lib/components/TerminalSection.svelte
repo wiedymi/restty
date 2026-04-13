@@ -1,16 +1,14 @@
 <script lang="ts">
-  const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
-  const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
-  const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
-  const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
-  const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
-  const TERMINAL_STATE_EVENT = "restty:playground-terminal-state";
-
-  type TerminalStateDetail = {
-    pauseLabel?: string;
-    renderer?: string;
-    fontSize?: number | string;
-  };
+  import {
+    TERMINAL_CLEAR_EVENT,
+    TERMINAL_FONT_SIZE_EVENT,
+    TERMINAL_INIT_EVENT,
+    TERMINAL_PAUSE_EVENT,
+    TERMINAL_RENDERER_EVENT,
+    TERMINAL_STATE_EVENT,
+    type ShellStringValueDetail,
+    type TerminalStateDetail,
+  } from "../../../../lib/shell-events.ts";
 
   let pauseLabel = "Pause";
   let renderer = "auto";

@@ -3,9 +3,11 @@
     getConnectionUiState,
     type ConnectionBackend,
   } from "../../../../lib/pty-connection.ts";
-
-  const PTY_BUTTON_EVENT = "restty:playground-pty-button";
-  const PTY_BUTTON_STATE_EVENT = "restty:playground-pty-button-state";
+  import {
+    PTY_BUTTON_EVENT,
+    PTY_BUTTON_STATE_EVENT,
+    type PtyButtonStateDetail,
+  } from "../../../../lib/shell-events.ts";
 
   let connectionBackend: ConnectionBackend = "webcontainer";
   let ptyButtonLabel = "Connect PTY";
@@ -20,7 +22,7 @@
   }
 
   function handleWindowPtyButtonState(event: Event) {
-    const detail = (event as CustomEvent<{ label?: string }>).detail;
+    const detail = (event as CustomEvent<PtyButtonStateDetail>).detail;
     if (typeof detail?.label === "string") {
       ptyButtonLabel = detail.label;
     }

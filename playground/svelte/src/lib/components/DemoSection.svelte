@@ -1,7 +1,6 @@
 <script lang="ts">
+  import { RUN_DEMO_EVENT } from "../../../../lib/shell-events.ts";
   import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
-
-  const RUN_DEMO_EVENT = "restty:playground-demo-run";
 
   let demoKind: PlaygroundDemoKind = "basic";
 
