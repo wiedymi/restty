@@ -92,6 +92,7 @@ const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
 const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
 const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
 const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
+const FONT_RENDERING_STATE_EVENT = "restty:playground-font-rendering-state";
 const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
 const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
 const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
@@ -265,14 +266,7 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
     selectedLocalFontMatcher,
     supportsLocalFontPicker: supportsLocalFontPicker(),
   });
-  syncHintingControls({
-    ligaturesSelect,
-    fontHintingSelect,
-    fontHintTargetSelect,
-    selectedLigatures,
-    selectedFontHinting,
-    selectedFontHintTarget,
-  });
+  syncFontRenderingControls();
   state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
   if (usesSvelteShell) {
     window.dispatchEvent(
@@ -765,16 +759,32 @@ if (usesSvelteShell) {
 }
 
 function applyFontRenderingSelections() {
-  syncHintingControls({
-    ligaturesSelect,
-    fontHintingSelect,
-    fontHintTargetSelect,
+  syncFontRenderingControls();
+  applyFontRenderingOptionsToAllPanes({
+    host: restty,
     selectedLigatures,
     selectedFontHinting,
     selectedFontHintTarget,
   });
-  applyFontRenderingOptionsToAllPanes({
-    host: restty,
+}
+
+function syncFontRenderingControls() {
+  if (usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(FONT_RENDERING_STATE_EVENT, {
+        detail: {
+          ligatures: selectedLigatures ? "on" : "off",
+          fontHinting: selectedFontHinting ? "on" : "off",
+          fontHintTarget: selectedFontHintTarget,
+        },
+      }),
+    );
+    return;
+  }
+  syncHintingControls({
+    ligaturesSelect,
+    fontHintingSelect,
+    fontHintTargetSelect,
     selectedLigatures,
     selectedFontHinting,
     selectedFontHintTarget,

@@ -7,6 +7,7 @@
   const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
   const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
   const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
+  const FONT_RENDERING_STATE_EVENT = "restty:playground-font-rendering-state";
   const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
   const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
   const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
@@ -14,6 +15,9 @@
   const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
   let mouseMode = "auto";
+  let ligatures = "on";
+  let fontHinting = "off";
+  let fontHintTarget = "auto";
   let shaderPreset: ShaderPreset = "none";
 
   function handleShaderPresetChange() {
@@ -114,9 +118,32 @@
   function handleLoadLocalFonts() {
     window.dispatchEvent(new CustomEvent(LOAD_LOCAL_FONTS_EVENT));
   }
+
+  function handleWindowFontRenderingState(event: Event) {
+    const detail = (
+      event as CustomEvent<{
+        ligatures?: string;
+        fontHinting?: string;
+        fontHintTarget?: string;
+      }>
+    ).detail;
+    if (!detail) return;
+    if (typeof detail.ligatures === "string") {
+      ligatures = detail.ligatures;
+    }
+    if (typeof detail.fontHinting === "string") {
+      fontHinting = detail.fontHinting;
+    }
+    if (typeof detail.fontHintTarget === "string") {
+      fontHintTarget = detail.fontHintTarget;
+    }
+  }
 </script>
 
-<svelte:window on:restty:playground-mouse-mode-state={handleWindowMouseModeState} />
+<svelte:window
+  on:restty:playground-font-rendering-state={handleWindowFontRenderingState}
+  on:restty:playground-mouse-mode-state={handleWindowMouseModeState}
+/>
 
 <section class="section">
   <div class="section-title">Appearance</div>
@@ -127,16 +154,16 @@
     </select>
   </div>
   <div class="field-row">
-    <select id="ligatures" onchange={handleLigaturesChange}>
-      <option value="on" selected>Ligatures: On</option>
+    <select id="ligatures" bind:value={ligatures} onchange={handleLigaturesChange}>
+      <option value="on">Ligatures: On</option>
       <option value="off">Ligatures: Off</option>
     </select>
-    <select id="fontHinting" onchange={handleHintingChange}>
-      <option value="off" selected>Hinting: Off</option>
+    <select id="fontHinting" bind:value={fontHinting} onchange={handleHintingChange}>
+      <option value="off">Hinting: Off</option>
       <option value="on">Hinting: On</option>
     </select>
-    <select id="fontHintTarget" onchange={handleHintTargetChange}>
-      <option value="auto" selected>Hint Target: Auto</option>
+    <select id="fontHintTarget" bind:value={fontHintTarget} onchange={handleHintTargetChange}>
+      <option value="auto">Hint Target: Auto</option>
       <option value="light">Hint Target: Light</option>
       <option value="normal">Hint Target: Normal</option>
     </select>
