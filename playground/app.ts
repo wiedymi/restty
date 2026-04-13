@@ -95,6 +95,7 @@ const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change
 const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
 const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
 const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
+const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
 const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
 const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
@@ -273,7 +274,13 @@ function renderActivePaneControls(pane: ManagedPane, state: PaneState) {
     selectedFontHintTarget,
   });
   state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
-  if (mouseModeEl) {
+  if (usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(MOUSE_MODE_STATE_EVENT, {
+        detail: { value: state.mouseMode },
+      }),
+    );
+  } else if (mouseModeEl) {
     const hasOption = Array.from(mouseModeEl.options).some(
       (option) => option.value === state.mouseMode,
     );
@@ -688,7 +695,13 @@ function applyMouseMode(value: string | null | undefined) {
   if (!pane || !state) return;
   pane.runtime.interaction.setMouseMode(value ?? "auto");
   state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
-  if (pane.id === activePaneId && mouseModeEl) {
+  if (pane.id === activePaneId && usesSvelteShell) {
+    window.dispatchEvent(
+      new CustomEvent(MOUSE_MODE_STATE_EVENT, {
+        detail: { value: state.mouseMode },
+      }),
+    );
+  } else if (pane.id === activePaneId && mouseModeEl) {
     mouseModeEl.value = state.mouseMode;
   }
 }

@@ -8,10 +8,12 @@
   const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
   const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
   const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
+  const MOUSE_MODE_STATE_EVENT = "restty:playground-mouse-mode-state";
   const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
   const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
   const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 
+  let mouseMode = "auto";
   let shaderPreset: ShaderPreset = "none";
 
   function handleShaderPresetChange() {
@@ -30,6 +32,13 @@
         detail: { value: select.value },
       }),
     );
+  }
+
+  function handleWindowMouseModeState(event: Event) {
+    const detail = (event as CustomEvent<{ value?: string }>).detail;
+    if (typeof detail?.value === "string") {
+      mouseMode = detail.value;
+    }
   }
 
   function handleThemeSelectChange(event: Event) {
@@ -107,6 +116,8 @@
   }
 </script>
 
+<svelte:window on:restty:playground-mouse-mode-state={handleWindowMouseModeState} />
+
 <section class="section">
   <div class="section-title">Appearance</div>
   <div class="field-row">
@@ -159,8 +170,8 @@
     </label>
   </div>
   <div class="field-row">
-    <select id="mouseMode" onchange={handleMouseModeChange}>
-      <option value="auto" selected>Mouse: Auto</option>
+    <select id="mouseMode" bind:value={mouseMode} onchange={handleMouseModeChange}>
+      <option value="auto">Mouse: Auto</option>
       <option value="on">Mouse: On</option>
       <option value="off">Mouse: Off</option>
     </select>
