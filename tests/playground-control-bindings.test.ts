@@ -2,9 +2,9 @@ import { expect, test } from "bun:test";
 import {
   bindAppearanceControls,
   bindConnectionControls,
-  bindSettingsControls,
   bindTerminalControls,
 } from "../playground/lib/control-bindings.ts";
+import { bindSettingsControls } from "../playground/lib/settings-bindings.ts";
 import {
   CONNECTION_BACKEND_CHANGE_EVENT,
   FONT_FAMILY_CHANGE_EVENT,

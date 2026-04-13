@@ -4,7 +4,6 @@ import { createConnectionController } from "./lib/connection-controller.ts";
 import {
   bindAppearanceControls,
   bindConnectionControls,
-  bindSettingsControls,
   bindTerminalControls,
 } from "./lib/control-bindings.ts";
 import { createDesktopNotificationHandler } from "./lib/desktop-notifications.ts";
@@ -20,6 +19,7 @@ import { createPaneShellSync } from "./lib/pane-shell-sync.ts";
 import { createPlaygroundShellAdapter } from "./lib/shell-adapter.ts";
 import { getActivePaneState, type PaneState } from "./lib/pane-state.ts";
 import { DEFAULT_CONNECTION_BACKEND } from "./lib/shell-defaults.ts";
+import { bindSettingsControls } from "./lib/settings-bindings.ts";
 import {
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
