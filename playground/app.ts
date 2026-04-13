@@ -1,5 +1,5 @@
 import { Restty, listBuiltinThemeNames } from "../src/index.ts";
-import { createDemoController, type PlaygroundDemoKind } from "./lib/demos.ts";
+import type { PlaygroundDemoKind } from "./lib/demos.ts";
 import { createConnectionController } from "./lib/connection-controller.ts";
 import {
   bindAppearanceControls,
@@ -9,11 +9,7 @@ import {
 } from "./lib/control-bindings.ts";
 import { createDesktopNotificationHandler } from "./lib/desktop-notifications.ts";
 import { createPaneAppearanceController } from "./lib/appearance-controller.ts";
-import {
-  createAdaptivePtyTransport,
-  getConnectionBackend,
-  syncConnectionUi,
-} from "./lib/pty-connection.ts";
+import { getConnectionBackend, syncConnectionUi } from "./lib/pty-connection.ts";
 import { createPaneLifecycleController } from "./lib/pane-lifecycle.ts";
 import { createPaneShellSync } from "./lib/pane-shell-sync.ts";
 import {
@@ -22,13 +18,14 @@ import {
   openSettingsDialog,
   restoreTerminalFocus,
 } from "./lib/settings-dialog.ts";
-import { createPaneState, getActivePaneState, type PaneState } from "./lib/pane-state.ts";
+import { getActivePaneState, type PaneState } from "./lib/pane-state.ts";
 import {
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
   THEME_FILE_RESET_EVENT,
 } from "./lib/shell-events.ts";
 import { resolvePlaygroundStartupDefaults } from "./lib/startup-defaults.ts";
+import { bootstrapPlaygroundSurface } from "./lib/surface-bootstrap.ts";
 
 const paneRoot = document.getElementById("paneRoot") as HTMLElement | null;
 if (!paneRoot) {
@@ -71,7 +68,6 @@ type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 
 const paneStates = new Map<number, PaneState>();
 let activePaneId: number | null = null;
-let resizeRaf = 0;
 let restty: Restty;
 const usesSvelteShell = document.documentElement.dataset.playgroundShell === "svelte";
 const initialConnectionBackend = getConnectionBackend(connectionBackendEl);
@@ -201,16 +197,6 @@ const paneLifecycle = createPaneLifecycleController({
   requestAnimationFrame,
 });
 
-function queueResizeAllPanes() {
-  if (resizeRaf) return;
-  resizeRaf = requestAnimationFrame(() => {
-    resizeRaf = 0;
-    for (const pane of restty.getPanes()) {
-      pane.runtime.interaction.updateSize(true);
-    }
-  });
-}
-
 appearanceController = createPaneAppearanceController({
   host: {
     getPanes: () => restty.getPanes(),
@@ -240,104 +226,22 @@ appearanceController = createPaneAppearanceController({
   initialState: appearanceInitialState,
 });
 
-restty = new Restty({
+restty = bootstrapPlaygroundSurface({
   root: paneRoot,
-  surface: {
-    createInitialPane: false,
-    autoInit: false,
-    paneStyles: {
-      inactivePaneOpacity: 0.9,
-    },
-    searchUi: {
-      styles: {
-        offsetTopPx: 14,
-        offsetRightPx: 14,
-        maxWidthPx: 400,
-        borderRadiusPx: 14,
-        panelBackground: "rgba(14, 14, 14, 0.92)",
-        panelBorderColor: "rgba(255, 255, 255, 0.14)",
-        buttonHoverBackground: "rgba(255, 255, 255, 0.18)",
-        statusActiveTextColor: "#e0bc72",
-      },
-    },
-    events: {
-      onPaneCreated: (pane) => {
-        const state = paneStates.get(pane.id);
-        if (!state) return;
-
-        pane.paused = state.paused;
-        pane.setPaused = (value: boolean) => {
-          paneLifecycle.setPanePaused(pane.id, value);
-        };
-
-        state.demos = createDemoController(pane.runtime);
-        pane.runtime.interaction.setMouseMode(state.mouseMode);
-        void paneLifecycle.initPane(pane, state);
-      },
-      onPaneClosed: (pane) => {
-        const state = paneStates.get(pane.id);
-        state?.demos?.stop();
-        paneStates.delete(pane.id);
-      },
-      onActivePaneChange: (pane) => {
-        activePaneId = pane?.id ?? null;
-        if (!pane) return;
-        const state = paneStates.get(pane.id);
-        if (!state) return;
-        paneShellSync.syncPtyButton(pane);
-        paneShellSync.renderActivePaneControls(pane, state);
-      },
-      onLayoutChanged: () => {
-        queueResizeAllPanes();
-      },
-      onDesktopNotification: handleDesktopNotification,
-    },
-    defaultContextMenu: {
-      canOpen: () => !isSettingsDialogOpen(),
-      getPtyUrl: () => connectionController.getConnectUrl(),
-    },
-    shortcuts: {
-      enabled: true,
-      canHandleEvent: () => !isSettingsDialogOpen(),
-    },
+  target: window,
+  initialFontSize,
+  defaultThemeName,
+  paneStates,
+  setActivePaneId: (id) => {
+    activePaneId = id;
   },
-  terminal: ({ id, sourcePane }) => {
-    const paneState = createPaneState({
-      id,
-      sourceState: sourcePane ? (paneStates.get(sourcePane.id) ?? null) : null,
-      renderer: appearanceController.getRendererDefault(),
-      fontSize: Number.isFinite(appearanceController.getFontSizeDefault())
-        ? appearanceController.getFontSizeDefault()
-        : Number.isFinite(initialFontSize)
-          ? initialFontSize
-          : 18,
-      mouseMode: appearanceController.getMouseModeDefault(),
-      defaultThemeName,
-    });
-    paneStates.set(id, paneState);
-    return {
-      renderer: paneState.renderer,
-      fontSize: paneState.fontSize,
-      ligatures: appearanceController.getLigatures(),
-      fontHinting: appearanceController.getFontHinting(),
-      fontHintTarget: appearanceController.getFontHintTarget(),
-      // Ghostty parity: use EM sizing semantics and native alpha blending.
-      fontSizeMode: "em",
-      alphaBlending: "native",
-      fontSources: appearanceController.getFontSources(),
-    };
-  },
-  services: ({ id }) => ({
-    ptyTransport: createAdaptivePtyTransport({
-      getConnectionBackend: () => connectionController.getBackend(),
-      getPtyUrl: () => connectionController.getConnectUrl(),
-      getWebContainerCommand: () => connectionController.getWebContainerCommand(),
-      getWebContainerCwd: () => connectionController.getWebContainerCwd(),
-    }),
-    callbacks: {},
-  }),
+  isSettingsDialogOpen: () => isSettingsDialogOpen(),
+  appearanceController,
+  connectionController,
+  paneLifecycle,
+  paneShellSync,
+  onDesktopNotification: handleDesktopNotification,
 });
-appearanceController.applyCurrentShaderPreset();
 
 bindSettingsControls({
   usesSvelteShell,
@@ -360,10 +264,6 @@ bindSettingsControls({
     if (!isSettingsDialogOpen(settingsDialog)) return;
     closeSettingsDialog({ host: restty, settingsDialog });
   },
-});
-
-window.addEventListener("resize", () => {
-  queueResizeAllPanes();
 });
 
 function handleTerminalInit() {
@@ -484,11 +384,3 @@ if (!usesSvelteShell) {
 paneShellSync.syncFontFamilyValue();
 paneShellSync.syncLocalFontControls();
 paneShellSync.syncFontRenderingControls();
-const firstPane = restty.createInitialPane({ focus: true });
-activePaneId = firstPane.id;
-const firstState = paneStates.get(firstPane.id);
-if (firstState) {
-  paneShellSync.syncPtyButton(firstPane);
-  paneShellSync.renderActivePaneControls(firstPane, firstState);
-}
-queueResizeAllPanes();
