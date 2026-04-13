@@ -17,16 +17,10 @@ test("createMergedPaneServicesConfig captures paneId snapshot for callbacks and 
       beforeInput: ({ text }) => text,
       beforeRenderOutput: ({ text }) => text,
     },
-    getFontSources: () => undefined,
     onDesktopNotification: (notification) => {
       notifyPaneIds.push(notification.paneId);
     },
-    shaderOps: {
-      normalizePaneShaderStages: () => [],
-      setPaneBaseShaderStages: () => {},
-      buildMergedShaderStages: (stages) => stages,
-    },
-    pluginOps: {
+    pluginHost: {
       applyInputInterceptors: (paneId, text) => {
         inputPaneIds.push(paneId);
         return text;

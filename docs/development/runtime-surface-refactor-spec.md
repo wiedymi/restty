@@ -308,12 +308,7 @@ Implementation rule:
 Preferred runtime lifecycle:
 
 ```ts
-export type ResttyRuntimeState =
-  | "created"
-  | "initializing"
-  | "ready"
-  | "failed"
-  | "destroyed";
+export type ResttyRuntimeState = "created" | "initializing" | "ready" | "failed" | "destroyed";
 ```
 
 Preferred runtime event union:
@@ -453,9 +448,7 @@ export type ResttyPaneTerminalApi = {
   getSearchState: () => ResttySearchState;
   openSearch: (options?: ResttyPaneSearchUiOpenOptions) => void;
   closeSearch: (options?: ResttyPaneSearchUiCloseOptions) => void;
-  toggleSearch: (
-    options?: ResttyPaneSearchUiOpenOptions & ResttyPaneSearchUiCloseOptions,
-  ) => void;
+  toggleSearch: (options?: ResttyPaneSearchUiOpenOptions & ResttyPaneSearchUiCloseOptions) => void;
   isSearchOpen: () => boolean;
   getSearchUiStyleOptions: () => Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>>;
   setSearchUiStyleOptions: (options: ResttyManagedPaneSearchUiStyleOptions) => void;
@@ -609,11 +602,11 @@ The following files are the clearest candidates for relocation or splitting base
   - `surface/panes/managed-pane-types.ts`
   - `surface/panes/terminal-config.ts`
 
-- `src/surface/restty-plugin-runtime.ts`
-- `src/surface/restty-plugin-types.ts`
-- `src/surface/restty-plugin-utils.ts`
-- `src/surface/restty/plugin-dispatcher.ts`
-- `src/surface/restty/plugin-ops.ts`
+- `src/surface/plugins/runtime.ts`
+- `src/surface/plugins/types.ts`
+- `src/surface/plugins/utils.ts`
+- `src/surface/plugins/dispatcher.ts`
+- `src/surface/plugins/host.ts`
   Consolidate under a single `surface/plugins/` area.
   The current split is half at the `surface/` root and half under `surface/restty/`, which makes ownership harder to read.
   Target:

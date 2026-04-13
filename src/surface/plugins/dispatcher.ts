@@ -9,7 +9,7 @@ import {
   type ResttyRenderHook,
   type ResttyRenderHookPayload,
   type ResttyRenderStageHandle,
-} from "../restty-plugin-types";
+} from "./types";
 import {
   type ResttyPluginRuntimeDisposerKind,
   type ResttyPluginRuntime,
@@ -20,7 +20,7 @@ import {
   attachRuntimeDisposer,
   onPluginEvent,
   emitPluginEvent,
-} from "../restty-plugin-runtime";
+} from "./runtime";
 import { normalizeShaderStage } from "../../runtime/shader-stages";
 import type { ResttyShaderStage } from "../../runtime/types";
 import type { ResttyPaneHandle } from "../restty-pane-handle";

@@ -6,7 +6,7 @@ import type {
 } from "../pane-app-manager";
 import type { ResttyPaneManager, ResttyPaneSplitDirection } from "../panes-types";
 import { ResttyPaneHandle } from "../restty-pane-handle";
-import type { ResttyLifecycleHookPayload, ResttyPluginEvents } from "../restty-plugin-types";
+import type { ResttyLifecycleHookPayload, ResttyPluginEvents } from "../plugins/types";
 import type {
   ResttyPaneSearchUiCloseOptions,
   ResttyPaneSearchUiOpenOptions,

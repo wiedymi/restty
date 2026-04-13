@@ -47,14 +47,14 @@ import {
   type ResttyRenderStageHandle,
   type ResttyPluginContext,
   type ResttyPlugin,
-} from "./restty-plugin-types";
-import { ResttyPluginOps } from "./restty/plugin-ops";
+} from "./plugins/types";
+import { ResttyPluginHost } from "./plugins/host";
 import * as paneOps from "./restty/pane-ops";
 import { ResttyShaderOps } from "./restty/shader-ops";
 
 export { ResttyPaneHandle } from "./restty-pane-handle";
 export type { ResttyPaneApi } from "./restty-pane-handle";
-export { RESTTY_PLUGIN_API_VERSION } from "./restty-plugin-types";
+export { RESTTY_PLUGIN_API_VERSION } from "./plugins/types";
 export type {
   ResttyPluginApiRange,
   ResttyPluginRequires,
@@ -79,7 +79,7 @@ export type {
   ResttyRenderStageHandle,
   ResttyPluginContext,
   ResttyPlugin,
-} from "./restty-plugin-types";
+} from "./plugins/types";
 
 export type ResttySurfaceEvents = Pick<
   CreateResttyAppPaneManagerOptions,
@@ -137,7 +137,7 @@ export class Restty extends ResttyActivePaneApi {
   readonly paneManager: ResttyAppPaneManager;
   private fontSources: ResttyFontSource[] | undefined;
   private readonly shaderOps: ResttyShaderOps;
-  private readonly pluginOps: ResttyPluginOps;
+  private readonly pluginHost: ResttyPluginHost;
 
   constructor(options: ResttyConfig) {
     super();
@@ -157,7 +157,7 @@ export class Restty extends ResttyActivePaneApi {
       getPanes: () => this.paneManager.getPanes(),
       getPaneById: (id) => this.paneManager.getPaneById(id),
     });
-    this.pluginOps = new ResttyPluginOps({
+    this.pluginHost = new ResttyPluginHost({
       restty: this,
       panes: () => this.panes(),
       pane: (id) => this.pane(id),
@@ -175,7 +175,7 @@ export class Restty extends ResttyActivePaneApi {
     const mergedServicesConfig = createMergedPaneServicesConfig({
       services,
       onDesktopNotification,
-      pluginOps: this.pluginOps,
+      pluginHost: this.pluginHost,
       runRenderHooks: (payload) => this.runRenderHooks(payload),
     });
 
@@ -327,33 +327,33 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   async use(plugin: ResttyPlugin, options?: unknown): Promise<void> {
-    await this.pluginOps.use(plugin, options);
+    await this.pluginHost.use(plugin, options);
   }
 
   async loadPlugins(
     manifest: ReadonlyArray<ResttyPluginManifestEntry>,
     registry: ResttyPluginRegistry,
   ): Promise<ResttyPluginLoadResult[]> {
-    return this.pluginOps.loadPlugins(manifest, registry);
+    return this.pluginHost.loadPlugins(manifest, registry);
   }
 
   unuse(pluginId: string): boolean {
-    return this.pluginOps.unuse(pluginId);
+    return this.pluginHost.unuse(pluginId);
   }
 
   plugins(): string[] {
-    return this.pluginOps.plugins();
+    return this.pluginHost.plugins();
   }
 
   pluginInfo(pluginId: string): ResttyPluginInfo | null;
   pluginInfo(): ResttyPluginInfo[];
   pluginInfo(pluginId?: string): ResttyPluginInfo | ResttyPluginInfo[] | null {
-    if (typeof pluginId === "string") return this.pluginOps.pluginInfo(pluginId);
-    return this.pluginOps.pluginInfo();
+    if (typeof pluginId === "string") return this.pluginHost.pluginInfo(pluginId);
+    return this.pluginHost.pluginInfo();
   }
 
   destroy(): void {
-    this.pluginOps.destroy();
+    this.pluginHost.destroy();
     this.shaderOps.clear();
     this.paneManager.destroy();
   }
@@ -439,18 +439,18 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   private runLifecycleHooks(payload: ResttyLifecycleHookPayload): void {
-    this.pluginOps.runLifecycleHooks(payload);
+    this.pluginHost.runLifecycleHooks(payload);
   }
 
   private runRenderHooks(payload: ResttyRenderHookPayload): void {
-    this.pluginOps.runRenderHooks(payload);
+    this.pluginHost.runRenderHooks(payload);
   }
 
   private emitPluginEvent<E extends keyof ResttyPluginEvents>(
     event: E,
     payload: ResttyPluginEvents[E],
   ): void {
-    this.pluginOps.emitPluginEvent(event, payload);
+    this.pluginHost.emitPluginEvent(event, payload);
   }
 }
 

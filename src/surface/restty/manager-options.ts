@@ -1,8 +1,8 @@
 import type { DesktopNotification } from "../../input";
 import type { CreateResttyAppPaneManagerOptions, ResttyManagedAppPane } from "../pane-app-manager";
-import type { ResttyPluginEvents, ResttyRenderHookPayload } from "../restty-plugin-types";
+import type { ResttyPluginEvents, ResttyRenderHookPayload } from "../plugins/types";
 import type { ResttyFontSource } from "../../runtime/types";
-import type { ResttyPluginOps } from "./plugin-ops";
+import type { ResttyPluginHost } from "../plugins/host";
 import type { ResttyShaderOps } from "./shader-ops";
 
 type PaneManagerEventHandlers = Pick<
@@ -22,7 +22,7 @@ type MergedPaneTerminalConfigDeps = {
 type MergedPaneServicesConfigDeps = {
   services: CreateResttyAppPaneManagerOptions["services"] | undefined;
   onDesktopNotification?: (notification: DesktopNotification & { paneId: number }) => void;
-  pluginOps: Pick<ResttyPluginOps, "applyInputInterceptors" | "applyOutputInterceptors">;
+  pluginHost: Pick<ResttyPluginHost, "applyInputInterceptors" | "applyOutputInterceptors">;
   runRenderHooks: (payload: ResttyRenderHookPayload) => void;
 };
 
@@ -79,7 +79,7 @@ export function createMergedPaneServicesConfig(
         const maybeUserText = resolvedBeforeInput?.({ text, source });
         if (maybeUserText === null) return null;
         const current = maybeUserText === undefined ? text : maybeUserText;
-        return deps.pluginOps.applyInputInterceptors(paneId, current, source);
+        return deps.pluginHost.applyInputInterceptors(paneId, current, source);
       },
       beforeRenderOutput: ({ text, source }) => {
         deps.runRenderHooks({
@@ -101,7 +101,7 @@ export function createMergedPaneServicesConfig(
           return null;
         }
         const current = maybeUserText === undefined ? text : maybeUserText;
-        const next = deps.pluginOps.applyOutputInterceptors(paneId, current, source);
+        const next = deps.pluginHost.applyOutputInterceptors(paneId, current, source);
         deps.runRenderHooks({
           phase: "after",
           paneId,

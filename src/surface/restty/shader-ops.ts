@@ -1,7 +1,7 @@
 import type { ResttyManagedAppPane } from "../pane-app-manager";
-import type { ResttyRenderStageHandle } from "../restty-plugin-types";
+import type { ResttyRenderStageHandle } from "../plugins/types";
 import type { ResttyShaderStage } from "../../runtime/types";
-import type { ResttyManagedShaderStage } from "../restty-plugin-runtime";
+import type { ResttyManagedShaderStage } from "../plugins/runtime";
 import {
   cloneShaderStages,
   normalizeShaderStage,

@@ -8,7 +8,7 @@ import {
   type ResttyPluginManifestEntry,
   type ResttyPluginRegistry,
   type ResttyRenderHookPayload,
-} from "../restty-plugin-types";
+} from "./types";
 import {
   type ResttyPluginRuntime,
   type ResttyPluginDiagnostic,
@@ -16,7 +16,7 @@ import {
   setPluginLoadError,
   patchPluginDiagnostic,
   buildPluginInfo,
-} from "../restty-plugin-runtime";
+} from "./runtime";
 import {
   assertPluginCompatibility,
   errorToMessage,
@@ -24,10 +24,10 @@ import {
   normalizePluginCleanup,
   normalizePluginMetadata,
   resolvePluginRegistryEntry,
-} from "../restty-plugin-utils";
-import { ResttyPluginDispatcher, type ResttyPluginHostDeps } from "./plugin-dispatcher";
+} from "./utils";
+import { ResttyPluginDispatcher, type ResttyPluginHostDeps } from "./dispatcher";
 
-export class ResttyPluginOps {
+export class ResttyPluginHost {
   private readonly pluginRuntimes = new Map<string, ResttyPluginRuntime>();
   private readonly pluginDiagnostics = new Map<string, ResttyPluginDiagnostic>();
   private readonly dispatcher: ResttyPluginDispatcher;

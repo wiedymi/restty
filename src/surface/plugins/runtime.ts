@@ -5,7 +5,7 @@ import type {
   ResttyPluginEvents,
   ResttyPluginInfo,
   ResttyPluginRequires,
-} from "./restty-plugin-types";
+} from "./types";
 
 export type ResttyPluginRuntimeDisposerKind =
   | "event"
