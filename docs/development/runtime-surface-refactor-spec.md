@@ -464,7 +464,6 @@ Spec decision:
 - `Restty` active-pane convenience methods should implement `ResttyPaneTerminalApi`
 - `ResttyPaneHandle` should extend `ResttyPaneTerminalApi` with pane-targeted methods such as `id`, `resize`, `focus`, and `blur`
 - `getRawPane()` is not part of the stable ergonomic API
-- `dumpAtlasForCodepoint(...)` moves to debug/internal access only
 
 Implementation note:
 

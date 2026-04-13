@@ -218,15 +218,20 @@ Notes:
 ### Phase 4: Verification
 
 1. Unit tests:
-  - two runtimes in same session fetch same URL font once
-  - two runtimes parse same source once
-  - leases refcount down to zero on destroy
+
+- two runtimes in same session fetch same URL font once
+- two runtimes parse same source once
+- leases refcount down to zero on destroy
+
 2. Integration memory check:
-  - create/split/close pane loop
-  - verify no growth in retained pane objects
+
+- create/split/close pane loop
+- verify no growth in retained pane objects
+
 3. Snapshot validation:
-  - one font set retained for active panes in same session
-  - no detached pane chain retained through `sourcePane` via internal wrappers
+
+- one font set retained for active panes in same session
+- no detached pane chain retained through `sourcePane` via internal wrappers
 
 ## Expected Results
 
@@ -237,11 +242,16 @@ Notes:
 ## Risks And Mitigations
 
 1. Risk: shared `Font` object thread/usage assumptions.
-  - Mitigation: keep only immutable parse data shared; mutable atlas/cache remains per pane.
+
+- Mitigation: keep only immutable parse data shared; mutable atlas/cache remains per pane.
+
 2. Risk: custom sessions without store lose sharing.
-  - Mitigation: fallback behavior preserved; document opt-in method.
+
+- Mitigation: fallback behavior preserved; document opt-in method.
+
 3. Risk: key collisions for buffer sources.
-  - Mitigation: use object-identity keys via WeakMap for `ArrayBuffer`/views.
+
+- Mitigation: use object-identity keys via WeakMap for `ArrayBuffer`/views.
 
 ## Rollout Strategy
 
@@ -249,5 +259,6 @@ Notes:
 2. Land Phase 2 behind internal flag if needed.
 3. Enable by default after validation.
 4. Keep diagnostics:
-  - log store hits/misses in dev builds
-  - expose simple stats via debug API when `debugExpose` is enabled.
+
+- log store hits/misses in dev builds
+- expose simple stats through explicit status callbacks when needed.
