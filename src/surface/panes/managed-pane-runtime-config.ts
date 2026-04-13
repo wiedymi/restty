@@ -4,14 +4,15 @@ import type {
   ResttyRuntimeConfig,
 } from "../../runtime/types";
 import type {
-  CreateResttyAppPaneManagerOptions,
   ResttyPaneRuntimeContext,
+  ResttyRuntimeServicesConfigInput,
+  ResttyTerminalConfigInput,
 } from "./managed-pane-types";
 
 export type CreateManagedPaneRuntimeConfigOptions = {
   context: ResttyPaneRuntimeContext;
-  terminal?: CreateResttyAppPaneManagerOptions["terminal"];
-  services?: CreateResttyAppPaneManagerOptions["services"];
+  terminal?: ResttyTerminalConfigInput;
+  services?: ResttyRuntimeServicesConfigInput;
   session: ResttyAppSession;
   onSearchState?: ResttyAppCallbacks["onSearchState"];
 };

@@ -1,7 +1,11 @@
 import { createManagedPaneDom } from "./managed-pane-dom";
 import { createManagedPaneRuntime } from "./managed-pane-runtime";
 import type { ResttyAppCallbacks, ResttyAppSession } from "../../runtime/types";
-import type { CreateResttyAppPaneManagerOptions, ResttyManagedAppPane } from "./managed-pane-types";
+import type {
+  ResttyManagedAppPane,
+  ResttyRuntimeServicesConfigInput,
+  ResttyTerminalConfigInput,
+} from "./managed-pane-types";
 
 export type ManagedPaneDomClassNames = {
   paneClassName: string;
@@ -14,8 +18,8 @@ export type CreateManagedPaneOptions = {
   id: number;
   sourcePane: ResttyManagedAppPane | null;
   dom: ManagedPaneDomClassNames;
-  terminal?: CreateResttyAppPaneManagerOptions["terminal"];
-  services?: CreateResttyAppPaneManagerOptions["services"];
+  terminal?: ResttyTerminalConfigInput;
+  services?: ResttyRuntimeServicesConfigInput;
   session: ResttyAppSession;
   autoInit?: boolean;
   onSearchState?: ResttyAppCallbacks["onSearchState"];
