@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import type { LocalFontOption } from "../../../../lib/font-controls.ts";
 import { getConnectionBackendForValue } from "../../../../lib/pty-connection.ts";
+import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
 import {
   CONNECTION_STATE_EVENT,
   FONT_FAMILY_STATE_EVENT,
@@ -48,6 +49,10 @@ type AppearanceShellState = {
   themeSelectValue: string;
 };
 
+type DemoShellState = {
+  kind: PlaygroundDemoKind;
+};
+
 const initialTerminalShellState: TerminalShellState = {
   pauseLabel: "Pause",
   renderer: "auto",
@@ -77,14 +82,20 @@ const initialAppearanceShellState: AppearanceShellState = {
   themeSelectValue: "",
 };
 
+const initialDemoShellState: DemoShellState = {
+  kind: "basic",
+};
+
 export const terminalShellState = writable<TerminalShellState>(initialTerminalShellState);
 export const connectionShellState = writable<ConnectionShellState>(initialConnectionShellState);
 export const appearanceShellState = writable<AppearanceShellState>(initialAppearanceShellState);
+export const demoShellState = writable<DemoShellState>(initialDemoShellState);
 
 export function resetShellState() {
   terminalShellState.set(initialTerminalShellState);
   connectionShellState.set(initialConnectionShellState);
   appearanceShellState.set(initialAppearanceShellState);
+  demoShellState.set(initialDemoShellState);
 }
 
 export function startShellStateBridge(target: EventTarget = window) {

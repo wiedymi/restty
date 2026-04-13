@@ -15,6 +15,7 @@ import {
 import {
   appearanceShellState,
   connectionShellState,
+  demoShellState,
   resetShellState,
   startShellStateBridge,
   terminalShellState,
@@ -152,4 +153,12 @@ test("stop bridge removes listeners", () => {
   );
 
   expect(get(terminalShellState).pauseLabel).toBe("Pause");
+});
+
+test("resetShellState restores the demo shell default", () => {
+  demoShellState.set({ kind: "unicode" });
+
+  resetShellState();
+
+  expect(get(demoShellState)).toEqual({ kind: "basic" });
 });
