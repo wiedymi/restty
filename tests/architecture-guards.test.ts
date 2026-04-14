@@ -754,10 +754,6 @@ test("playground orchestrator delegates shell control wiring to a dedicated modu
     "utf8",
   );
   const wiring = readFileSync(resolve(playgroundRoot, "lib/playground-wiring.ts"), "utf8");
-  const svelteWiring = readFileSync(
-    resolve(playgroundRoot, "lib/playground-wiring.svelte.ts"),
-    "utf8",
-  );
   const wiringTypes = readFileSync(
     resolve(playgroundRoot, "lib/playground-wiring.types.ts"),
     "utf8",
@@ -770,24 +766,16 @@ test("playground orchestrator delegates shell control wiring to a dedicated modu
   expect(orchestrator).toContain("shell: {");
   expect(orchestrator).toContain("controllers: {");
   expect(orchestrator).toContain("state: {");
-  expect(wiring).toContain('./playground-wiring.svelte.ts"');
-  expect(wiring).toContain("wireSveltePlaygroundControls(options)");
-  expect(wiring).not.toContain("wireLegacyPlaygroundControls");
-  expect(wiring).not.toContain("bindConnectionControls(");
-  expect(wiring).not.toContain("bindTerminalControls(");
-  expect(wiring).not.toContain("bindAppearanceControls(");
-  expect(wiring).not.toContain("bindConnectionShellEffects(");
-  expect(wiring).not.toContain("bindTerminalShellEffects(");
-  expect(wiring).not.toContain("bindAppearanceShellEffects(");
-  expect(svelteWiring).toContain("bindConnectionShellEffects(");
-  expect(svelteWiring).toContain("bindTerminalShellEffects(");
-  expect(svelteWiring).toContain("bindAppearanceShellEffects(");
+  expect(wiring).toContain("bindConnectionShellEffects(");
+  expect(wiring).toContain("bindTerminalShellEffects(");
+  expect(wiring).toContain("bindAppearanceShellEffects(");
   expect(wiringTypes).toContain("export type PlaygroundControlShell =");
   expect(wiringTypes).toContain("export type PlaygroundControlControllers =");
   expect(wiringTypes).toContain("export type PlaygroundControlState =");
   expect(wiringTypes).not.toContain("usesSvelteShell");
   expect(wiringTypes).not.toContain("legacyElements");
   expect(existsSync(resolve(playgroundRoot, "lib/playground-wiring.legacy.ts"))).toBe(false);
+  expect(existsSync(resolve(playgroundRoot, "lib/playground-wiring.svelte.ts"))).toBe(false);
 });
 
 test("playground orchestrator delegates controller session setup to a dedicated module", () => {
@@ -1028,40 +1016,28 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
 
 test("playground wiring uses settings shell effects only", () => {
   const wiring = readFileSync(resolve(playgroundRoot, "lib/playground-wiring.ts"), "utf8");
-  const svelteWiring = readFileSync(
-    resolve(playgroundRoot, "lib/playground-wiring.svelte.ts"),
-    "utf8",
-  );
   const settingsShellEffects = readFileSync(
     resolve(playgroundRoot, "lib/settings-shell-effects.ts"),
     "utf8",
   );
 
-  expect(wiring).toContain('./playground-wiring.svelte.ts"');
-  expect(wiring).not.toContain("if (options.usesSvelteShell)");
-  expect(svelteWiring).toContain('./settings-shell-effects.ts"');
-  expect(svelteWiring).toContain("bindSettingsShellEffects({");
+  expect(wiring).toContain('./settings-shell-effects.ts"');
+  expect(wiring).toContain("bindSettingsShellEffects({");
   expect(settingsShellEffects).toContain("export function bindSettingsShellEffects");
   expect(existsSync(resolve(playgroundRoot, "lib/settings-bindings.ts"))).toBe(false);
 });
 
 test("playground wiring uses shell control effects only", () => {
   const wiring = readFileSync(resolve(playgroundRoot, "lib/playground-wiring.ts"), "utf8");
-  const svelteWiring = readFileSync(
-    resolve(playgroundRoot, "lib/playground-wiring.svelte.ts"),
-    "utf8",
-  );
   const shellEffects = readFileSync(
     resolve(playgroundRoot, "lib/control-shell-effects.ts"),
     "utf8",
   );
 
-  expect(wiring).toContain('./playground-wiring.svelte.ts"');
-  expect(wiring).not.toContain("if (options.usesSvelteShell)");
-  expect(svelteWiring).toContain('./control-shell-effects.ts"');
-  expect(svelteWiring).toContain("bindConnectionShellEffects({");
-  expect(svelteWiring).toContain("bindTerminalShellEffects({");
-  expect(svelteWiring).toContain("bindAppearanceShellEffects({");
+  expect(wiring).toContain('./control-shell-effects.ts"');
+  expect(wiring).toContain("bindConnectionShellEffects({");
+  expect(wiring).toContain("bindTerminalShellEffects({");
+  expect(wiring).toContain("bindAppearanceShellEffects({");
   expect(shellEffects).toContain("export function bindConnectionShellEffects");
   expect(shellEffects).toContain("export function bindTerminalShellEffects");
   expect(shellEffects).toContain("export function bindAppearanceShellEffects");
