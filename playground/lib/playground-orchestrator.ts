@@ -1,6 +1,5 @@
 import { Restty, listBuiltinThemeNames } from "../../src/index.ts";
 import type { LegacyPlaygroundElements, SharedPlaygroundElements } from "./elements.ts";
-import { getConnectionBackend } from "./pty-connection.ts";
 import { DEFAULT_CONNECTION_BACKEND } from "./shell-defaults.ts";
 import { resolvePlaygroundStartupDefaults } from "./startup-defaults.ts";
 import { bootstrapPlaygroundSurface } from "./surface-bootstrap.ts";
@@ -11,7 +10,6 @@ type PlaygroundWindow = Window & typeof globalThis;
 
 type BootstrapPlaygroundOrchestratorOptions = {
   window: PlaygroundWindow;
-  usesSvelteShell: boolean;
   sharedElements: SharedPlaygroundElements;
   legacyElements: LegacyPlaygroundElements;
   notificationHost?: typeof Notification;
@@ -19,7 +17,6 @@ type BootstrapPlaygroundOrchestratorOptions = {
 
 export function bootstrapPlaygroundOrchestrator({
   window,
-  usesSvelteShell,
   sharedElements: { paneRoot, settingsDialog },
   legacyElements: {
     btnInit,
@@ -53,9 +50,7 @@ export function bootstrapPlaygroundOrchestrator({
 }: BootstrapPlaygroundOrchestratorOptions): Restty {
   let restty: Restty;
 
-  const initialConnectionBackend = usesSvelteShell
-    ? DEFAULT_CONNECTION_BACKEND
-    : getConnectionBackend(connectionBackendEl);
+  const initialConnectionBackend = DEFAULT_CONNECTION_BACKEND;
   const builtinThemeNames = listBuiltinThemeNames();
   const {
     initialPtyUrl,
@@ -65,7 +60,6 @@ export function bootstrapPlaygroundOrchestrator({
     defaultThemeName,
     appearanceInitialState,
   } = resolvePlaygroundStartupDefaults({
-    usesSvelteShell,
     shaderPresetValue: shaderPresetEl?.value,
     ptyUrlValue: ptyUrlInput?.value,
     webContainerCommandValue: wcCommandInput?.value,
@@ -94,7 +88,7 @@ export function bootstrapPlaygroundOrchestrator({
     },
     shell: {
       window,
-      usesSvelteShell,
+      usesSvelteShell: true,
       elements: {
         btnPause,
         rendererSelect,

@@ -695,6 +695,8 @@ test("playground app bootstrap delegates shell element lookup", () => {
 
   expect(appBootstrap).toContain('./elements.ts"');
   expect(appBootstrap).not.toContain("document.getElementById(");
+  expect(appBootstrap).not.toContain("dataset.playgroundShell");
+  expect(appBootstrap).not.toContain("createEmptyLegacyPlaygroundElements");
 });
 
 test("playground app entrypoint delegates controller orchestration to app bootstrap", () => {
@@ -724,10 +726,13 @@ test("playground app bootstrap delegates controller composition to a dedicated o
   expect(appBootstrap).not.toContain("createConnectionController(");
   expect(appBootstrap).not.toContain("createPaneAppearanceController(");
   expect(appBootstrap).not.toContain("createPaneLifecycleController(");
+  expect(appBootstrap).not.toContain("usesSvelteShell");
   expect(orchestrator).toContain('./playground-session.ts"');
   expect(orchestrator).not.toContain("createConnectionController(");
   expect(orchestrator).not.toContain("createPaneAppearanceController(");
   expect(orchestrator).not.toContain("createPaneLifecycleController(");
+  expect(orchestrator).not.toContain("getConnectionBackend(");
+  expect(orchestrator).toContain("DEFAULT_CONNECTION_BACKEND");
   expect(session).toContain("createConnectionController(");
   expect(session).toContain("createPaneAppearanceController(");
   expect(session).toContain("createPaneLifecycleController(");

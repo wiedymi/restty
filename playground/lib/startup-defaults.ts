@@ -44,7 +44,6 @@ export type PlaygroundStartupDefaults = {
 };
 
 type ResolvePlaygroundStartupDefaultsOptions = {
-  usesSvelteShell: boolean;
   shaderPresetValue: string | null | undefined;
   ptyUrlValue: string | null | undefined;
   webContainerCommandValue: string | null | undefined;
@@ -95,7 +94,6 @@ function resolveFontHintTarget(value: string | null | undefined): FontHintTarget
 }
 
 export function resolvePlaygroundStartupDefaults({
-  usesSvelteShell,
   shaderPresetValue,
   ptyUrlValue,
   webContainerCommandValue,
@@ -110,10 +108,9 @@ export function resolvePlaygroundStartupDefaults({
   preferredThemeName = DEFAULT_THEME_NAME,
 }: ResolvePlaygroundStartupDefaultsOptions): PlaygroundStartupDefaults {
   const searchParams = locationSearch ? new URLSearchParams(locationSearch) : null;
-  const initialShaderPreset =
-    usesSvelteShell || !isShaderPreset(shaderPresetValue)
-      ? DEFAULT_SHADER_PRESET
-      : shaderPresetValue;
+  const initialShaderPreset = isShaderPreset(shaderPresetValue)
+    ? shaderPresetValue
+    : DEFAULT_SHADER_PRESET;
   const initialRendererDefault = isRendererChoice(rendererValue)
     ? rendererValue
     : DEFAULT_TERMINAL_RENDERER;

@@ -14,7 +14,6 @@ import { resolvePlaygroundStartupDefaults } from "../playground/lib/startup-defa
 
 test("resolvePlaygroundStartupDefaults honors shell defaults and query params", () => {
   const startup = resolvePlaygroundStartupDefaults({
-    usesSvelteShell: true,
     shaderPresetValue: "crt-lite",
     ptyUrlValue: undefined,
     webContainerCommandValue: "  jsh  ",
@@ -35,7 +34,7 @@ test("resolvePlaygroundStartupDefaults honors shell defaults and query params", 
     initialFontSize: 20,
     defaultThemeName: DEFAULT_THEME_NAME,
     appearanceInitialState: {
-      shaderPreset: "none",
+      shaderPreset: "crt-lite",
       rendererDefault: "webgpu",
       fontSizeDefault: 20,
       mouseModeDefault: "sgr",
@@ -52,7 +51,6 @@ test("resolvePlaygroundStartupDefaults honors shell defaults and query params", 
 
 test("resolvePlaygroundStartupDefaults falls back for invalid control values", () => {
   const startup = resolvePlaygroundStartupDefaults({
-    usesSvelteShell: false,
     shaderPresetValue: "weird",
     ptyUrlValue: null,
     webContainerCommandValue: "   ",
