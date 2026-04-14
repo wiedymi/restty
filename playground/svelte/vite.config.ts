@@ -26,6 +26,10 @@ function copyPlaygroundPublicAssets() {
   };
 }
 
+function normalizeChunkId(id: string) {
+  return id.replaceAll("\\", "/");
+}
+
 export default defineConfig({
   root: repoRoot,
   plugins: [svelte({ configFile: false }), copyPlaygroundPublicAssets()],
@@ -38,6 +42,21 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: resolve(repoRoot, "playground/svelte/index.html"),
+      output: {
+        manualChunks(id) {
+          const normalizedId = normalizeChunkId(id);
+          if (
+            normalizedId.includes("/node_modules/@webcontainer/") ||
+            normalizedId.includes("/playground/lib/webcontainer-")
+          ) {
+            return "webcontainer-pty";
+          }
+          if (normalizedId.includes("/src/") || normalizedId.endsWith("/playground/app.ts")) {
+            return "restty-runtime";
+          }
+          return undefined;
+        },
+      },
     },
   },
 });

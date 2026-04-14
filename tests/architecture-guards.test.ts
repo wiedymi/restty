@@ -652,6 +652,15 @@ test("playground source does not import src/internal.ts", () => {
   ).toEqual([]);
 });
 
+test("playground svelte build defines explicit runtime chunks", () => {
+  const viteConfig = readFileSync(resolve(playgroundRoot, "svelte/vite.config.ts"), "utf8");
+
+  expect(viteConfig).toContain("manualChunks(id)");
+  expect(viteConfig).toContain('return "restty-runtime"');
+  expect(viteConfig).toContain('return "webcontainer-pty"');
+  expect(viteConfig).toContain('normalizedId.includes("/src/")');
+});
+
 test("playground app bootstrap delegates restty construction to the surface bootstrap", () => {
   const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
   const orchestrator = readFileSync(
