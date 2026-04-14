@@ -61,7 +61,7 @@ const restty = new Restty({
 Touch mode summary:
 
 - `"long-press"`: one-finger pan scroll, selection starts after long press.
-- `"drag"`: immediate drag selection (legacy behavior).
+- `"drag"`: immediate drag selection.
 - `"off"`: disable touch selection and keep touch scrolling.
 
 ## 3) Single-pane convenience API
@@ -108,7 +108,7 @@ if (focused) {
 }
 ```
 
-If needed, legacy/raw pane objects are still available:
+If needed, pane handles are still available:
 
 - `restty.getPanes()`
 - `restty.getActivePane()`
