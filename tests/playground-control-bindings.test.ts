@@ -4,13 +4,14 @@ import {
   bindConnectionControls,
   bindTerminalControls,
 } from "../playground/lib/control-bindings.ts";
-import { bindSettingsControls } from "../playground/lib/settings-bindings.ts";
 import {
   dispatchAppearanceInput as emitAppearanceInput,
   dispatchConnectionInput as emitConnectionInput,
   dispatchShellCommand as emitShellCommand,
   dispatchTerminalAction as emitTerminalAction,
 } from "../playground/lib/shell-bridge.ts";
+import { bindSettingsShellEffects } from "../playground/lib/settings-shell-effects.ts";
+import { bindLegacySettingsControls } from "../playground/lib/settings-bindings.ts";
 
 function createMutableTarget<T extends object>(initial: T): EventTarget & T {
   return Object.assign(new EventTarget(), initial);
@@ -203,16 +204,12 @@ test("control bindings read legacy control values", () => {
   ]);
 });
 
-test("settings bindings wire svelte and legacy controls", () => {
+test("settings shell effects forward shell commands", () => {
   const svelteCalls: string[] = [];
   const svelteTarget = new EventTarget();
 
-  bindSettingsControls({
-    usesSvelteShell: true,
+  bindSettingsShellEffects({
     target: svelteTarget as Window & EventTarget,
-    settingsDialog: null,
-    settingsFab: null,
-    settingsClose: null,
     onOpen: () => svelteCalls.push("open"),
     onClose: () => svelteCalls.push("close"),
   });
@@ -221,15 +218,16 @@ test("settings bindings wire svelte and legacy controls", () => {
   emitShellCommand({ command: "settings-close" }, svelteTarget);
 
   expect(svelteCalls).toEqual(["open", "close"]);
+});
 
+test("legacy settings bindings wire legacy controls", () => {
   const legacyCalls: string[] = [];
   const legacyTarget = new EventTarget();
   const settingsFab = createMutableTarget({});
   const settingsClose = createMutableTarget({});
   const settingsDialog = createMutableTarget({ open: true }) as HTMLDialogElement & EventTarget;
 
-  bindSettingsControls({
-    usesSvelteShell: false,
+  bindLegacySettingsControls({
     target: legacyTarget as Window & EventTarget,
     settingsDialog,
     settingsFab,

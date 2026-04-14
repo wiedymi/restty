@@ -916,6 +916,10 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
     resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"),
     "utf8",
   );
+  const settingsShellEffects = readFileSync(
+    resolve(playgroundRoot, "lib/settings-shell-effects.ts"),
+    "utf8",
+  );
   const settingsBindings = readFileSync(
     resolve(playgroundRoot, "lib/settings-bindings.ts"),
     "utf8",
@@ -929,12 +933,14 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellAdapter).toContain('./shell-bridge.ts"');
   expect(paneShellSync).toContain('./shell-bridge.ts"');
   expect(shellDispatch).toContain('../../../lib/shell-bridge.ts"');
-  expect(settingsBindings).toContain('./shell-bridge.ts"');
+  expect(settingsShellEffects).toContain('./shell-bridge.ts"');
+  expect(settingsBindings).not.toContain('./shell-bridge.ts"');
   expect(shellState).toContain('../../../../lib/shell-bridge.ts"');
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(shellDispatch).not.toContain("new CustomEvent(");
   expect(settingsBindings).not.toContain("new CustomEvent(");
+  expect(settingsShellEffects).not.toContain("new CustomEvent(");
   expect(shellDispatch).toContain("emitTerminalAction");
   expect(shellDispatch).toContain("emitConnectionInput");
   expect(shellDispatch).toContain("emitAppearanceInput");
@@ -966,7 +972,7 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellDispatch).not.toContain("TERMINAL_CLEAR_EVENT");
   expect(shellDispatch).not.toContain("TERMINAL_RENDERER_EVENT");
   expect(shellDispatch).not.toContain("TERMINAL_FONT_SIZE_EVENT");
-  expect(settingsBindings).not.toContain("SHELL_COMMAND_EVENT");
+  expect(settingsShellEffects).not.toContain("SHELL_COMMAND_EVENT");
   expect(shellState).not.toContain("addEventListener(ACTIVE_PANE_STATE_EVENT");
   expect(shellState).not.toContain("addEventListener(CONNECTION_STATE_EVENT");
   expect(shellBridge).toContain("dispatchShellEvent(");
@@ -976,6 +982,28 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellBridge).toContain("listenConnectionInput(");
   expect(shellBridge).toContain("listenAppearanceInput(");
   expect(shellBridge).toContain("listenTerminalAction(");
+  expect(settingsShellEffects).toContain("listenShellCommand");
+  expect(settingsBindings).not.toContain("listenShellCommand");
+});
+
+test("playground wiring splits settings shell effects from legacy settings bindings", () => {
+  const wiring = readFileSync(resolve(playgroundRoot, "lib/playground-wiring.ts"), "utf8");
+  const settingsShellEffects = readFileSync(
+    resolve(playgroundRoot, "lib/settings-shell-effects.ts"),
+    "utf8",
+  );
+  const settingsBindings = readFileSync(
+    resolve(playgroundRoot, "lib/settings-bindings.ts"),
+    "utf8",
+  );
+
+  expect(wiring).toContain('./settings-shell-effects.ts"');
+  expect(wiring).toContain('./settings-bindings.ts"');
+  expect(wiring).toContain("if (usesSvelteShell)");
+  expect(wiring).toContain("bindSettingsShellEffects({");
+  expect(wiring).toContain("bindLegacySettingsControls({");
+  expect(settingsShellEffects).toContain("export function bindSettingsShellEffects");
+  expect(settingsBindings).toContain("export function bindLegacySettingsControls");
 });
 
 test("svelte app delegates settings shell lifecycle to a dedicated component", () => {

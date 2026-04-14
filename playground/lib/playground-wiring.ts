@@ -11,7 +11,8 @@ import type { createConnectionController } from "./connection-controller.ts";
 import type { createPaneLifecycleController } from "./pane-lifecycle.ts";
 import type { createPaneShellSync } from "./pane-shell-sync.ts";
 import type { createPlaygroundShellAdapter } from "./shell-adapter.ts";
-import { bindSettingsControls } from "./settings-bindings.ts";
+import { bindSettingsShellEffects } from "./settings-shell-effects.ts";
+import { bindLegacySettingsControls } from "./settings-bindings.ts";
 import type { PaneState } from "./pane-state.ts";
 
 type PlaygroundWindow = Window & typeof globalThis;
@@ -85,19 +86,30 @@ export function wirePlaygroundControls({
   controllers: { paneLifecycle, appearanceController, connectionController },
   state: { paneStates, getActivePaneId },
 }: WirePlaygroundControlsOptions): void {
-  bindSettingsControls({
-    usesSvelteShell,
-    target: window,
-    settingsDialog,
-    settingsFab,
-    settingsClose,
-    onOpen: () => {
-      shellAdapter.openSettings(restty);
-    },
-    onClose: () => {
-      shellAdapter.closeSettings(restty);
-    },
-  });
+  if (usesSvelteShell) {
+    bindSettingsShellEffects({
+      target: window,
+      onOpen: () => {
+        shellAdapter.openSettings(restty);
+      },
+      onClose: () => {
+        shellAdapter.closeSettings(restty);
+      },
+    });
+  } else {
+    bindLegacySettingsControls({
+      target: window,
+      settingsDialog,
+      settingsFab,
+      settingsClose,
+      onOpen: () => {
+        shellAdapter.openSettings(restty);
+      },
+      onClose: () => {
+        shellAdapter.closeSettings(restty);
+      },
+    });
+  }
 
   bindConnectionControls({
     usesSvelteShell,

@@ -1,5 +1,3 @@
-import { listenShellCommand } from "./shell-bridge.ts";
-
 type TargetLike = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 type NullableTarget = TargetLike | null | undefined;
@@ -18,8 +16,7 @@ function listen(
   };
 }
 
-export function bindSettingsControls(options: {
-  usesSvelteShell: boolean;
+export function bindLegacySettingsControls(options: {
   target: Window & TargetLike;
   settingsDialog: (HTMLDialogElement & TargetLike) | null;
   settingsFab: NullableTarget;
@@ -29,42 +26,27 @@ export function bindSettingsControls(options: {
 }): Disposer {
   const disposers: Disposer[] = [];
 
-  if (options.usesSvelteShell) {
-    disposers.push(
-      listenShellCommand(options.target, (detail) => {
-        switch (detail?.command) {
-          case "settings-open":
-            options.onOpen();
-            break;
-          case "settings-close":
-            options.onClose();
-            break;
-        }
-      }),
-    );
-  } else {
-    disposers.push(
-      listen(options.settingsFab, "click", options.onOpen),
-      listen(options.settingsClose, "click", options.onClose),
-      listen(options.settingsDialog, "click", (event) => {
-        if (event.target !== options.settingsDialog) return;
+  disposers.push(
+    listen(options.settingsFab, "click", options.onOpen),
+    listen(options.settingsClose, "click", options.onClose),
+    listen(options.settingsDialog, "click", (event) => {
+      if (event.target !== options.settingsDialog) return;
+      options.onClose();
+    }),
+    listen(options.settingsDialog, "cancel", (event) => {
+      event.preventDefault();
+      options.onClose();
+    }),
+    listen(
+      options.target,
+      "keydown",
+      (event) => {
+        if ((event as KeyboardEvent).key !== "Escape") return;
         options.onClose();
-      }),
-      listen(options.settingsDialog, "cancel", (event) => {
-        event.preventDefault();
-        options.onClose();
-      }),
-      listen(
-        options.target,
-        "keydown",
-        (event) => {
-          if ((event as KeyboardEvent).key !== "Escape") return;
-          options.onClose();
-        },
-        { capture: true },
-      ),
-    );
-  }
+      },
+      { capture: true },
+    ),
+  );
 
   return () => {
     for (const dispose of disposers) dispose();
