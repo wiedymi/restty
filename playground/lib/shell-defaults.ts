@@ -2,7 +2,7 @@ import { DEFAULT_FONT_FAMILY } from "./font-controls.ts";
 import { getDefaultLocalFontHintText, supportsLocalFontPicker } from "./font-local-picker.ts";
 import type { PlaygroundDemoKind } from "./demos.ts";
 import type { RendererChoice } from "./pane-state.ts";
-import type { ConnectionBackend } from "./pty-connection.ts";
+import type { ConnectionBackend } from "./connection-state.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 
 export const DEFAULT_TERMINAL_RENDERER: RendererChoice = "auto";

@@ -1,4 +1,4 @@
-import { getConnectionBackendForValue } from "../../../../lib/pty-connection.ts";
+import { getConnectionBackendForValue } from "../../../../lib/connection-state.ts";
 import type {
   ActivePaneAppearanceStateDetail,
   ActivePaneStateDetail,

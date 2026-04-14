@@ -1,5 +1,5 @@
 import type { PaneShellSyncPane } from "./pane-shell-sync.types.ts";
-import type { ConnectionBackend } from "./pty-connection.ts";
+import type { ConnectionBackend } from "./connection-state.ts";
 import { dispatchConnectionState } from "./shell-bridge.ts";
 
 type CreatePaneConnectionShellEventsOptions = {

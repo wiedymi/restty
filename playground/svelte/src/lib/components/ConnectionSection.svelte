@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getConnectionUiState } from "../../../../lib/pty-connection.ts";
+  import { getConnectionUiState } from "../../../../lib/connection-state.ts";
   import { dispatchConnectionInput, dispatchShellCommand } from "../../../../lib/shell-bridge.ts";
   import { connectionShellState } from "../stores/shell-state.ts";
 

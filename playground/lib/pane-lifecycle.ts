@@ -1,7 +1,7 @@
 import { stopPaneDemo } from "./demos.ts";
 import { applySavedThemeForPane } from "./pane-theme.ts";
 import { withPanePaused, type PaneState } from "./pane-state.ts";
-import { getConnectUrlForState, type ConnectionBackend } from "./pty-connection.ts";
+import { getConnectUrlForState, type ConnectionBackend } from "./connection-state.ts";
 
 export type PaneLifecyclePane = {
   id: number;

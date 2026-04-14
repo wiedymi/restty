@@ -5,7 +5,7 @@ import type { LocalFontOption } from "./font-local-picker.ts";
 import type { PaneState } from "./pane-state.ts";
 import { createPaneTerminalShellEvents } from "./pane-terminal-shell-events.ts";
 import type { PaneShellSyncPane } from "./pane-shell-sync.types.ts";
-import type { ConnectionBackend } from "./pty-connection.ts";
+import type { ConnectionBackend } from "./connection-state.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 import { dispatchActivePaneState } from "./shell-bridge.ts";
 

@@ -1,7 +1,7 @@
 import type { PlaygroundDemoKind } from "./demos.ts";
 import type { LocalFontOption } from "./font-local-picker.ts";
 import type { RendererChoice } from "./pane-state.ts";
-import type { ConnectionBackend } from "./pty-connection.ts";
+import type { ConnectionBackend } from "./connection-state.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 
 export const CONNECTION_INPUT_EVENT = "restty:playground-connection-input";

@@ -2,7 +2,7 @@ import {
   getConnectUrlForState,
   getConnectionBackendForValue,
   type ConnectionBackend,
-} from "./pty-connection.ts";
+} from "./connection-state.ts";
 
 export type ConnectionControllerPane = {
   runtime: {

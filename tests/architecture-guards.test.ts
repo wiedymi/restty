@@ -880,6 +880,19 @@ test("demo controller delegates static demo payload content", () => {
   expect(demoContent).toContain("restty demo: unicode");
 });
 
+test("pty connection delegates backend ui state helpers", () => {
+  const ptyConnection = readFileSync(resolve(playgroundRoot, "lib/pty-connection.ts"), "utf8");
+  const connectionState = readFileSync(resolve(playgroundRoot, "lib/connection-state.ts"), "utf8");
+
+  expect(ptyConnection).toContain('./connection-state.ts"');
+  expect(ptyConnection).not.toContain("export function getConnectionBackendForValue");
+  expect(ptyConnection).not.toContain("export function getConnectionUiState");
+  expect(ptyConnection).not.toContain("export function syncConnectionUi");
+  expect(connectionState).toContain("export function getConnectionBackendForValue");
+  expect(connectionState).toContain("export function getConnectionUiState");
+  expect(connectionState).toContain("export function syncConnectionUi");
+});
+
 test("playground no longer ships legacy runtime status or log widgets", () => {
   const playgroundApp = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
   const playgroundIndex = readFileSync(resolve(playgroundPublicRoot, "index.html"), "utf8");
