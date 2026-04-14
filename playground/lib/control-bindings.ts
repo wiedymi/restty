@@ -1,24 +1,13 @@
 import {
+  APPEARANCE_INPUT_EVENT,
   CONNECTION_INPUT_EVENT,
-  FONT_FAMILY_LOCAL_CHANGE_EVENT,
-  FONT_FAMILY_CHANGE_EVENT,
-  FONT_HINT_TARGET_CHANGE_EVENT,
-  FONT_HINTING_CHANGE_EVENT,
-  FONT_LIGATURES_CHANGE_EVENT,
-  LOAD_LOCAL_FONTS_EVENT,
-  MOUSE_MODE_CHANGE_EVENT,
   PTY_BUTTON_EVENT,
   RUN_DEMO_EVENT,
-  SHADER_PRESET_CHANGE_EVENT,
   TERMINAL_ACTION_EVENT,
-  THEME_FILE_CHANGE_EVENT,
-  THEME_SELECT_CHANGE_EVENT,
+  type AppearanceInputDetail,
   type ConnectionInputDetail,
   type DemoRunDetail,
-  type ShaderPresetChangeDetail,
-  type ShellStringValueDetail,
   type TerminalActionDetail,
-  type ThemeFileChangeDetail,
 } from "./shell-events.ts";
 
 type TargetLike = Pick<EventTarget, "addEventListener" | "removeEventListener">;
@@ -27,11 +16,9 @@ type NullableTarget = TargetLike | null | undefined;
 
 type Disposer = () => void;
 
-type StringValueEvent = CustomEvent<ShellStringValueDetail>;
 type DemoRunEvent = CustomEvent<DemoRunDetail>;
+type AppearanceInputEvent = CustomEvent<AppearanceInputDetail>;
 type ConnectionInputEvent = CustomEvent<ConnectionInputDetail>;
-type ThemeFileChangeEvent = CustomEvent<ThemeFileChangeDetail>;
-type ShaderPresetChangeEvent = CustomEvent<ShaderPresetChangeDetail>;
 type TerminalActionEvent = CustomEvent<TerminalActionDetail>;
 
 type ValueTarget = TargetLike & {
@@ -225,35 +212,39 @@ export function bindAppearanceControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, THEME_FILE_CHANGE_EVENT, (event) => {
-        void options.onThemeFileChange((event as ThemeFileChangeEvent).detail?.file);
-      }),
-      listen(options.target, THEME_SELECT_CHANGE_EVENT, (event) => {
-        options.onThemeSelectChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, MOUSE_MODE_CHANGE_EVENT, (event) => {
-        options.onMouseModeChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, SHADER_PRESET_CHANGE_EVENT, (event) => {
-        options.onShaderPresetChange((event as ShaderPresetChangeEvent).detail?.value);
-      }),
-      listen(options.target, FONT_HINTING_CHANGE_EVENT, (event) => {
-        options.onFontHintingChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, FONT_LIGATURES_CHANGE_EVENT, (event) => {
-        options.onLigaturesChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, FONT_HINT_TARGET_CHANGE_EVENT, (event) => {
-        options.onFontHintTargetChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, FONT_FAMILY_CHANGE_EVENT, (event) => {
-        void options.onFontFamilyChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, FONT_FAMILY_LOCAL_CHANGE_EVENT, (event) => {
-        void options.onFontFamilyLocalChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, LOAD_LOCAL_FONTS_EVENT, () => {
-        void options.onLoadLocalFonts();
+      listen(options.target, APPEARANCE_INPUT_EVENT, (event) => {
+        const detail = (event as AppearanceInputEvent).detail;
+
+        if (detail?.themeFile !== undefined) {
+          void options.onThemeFileChange(detail.themeFile);
+        }
+        if (detail?.themeSelectValue !== undefined) {
+          options.onThemeSelectChange(detail.themeSelectValue);
+        }
+        if (detail?.mouseMode !== undefined) {
+          options.onMouseModeChange(detail.mouseMode);
+        }
+        if (detail?.shaderPreset !== undefined) {
+          options.onShaderPresetChange(detail.shaderPreset);
+        }
+        if (detail?.fontHinting !== undefined) {
+          options.onFontHintingChange(detail.fontHinting);
+        }
+        if (detail?.ligatures !== undefined) {
+          options.onLigaturesChange(detail.ligatures);
+        }
+        if (detail?.fontHintTarget !== undefined) {
+          options.onFontHintTargetChange(detail.fontHintTarget);
+        }
+        if (detail?.fontFamily !== undefined) {
+          void options.onFontFamilyChange(detail.fontFamily);
+        }
+        if (detail?.localFontValue !== undefined) {
+          void options.onFontFamilyLocalChange(detail.localFontValue);
+        }
+        if (detail?.action === "load-local-fonts") {
+          void options.onLoadLocalFonts();
+        }
       }),
     );
   } else {

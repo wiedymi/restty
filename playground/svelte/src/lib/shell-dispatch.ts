@@ -2,22 +2,13 @@ import type { PlaygroundDemoKind } from "../../../lib/demos.ts";
 import { dispatchShellEvent } from "../../../lib/shell-bridge.ts";
 import type { ShaderPreset } from "../../../lib/shader-presets.ts";
 import {
+  APPEARANCE_INPUT_EVENT,
   CONNECTION_INPUT_EVENT,
-  FONT_FAMILY_LOCAL_CHANGE_EVENT,
-  FONT_FAMILY_CHANGE_EVENT,
-  FONT_HINT_TARGET_CHANGE_EVENT,
-  FONT_HINTING_CHANGE_EVENT,
-  FONT_LIGATURES_CHANGE_EVENT,
-  LOAD_LOCAL_FONTS_EVENT,
-  MOUSE_MODE_CHANGE_EVENT,
   PTY_BUTTON_EVENT,
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
-  SHADER_PRESET_CHANGE_EVENT,
   TERMINAL_ACTION_EVENT,
-  THEME_FILE_CHANGE_EVENT,
-  THEME_SELECT_CHANGE_EVENT,
 } from "../../../lib/shell-events.ts";
 
 export function dispatchSettingsOpen(target: EventTarget = window) {
@@ -46,6 +37,24 @@ export function dispatchConnectionInput(
 
 export function dispatchConnectionBackendChange(value: string, target: EventTarget = window) {
   dispatchConnectionInput({ backend: value }, target);
+}
+
+export function dispatchAppearanceInput(
+  detail: {
+    action?: "load-local-fonts";
+    fontFamily?: string;
+    localFontValue?: string;
+    ligatures?: string;
+    fontHinting?: string;
+    fontHintTarget?: string;
+    mouseMode?: string;
+    shaderPreset?: ShaderPreset | string;
+    themeSelectValue?: string;
+    themeFile?: File | null;
+  },
+  target: EventTarget = window,
+) {
+  dispatchShellEvent(APPEARANCE_INPUT_EVENT, detail, target);
 }
 
 export function dispatchTerminalInit(target: EventTarget = window) {
@@ -77,39 +86,39 @@ export function dispatchPtyUrlChange(value: string, target: EventTarget = window
 }
 
 export function dispatchFontFamilyChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(FONT_FAMILY_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ fontFamily: value }, target);
 }
 
 export function dispatchLocalFontFamilyChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(FONT_FAMILY_LOCAL_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ localFontValue: value }, target);
 }
 
 export function dispatchLigaturesChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(FONT_LIGATURES_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ ligatures: value }, target);
 }
 
 export function dispatchHintingChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(FONT_HINTING_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ fontHinting: value }, target);
 }
 
 export function dispatchHintTargetChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(FONT_HINT_TARGET_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ fontHintTarget: value }, target);
 }
 
 export function dispatchLoadLocalFonts(target: EventTarget = window) {
-  dispatchShellEvent(LOAD_LOCAL_FONTS_EVENT, undefined, target);
+  dispatchAppearanceInput({ action: "load-local-fonts" }, target);
 }
 
 export function dispatchMouseModeChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(MOUSE_MODE_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ mouseMode: value }, target);
 }
 
 export function dispatchThemeSelectChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(THEME_SELECT_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ themeSelectValue: value }, target);
 }
 
 export function dispatchThemeFileChange(file: File | null, target: EventTarget = window) {
-  dispatchShellEvent(THEME_FILE_CHANGE_EVENT, { file }, target);
+  dispatchAppearanceInput({ themeFile: file }, target);
 }
 
 export function dispatchWebContainerCommandChange(value: string, target: EventTarget = window) {
@@ -124,5 +133,5 @@ export function dispatchShaderPresetChange(
   value: ShaderPreset | string,
   target: EventTarget = window,
 ) {
-  dispatchShellEvent(SHADER_PRESET_CHANGE_EVENT, { value }, target);
+  dispatchAppearanceInput({ shaderPreset: value }, target);
 }

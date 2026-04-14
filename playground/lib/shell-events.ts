@@ -10,23 +10,10 @@ export const CONNECTION_INPUT_EVENT = "restty:playground-connection-input";
 export const CONNECTION_STATE_EVENT = "restty:playground-connection-state";
 export const ACTIVE_PANE_STATE_EVENT = "restty:playground-active-pane-state";
 export const RUN_DEMO_EVENT = "restty:playground-demo-run";
-export const FONT_FAMILY_LOCAL_CHANGE_EVENT = "restty:playground-font-family-local-change";
-export const FONT_FAMILY_CHANGE_EVENT = "restty:playground-font-family-change";
-export const FONT_LIGATURES_CHANGE_EVENT = "restty:playground-font-ligatures-change";
-export const FONT_HINTING_CHANGE_EVENT = "restty:playground-font-hinting-change";
-export const FONT_HINT_TARGET_CHANGE_EVENT = "restty:playground-font-hint-target-change";
-export const LOAD_LOCAL_FONTS_EVENT = "restty:playground-load-local-fonts";
-export const THEME_FILE_CHANGE_EVENT = "restty:playground-theme-file-change";
+export const APPEARANCE_INPUT_EVENT = "restty:playground-appearance-input";
 export const THEME_FILE_RESET_EVENT = "restty:playground-theme-file-reset";
-export const MOUSE_MODE_CHANGE_EVENT = "restty:playground-mouse-mode-change";
-export const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change";
-export const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
 export const TERMINAL_ACTION_EVENT = "restty:playground-terminal-action";
 export const PTY_BUTTON_EVENT = "restty:playground-pty-button";
-
-export type ShellStringValueDetail = {
-  value?: string;
-};
 
 export type DemoRunDetail = {
   kind?: PlaygroundDemoKind | string;
@@ -37,6 +24,19 @@ export type ConnectionInputDetail = {
   ptyUrl?: string;
   webContainerCommand?: string;
   webContainerCwd?: string;
+};
+
+export type AppearanceInputDetail = {
+  action?: "load-local-fonts";
+  fontFamily?: string;
+  localFontValue?: string;
+  ligatures?: string;
+  fontHinting?: string;
+  fontHintTarget?: string;
+  mouseMode?: string;
+  shaderPreset?: ShaderPreset | string;
+  themeSelectValue?: string;
+  themeFile?: File | null;
 };
 
 export type ConnectionStateDetail = {
@@ -75,26 +75,14 @@ export type LocalFontStateDetail = {
   options?: LocalFontOption[];
 };
 
-export type RendererChangeDetail = {
-  value?: RendererChoice | string;
-};
-
 export type TerminalActionDetail = {
   command?: "init" | "pause" | "clear";
   renderer?: RendererChoice | string;
   fontSize?: number | string;
 };
 
-export type ShaderPresetChangeDetail = {
-  value?: ShaderPreset | string;
-};
-
 export type TerminalStateDetail = {
   pauseLabel?: string;
   renderer?: string;
   fontSize?: number | string;
-};
-
-export type ThemeFileChangeDetail = {
-  file?: File | null;
 };

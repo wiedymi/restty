@@ -6,14 +6,12 @@ import {
 } from "../playground/lib/control-bindings.ts";
 import { bindSettingsControls } from "../playground/lib/settings-bindings.ts";
 import {
+  APPEARANCE_INPUT_EVENT,
   CONNECTION_INPUT_EVENT,
-  FONT_FAMILY_CHANGE_EVENT,
-  FONT_HINTING_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
   TERMINAL_ACTION_EVENT,
-  THEME_SELECT_CHANGE_EVENT,
 } from "../playground/lib/shell-events.ts";
 
 function createMutableTarget<T extends object>(initial: T): EventTarget & T {
@@ -99,12 +97,12 @@ test("control bindings forward svelte shell events", () => {
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { renderer: "webgpu" } }));
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { fontSize: "24" } }));
   target.dispatchEvent(
-    new CustomEvent(THEME_SELECT_CHANGE_EVENT, { detail: { value: "Aizen Dark" } }),
+    new CustomEvent(APPEARANCE_INPUT_EVENT, { detail: { themeSelectValue: "Aizen Dark" } }),
   );
   target.dispatchEvent(
-    new CustomEvent(FONT_FAMILY_CHANGE_EVENT, { detail: { value: "jetbrains" } }),
+    new CustomEvent(APPEARANCE_INPUT_EVENT, { detail: { fontFamily: "jetbrains" } }),
   );
-  target.dispatchEvent(new CustomEvent(FONT_HINTING_CHANGE_EVENT, { detail: { value: "on" } }));
+  target.dispatchEvent(new CustomEvent(APPEARANCE_INPUT_EVENT, { detail: { fontHinting: "on" } }));
 
   expect(calls).toEqual([
     ["backend", "webcontainer"],
