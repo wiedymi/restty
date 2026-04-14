@@ -682,6 +682,10 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
     resolve(playgroundRoot, "lib/surface-bootstrap-events.ts"),
     "utf8",
   );
+  const surfaceRuntime = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap-runtime.ts"),
+    "utf8",
+  );
   const surfaceStartup = readFileSync(resolve(playgroundRoot, "lib/surface-startup.ts"), "utf8");
 
   expect(surfaceBootstrap).toContain('./surface-startup.ts"');
@@ -699,13 +703,19 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
   expect(surfaceStartup).toContain("createInitialPane({ focus: true })");
   expect(surfaceAssembly).toContain("export function assemblePlaygroundSurface");
   expect(surfaceAssembly).toContain('./surface-bootstrap-events.ts"');
+  expect(surfaceAssembly).toContain('./surface-bootstrap-runtime.ts"');
   expect(surfaceAssembly).toContain("createRestty({");
   expect(surfaceAssembly).not.toContain("onPaneCreated:");
+  expect(surfaceAssembly).not.toContain("terminal: ({ id, sourcePane }) =>");
+  expect(surfaceAssembly).not.toContain("services: () => ({");
   expect(surfaceAssembly).toContain("events: surfaceEvents");
-  expect(surfaceAssembly).toContain("terminal: ({ id, sourcePane }) =>");
+  expect(surfaceAssembly).toContain("...runtimeFactories");
   expect(surfaceEvents).toContain("export function createPlaygroundSurfaceEvents");
   expect(surfaceEvents).toContain("onPaneCreated:");
   expect(surfaceEvents).toContain("onActivePaneChange:");
+  expect(surfaceRuntime).toContain("export function createPlaygroundSurfaceRuntimeFactories");
+  expect(surfaceRuntime).toContain("terminal: ({ id, sourcePane }) =>");
+  expect(surfaceRuntime).toContain("services: () => ({");
 });
 
 test("playground app bootstrap delegates shell element lookup", () => {

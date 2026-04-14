@@ -1,13 +1,13 @@
 import { Restty } from "../../src/index.ts";
-import { createAdaptivePtyTransport } from "./pty-connection.ts";
 import { createDemoController } from "./demos.ts";
 import type { PlaygroundDesktopNotification } from "./desktop-notifications.ts";
 import type { createPaneAppearanceController } from "./appearance-controller.ts";
 import type { createConnectionController } from "./connection-controller.ts";
 import type { createPaneLifecycleController } from "./pane-lifecycle.ts";
-import { createPaneState, type PaneState } from "./pane-state.ts";
+import type { PaneState } from "./pane-state.ts";
 import type { createPaneShellSync } from "./pane-shell-sync.ts";
 import { createPlaygroundSurfaceEvents } from "./surface-bootstrap-events.ts";
+import { createPlaygroundSurfaceRuntimeFactories } from "./surface-bootstrap-runtime.ts";
 
 export type PlaygroundSurfaceStartupConfig = {
   initialFontSize: number;
@@ -43,7 +43,9 @@ export type CreatePlaygroundSurfaceAssemblyOptions = {
   onDesktopNotification: (notification: PlaygroundDesktopNotification) => void;
   surfaceStartup: PlaygroundSurfaceStartupBridge;
   createRestty?: (config: ConstructorParameters<typeof Restty>[0]) => Restty;
-  createPtyTransport?: typeof createAdaptivePtyTransport;
+  createPtyTransport?: Parameters<
+    typeof createPlaygroundSurfaceRuntimeFactories
+  >[0]["createPtyTransport"];
   createDemoController?: typeof createDemoController;
 };
 
@@ -56,8 +58,8 @@ export function assemblePlaygroundSurface({
   onDesktopNotification,
   surfaceStartup,
   createRestty = (config) => new Restty(config),
-  createPtyTransport = createAdaptivePtyTransport,
   createDemoController: createDemoControllerForPane = createDemoController,
+  createPtyTransport,
 }: CreatePlaygroundSurfaceAssemblyOptions): Restty {
   const surfaceEvents = createPlaygroundSurfaceEvents({
     paneStates,
@@ -67,6 +69,14 @@ export function assemblePlaygroundSurface({
     queueResizeAllPanes: surfaceStartup.queueResizeAllPanes,
     onDesktopNotification,
     createDemoController: createDemoControllerForPane,
+  });
+  const runtimeFactories = createPlaygroundSurfaceRuntimeFactories({
+    paneStates,
+    initialFontSize,
+    defaultThemeName,
+    appearanceController,
+    connectionController,
+    createPtyTransport,
   });
 
   return createRestty({
@@ -99,39 +109,6 @@ export function assemblePlaygroundSurface({
         canHandleEvent: () => !isSettingsDialogOpen(),
       },
     },
-    terminal: ({ id, sourcePane }) => {
-      const paneState = createPaneState({
-        id,
-        sourceState: sourcePane ? (paneStates.get(sourcePane.id) ?? null) : null,
-        renderer: appearanceController.getRendererDefault(),
-        fontSize: Number.isFinite(appearanceController.getFontSizeDefault())
-          ? appearanceController.getFontSizeDefault()
-          : Number.isFinite(initialFontSize)
-            ? initialFontSize
-            : 18,
-        mouseMode: appearanceController.getMouseModeDefault(),
-        defaultThemeName,
-      });
-      paneStates.set(id, paneState);
-      return {
-        renderer: paneState.renderer,
-        fontSize: paneState.fontSize,
-        ligatures: appearanceController.getLigatures(),
-        fontHinting: appearanceController.getFontHinting(),
-        fontHintTarget: appearanceController.getFontHintTarget(),
-        fontSizeMode: "em",
-        alphaBlending: "native",
-        fontSources: appearanceController.getFontSources(),
-      };
-    },
-    services: () => ({
-      ptyTransport: createPtyTransport({
-        getConnectionBackend: () => connectionController.getBackend(),
-        getPtyUrl: () => connectionController.getConnectUrl(),
-        getWebContainerCommand: () => connectionController.getWebContainerCommand(),
-        getWebContainerCwd: () => connectionController.getWebContainerCwd(),
-      }),
-      callbacks: {},
-    }),
+    ...runtimeFactories,
   });
 }
