@@ -10,17 +10,23 @@ import type { WirePlaygroundControlsOptions } from "./playground-wiring.types.ts
 export function wirePlaygroundControls({
   restty,
   window,
-  shell: { shellAdapter, paneShellSync, getConnectionShellStateDetail },
+  shell: {
+    openSettings,
+    closeSettings,
+    syncConnectionState,
+    paneShellSync,
+    getConnectionShellStateDetail,
+  },
   controllers: { paneLifecycle, appearanceController, connectionController },
   state: { paneStates, getActivePaneId },
 }: WirePlaygroundControlsOptions): void {
   bindSettingsShellEffects({
     target: window,
     onOpen: () => {
-      shellAdapter.openSettings(restty);
+      openSettings(restty);
     },
     onClose: () => {
-      shellAdapter.closeSettings(restty);
+      closeSettings(restty);
     },
   });
 
@@ -91,7 +97,7 @@ export function wirePlaygroundControls({
     },
   });
 
-  shellAdapter.syncConnectionState(getConnectionShellStateDetail());
+  syncConnectionState(getConnectionShellStateDetail());
   paneShellSync.syncFontFamilyValue();
   paneShellSync.syncLocalFontControls();
   paneShellSync.syncFontRenderingControls();

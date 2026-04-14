@@ -80,7 +80,7 @@ export function createPlaygroundSessionControllers({
     getPanes: () => getRestty().getPanes(),
     connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
     syncConnectionState: () => {
-      shell.shellAdapter.syncConnectionState(shell.getConnectionShellStateDetail());
+      shell.syncConnectionState(shell.getConnectionShellStateDetail());
     },
     syncPtyButton: (pane) => {
       shell.paneShellSync.syncPtyButton(pane);
@@ -114,7 +114,7 @@ export function createPlaygroundSessionControllers({
       syncShaderPresetValue: (value) => shell.paneShellSync.syncShaderPresetValue(value),
       syncThemeSelectValue: (value) => shell.paneShellSync.syncThemeSelectValue(value),
     },
-    onThemeFileReset: shell.shellAdapter.resetThemeFileInput,
+    onThemeFileReset: shell.resetThemeFileInput,
     initialState: appearanceInitialState,
   });
 

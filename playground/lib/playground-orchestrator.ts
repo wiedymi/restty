@@ -104,7 +104,7 @@ export function bootstrapPlaygroundOrchestrator({
       setActivePaneId: session.state.setActivePaneId,
     },
     shell: {
-      isSettingsDialogOpen: session.shell.shellAdapter.isSettingsDialogOpen,
+      isSettingsDialogOpen: session.shell.isSettingsDialogOpen,
       paneShellSync: session.shell.paneShellSync,
     },
     controllers: {
@@ -119,7 +119,9 @@ export function bootstrapPlaygroundOrchestrator({
     restty,
     window,
     shell: {
-      shellAdapter: session.shell.shellAdapter,
+      openSettings: session.shell.openSettings,
+      closeSettings: session.shell.closeSettings,
+      syncConnectionState: session.shell.syncConnectionState,
       paneShellSync: session.shell.paneShellSync,
       getConnectionShellStateDetail: session.shell.getConnectionShellStateDetail,
     },

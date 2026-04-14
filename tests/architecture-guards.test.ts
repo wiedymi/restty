@@ -868,10 +868,14 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(sessionState).toContain("export function createPlaygroundSessionState");
   expect(sessionState).toContain("new Map<number, PaneState>()");
   expect(sessionState).toContain("let activePaneId: number | null = null");
-  expect(sessionShell).toContain("createPlaygroundShellAdapter(");
+  expect(sessionShell).toContain("createPlaygroundShellEffects(");
+  expect(sessionShell).toContain(
+    "isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog)",
+  );
   expect(sessionShell).toContain("createPaneShellSync(");
   expect(orchestrator).toContain("session.state.paneStates");
-  expect(orchestrator).toContain("session.shell.shellAdapter");
+  expect(orchestrator).toContain("session.shell.isSettingsDialogOpen");
+  expect(orchestrator).not.toContain("session.shell.shellAdapter");
   expect(orchestrator).toContain("session.controllers.paneLifecycle");
   expect(orchestrator).toContain("session.notifications.handleDesktopNotification");
 });
@@ -1090,8 +1094,11 @@ test("appearance controller delegates terminal policy", () => {
 });
 
 test("shell bridge centralizes custom event dispatch and listeners", () => {
-  const shellAdapter = readFileSync(resolve(playgroundRoot, "lib/shell-adapter.ts"), "utf8");
   const shellEffects = readFileSync(resolve(playgroundRoot, "lib/shell-effects.ts"), "utf8");
+  const sessionShell = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-shell.ts"),
+    "utf8",
+  );
   const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
   const settingsShell = readFileSync(
     resolve(playgroundRoot, "svelte/src/lib/components/SettingsShell.svelte"),
@@ -1131,10 +1138,10 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   );
   const shellBridge = readFileSync(resolve(playgroundRoot, "lib/shell-bridge.ts"), "utf8");
 
-  expect(shellAdapter).toContain('./shell-effects.ts"');
-  expect(shellAdapter).not.toContain("legacy-shell-adapter");
+  expect(sessionShell).toContain('./shell-effects.ts"');
   expect(paneShellSync).toContain('./shell-bridge.ts"');
   expect(shellEffects).toContain('./shell-bridge.ts"');
+  expect(existsSync(resolve(playgroundRoot, "lib/shell-adapter.ts"))).toBe(false);
   expect(existsSync(resolve(playgroundRoot, "lib/legacy-shell-adapter.ts"))).toBe(false);
   expect(settingsShell).toContain("../../../../lib/shell-bridge.ts");
   expect(terminalSection).toContain("../../../../lib/shell-bridge.ts");
@@ -1146,7 +1153,7 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellStateBridge).toContain('../../../lib/shell-bridge.ts"');
   expect(shellStateBridge).toContain('./stores/shell-state-reducers.ts"');
   expect(shellState).not.toContain('../../../../lib/shell-bridge.ts"');
-  expect(shellAdapter).not.toContain("new CustomEvent(");
+  expect(sessionShell).not.toContain("new CustomEvent(");
   expect(shellEffects).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(settingsShellEffects).not.toContain("new CustomEvent(");

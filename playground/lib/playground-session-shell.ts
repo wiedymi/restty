@@ -2,8 +2,9 @@ import { Restty } from "../../src/index.ts";
 import { createPaneAppearanceController } from "./appearance-controller.ts";
 import { createConnectionController } from "./connection-controller.ts";
 import { createPaneShellSync } from "./pane-shell-sync.ts";
-import { createPlaygroundShellAdapter } from "./shell-adapter.ts";
+import { createPlaygroundShellEffects } from "./shell-effects.ts";
 import type { ConnectionStateDetail } from "./shell-events.ts";
+import { isSettingsDialogOpen } from "./settings-dialog.ts";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type PlaygroundWindow = Window & typeof globalThis;
@@ -17,7 +18,11 @@ type CreatePlaygroundSessionShellOptions = {
 };
 
 export type PlaygroundSessionShell = {
-  shellAdapter: ReturnType<typeof createPlaygroundShellAdapter>;
+  isSettingsDialogOpen: () => boolean;
+  openSettings: ReturnType<typeof createPlaygroundShellEffects>["openSettings"];
+  closeSettings: ReturnType<typeof createPlaygroundShellEffects>["closeSettings"];
+  resetThemeFileInput: ReturnType<typeof createPlaygroundShellEffects>["resetThemeFileInput"];
+  syncConnectionState: ReturnType<typeof createPlaygroundShellEffects>["syncConnectionState"];
   paneShellSync: ReturnType<typeof createPaneShellSync>;
   getConnectionShellStateDetail: () => ConnectionStateDetail;
 };
@@ -49,9 +54,8 @@ export function createPlaygroundSessionShell({
     };
   }
 
-  const shellAdapter = createPlaygroundShellAdapter({
+  const shellEffects = createPlaygroundShellEffects({
     target: window,
-    settingsDialog,
   });
 
   const paneShellSync = createPaneShellSync({
@@ -71,7 +75,11 @@ export function createPlaygroundSessionShell({
   });
 
   return {
-    shellAdapter,
+    isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog),
+    openSettings: shellEffects.openSettings,
+    closeSettings: shellEffects.closeSettings,
+    resetThemeFileInput: shellEffects.resetThemeFileInput,
+    syncConnectionState: shellEffects.syncConnectionState,
     paneShellSync,
     getConnectionShellStateDetail,
   };
