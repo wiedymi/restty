@@ -1,12 +1,6 @@
 <script lang="ts">
   import { getConnectionUiState } from "../../../../lib/pty-connection.ts";
-  import {
-    dispatchConnectionBackendChange,
-    dispatchPtyButton,
-    dispatchPtyUrlChange,
-    dispatchWebContainerCommandChange,
-    dispatchWebContainerCwdChange,
-  } from "../shell-dispatch.ts";
+  import { dispatchConnectionInput, dispatchShellCommand } from "../../../../lib/shell-bridge.ts";
   import { connectionShellState } from "../stores/shell-state.ts";
 
   $: connectionUi = getConnectionUiState($connectionShellState.backend);
@@ -14,25 +8,25 @@
   function handleConnectionBackendChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchConnectionBackendChange(select.value);
+    dispatchConnectionInput({ backend: select.value });
   }
 
   function handlePtyUrlChange(event: Event) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
-    dispatchPtyUrlChange(input.value);
+    dispatchConnectionInput({ ptyUrl: input.value });
   }
 
   function handleWebContainerCommandChange(event: Event) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
-    dispatchWebContainerCommandChange(input.value);
+    dispatchConnectionInput({ webContainerCommand: input.value });
   }
 
   function handleWebContainerCwdChange(event: Event) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
-    dispatchWebContainerCwdChange(input.value);
+    dispatchConnectionInput({ webContainerCwd: input.value });
   }
 </script>
 
@@ -60,7 +54,7 @@
       disabled={connectionUi.ptyUrlDisabled}
       oninput={handlePtyUrlChange}
     />
-    <button id="btnPty" type="button" onclick={dispatchPtyButton}>
+    <button id="btnPty" type="button" onclick={() => dispatchShellCommand({ command: "pty-button" })}>
       {$connectionShellState.ptyButtonLabel}
     </button>
   </div>

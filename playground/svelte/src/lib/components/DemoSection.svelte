@@ -1,6 +1,6 @@
-  <script lang="ts">
+<script lang="ts">
   import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
-  import { dispatchDemoRun } from "../shell-dispatch.ts";
+  import { dispatchShellCommand } from "../../../../lib/shell-bridge.ts";
   import { demoShellState, setDemoShellKind } from "../stores/shell-state.ts";
 
   function getDemoKindForValue(value: string): PlaygroundDemoKind {
@@ -31,7 +31,11 @@
       <option value="unicode">Unicode</option>
       <option value="anim">Animation</option>
     </select>
-    <button id="btnRunDemo" type="button" onclick={() => dispatchDemoRun($demoShellState.kind)}>
+    <button
+      id="btnRunDemo"
+      type="button"
+      onclick={() => dispatchShellCommand({ command: "run-demo", demoKind: $demoShellState.kind })}
+    >
       Run
     </button>
   </div>

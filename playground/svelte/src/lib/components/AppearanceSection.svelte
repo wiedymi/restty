@@ -1,18 +1,7 @@
 <script lang="ts">
   import { listBuiltinThemeNames } from "../../../../../src/index.ts";
+  import { dispatchAppearanceInput } from "../../../../lib/shell-bridge.ts";
   import { THEME_FILE_RESET_EVENT } from "../../../../lib/shell-events.ts";
-  import {
-    dispatchFontFamilyChange,
-    dispatchHintingChange,
-    dispatchHintTargetChange,
-    dispatchLigaturesChange,
-    dispatchLoadLocalFonts,
-    dispatchLocalFontFamilyChange,
-    dispatchMouseModeChange,
-    dispatchShaderPresetChange,
-    dispatchThemeFileChange,
-    dispatchThemeSelectChange,
-  } from "../shell-dispatch.ts";
   import { appearanceShellState } from "../stores/shell-state.ts";
 
   const builtinThemeNames = listBuiltinThemeNames();
@@ -22,25 +11,25 @@
   function handleShaderPresetChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchShaderPresetChange(select.value);
+    dispatchAppearanceInput({ shaderPreset: select.value });
   }
 
   function handleMouseModeChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchMouseModeChange(select.value);
+    dispatchAppearanceInput({ mouseMode: select.value });
   }
 
   function handleThemeSelectChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchThemeSelectChange(select.value);
+    dispatchAppearanceInput({ themeSelectValue: select.value });
   }
 
   function handleThemeFileChange(event: Event) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
-    dispatchThemeFileChange(input.files?.[0] ?? null);
+    dispatchAppearanceInput({ themeFile: input.files?.[0] ?? null });
   }
 
   function handleWindowThemeFileReset() {
@@ -52,35 +41,35 @@
   function handleLigaturesChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchLigaturesChange(select.value);
+    dispatchAppearanceInput({ ligatures: select.value });
   }
 
   function handleFontFamilyChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchFontFamilyChange(select.value);
+    dispatchAppearanceInput({ fontFamily: select.value });
   }
 
   function handleLocalFontFamilyChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchLocalFontFamilyChange(select.value);
+    dispatchAppearanceInput({ localFontValue: select.value });
   }
 
   function handleHintingChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchHintingChange(select.value);
+    dispatchAppearanceInput({ fontHinting: select.value });
   }
 
   function handleHintTargetChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchHintTargetChange(select.value);
+    dispatchAppearanceInput({ fontHintTarget: select.value });
   }
 
   function handleLoadLocalFonts() {
-    dispatchLoadLocalFonts();
+    dispatchAppearanceInput({ action: "load-local-fonts" });
   }
 </script>
 

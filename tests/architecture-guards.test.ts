@@ -948,8 +948,24 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   const shellAdapter = readFileSync(resolve(playgroundRoot, "lib/shell-adapter.ts"), "utf8");
   const shellEffects = readFileSync(resolve(playgroundRoot, "lib/shell-effects.ts"), "utf8");
   const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
-  const shellDispatch = readFileSync(
-    resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"),
+  const settingsShell = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/components/SettingsShell.svelte"),
+    "utf8",
+  );
+  const terminalSection = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/components/TerminalSection.svelte"),
+    "utf8",
+  );
+  const connectionSection = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/components/ConnectionSection.svelte"),
+    "utf8",
+  );
+  const appearanceSection = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/components/AppearanceSection.svelte"),
+    "utf8",
+  );
+  const demoSection = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/components/DemoSection.svelte"),
     "utf8",
   );
   const settingsShellEffects = readFileSync(
@@ -967,45 +983,18 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(paneShellSync).toContain('./shell-bridge.ts"');
   expect(shellEffects).toContain('./shell-bridge.ts"');
   expect(existsSync(resolve(playgroundRoot, "lib/legacy-shell-adapter.ts"))).toBe(false);
-  expect(shellDispatch).toContain('../../../lib/shell-bridge.ts"');
+  expect(settingsShell).toContain("../../../../lib/shell-bridge.ts");
+  expect(terminalSection).toContain("../../../../lib/shell-bridge.ts");
+  expect(connectionSection).toContain("../../../../lib/shell-bridge.ts");
+  expect(appearanceSection).toContain("../../../../lib/shell-bridge.ts");
+  expect(demoSection).toContain("../../../../lib/shell-bridge.ts");
+  expect(existsSync(resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"))).toBe(false);
   expect(settingsShellEffects).toContain('./shell-bridge.ts"');
   expect(shellState).toContain('../../../../lib/shell-bridge.ts"');
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(shellEffects).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
-  expect(shellDispatch).not.toContain("new CustomEvent(");
   expect(settingsShellEffects).not.toContain("new CustomEvent(");
-  expect(shellDispatch).toContain("emitTerminalAction");
-  expect(shellDispatch).toContain("emitConnectionInput");
-  expect(shellDispatch).toContain("emitAppearanceInput");
-  expect(shellDispatch).toContain("emitShellCommand");
-  expect(shellDispatch).not.toContain("TERMINAL_ACTION_EVENT");
-  expect(shellDispatch).not.toContain("CONNECTION_INPUT_EVENT");
-  expect(shellDispatch).not.toContain("APPEARANCE_INPUT_EVENT");
-  expect(shellDispatch).not.toContain("SHELL_COMMAND_EVENT");
-  expect(shellDispatch).not.toContain("CONNECTION_BACKEND_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("PTY_URL_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("WC_COMMAND_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("WC_CWD_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("SETTINGS_OPEN_EVENT");
-  expect(shellDispatch).not.toContain("SETTINGS_CLOSE_EVENT");
-  expect(shellDispatch).not.toContain("PTY_BUTTON_EVENT");
-  expect(shellDispatch).not.toContain("RUN_DEMO_EVENT");
-  expect(shellDispatch).not.toContain("FONT_FAMILY_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("FONT_FAMILY_LOCAL_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("FONT_LIGATURES_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("FONT_HINTING_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("FONT_HINT_TARGET_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("LOAD_LOCAL_FONTS_EVENT");
-  expect(shellDispatch).not.toContain("THEME_FILE_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("THEME_SELECT_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("MOUSE_MODE_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("SHADER_PRESET_CHANGE_EVENT");
-  expect(shellDispatch).not.toContain("TERMINAL_INIT_EVENT");
-  expect(shellDispatch).not.toContain("TERMINAL_PAUSE_EVENT");
-  expect(shellDispatch).not.toContain("TERMINAL_CLEAR_EVENT");
-  expect(shellDispatch).not.toContain("TERMINAL_RENDERER_EVENT");
-  expect(shellDispatch).not.toContain("TERMINAL_FONT_SIZE_EVENT");
   expect(settingsShellEffects).not.toContain("SHELL_COMMAND_EVENT");
   expect(shellState).not.toContain("addEventListener(ACTIVE_PANE_STATE_EVENT");
   expect(shellState).not.toContain("addEventListener(CONNECTION_STATE_EVENT");
@@ -1088,7 +1077,7 @@ test("svelte app delegates settings shell lifecycle to a dedicated component", (
   expect(shellMain).toContain('./lib/stores/shell-state.ts"');
   expect(shellMain).toContain('document.documentElement.dataset.playgroundShell = "svelte"');
   expect(shellMain).toContain("startShellStateBridge()");
-  expect(settingsShell).toContain("../shell-dispatch.ts");
+  expect(settingsShell).toContain("../../../../lib/shell-bridge.ts");
   expect(settingsShell).not.toContain("../stores/shell-state.ts");
   expect(settingsShell).not.toContain("startShellStateBridge");
   expect(settingsShell).not.toContain(

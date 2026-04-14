@@ -1,36 +1,30 @@
 <script lang="ts">
-  import {
-    dispatchTerminalClear,
-    dispatchTerminalFontSizeChange,
-    dispatchTerminalInit,
-    dispatchTerminalPause,
-    dispatchTerminalRendererChange,
-  } from "../shell-dispatch.ts";
+  import { dispatchTerminalAction } from "../../../../lib/shell-bridge.ts";
   import { terminalShellState } from "../stores/shell-state.ts";
 
   function handleFontSizeEvent(event: Event) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
-    dispatchTerminalFontSizeChange(input.value);
+    dispatchTerminalAction({ fontSize: input.value });
   }
 
   function handleRendererEvent(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    dispatchTerminalRendererChange(select.value);
+    dispatchTerminalAction({ renderer: select.value });
   }
 </script>
 
 <section class="section">
   <div class="section-title">Terminal</div>
   <div class="btn-row">
-    <button id="btnInit" type="button" onclick={dispatchTerminalInit}>
+    <button id="btnInit" type="button" onclick={() => dispatchTerminalAction({ command: "init" })}>
       Init
     </button>
-    <button id="btnPause" type="button" onclick={dispatchTerminalPause}>
+    <button id="btnPause" type="button" onclick={() => dispatchTerminalAction({ command: "pause" })}>
       {$terminalShellState.pauseLabel}
     </button>
-    <button id="btnClear" type="button" onclick={dispatchTerminalClear}>
+    <button id="btnClear" type="button" onclick={() => dispatchTerminalAction({ command: "clear" })}>
       Clear
     </button>
   </div>

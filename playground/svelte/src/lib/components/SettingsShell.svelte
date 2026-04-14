@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { dispatchSettingsClose, dispatchSettingsOpen } from "../shell-dispatch.ts";
+  import { dispatchShellCommand } from "../../../../lib/shell-bridge.ts";
 
   let settingsDialog: HTMLDialogElement | null = null;
   let isOpen = false;
@@ -28,13 +28,13 @@
   function openSettings() {
     if (isOpen) return;
     isOpen = true;
-    dispatchSettingsOpen();
+    dispatchShellCommand({ command: "settings-open" });
   }
 
   function closeSettings() {
     if (!isOpen) return;
     isOpen = false;
-    dispatchSettingsClose();
+    dispatchShellCommand({ command: "settings-close" });
   }
 
   function handleDialogClick(event: MouseEvent) {
