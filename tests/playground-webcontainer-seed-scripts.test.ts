@@ -1,10 +1,12 @@
 import { afterEach, expect, test } from "bun:test";
 import {
   ensureWebContainerSeedScripts,
-  fetchFirstScript,
-  normalizeFetchedScript,
   type WebContainerSeedScriptContainer,
 } from "../playground/lib/webcontainer-seed-scripts.ts";
+import {
+  fetchFirstScript,
+  normalizeFetchedScript,
+} from "../playground/lib/webcontainer-seed-fetch.ts";
 
 type SpawnCall = {
   command: string;

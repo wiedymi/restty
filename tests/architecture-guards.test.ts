@@ -898,17 +898,22 @@ test("webcontainer seed provisioning delegates static seed manifest", () => {
     resolve(playgroundRoot, "lib/webcontainer-seed-scripts.ts"),
     "utf8",
   );
+  const seedFetch = readFileSync(resolve(playgroundRoot, "lib/webcontainer-seed-fetch.ts"), "utf8");
   const seedManifest = readFileSync(
     resolve(playgroundRoot, "lib/webcontainer-seed-manifest.ts"),
     "utf8",
   );
 
   expect(seedScripts).toContain('./webcontainer-seed-manifest.ts"');
+  expect(seedScripts).toContain('./webcontainer-seed-fetch.ts"');
   expect(seedScripts).not.toContain("const FALLBACK_DEMO_JS");
   expect(seedScripts).not.toContain("const FALLBACK_TEST_JS");
+  expect(seedScripts).not.toContain("normalizeFetchedScript(");
   expect(seedManifest).toContain("export const WEBCONTAINER_SEED_SCRIPTS");
   expect(seedManifest).toContain("restty demo fallback");
   expect(seedManifest).toContain("restty test fallback");
+  expect(seedFetch).toContain("normalizeFetchedScript(");
+  expect(seedFetch).toContain("fetchFirstScript(");
 });
 
 test("playground no longer ships legacy runtime status or log widgets", () => {
@@ -945,14 +950,17 @@ test("webcontainer pty delegates seed script bootstrap", () => {
     resolve(playgroundRoot, "lib/webcontainer-seed-manifest.ts"),
     "utf8",
   );
+  const seedFetch = readFileSync(resolve(playgroundRoot, "lib/webcontainer-seed-fetch.ts"), "utf8");
 
   expect(webcontainerPty).not.toContain('./webcontainer-seed-scripts.ts"');
   expect(webcontainerLaunch).toContain('./webcontainer-seed-scripts.ts"');
   expect(webcontainerLaunch).not.toContain("normalizeFetchedScript(");
   expect(webcontainerLaunch).not.toContain("restty demo fallback");
-  expect(seedScripts).toContain("normalizeFetchedScript(");
+  expect(seedScripts).toContain("fetchFirstScript(");
+  expect(seedScripts).not.toContain("normalizeFetchedScript(");
   expect(seedScripts).toContain("WEBCONTAINER_SEED_SCRIPTS");
   expect(seedManifest).toContain("restty demo fallback");
+  expect(seedFetch).toContain("normalizeFetchedScript(");
 });
 
 test("webcontainer pty delegates process lifecycle", () => {
