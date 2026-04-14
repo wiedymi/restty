@@ -826,10 +826,10 @@ test("playground app bootstrap delegates controller composition to a dedicated o
   expect(session).not.toContain("createConnectionController(");
   expect(session).not.toContain("createPaneAppearanceController(");
   expect(session).not.toContain("createPaneLifecycleController(");
-  expect(session).not.toContain("LegacyPlaygroundElements");
+  expect(session).not.toContain("PlaygroundControlElements");
   expect(session).not.toContain("btnPause");
   expect(session).not.toContain("rendererSelect");
-  expect(session).not.toContain("fontSizeInput");
+  expect(session).not.toContain("themeFileInput");
 });
 
 test("playground orchestrator delegates shell control wiring to a dedicated module", () => {
