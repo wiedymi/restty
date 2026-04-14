@@ -893,6 +893,24 @@ test("pty connection delegates backend ui state helpers", () => {
   expect(connectionState).toContain("export function syncConnectionUi");
 });
 
+test("webcontainer seed provisioning delegates static seed manifest", () => {
+  const seedScripts = readFileSync(
+    resolve(playgroundRoot, "lib/webcontainer-seed-scripts.ts"),
+    "utf8",
+  );
+  const seedManifest = readFileSync(
+    resolve(playgroundRoot, "lib/webcontainer-seed-manifest.ts"),
+    "utf8",
+  );
+
+  expect(seedScripts).toContain('./webcontainer-seed-manifest.ts"');
+  expect(seedScripts).not.toContain("const FALLBACK_DEMO_JS");
+  expect(seedScripts).not.toContain("const FALLBACK_TEST_JS");
+  expect(seedManifest).toContain("export const WEBCONTAINER_SEED_SCRIPTS");
+  expect(seedManifest).toContain("restty demo fallback");
+  expect(seedManifest).toContain("restty test fallback");
+});
+
 test("playground no longer ships legacy runtime status or log widgets", () => {
   const playgroundApp = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
   const playgroundIndex = readFileSync(resolve(playgroundPublicRoot, "index.html"), "utf8");
@@ -923,13 +941,18 @@ test("webcontainer pty delegates seed script bootstrap", () => {
     resolve(playgroundRoot, "lib/webcontainer-seed-scripts.ts"),
     "utf8",
   );
+  const seedManifest = readFileSync(
+    resolve(playgroundRoot, "lib/webcontainer-seed-manifest.ts"),
+    "utf8",
+  );
 
   expect(webcontainerPty).not.toContain('./webcontainer-seed-scripts.ts"');
   expect(webcontainerLaunch).toContain('./webcontainer-seed-scripts.ts"');
   expect(webcontainerLaunch).not.toContain("normalizeFetchedScript(");
   expect(webcontainerLaunch).not.toContain("restty demo fallback");
   expect(seedScripts).toContain("normalizeFetchedScript(");
-  expect(seedScripts).toContain("restty demo fallback");
+  expect(seedScripts).toContain("WEBCONTAINER_SEED_SCRIPTS");
+  expect(seedManifest).toContain("restty demo fallback");
 });
 
 test("webcontainer pty delegates process lifecycle", () => {
