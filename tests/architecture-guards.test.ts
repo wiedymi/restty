@@ -622,10 +622,6 @@ test("playground app bootstrap delegates shell element lookup", () => {
 test("playground app entrypoint delegates controller orchestration to app bootstrap", () => {
   const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
   const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
-  const orchestrator = readFileSync(
-    resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
-    "utf8",
-  );
 
   expect(appSource).toContain('./lib/app-bootstrap.ts"');
   expect(appSource).not.toContain("./lib/control-bindings");
@@ -636,9 +632,6 @@ test("playground app entrypoint delegates controller orchestration to app bootst
   expect(appBootstrap).not.toContain("bindConnectionControls(");
   expect(appBootstrap).not.toContain("bindTerminalControls(");
   expect(appBootstrap).not.toContain("bindAppearanceControls(");
-  expect(orchestrator).toContain("bindConnectionControls(");
-  expect(orchestrator).toContain("bindTerminalControls(");
-  expect(orchestrator).toContain("bindAppearanceControls(");
 });
 
 test("playground app bootstrap delegates controller composition to a dedicated orchestrator", () => {
@@ -655,6 +648,22 @@ test("playground app bootstrap delegates controller composition to a dedicated o
   expect(orchestrator).toContain("createConnectionController(");
   expect(orchestrator).toContain("createPaneAppearanceController(");
   expect(orchestrator).toContain("createPaneLifecycleController(");
+});
+
+test("playground orchestrator delegates shell control wiring to a dedicated module", () => {
+  const orchestrator = readFileSync(
+    resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
+    "utf8",
+  );
+  const wiring = readFileSync(resolve(playgroundRoot, "lib/playground-wiring.ts"), "utf8");
+
+  expect(orchestrator).toContain('./playground-wiring.ts"');
+  expect(orchestrator).not.toContain("bindConnectionControls(");
+  expect(orchestrator).not.toContain("bindTerminalControls(");
+  expect(orchestrator).not.toContain("bindAppearanceControls(");
+  expect(wiring).toContain("bindConnectionControls(");
+  expect(wiring).toContain("bindTerminalControls(");
+  expect(wiring).toContain("bindAppearanceControls(");
 });
 
 test("playground no longer ships legacy runtime status or log widgets", () => {
