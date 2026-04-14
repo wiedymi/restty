@@ -757,6 +757,14 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(session).toContain("createPaneAppearanceController(");
   expect(session).toContain("createPaneLifecycleController(");
   expect(session).toContain("createPlaygroundShellAdapter(");
+  expect(session).toContain("state: {");
+  expect(session).toContain("shell: {");
+  expect(session).toContain("controllers: {");
+  expect(session).toContain("notifications: {");
+  expect(orchestrator).toContain("session.state.paneStates");
+  expect(orchestrator).toContain("session.shell.shellAdapter");
+  expect(orchestrator).toContain("session.controllers.paneLifecycle");
+  expect(orchestrator).toContain("session.notifications.handleDesktopNotification");
 });
 
 test("playground no longer ships legacy runtime status or log widgets", () => {

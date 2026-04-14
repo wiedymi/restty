@@ -50,6 +50,28 @@ type CreatePlaygroundSessionOptions = {
   };
 };
 
+export type PlaygroundSessionState = {
+  paneStates: Map<number, PaneState>;
+  getActivePaneId: () => number | null;
+  setActivePaneId: (id: number | null) => void;
+};
+
+export type PlaygroundSessionShell = {
+  shellAdapter: ReturnType<typeof createPlaygroundShellAdapter>;
+  paneShellSync: ReturnType<typeof createPaneShellSync>;
+  getConnectionShellStateDetail: () => ConnectionStateDetail;
+};
+
+export type PlaygroundSessionControllers = {
+  paneLifecycle: ReturnType<typeof createPaneLifecycleController>;
+  connectionController: ReturnType<typeof createConnectionController>;
+  appearanceController: ReturnType<typeof createPaneAppearanceController>;
+};
+
+export type PlaygroundSessionNotifications = {
+  handleDesktopNotification: ReturnType<typeof createDesktopNotificationHandler>;
+};
+
 export function createPlaygroundSession({
   window,
   usesSvelteShell,
@@ -242,17 +264,25 @@ export function createPlaygroundSession({
   });
 
   return {
-    paneStates,
-    shellAdapter,
-    paneShellSync,
-    paneLifecycle,
-    connectionController,
-    appearanceController,
-    handleDesktopNotification,
-    getConnectionShellStateDetail,
-    getActivePaneId: () => activePaneId,
-    setActivePaneId: (id: number | null) => {
-      activePaneId = id;
-    },
+    state: {
+      paneStates,
+      getActivePaneId: () => activePaneId,
+      setActivePaneId: (id: number | null) => {
+        activePaneId = id;
+      },
+    } satisfies PlaygroundSessionState,
+    shell: {
+      shellAdapter,
+      paneShellSync,
+      getConnectionShellStateDetail,
+    } satisfies PlaygroundSessionShell,
+    controllers: {
+      paneLifecycle,
+      connectionController,
+      appearanceController,
+    } satisfies PlaygroundSessionControllers,
+    notifications: {
+      handleDesktopNotification,
+    } satisfies PlaygroundSessionNotifications,
   };
 }
