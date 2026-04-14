@@ -503,18 +503,32 @@ test("playground source does not import src/internal.ts", () => {
   ).toEqual([]);
 });
 
-test("playground app entrypoint delegates restty construction to the surface bootstrap", () => {
-  const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+test("playground app bootstrap delegates restty construction to the surface bootstrap", () => {
+  const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
 
-  expect(appSource).toContain('./lib/surface-bootstrap.ts"');
-  expect(appSource).not.toContain("new Restty(");
+  expect(appBootstrap).toContain('./surface-bootstrap.ts"');
+  expect(appBootstrap).not.toContain("new Restty(");
 });
 
-test("playground app entrypoint delegates shell element lookup", () => {
-  const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+test("playground app bootstrap delegates shell element lookup", () => {
+  const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
 
-  expect(appSource).toContain('./lib/elements.ts"');
-  expect(appSource).not.toContain("document.getElementById(");
+  expect(appBootstrap).toContain('./elements.ts"');
+  expect(appBootstrap).not.toContain("document.getElementById(");
+});
+
+test("playground app entrypoint delegates controller orchestration to app bootstrap", () => {
+  const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+  const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
+
+  expect(appSource).toContain('./lib/app-bootstrap.ts"');
+  expect(appSource).not.toContain("./lib/control-bindings");
+  expect(appSource).not.toContain("./lib/appearance-controller");
+  expect(appSource).not.toContain("./lib/connection-controller");
+  expect(appSource).not.toContain("./lib/pane-lifecycle");
+  expect(appBootstrap).toContain("bindConnectionControls(");
+  expect(appBootstrap).toContain("bindTerminalControls(");
+  expect(appBootstrap).toContain("bindAppearanceControls(");
 });
 
 test("playground no longer ships legacy runtime status or log widgets", () => {
