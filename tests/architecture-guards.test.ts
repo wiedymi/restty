@@ -1017,6 +1017,36 @@ test("playground theme helpers import theme modules directly", () => {
   expect(appearanceSection).not.toContain("../../../../../src/index.ts");
 });
 
+test("playground helper layers use Restty as a type-only dependency", () => {
+  const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
+  const session = readFileSync(resolve(playgroundRoot, "lib/playground-session.ts"), "utf8");
+  const sessionShell = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-shell.ts"),
+    "utf8",
+  );
+  const sessionControllers = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
+    "utf8",
+  );
+  const wiringTypes = readFileSync(
+    resolve(playgroundRoot, "lib/playground-wiring.types.ts"),
+    "utf8",
+  );
+  const surfaceBootstrap = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap.ts"),
+    "utf8",
+  );
+  const surfaceStartup = readFileSync(resolve(playgroundRoot, "lib/surface-startup.ts"), "utf8");
+
+  expect(appBootstrap).toContain('import type { Restty } from "../../src/index.ts"');
+  expect(session).toContain('import type { Restty } from "../../src/index.ts"');
+  expect(sessionShell).toContain('import type { Restty } from "../../src/index.ts"');
+  expect(sessionControllers).toContain('import type { Restty } from "../../src/index.ts"');
+  expect(wiringTypes).toContain('import type { Restty } from "../../src/index.ts"');
+  expect(surfaceBootstrap).toContain('import type { Restty } from "../../src/index.ts"');
+  expect(surfaceStartup).toContain('import type { Restty } from "../../src/index.ts"');
+});
+
 test("pty connection delegates backend ui state helpers", () => {
   const ptyConnection = readFileSync(resolve(playgroundRoot, "lib/pty-connection.ts"), "utf8");
   const connectionState = readFileSync(resolve(playgroundRoot, "lib/connection-state.ts"), "utf8");

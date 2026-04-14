@@ -1,4 +1,4 @@
-import { Restty } from "../../src/index.ts";
+import type { Restty } from "../../src/index.ts";
 import { queryPlaygroundElements } from "./elements.ts";
 import { bootstrapPlaygroundOrchestrator } from "./playground-orchestrator.ts";
 

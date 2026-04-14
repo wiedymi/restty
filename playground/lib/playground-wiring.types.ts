@@ -1,4 +1,4 @@
-import { Restty } from "../../src/index.ts";
+import type { Restty } from "../../src/index.ts";
 import type { createPaneAppearanceController } from "./appearance-controller.ts";
 import type { createConnectionController } from "./connection-controller.ts";
 import type { createPaneLifecycleController } from "./pane-lifecycle.ts";
