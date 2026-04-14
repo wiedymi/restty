@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import { createPlaygroundSessionShell } from "../playground/lib/playground-session-shell.ts";
+import { dispatchShellCommand } from "../playground/lib/shell-bridge.ts";
 import { CONNECTION_STATE_EVENT, THEME_FILE_RESET_EVENT } from "../playground/lib/shell-events.ts";
 
 function createPane() {
@@ -42,7 +43,6 @@ test("playground session shell dispatches theme reset and connection state", () 
   const pane = createPane();
   const shell = createPlaygroundSessionShell({
     window: target as Window & typeof globalThis,
-    settingsDialog: null,
     getActivePane: () => pane,
     getConnectionController: () => ({
       getBackend: () => "ws",
@@ -52,6 +52,12 @@ test("playground session shell dispatches theme reset and connection state", () 
     }),
     getAppearanceController: createAppearanceController,
   });
+
+  expect(shell.isSettingsDialogOpen()).toBe(false);
+  dispatchShellCommand({ command: "settings-open" }, target);
+  expect(shell.isSettingsDialogOpen()).toBe(true);
+  dispatchShellCommand({ command: "settings-close" }, target);
+  expect(shell.isSettingsDialogOpen()).toBe(false);
 
   shell.resetThemeFileInput();
   shell.syncConnectionState(shell.getConnectionShellStateDetail());

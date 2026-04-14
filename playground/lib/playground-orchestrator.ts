@@ -16,7 +16,7 @@ type BootstrapPlaygroundOrchestratorOptions = {
 
 export function bootstrapPlaygroundOrchestrator({
   window,
-  elements: { paneRoot, settingsDialog },
+  elements: { paneRoot },
   notificationHost = globalThis.Notification,
 }: BootstrapPlaygroundOrchestratorOptions): Restty {
   let restty: Restty;
@@ -51,7 +51,6 @@ export function bootstrapPlaygroundOrchestrator({
     },
     shell: {
       window,
-      settingsDialog,
     },
   });
 

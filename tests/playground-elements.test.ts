@@ -3,18 +3,13 @@ import { queryPlaygroundElements } from "../playground/lib/elements.ts";
 
 test("queryPlaygroundElements returns the required root elements", () => {
   const paneRoot = { id: "paneRoot" };
-  const settingsDialog = { id: "settingsDialog", open: false };
-  const elements = new Map<string, unknown>([
-    ["paneRoot", paneRoot],
-    ["settingsDialog", settingsDialog],
-  ]);
+  const elements = new Map<string, unknown>([["paneRoot", paneRoot]]);
 
   const queried = queryPlaygroundElements({
     getElementById: (id) => (elements.get(id) ?? null) as HTMLElement | null,
   });
 
   expect(queried.paneRoot).toBe(paneRoot);
-  expect(queried.settingsDialog).toBe(settingsDialog);
 });
 
 test("queryPlaygroundElements throws when the required pane root is missing", () => {

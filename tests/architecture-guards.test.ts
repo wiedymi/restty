@@ -915,9 +915,9 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(sessionState).toContain("let activePaneId: number | null = null");
   expect(sessionShell).toContain("dispatchThemeFileReset(window)");
   expect(sessionShell).toContain("dispatchConnectionState(detail, window)");
-  expect(sessionShell).toContain(
-    "isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog)",
-  );
+  expect(sessionShell).toContain("listenShellCommand(window");
+  expect(sessionShell).toContain("isSettingsDialogOpen: () => settingsOpen");
+  expect(sessionShell).not.toContain("settingsDialog");
   expect(sessionShell).toContain("createPaneShellSync(");
   expect(orchestrator).toContain("session.state.paneStates");
   expect(orchestrator).toContain("session.shell.isSettingsDialogOpen");

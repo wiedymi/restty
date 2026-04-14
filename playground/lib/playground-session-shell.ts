@@ -2,16 +2,18 @@ import { Restty } from "../../src/index.ts";
 import { createPaneAppearanceController } from "./appearance-controller.ts";
 import { createConnectionController } from "./connection-controller.ts";
 import { createPaneShellSync } from "./pane-shell-sync.ts";
-import { dispatchConnectionState, dispatchThemeFileReset } from "./shell-bridge.ts";
+import {
+  dispatchConnectionState,
+  dispatchThemeFileReset,
+  listenShellCommand,
+} from "./shell-bridge.ts";
 import type { ConnectionStateDetail } from "./shell-events.ts";
-import { isSettingsDialogOpen } from "./settings-dialog.ts";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type PlaygroundWindow = Window & typeof globalThis;
 
 type CreatePlaygroundSessionShellOptions = {
   window: PlaygroundWindow;
-  settingsDialog: HTMLDialogElement | null;
   getActivePane: () => ManagedPane | null;
   getConnectionController: () => ReturnType<typeof createConnectionController>;
   getAppearanceController: () => ReturnType<typeof createPaneAppearanceController>;
@@ -27,11 +29,23 @@ export type PlaygroundSessionShell = {
 
 export function createPlaygroundSessionShell({
   window,
-  settingsDialog,
   getActivePane,
   getConnectionController,
   getAppearanceController,
 }: CreatePlaygroundSessionShellOptions): PlaygroundSessionShell {
+  let settingsOpen = false;
+
+  listenShellCommand(window, (detail) => {
+    switch (detail?.command) {
+      case "settings-open":
+        settingsOpen = true;
+        break;
+      case "settings-close":
+        settingsOpen = false;
+        break;
+    }
+  });
+
   function getPtyButtonLabel() {
     const pane = getActivePane();
     if (pane?.runtime.io.isPtyConnected()) return "Disconnect";
@@ -69,7 +83,7 @@ export function createPlaygroundSessionShell({
   });
 
   return {
-    isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog),
+    isSettingsDialogOpen: () => settingsOpen,
     resetThemeFileInput: () => {
       dispatchThemeFileReset(window);
     },

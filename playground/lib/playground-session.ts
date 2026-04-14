@@ -32,7 +32,6 @@ type PlaygroundSessionStartup = {
 
 type PlaygroundSessionShellConfig = {
   window: PlaygroundWindow;
-  settingsDialog: HTMLDialogElement | null;
 };
 
 type CreatePlaygroundSessionOptions = {
@@ -54,7 +53,7 @@ export function createPlaygroundSession({
     initialWebContainerCwd,
     appearanceInitialState,
   },
-  shell: { window, settingsDialog },
+  shell: { window },
 }: CreatePlaygroundSessionOptions) {
   const state = createPlaygroundSessionState();
 
@@ -81,7 +80,6 @@ export function createPlaygroundSession({
 
   const shell = createPlaygroundSessionShell({
     window,
-    settingsDialog,
     getActivePane,
     getConnectionController: () => connectionController,
     getAppearanceController: () => appearanceController,

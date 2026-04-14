@@ -1,10 +1,7 @@
 type DocumentLike = Pick<Document, "getElementById">;
 
-type DialogLike = HTMLDialogElement | null;
-
 export type PlaygroundElements = {
   paneRoot: HTMLElement;
-  settingsDialog: DialogLike;
 };
 
 function getRequiredElement(documentLike: DocumentLike, id: string): HTMLElement {
@@ -18,6 +15,5 @@ function getRequiredElement(documentLike: DocumentLike, id: string): HTMLElement
 export function queryPlaygroundElements(documentLike: DocumentLike): PlaygroundElements {
   return {
     paneRoot: getRequiredElement(documentLike, "paneRoot"),
-    settingsDialog: documentLike.getElementById("settingsDialog") as HTMLDialogElement | null,
   };
 }
