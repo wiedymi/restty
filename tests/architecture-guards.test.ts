@@ -212,6 +212,25 @@ test("runtime controller delegates render loop orchestration to a dedicated modu
   expect(runtimeControllerRenderLoop).toContain("requestAnimationFrame(() => loop(state))");
 });
 
+test("runtime controller delegates keyboard event binding to a dedicated module", () => {
+  const runtimeController = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.ts"),
+    "utf8",
+  );
+  const runtimeControllerKeyboard = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.keyboard.ts"),
+    "utf8",
+  );
+
+  expect(runtimeController).toContain('./runtime-controller.keyboard"');
+  expect(runtimeController).not.toContain("const onKeyDown =");
+  expect(runtimeController).not.toContain("const onKeyUp =");
+  expect(runtimeControllerKeyboard).toContain(
+    "export function attachRuntimeControllerKeyboardEvents",
+  );
+  expect(runtimeControllerKeyboard).toContain('window.addEventListener("keydown", onKeyDown)');
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });
