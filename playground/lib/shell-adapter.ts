@@ -1,4 +1,5 @@
 import { syncConnectionUi } from "./pty-connection.ts";
+import { dispatchConnectionState, dispatchThemeFileReset } from "./shell-bridge.ts";
 import {
   closeSettingsDialog,
   isSettingsDialogOpen,
@@ -7,11 +8,7 @@ import {
   type SettingsDialogElement,
   type SettingsDialogHost,
 } from "./settings-dialog.ts";
-import {
-  CONNECTION_STATE_EVENT,
-  THEME_FILE_RESET_EVENT,
-  type ConnectionStateDetail,
-} from "./shell-events.ts";
+import { type ConnectionStateDetail } from "./shell-events.ts";
 
 type ConnectionUiElements = {
   connectionBackendEl: HTMLSelectElement | null;
@@ -40,7 +37,7 @@ export function createPlaygroundShellAdapter({
 }: CreatePlaygroundShellAdapterOptions) {
   function resetThemeFileInput() {
     if (usesSvelteShell) {
-      target.dispatchEvent(new CustomEvent(THEME_FILE_RESET_EVENT));
+      dispatchThemeFileReset(target);
       return;
     }
     if (themeFileInput) {
@@ -50,11 +47,7 @@ export function createPlaygroundShellAdapter({
 
   function syncConnectionState(detail: ConnectionStateDetail) {
     if (usesSvelteShell) {
-      target.dispatchEvent(
-        new CustomEvent(CONNECTION_STATE_EVENT, {
-          detail,
-        }),
-      );
+      dispatchConnectionState(detail, target);
       return;
     }
     syncConnectionUiImpl(connectionUi);

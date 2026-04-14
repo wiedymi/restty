@@ -4,15 +4,14 @@ import {
   type FontHintTarget,
   type LocalFontOption,
 } from "./font-controls.ts";
+import {
+  dispatchActivePaneState as emitActivePaneState,
+  dispatchConnectionState,
+} from "./shell-bridge.ts";
 import { syncFontFamilyControls, syncHintingControls } from "./font-control-sync.ts";
 import type { PaneState } from "./pane-state.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
-import {
-  ACTIVE_PANE_STATE_EVENT,
-  CONNECTION_STATE_EVENT,
-  type ActivePaneStateDetail,
-  type LocalFontStateDetail,
-} from "./shell-events.ts";
+import { type ActivePaneStateDetail, type LocalFontStateDetail } from "./shell-events.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 
 export type PaneShellSyncPane = {
@@ -76,19 +75,12 @@ type CreatePaneShellSyncOptions = {
   syncSelectedDefaults: (state: PaneState) => void;
 };
 
-function dispatchStateEvent(target: EventTarget | undefined, type: string, detail: object) {
-  target?.dispatchEvent(
-    new CustomEvent(type, {
-      detail,
-    }),
-  );
-}
-
 export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
   const target = options.target;
 
   function dispatchActivePaneState(detail: ActivePaneStateDetail) {
-    dispatchStateEvent(target, ACTIVE_PANE_STATE_EVENT, detail);
+    if (!target) return;
+    emitActivePaneState(detail, target);
   }
 
   function syncPauseButton(state: PaneState) {
@@ -131,7 +123,8 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
         ? "Start WebContainer"
         : "Connect PTY";
     if (options.usesSvelteShell) {
-      dispatchStateEvent(target, CONNECTION_STATE_EVENT, { ptyButtonLabel: label });
+      if (!target) return;
+      dispatchConnectionState({ ptyButtonLabel: label }, target);
       return;
     }
     if (options.elements.ptyBtn) {

@@ -640,6 +640,33 @@ test("appearance controller delegates terminal policy", () => {
   expect(terminalController).toContain("getMouseStatus()");
 });
 
+test("shell bridge centralizes custom event dispatch and listeners", () => {
+  const shellAdapter = readFileSync(resolve(playgroundRoot, "lib/shell-adapter.ts"), "utf8");
+  const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
+  const shellDispatch = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"),
+    "utf8",
+  );
+  const shellState = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/stores/shell-state.ts"),
+    "utf8",
+  );
+  const shellBridge = readFileSync(resolve(playgroundRoot, "lib/shell-bridge.ts"), "utf8");
+
+  expect(shellAdapter).toContain('./shell-bridge.ts"');
+  expect(paneShellSync).toContain('./shell-bridge.ts"');
+  expect(shellDispatch).toContain('../../../lib/shell-bridge.ts"');
+  expect(shellState).toContain('../../../../lib/shell-bridge.ts"');
+  expect(shellAdapter).not.toContain("new CustomEvent(");
+  expect(paneShellSync).not.toContain("new CustomEvent(");
+  expect(shellDispatch).not.toContain("new CustomEvent(");
+  expect(shellState).not.toContain("addEventListener(ACTIVE_PANE_STATE_EVENT");
+  expect(shellState).not.toContain("addEventListener(CONNECTION_STATE_EVENT");
+  expect(shellBridge).toContain("dispatchShellEvent(");
+  expect(shellBridge).toContain("listenActivePaneState(");
+  expect(shellBridge).toContain("listenConnectionState(");
+});
+
 test("src/internal.ts does not import runtime or surface modules directly", () => {
   const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
     return (

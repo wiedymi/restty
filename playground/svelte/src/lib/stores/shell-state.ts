@@ -1,6 +1,7 @@
 import { writable } from "svelte/store";
 import type { LocalFontOption } from "../../../../lib/font-controls.ts";
 import { getConnectionBackendForValue } from "../../../../lib/pty-connection.ts";
+import { listenActivePaneState, listenConnectionState } from "../../../../lib/shell-bridge.ts";
 import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
 import {
   createInitialAppearanceShellValues,
@@ -9,12 +10,10 @@ import {
   DEFAULT_TERMINAL_FONT_SIZE,
   DEFAULT_TERMINAL_RENDERER,
 } from "../../../../lib/shell-defaults.ts";
-import {
-  ACTIVE_PANE_STATE_EVENT,
-  CONNECTION_STATE_EVENT,
-  type ActivePaneAppearanceStateDetail,
-  type ActivePaneStateDetail,
-  type ConnectionStateDetail,
+import type {
+  ActivePaneAppearanceStateDetail,
+  ActivePaneStateDetail,
+  ConnectionStateDetail,
 } from "../../../../lib/shell-events.ts";
 
 type TerminalShellState = {
@@ -92,9 +91,7 @@ export function resetShellState() {
 }
 
 export function startShellStateBridge(target: EventTarget = window) {
-  const handleConnectionState: EventListener = (event) => {
-    const detail = (event as CustomEvent<ConnectionStateDetail>).detail;
-    if (!detail) return;
+  const stopConnectionState = listenConnectionState(target, (detail: ConnectionStateDetail) => {
     connectionShellState.update((state) => ({
       ...state,
       backend:
@@ -111,7 +108,7 @@ export function startShellStateBridge(target: EventTarget = window) {
       webContainerCwd:
         typeof detail.webContainerCwd === "string" ? detail.webContainerCwd : state.webContainerCwd,
     }));
-  };
+  });
 
   const applyAppearanceState = (detail: ActivePaneAppearanceStateDetail) => {
     appearanceShellState.update((state) => ({
@@ -156,9 +153,7 @@ export function startShellStateBridge(target: EventTarget = window) {
     }));
   };
 
-  const handleActivePaneState: EventListener = (event) => {
-    const detail = (event as CustomEvent<ActivePaneStateDetail>).detail;
-    if (!detail) return;
+  const stopActivePaneState = listenActivePaneState(target, (detail: ActivePaneStateDetail) => {
     if (detail.terminal) {
       terminalShellState.update((state) => ({
         pauseLabel:
@@ -176,13 +171,10 @@ export function startShellStateBridge(target: EventTarget = window) {
     if (detail.appearance) {
       applyAppearanceState(detail.appearance);
     }
-  };
-
-  target.addEventListener(ACTIVE_PANE_STATE_EVENT, handleActivePaneState);
-  target.addEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
+  });
 
   return () => {
-    target.removeEventListener(ACTIVE_PANE_STATE_EVENT, handleActivePaneState);
-    target.removeEventListener(CONNECTION_STATE_EVENT, handleConnectionState);
+    stopActivePaneState();
+    stopConnectionState();
   };
 }

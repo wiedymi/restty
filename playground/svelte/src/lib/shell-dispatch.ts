@@ -1,4 +1,5 @@
 import type { PlaygroundDemoKind } from "../../../lib/demos.ts";
+import { dispatchShellEvent } from "../../../lib/shell-bridge.ts";
 import type { ShaderPreset } from "../../../lib/shader-presets.ts";
 import {
   CONNECTION_BACKEND_CHANGE_EVENT,
@@ -25,12 +26,6 @@ import {
   WC_COMMAND_CHANGE_EVENT,
   WC_CWD_CHANGE_EVENT,
 } from "../../../lib/shell-events.ts";
-
-function dispatchShellEvent<T>(type: string, detail?: T, target: EventTarget = window) {
-  target.dispatchEvent(
-    detail === undefined ? new CustomEvent(type) : new CustomEvent(type, { detail }),
-  );
-}
 
 export function dispatchSettingsOpen(target: EventTarget = window) {
   dispatchShellEvent(SETTINGS_OPEN_EVENT, undefined, target);
