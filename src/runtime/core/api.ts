@@ -47,6 +47,8 @@ export type ResttyRuntimeTerminalApi = {
   applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
   /** Reset colors to the default theme. */
   resetTheme: () => void;
+  /** Clear terminal scrollback and visible content. */
+  clearScreen: () => void;
 };
 
 export type ResttyRuntimeIoApi = {

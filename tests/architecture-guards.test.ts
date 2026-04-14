@@ -615,6 +615,20 @@ test("surface active pane api derives from pane handle contract", () => {
   expect(activePaneApi).not.toContain("../../input");
 });
 
+test("surface pane handle derives pane api types from runtime contracts", () => {
+  const paneHandle = readFileSync(resolve(surfaceRoot, "restty/pane-handle.ts"), "utf8");
+
+  expect(paneHandle).toContain('from "../../runtime/core/api"');
+  expect(paneHandle).toContain('setRenderer: ResttyRuntimeTerminalApi["setRenderer"]');
+  expect(paneHandle).toContain('sendInput: ResttyRuntimeIoApi["sendInput"]');
+  expect(paneHandle).toContain('setMouseMode: ResttyRuntimeInteractionApi["setMouseMode"]');
+  expect(paneHandle).toContain('getSearchState: ResttyRuntimeSearchApi["getState"]');
+  expect(paneHandle).toContain('setShaderStages: ResttyRuntimeRenderApi["setShaderStages"]');
+  expect(paneHandle).not.toContain("../../theme");
+  expect(paneHandle).not.toContain("../../input");
+  expect(paneHandle).not.toContain("../../runtime/core/models");
+});
+
 test("surface pane ops split handle, command, and style helpers", () => {
   const paneOps = readFileSync(resolve(surfaceRoot, "restty/pane-ops.ts"), "utf8");
   const paneHandleOps = readFileSync(resolve(surfaceRoot, "restty/pane-handle-ops.ts"), "utf8");

@@ -1,15 +1,14 @@
-import type { InputHandler, MouseMode } from "../../input";
-import type { GhosttyTheme } from "../../theme";
 import type {
   ResttyManagedPane,
   ResttyManagedPaneSearchUiStyleOptions,
 } from "../panes/managed-pane-types";
 import type {
-  ResttyFontHintTarget,
-  ResttyFontSource,
-  ResttySearchState,
-  ResttyShaderStage,
-} from "../../runtime/core/models";
+  ResttyRuntimeInteractionApi,
+  ResttyRuntimeIoApi,
+  ResttyRuntimeRenderApi,
+  ResttyRuntimeSearchApi,
+  ResttyRuntimeTerminalApi,
+} from "../../runtime/core/api";
 import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "../search-ui";
 
 type PaneSearchUiHandleOps = {
@@ -29,45 +28,45 @@ type PaneSearchUiHandleOps = {
  */
 export type ResttyPaneApi = {
   id: number;
-  setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
-  setPaused: (value: boolean) => void;
-  togglePause: () => void;
-  setFontSize: (value: number) => void;
-  setLigatures: (value: boolean) => void;
-  setFontHinting: (value: boolean) => void;
-  setFontHintTarget: (value: ResttyFontHintTarget) => void;
-  setFontSources: (sources: ResttyFontSource[]) => Promise<void>;
-  applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
-  resetTheme: () => void;
-  sendInput: (text: string, source?: string) => void;
-  sendKeyInput: (text: string, source?: string) => void;
-  clearScreen: () => void;
-  connectPty: (url?: string) => void;
-  disconnectPty: () => void;
-  isPtyConnected: () => boolean;
-  setMouseMode: (value: MouseMode) => void;
-  getMouseStatus: () => ReturnType<InputHandler["getMouseStatus"]>;
-  copySelectionToClipboard: () => Promise<boolean>;
-  pasteFromClipboard: () => Promise<boolean>;
-  selectWordAtClientPoint: (clientX: number, clientY: number) => boolean;
-  setSearchQuery: (query: string) => void;
-  clearSearch: () => void;
-  searchNext: () => void;
-  searchPrevious: () => void;
-  getSearchState: () => ResttySearchState;
+  setRenderer: ResttyRuntimeTerminalApi["setRenderer"];
+  setPaused: ResttyRuntimeTerminalApi["setPaused"];
+  togglePause: ResttyRuntimeTerminalApi["togglePause"];
+  setFontSize: ResttyRuntimeTerminalApi["setFontSize"];
+  setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
+  setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
+  setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
+  setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
+  applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
+  resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
+  sendInput: ResttyRuntimeIoApi["sendInput"];
+  sendKeyInput: ResttyRuntimeIoApi["sendKeyInput"];
+  clearScreen: ResttyRuntimeTerminalApi["clearScreen"];
+  connectPty: ResttyRuntimeIoApi["connectPty"];
+  disconnectPty: ResttyRuntimeIoApi["disconnectPty"];
+  isPtyConnected: ResttyRuntimeIoApi["isPtyConnected"];
+  setMouseMode: ResttyRuntimeInteractionApi["setMouseMode"];
+  getMouseStatus: ResttyRuntimeInteractionApi["getMouseStatus"];
+  copySelectionToClipboard: ResttyRuntimeInteractionApi["copySelectionToClipboard"];
+  pasteFromClipboard: ResttyRuntimeInteractionApi["pasteFromClipboard"];
+  selectWordAtClientPoint: ResttyRuntimeInteractionApi["selectWordAtClientPoint"];
+  setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
+  clearSearch: ResttyRuntimeSearchApi["clear"];
+  searchNext: ResttyRuntimeSearchApi["next"];
+  searchPrevious: ResttyRuntimeSearchApi["previous"];
+  getSearchState: ResttyRuntimeSearchApi["getState"];
   openSearch: (options?: ResttyPaneSearchUiOpenOptions) => void;
   closeSearch: (options?: ResttyPaneSearchUiCloseOptions) => void;
   toggleSearch: (options?: ResttyPaneSearchUiOpenOptions & ResttyPaneSearchUiCloseOptions) => void;
   isSearchOpen: () => boolean;
-  resize: (cols: number, rows: number) => void;
-  focus: () => void;
-  blur: () => void;
-  updateSize: (force?: boolean) => void;
-  getBackend: () => string;
+  resize: ResttyRuntimeInteractionApi["resize"];
+  focus: ResttyRuntimeInteractionApi["focus"];
+  blur: ResttyRuntimeInteractionApi["blur"];
+  updateSize: ResttyRuntimeInteractionApi["updateSize"];
+  getBackend: ResttyRuntimeRenderApi["getBackend"];
   getSearchUiStyleOptions: () => Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>>;
   setSearchUiStyleOptions: (options: ResttyManagedPaneSearchUiStyleOptions) => void;
-  setShaderStages: (stages: ResttyShaderStage[]) => void;
-  getShaderStages: () => ResttyShaderStage[];
+  setShaderStages: ResttyRuntimeRenderApi["setShaderStages"];
+  getShaderStages: ResttyRuntimeRenderApi["getShaderStages"];
 };
 
 /**
