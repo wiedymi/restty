@@ -231,6 +231,24 @@ test("runtime controller delegates keyboard event binding to a dedicated module"
   expect(runtimeControllerKeyboard).toContain('window.addEventListener("keydown", onKeyDown)');
 });
 
+test("runtime controller delegates wasm input forwarding to a dedicated module", () => {
+  const runtimeController = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.ts"),
+    "utf8",
+  );
+  const runtimeControllerInput = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.input.ts"),
+    "utf8",
+  );
+
+  expect(runtimeController).toContain('./runtime-controller.input"');
+  expect(runtimeController).not.toContain("function writeToWasm(");
+  expect(runtimeController).not.toContain("function flushWasmOutputToPty(");
+  expect(runtimeController).not.toContain("function sendInput(");
+  expect(runtimeControllerInput).toContain("export function createRuntimeControllerInput");
+  expect(runtimeControllerInput).toContain('sendInput("\\x1b[2J\\x1b[H")');
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });
