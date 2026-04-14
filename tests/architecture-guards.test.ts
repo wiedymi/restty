@@ -984,6 +984,10 @@ test("svelte app delegates settings shell lifecycle to a dedicated component", (
     resolve(playgroundRoot, "svelte/src/lib/components/ShellBridge.svelte"),
     "utf8",
   );
+  const shellState = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/stores/shell-state.ts"),
+    "utf8",
+  );
   const settingsShell = readFileSync(
     resolve(playgroundRoot, "svelte/src/lib/components/SettingsShell.svelte"),
     "utf8",
@@ -1003,13 +1007,17 @@ test("svelte app delegates settings shell lifecycle to a dedicated component", (
   expect(shellBridge).toContain('document.documentElement.dataset.playgroundShell = "svelte"');
   expect(shellBridge).toContain("onMount(() => startShellStateBridge())");
   expect(settingsShell).toContain("../shell-dispatch.ts");
-  expect(settingsShell).toContain("../stores/shell-state.ts");
+  expect(settingsShell).not.toContain("../stores/shell-state.ts");
   expect(settingsShell).not.toContain("startShellStateBridge");
   expect(settingsShell).not.toContain(
     'document.documentElement.dataset.playgroundShell = "svelte"',
   );
+  expect(settingsShell).toContain("let isOpen = false");
   expect(settingsShell).toContain('id="settingsFab"');
   expect(settingsShell).toContain('id="settingsDialog"');
+  expect(shellState).not.toContain("settingsShellState");
+  expect(shellState).not.toContain("setSettingsOpen");
+  expect(shellState).not.toContain("settings:");
 });
 
 test("pane shell sync delegates terminal, appearance, and connection reflection", () => {

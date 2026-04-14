@@ -1,15 +1,12 @@
 <script lang="ts">
   import { dispatchSettingsClose, dispatchSettingsOpen } from "../shell-dispatch.ts";
-  import {
-    setSettingsOpen,
-    settingsShellState,
-  } from "../stores/shell-state.ts";
 
   let settingsDialog: HTMLDialogElement | null = null;
+  let isOpen = false;
 
   function syncSettingsDialog() {
     if (!settingsDialog) return;
-    if ($settingsShellState.open) {
+    if (isOpen) {
       if (!settingsDialog.open) {
         if (typeof settingsDialog.showModal === "function") {
           settingsDialog.showModal();
@@ -29,14 +26,14 @@
   }
 
   function openSettings() {
-    if ($settingsShellState.open) return;
+    if (isOpen) return;
+    isOpen = true;
     dispatchSettingsOpen();
-    setSettingsOpen(true);
   }
 
   function closeSettings() {
-    if (!$settingsShellState.open) return;
-    setSettingsOpen(false);
+    if (!isOpen) return;
+    isOpen = false;
     dispatchSettingsClose();
   }
 
@@ -51,7 +48,7 @@
   }
 
   function handleWindowKeydown(event: KeyboardEvent) {
-    if (!$settingsShellState.open || event.key !== "Escape") return;
+    if (!isOpen || event.key !== "Escape") return;
     event.preventDefault();
     closeSettings();
   }

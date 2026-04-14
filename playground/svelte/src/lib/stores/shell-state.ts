@@ -49,16 +49,11 @@ type DemoShellState = {
   kind: PlaygroundDemoKind;
 };
 
-type SettingsShellState = {
-  open: boolean;
-};
-
 export type PlaygroundShellState = {
   terminal: TerminalShellState;
   connection: ConnectionShellState;
   appearance: AppearanceShellState;
   demo: DemoShellState;
-  settings: SettingsShellState;
 };
 
 const initialTerminalShellState: TerminalShellState = {
@@ -80,10 +75,6 @@ const initialDemoShellState: DemoShellState = {
   kind: DEFAULT_DEMO_KIND,
 };
 
-const initialSettingsShellState: SettingsShellState = {
-  open: false,
-};
-
 function createInitialShellState(): PlaygroundShellState {
   return {
     terminal: { ...initialTerminalShellState },
@@ -93,7 +84,6 @@ function createInitialShellState(): PlaygroundShellState {
       localFontOptions: [...initialAppearanceShellState.localFontOptions],
     },
     demo: { ...initialDemoShellState },
-    settings: { ...initialSettingsShellState },
   };
 }
 
@@ -102,7 +92,6 @@ export const terminalShellState = derived(shellState, ($state) => $state.termina
 export const connectionShellState = derived(shellState, ($state) => $state.connection);
 export const appearanceShellState = derived(shellState, ($state) => $state.appearance);
 export const demoShellState = derived(shellState, ($state) => $state.demo);
-export const settingsShellState = derived(shellState, ($state) => $state.settings);
 
 function updateShellDomain<K extends keyof PlaygroundShellState>(
   key: K,
@@ -118,13 +107,6 @@ export function setDemoShellKind(kind: PlaygroundDemoKind) {
   updateShellDomain("demo", (state) => ({
     ...state,
     kind,
-  }));
-}
-
-export function setSettingsOpen(open: boolean) {
-  updateShellDomain("settings", (state) => ({
-    ...state,
-    open,
   }));
 }
 

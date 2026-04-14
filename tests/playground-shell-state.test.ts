@@ -8,9 +8,7 @@ import {
   demoShellState,
   resetShellState,
   setDemoShellKind,
-  setSettingsOpen,
   shellState,
-  settingsShellState,
   startShellStateBridge,
   terminalShellState,
 } from "../playground/svelte/src/lib/stores/shell-state.ts";
@@ -228,14 +226,12 @@ test("stop bridge removes listeners", () => {
 
 test("resetShellState restores the demo shell default", () => {
   setDemoShellKind("unicode");
-  setSettingsOpen(true);
 
   resetShellState();
 
   expect(get(demoShellState)).toEqual({ kind: "basic" });
-  expect(get(settingsShellState)).toEqual({ open: false });
   expect(get(shellState)).toMatchObject({
     demo: { kind: "basic" },
-    settings: { open: false },
   });
+  expect(get(shellState)).not.toHaveProperty("settings");
 });
