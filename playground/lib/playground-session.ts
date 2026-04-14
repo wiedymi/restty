@@ -5,10 +5,10 @@ import { createPaneAppearanceController } from "./appearance-controller.ts";
 import { createPaneLifecycleController } from "./pane-lifecycle.ts";
 import { createPaneShellSync } from "./pane-shell-sync.ts";
 import { createPlaygroundShellAdapter } from "./shell-adapter.ts";
+import type { PlaygroundElements } from "./elements.ts";
 import type { ConnectionStateDetail } from "./shell-events.ts";
 import type { PlaygroundAppearanceInitialState } from "./startup-defaults.ts";
 import type { PaneState } from "./pane-state.ts";
-import type { LegacyPlaygroundElements } from "./elements.ts";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type PlaygroundWindow = Window & typeof globalThis;
@@ -29,7 +29,7 @@ type PlaygroundSessionStartup = {
 type PlaygroundSessionShellConfig = {
   window: PlaygroundWindow;
   elements: Pick<
-    LegacyPlaygroundElements,
+    PlaygroundElements,
     | "btnPause"
     | "rendererSelect"
     | "fontSizeInput"

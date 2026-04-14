@@ -694,9 +694,12 @@ test("playground app bootstrap delegates shell element lookup", () => {
   const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
 
   expect(appBootstrap).toContain('./elements.ts"');
+  expect(appBootstrap).toContain("queryPlaygroundElements");
   expect(appBootstrap).not.toContain("document.getElementById(");
   expect(appBootstrap).not.toContain("dataset.playgroundShell");
   expect(appBootstrap).not.toContain("createEmptyLegacyPlaygroundElements");
+  expect(appBootstrap).not.toContain("querySharedPlaygroundElements");
+  expect(appBootstrap).not.toContain("queryLegacyPlaygroundElements");
 });
 
 test("playground app entrypoint delegates controller orchestration to app bootstrap", () => {
@@ -727,15 +730,19 @@ test("playground app bootstrap delegates controller composition to a dedicated o
   expect(appBootstrap).not.toContain("createPaneAppearanceController(");
   expect(appBootstrap).not.toContain("createPaneLifecycleController(");
   expect(appBootstrap).not.toContain("usesSvelteShell");
+  expect(appBootstrap).not.toContain("legacyElements");
   expect(orchestrator).toContain('./playground-session.ts"');
   expect(orchestrator).not.toContain("createConnectionController(");
   expect(orchestrator).not.toContain("createPaneAppearanceController(");
   expect(orchestrator).not.toContain("createPaneLifecycleController(");
   expect(orchestrator).not.toContain("getConnectionBackend(");
+  expect(orchestrator).not.toContain("legacyElements");
+  expect(orchestrator).not.toContain("LegacyPlaygroundElements");
   expect(orchestrator).toContain("DEFAULT_CONNECTION_BACKEND");
   expect(session).toContain("createConnectionController(");
   expect(session).toContain("createPaneAppearanceController(");
   expect(session).toContain("createPaneLifecycleController(");
+  expect(session).not.toContain("LegacyPlaygroundElements");
 });
 
 test("playground orchestrator delegates shell control wiring to a dedicated module", () => {

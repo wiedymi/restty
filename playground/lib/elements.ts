@@ -6,12 +6,9 @@ type HintLike = HTMLElement | null;
 type InputLike = HTMLInputElement | null;
 type SelectLike = HTMLSelectElement | null;
 
-export type SharedPlaygroundElements = {
+export type PlaygroundElements = {
   paneRoot: HTMLElement;
   settingsDialog: DialogLike;
-};
-
-export type LegacyPlaygroundElements = {
   btnInit: ButtonLike;
   btnPause: ButtonLike;
   btnClear: ButtonLike;
@@ -40,6 +37,9 @@ export type LegacyPlaygroundElements = {
   settingsClose: ButtonLike;
 };
 
+export type PlaygroundRootElements = Pick<PlaygroundElements, "paneRoot" | "settingsDialog">;
+export type PlaygroundControlElements = Omit<PlaygroundElements, keyof PlaygroundRootElements>;
+
 function getRequiredElement(documentLike: DocumentLike, id: string): HTMLElement {
   const element = documentLike.getElementById(id) as HTMLElement | null;
   if (!element) {
@@ -48,19 +48,10 @@ function getRequiredElement(documentLike: DocumentLike, id: string): HTMLElement
   return element;
 }
 
-export function querySharedPlaygroundElements(
-  documentLike: DocumentLike,
-): SharedPlaygroundElements {
+export function queryPlaygroundElements(documentLike: DocumentLike): PlaygroundElements {
   return {
     paneRoot: getRequiredElement(documentLike, "paneRoot"),
     settingsDialog: documentLike.getElementById("settingsDialog") as HTMLDialogElement | null,
-  };
-}
-
-export function queryLegacyPlaygroundElements(
-  documentLike: DocumentLike,
-): LegacyPlaygroundElements {
-  return {
     btnInit: documentLike.getElementById("btnInit") as HTMLButtonElement | null,
     btnPause: documentLike.getElementById("btnPause") as HTMLButtonElement | null,
     btnClear: documentLike.getElementById("btnClear") as HTMLButtonElement | null,
@@ -91,36 +82,5 @@ export function queryLegacyPlaygroundElements(
     shaderPresetEl: documentLike.getElementById("shaderPreset") as HTMLSelectElement | null,
     settingsFab: documentLike.getElementById("settingsFab") as HTMLButtonElement | null,
     settingsClose: documentLike.getElementById("settingsClose") as HTMLButtonElement | null,
-  };
-}
-
-export function createEmptyLegacyPlaygroundElements(): LegacyPlaygroundElements {
-  return {
-    btnInit: null,
-    btnPause: null,
-    btnClear: null,
-    rendererSelect: null,
-    demoSelect: null,
-    btnRunDemo: null,
-    connectionBackendEl: null,
-    ptyUrlInput: null,
-    wcCommandInput: null,
-    wcCwdInput: null,
-    connectionHintEl: null,
-    ptyBtn: null,
-    themeSelect: null,
-    themeFileInput: null,
-    fontSizeInput: null,
-    fontFamilySelect: null,
-    ligaturesSelect: null,
-    fontHintingSelect: null,
-    fontHintTargetSelect: null,
-    fontFamilyLocalSelect: null,
-    btnLoadLocalFonts: null,
-    fontFamilyHintEl: null,
-    mouseModeEl: null,
-    shaderPresetEl: null,
-    settingsFab: null,
-    settingsClose: null,
   };
 }

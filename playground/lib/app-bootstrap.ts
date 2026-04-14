@@ -1,5 +1,5 @@
 import { Restty } from "../../src/index.ts";
-import { queryLegacyPlaygroundElements, querySharedPlaygroundElements } from "./elements.ts";
+import { queryPlaygroundElements } from "./elements.ts";
 import { bootstrapPlaygroundOrchestrator } from "./playground-orchestrator.ts";
 
 type PlaygroundWindow = Window & typeof globalThis;
@@ -18,7 +18,6 @@ export function bootstrapPlaygroundApp({
   return bootstrapPlaygroundOrchestrator({
     window,
     notificationHost,
-    sharedElements: querySharedPlaygroundElements(document),
-    legacyElements: queryLegacyPlaygroundElements(document),
+    elements: queryPlaygroundElements(document),
   });
 }

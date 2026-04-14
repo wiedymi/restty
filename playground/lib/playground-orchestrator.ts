@@ -1,5 +1,5 @@
 import { Restty, listBuiltinThemeNames } from "../../src/index.ts";
-import type { LegacyPlaygroundElements, SharedPlaygroundElements } from "./elements.ts";
+import type { PlaygroundElements } from "./elements.ts";
 import { DEFAULT_CONNECTION_BACKEND } from "./shell-defaults.ts";
 import { resolvePlaygroundStartupDefaults } from "./startup-defaults.ts";
 import { bootstrapPlaygroundSurface } from "./surface-bootstrap.ts";
@@ -10,15 +10,15 @@ type PlaygroundWindow = Window & typeof globalThis;
 
 type BootstrapPlaygroundOrchestratorOptions = {
   window: PlaygroundWindow;
-  sharedElements: SharedPlaygroundElements;
-  legacyElements: LegacyPlaygroundElements;
+  elements: PlaygroundElements;
   notificationHost?: typeof Notification;
 };
 
 export function bootstrapPlaygroundOrchestrator({
   window,
-  sharedElements: { paneRoot, settingsDialog },
-  legacyElements: {
+  elements: {
+    paneRoot,
+    settingsDialog,
     btnInit,
     btnPause,
     btnClear,
