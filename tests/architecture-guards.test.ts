@@ -818,6 +818,10 @@ test("playground orchestrator delegates controller session setup to a dedicated 
     resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
     "utf8",
   );
+  const sessionState = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-state.ts"),
+    "utf8",
+  );
   const sessionShell = readFileSync(
     resolve(playgroundRoot, "lib/playground-session-shell.ts"),
     "utf8",
@@ -829,7 +833,9 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(orchestrator).not.toContain("createPaneLifecycleController(");
   expect(orchestrator).not.toContain("createPlaygroundShellAdapter(");
   expect(session).toContain('./playground-session-controllers.ts"');
+  expect(session).toContain('./playground-session-state.ts"');
   expect(session).toContain("createPlaygroundSessionControllers(");
+  expect(session).toContain("createPlaygroundSessionState()");
   expect(session).not.toContain("createConnectionController(");
   expect(session).not.toContain("createPaneAppearanceController(");
   expect(session).not.toContain("createPaneLifecycleController(");
@@ -842,7 +848,7 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(orchestrator).toContain("shell: {");
   expect(session).toContain("type PlaygroundSessionDeps =");
   expect(session).toContain("type PlaygroundSessionStartup =");
-  expect(session).toContain("state: {");
+  expect(session).toContain("state,");
   expect(session).toContain("shell: {");
   expect(session).toContain("controllers = createPlaygroundSessionControllers(");
   expect(session).toContain("controllers,");
@@ -850,6 +856,9 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(sessionControllers).toContain("createConnectionController(");
   expect(sessionControllers).toContain("createPaneAppearanceController(");
   expect(sessionControllers).toContain("createPaneLifecycleController(");
+  expect(sessionState).toContain("export function createPlaygroundSessionState");
+  expect(sessionState).toContain("new Map<number, PaneState>()");
+  expect(sessionState).toContain("let activePaneId: number | null = null");
   expect(sessionShell).toContain("createPlaygroundShellAdapter(");
   expect(sessionShell).toContain("createPaneShellSync(");
   expect(orchestrator).toContain("session.state.paneStates");

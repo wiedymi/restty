@@ -5,11 +5,14 @@ import {
   type PlaygroundSessionControllers,
 } from "./playground-session-controllers.ts";
 import {
+  createPlaygroundSessionState,
+  type PlaygroundSessionState,
+} from "./playground-session-state.ts";
+import {
   createPlaygroundSessionShell,
   type PlaygroundSessionShell,
 } from "./playground-session-shell.ts";
 import type { PlaygroundAppearanceInitialState } from "./startup-defaults.ts";
-import type { PaneState } from "./pane-state.ts";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type PlaygroundWindow = Window & typeof globalThis;
@@ -38,12 +41,6 @@ type CreatePlaygroundSessionOptions = {
   shell: PlaygroundSessionShellConfig;
 };
 
-export type PlaygroundSessionState = {
-  paneStates: Map<number, PaneState>;
-  getActivePaneId: () => number | null;
-  setActivePaneId: (id: number | null) => void;
-};
-
 export type PlaygroundSessionNotifications = {
   handleDesktopNotification: ReturnType<typeof createDesktopNotificationHandler>;
 };
@@ -59,8 +56,7 @@ export function createPlaygroundSession({
   },
   shell: { window, settingsDialog },
 }: CreatePlaygroundSessionOptions) {
-  const paneStates = new Map<number, PaneState>();
-  let activePaneId: number | null = null;
+  const state = createPlaygroundSessionState();
 
   function getActivePane(): ManagedPane | null {
     return getRestty().getActivePane();
@@ -94,8 +90,8 @@ export function createPlaygroundSession({
   const controllers = createPlaygroundSessionControllers({
     getRestty,
     getActivePane,
-    getActivePaneId: () => activePaneId,
-    paneStates,
+    getActivePaneId: state.getActivePaneId,
+    paneStates: state.paneStates,
     window,
     shell,
     startup: {
@@ -110,13 +106,7 @@ export function createPlaygroundSession({
   appearanceController = controllers.appearanceController;
 
   return {
-    state: {
-      paneStates,
-      getActivePaneId: () => activePaneId,
-      setActivePaneId: (id: number | null) => {
-        activePaneId = id;
-      },
-    } satisfies PlaygroundSessionState,
+    state,
     shell,
     controllers,
     notifications: {
