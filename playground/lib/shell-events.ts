@@ -24,11 +24,7 @@ export const THEME_SELECT_CHANGE_EVENT = "restty:playground-theme-select-change"
 export const WC_COMMAND_CHANGE_EVENT = "restty:playground-webcontainer-command-change";
 export const WC_CWD_CHANGE_EVENT = "restty:playground-webcontainer-cwd-change";
 export const SHADER_PRESET_CHANGE_EVENT = "restty:playground-shader-preset-change";
-export const TERMINAL_INIT_EVENT = "restty:playground-terminal-init";
-export const TERMINAL_PAUSE_EVENT = "restty:playground-terminal-pause";
-export const TERMINAL_CLEAR_EVENT = "restty:playground-terminal-clear";
-export const TERMINAL_FONT_SIZE_EVENT = "restty:playground-terminal-font-size-change";
-export const TERMINAL_RENDERER_EVENT = "restty:playground-terminal-renderer-change";
+export const TERMINAL_ACTION_EVENT = "restty:playground-terminal-action";
 export const PTY_BUTTON_EVENT = "restty:playground-pty-button";
 
 export type ShellStringValueDetail = {
@@ -77,6 +73,12 @@ export type LocalFontStateDetail = {
 
 export type RendererChangeDetail = {
   value?: RendererChoice | string;
+};
+
+export type TerminalActionDetail = {
+  command?: "init" | "pause" | "clear";
+  renderer?: RendererChoice | string;
+  fontSize?: number | string;
 };
 
 export type ShaderPresetChangeDetail = {

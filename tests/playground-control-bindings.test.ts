@@ -13,11 +13,7 @@ import {
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
-  TERMINAL_CLEAR_EVENT,
-  TERMINAL_FONT_SIZE_EVENT,
-  TERMINAL_INIT_EVENT,
-  TERMINAL_PAUSE_EVENT,
-  TERMINAL_RENDERER_EVENT,
+  TERMINAL_ACTION_EVENT,
   THEME_SELECT_CHANGE_EVENT,
   WC_COMMAND_CHANGE_EVENT,
   WC_CWD_CHANGE_EVENT,
@@ -95,12 +91,12 @@ test("control bindings forward svelte shell events", () => {
   target.dispatchEvent(new CustomEvent(PTY_URL_CHANGE_EVENT, { detail: { value: "ws://x" } }));
   target.dispatchEvent(new CustomEvent(WC_COMMAND_CHANGE_EVENT, { detail: { value: "bash" } }));
   target.dispatchEvent(new CustomEvent(WC_CWD_CHANGE_EVENT, { detail: { value: "/tmp" } }));
-  target.dispatchEvent(new CustomEvent(TERMINAL_INIT_EVENT));
-  target.dispatchEvent(new CustomEvent(TERMINAL_PAUSE_EVENT));
-  target.dispatchEvent(new CustomEvent(TERMINAL_CLEAR_EVENT));
+  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "init" } }));
+  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "pause" } }));
+  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "clear" } }));
   target.dispatchEvent(new CustomEvent(RUN_DEMO_EVENT, { detail: { kind: "unicode" } }));
-  target.dispatchEvent(new CustomEvent(TERMINAL_RENDERER_EVENT, { detail: { value: "webgpu" } }));
-  target.dispatchEvent(new CustomEvent(TERMINAL_FONT_SIZE_EVENT, { detail: { value: "24" } }));
+  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { renderer: "webgpu" } }));
+  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { fontSize: "24" } }));
   target.dispatchEvent(
     new CustomEvent(THEME_SELECT_CHANGE_EVENT, { detail: { value: "Aizen Dark" } }),
   );

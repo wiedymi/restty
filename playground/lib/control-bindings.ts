@@ -11,11 +11,7 @@ import {
   PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SHADER_PRESET_CHANGE_EVENT,
-  TERMINAL_CLEAR_EVENT,
-  TERMINAL_FONT_SIZE_EVENT,
-  TERMINAL_INIT_EVENT,
-  TERMINAL_PAUSE_EVENT,
-  TERMINAL_RENDERER_EVENT,
+  TERMINAL_ACTION_EVENT,
   THEME_FILE_CHANGE_EVENT,
   THEME_SELECT_CHANGE_EVENT,
   WC_COMMAND_CHANGE_EVENT,
@@ -24,6 +20,7 @@ import {
   type RendererChangeDetail,
   type ShaderPresetChangeDetail,
   type ShellStringValueDetail,
+  type TerminalActionDetail,
   type ThemeFileChangeDetail,
 } from "./shell-events.ts";
 
@@ -38,6 +35,7 @@ type DemoRunEvent = CustomEvent<DemoRunDetail>;
 type ThemeFileChangeEvent = CustomEvent<ThemeFileChangeDetail>;
 type RendererChangeEvent = CustomEvent<RendererChangeDetail>;
 type ShaderPresetChangeEvent = CustomEvent<ShaderPresetChangeDetail>;
+type TerminalActionEvent = CustomEvent<TerminalActionDetail>;
 
 type ValueTarget = TargetLike & {
   value?: string;
@@ -146,18 +144,31 @@ export function bindTerminalControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, TERMINAL_INIT_EVENT, options.onInit),
-      listen(options.target, TERMINAL_PAUSE_EVENT, options.onPauseToggle),
-      listen(options.target, TERMINAL_CLEAR_EVENT, options.onClear),
       listen(options.target, PTY_BUTTON_EVENT, options.onPtyButton),
       listen(options.target, RUN_DEMO_EVENT, (event) => {
         options.onDemoRun((event as DemoRunEvent).detail?.kind);
       }),
-      listen(options.target, TERMINAL_RENDERER_EVENT, (event) => {
-        options.onRendererChange((event as RendererChangeEvent).detail?.value);
-      }),
-      listen(options.target, TERMINAL_FONT_SIZE_EVENT, (event) => {
-        options.onFontSizeChange((event as StringValueEvent).detail?.value);
+      listen(options.target, TERMINAL_ACTION_EVENT, (event) => {
+        const detail = (event as TerminalActionEvent).detail;
+
+        switch (detail?.command) {
+          case "init":
+            options.onInit();
+            break;
+          case "pause":
+            options.onPauseToggle();
+            break;
+          case "clear":
+            options.onClear();
+            break;
+        }
+
+        if (detail?.renderer !== undefined) {
+          options.onRendererChange(detail.renderer);
+        }
+        if (detail?.fontSize !== undefined) {
+          options.onFontSizeChange(String(detail.fontSize));
+        }
       }),
     );
   } else {

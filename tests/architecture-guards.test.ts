@@ -929,6 +929,12 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(shellDispatch).not.toContain("new CustomEvent(");
+  expect(shellDispatch).toContain("TERMINAL_ACTION_EVENT");
+  expect(shellDispatch).not.toContain("TERMINAL_INIT_EVENT");
+  expect(shellDispatch).not.toContain("TERMINAL_PAUSE_EVENT");
+  expect(shellDispatch).not.toContain("TERMINAL_CLEAR_EVENT");
+  expect(shellDispatch).not.toContain("TERMINAL_RENDERER_EVENT");
+  expect(shellDispatch).not.toContain("TERMINAL_FONT_SIZE_EVENT");
   expect(shellState).not.toContain("addEventListener(ACTIVE_PANE_STATE_EVENT");
   expect(shellState).not.toContain("addEventListener(CONNECTION_STATE_EVENT");
   expect(shellBridge).toContain("dispatchShellEvent(");

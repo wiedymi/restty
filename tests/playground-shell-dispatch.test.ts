@@ -5,8 +5,7 @@ import {
   LOAD_LOCAL_FONTS_EVENT,
   PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
-  TERMINAL_CLEAR_EVENT,
-  TERMINAL_FONT_SIZE_EVENT,
+  TERMINAL_ACTION_EVENT,
   THEME_FILE_CHANGE_EVENT,
   WC_COMMAND_CHANGE_EVENT,
   WC_CWD_CHANGE_EVENT,
@@ -39,12 +38,11 @@ test("dispatch helpers emit shell events with expected detail", () => {
   target.addEventListener(CONNECTION_BACKEND_CHANGE_EVENT, record(CONNECTION_BACKEND_CHANGE_EVENT));
   target.addEventListener(FONT_FAMILY_CHANGE_EVENT, record(FONT_FAMILY_CHANGE_EVENT));
   target.addEventListener(PTY_URL_CHANGE_EVENT, record(PTY_URL_CHANGE_EVENT));
-  target.addEventListener(TERMINAL_FONT_SIZE_EVENT, record(TERMINAL_FONT_SIZE_EVENT));
+  target.addEventListener(TERMINAL_ACTION_EVENT, record(TERMINAL_ACTION_EVENT));
   target.addEventListener(THEME_FILE_CHANGE_EVENT, record(THEME_FILE_CHANGE_EVENT));
   target.addEventListener(WC_COMMAND_CHANGE_EVENT, record(WC_COMMAND_CHANGE_EVENT));
   target.addEventListener(WC_CWD_CHANGE_EVENT, record(WC_CWD_CHANGE_EVENT));
   target.addEventListener(LOAD_LOCAL_FONTS_EVENT, record(LOAD_LOCAL_FONTS_EVENT));
-  target.addEventListener(TERMINAL_CLEAR_EVENT, record(TERMINAL_CLEAR_EVENT));
 
   const file = new File(["theme"], "theme.conf");
   dispatchDemoRun("unicode", target);
@@ -63,11 +61,11 @@ test("dispatch helpers emit shell events with expected detail", () => {
     { type: CONNECTION_BACKEND_CHANGE_EVENT, detail: { value: "webcontainer" } },
     { type: FONT_FAMILY_CHANGE_EVENT, detail: { value: "jetbrains" } },
     { type: PTY_URL_CHANGE_EVENT, detail: { value: "ws://localhost:8787/pty" } },
-    { type: TERMINAL_FONT_SIZE_EVENT, detail: { value: "22" } },
+    { type: TERMINAL_ACTION_EVENT, detail: { fontSize: "22" } },
     { type: THEME_FILE_CHANGE_EVENT, detail: { file } },
     { type: WC_COMMAND_CHANGE_EVENT, detail: { value: "bash" } },
     { type: WC_CWD_CHANGE_EVENT, detail: { value: "/tmp" } },
     { type: LOAD_LOCAL_FONTS_EVENT, detail: null },
-    { type: TERMINAL_CLEAR_EVENT, detail: null },
+    { type: TERMINAL_ACTION_EVENT, detail: { command: "clear" } },
   ]);
 });

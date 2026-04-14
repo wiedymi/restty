@@ -16,11 +16,7 @@ import {
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
   SHADER_PRESET_CHANGE_EVENT,
-  TERMINAL_CLEAR_EVENT,
-  TERMINAL_FONT_SIZE_EVENT,
-  TERMINAL_INIT_EVENT,
-  TERMINAL_PAUSE_EVENT,
-  TERMINAL_RENDERER_EVENT,
+  TERMINAL_ACTION_EVENT,
   THEME_FILE_CHANGE_EVENT,
   THEME_SELECT_CHANGE_EVENT,
   WC_COMMAND_CHANGE_EVENT,
@@ -44,23 +40,23 @@ export function dispatchConnectionBackendChange(value: string, target: EventTarg
 }
 
 export function dispatchTerminalInit(target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_INIT_EVENT, undefined, target);
+  dispatchShellEvent(TERMINAL_ACTION_EVENT, { command: "init" }, target);
 }
 
 export function dispatchTerminalPause(target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_PAUSE_EVENT, undefined, target);
+  dispatchShellEvent(TERMINAL_ACTION_EVENT, { command: "pause" }, target);
 }
 
 export function dispatchTerminalClear(target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_CLEAR_EVENT, undefined, target);
+  dispatchShellEvent(TERMINAL_ACTION_EVENT, { command: "clear" }, target);
 }
 
 export function dispatchTerminalFontSizeChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_FONT_SIZE_EVENT, { value }, target);
+  dispatchShellEvent(TERMINAL_ACTION_EVENT, { fontSize: value }, target);
 }
 
 export function dispatchTerminalRendererChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_RENDERER_EVENT, { value }, target);
+  dispatchShellEvent(TERMINAL_ACTION_EVENT, { renderer: value }, target);
 }
 
 export function dispatchPtyButton(target: EventTarget = window) {
