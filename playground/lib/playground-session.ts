@@ -3,9 +3,10 @@ import { createConnectionController } from "./connection-controller.ts";
 import { createDesktopNotificationHandler } from "./desktop-notifications.ts";
 import { createPaneAppearanceController } from "./appearance-controller.ts";
 import { createPaneLifecycleController } from "./pane-lifecycle.ts";
-import { createPaneShellSync } from "./pane-shell-sync.ts";
-import { createPlaygroundShellAdapter } from "./shell-adapter.ts";
-import type { ConnectionStateDetail } from "./shell-events.ts";
+import {
+  createPlaygroundSessionShell,
+  type PlaygroundSessionShell,
+} from "./playground-session-shell.ts";
 import type { PlaygroundAppearanceInitialState } from "./startup-defaults.ts";
 import type { PaneState } from "./pane-state.ts";
 
@@ -40,12 +41,6 @@ export type PlaygroundSessionState = {
   paneStates: Map<number, PaneState>;
   getActivePaneId: () => number | null;
   setActivePaneId: (id: number | null) => void;
-};
-
-export type PlaygroundSessionShell = {
-  shellAdapter: ReturnType<typeof createPlaygroundShellAdapter>;
-  paneShellSync: ReturnType<typeof createPaneShellSync>;
-  getConnectionShellStateDetail: () => ConnectionStateDetail;
 };
 
 export type PlaygroundSessionControllers = {
@@ -85,24 +80,6 @@ export function createPlaygroundSession({
   let appearanceController: ReturnType<typeof createPaneAppearanceController>;
   let connectionController: ReturnType<typeof createConnectionController>;
 
-  function getPtyButtonLabel() {
-    const pane = getActivePane();
-    if (pane?.runtime.io.isPtyConnected()) return "Disconnect";
-    return connectionController.getBackend() === "webcontainer"
-      ? "Start WebContainer"
-      : "Connect PTY";
-  }
-
-  function getConnectionShellStateDetail(): ConnectionStateDetail {
-    return {
-      backend: connectionController.getBackend(),
-      ptyUrl: connectionController.getPtyUrl(),
-      ptyButtonLabel: getPtyButtonLabel(),
-      webContainerCommand: connectionController.getWebContainerCommand(),
-      webContainerCwd: connectionController.getWebContainerCwd(),
-    };
-  }
-
   const handleDesktopNotification = createDesktopNotificationHandler({
     sink:
       typeof notificationHost === "undefined"
@@ -117,25 +94,12 @@ export function createPlaygroundSession({
           },
   });
 
-  const shellAdapter = createPlaygroundShellAdapter({
-    target: window,
+  const shell = createPlaygroundSessionShell({
+    window,
     settingsDialog,
-  });
-
-  const paneShellSync = createPaneShellSync({
-    target: window,
-    getSelectedConnectionBackend: () => connectionController.getBackend(),
-    getSelectedFontFamily: () => appearanceController.getFontFamily(),
-    getSelectedLocalFontMatcher: () => appearanceController.getLocalFontMatcher(),
-    getDetectedLocalFontOptions: () => appearanceController.getDetectedLocalFontOptions(),
-    getLocalFontHintText: () => appearanceController.getLocalFontHintText(),
-    getSelectedLigatures: () => appearanceController.getLigatures(),
-    getSelectedFontHinting: () => appearanceController.getFontHinting(),
-    getSelectedFontHintTarget: () => appearanceController.getFontHintTarget(),
-    getSelectedShaderPreset: () => appearanceController.getShaderPreset(),
-    syncSelectedDefaults: (state) => {
-      appearanceController.syncTerminalDefaultsFromState(state);
-    },
+    getActivePane,
+    getConnectionController: () => connectionController,
+    getAppearanceController: () => appearanceController,
   });
 
   const paneLifecycle = createPaneLifecycleController({
@@ -149,10 +113,10 @@ export function createPlaygroundSession({
     getSelectedConnectionBackend: () => connectionController.getBackend(),
     getSelectedPtyUrl: () => connectionController.getPtyUrl(),
     syncPauseButton: (state) => {
-      paneShellSync.syncPauseButton(state);
+      shell.paneShellSync.syncPauseButton(state);
     },
     syncPtyButton: (pane) => {
-      paneShellSync.syncPtyButton(pane);
+      shell.paneShellSync.syncPtyButton(pane);
     },
     waitForAnimationFrame,
     requestAnimationFrame: window.requestAnimationFrame.bind(window),
@@ -163,10 +127,10 @@ export function createPlaygroundSession({
     getPanes: () => getRestty().getPanes(),
     connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
     syncConnectionState: () => {
-      shellAdapter.syncConnectionState(getConnectionShellStateDetail());
+      shell.shellAdapter.syncConnectionState(shell.getConnectionShellStateDetail());
     },
     syncPtyButton: (pane) => {
-      paneShellSync.syncPtyButton(pane);
+      shell.paneShellSync.syncPtyButton(pane);
     },
     initialBackend: initialConnectionBackend,
     initialPtyUrl,
@@ -189,14 +153,14 @@ export function createPlaygroundSession({
       paneStates.set(id, state);
     },
     shellSync: {
-      syncFontFamilyValue: () => paneShellSync.syncFontFamilyValue(),
-      syncFontRenderingControls: () => paneShellSync.syncFontRenderingControls(),
-      syncLocalFontControls: () => paneShellSync.syncLocalFontControls(),
-      syncMouseModeValue: (value) => paneShellSync.syncMouseModeValue(value),
-      syncShaderPresetValue: (value) => paneShellSync.syncShaderPresetValue(value),
-      syncThemeSelectValue: (value) => paneShellSync.syncThemeSelectValue(value),
+      syncFontFamilyValue: () => shell.paneShellSync.syncFontFamilyValue(),
+      syncFontRenderingControls: () => shell.paneShellSync.syncFontRenderingControls(),
+      syncLocalFontControls: () => shell.paneShellSync.syncLocalFontControls(),
+      syncMouseModeValue: (value) => shell.paneShellSync.syncMouseModeValue(value),
+      syncShaderPresetValue: (value) => shell.paneShellSync.syncShaderPresetValue(value),
+      syncThemeSelectValue: (value) => shell.paneShellSync.syncThemeSelectValue(value),
     },
-    onThemeFileReset: shellAdapter.resetThemeFileInput,
+    onThemeFileReset: shell.shellAdapter.resetThemeFileInput,
     initialState: appearanceInitialState,
   });
 
@@ -208,11 +172,7 @@ export function createPlaygroundSession({
         activePaneId = id;
       },
     } satisfies PlaygroundSessionState,
-    shell: {
-      shellAdapter,
-      paneShellSync,
-      getConnectionShellStateDetail,
-    } satisfies PlaygroundSessionShell,
+    shell,
     controllers: {
       paneLifecycle,
       connectionController,
