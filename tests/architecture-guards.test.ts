@@ -964,19 +964,33 @@ test("appearance controller delegates font policy", () => {
   const fontController = readFileSync(resolve(playgroundRoot, "lib/font-controller.ts"), "utf8");
   const fontControls = readFileSync(resolve(playgroundRoot, "lib/font-controls.ts"), "utf8");
   const fontLocalPicker = readFileSync(resolve(playgroundRoot, "lib/font-local-picker.ts"), "utf8");
+  const fontSourceController = readFileSync(
+    resolve(playgroundRoot, "lib/font-source-controller.ts"),
+    "utf8",
+  );
+  const fontRenderingController = readFileSync(
+    resolve(playgroundRoot, "lib/font-rendering-controller.ts"),
+    "utf8",
+  );
 
   expect(appearanceController).toContain('./font-controller.ts"');
   expect(appearanceController).not.toContain("applyFontSourcesToAllPanes(");
   expect(appearanceController).not.toContain("applyFontRenderingOptionsToAllPanes(");
-  expect(fontController).toContain("applyFontSourcesToAllPanes(");
-  expect(fontController).toContain("applyFontRenderingOptionsToAllPanes(");
-  expect(fontController).toContain("detectLocalFontState");
+  expect(fontController).toContain('./font-source-controller.ts"');
+  expect(fontController).toContain('./font-rendering-controller.ts"');
+  expect(fontController).not.toContain("applyFontSourcesToAllPanes(");
+  expect(fontController).not.toContain("applyFontRenderingOptionsToAllPanes(");
+  expect(fontController).not.toContain("const detectLocalFontStateImpl =");
   expect(fontController).toContain('./font-local-picker.ts"');
   expect(fontControls).toContain("buildFontSourcesForSelection");
   expect(fontControls).not.toContain("detectLocalFontState");
   expect(fontControls).not.toContain("supportsLocalFontPicker");
   expect(fontLocalPicker).toContain("detectLocalFontState");
   expect(fontLocalPicker).toContain("supportsLocalFontPicker");
+  expect(fontSourceController).toContain("applyFontSourcesToAllPanes(");
+  expect(fontSourceController).toContain("detectLocalFontState");
+  expect(fontRenderingController).toContain("applyFontRenderingOptionsToAllPanes(");
+  expect(fontRenderingController).toContain("resolveFontHintTarget");
 });
 
 test("appearance controller delegates terminal policy", () => {
