@@ -1,18 +1,11 @@
+import type { ResttyPaneApi } from "../../src/index.ts";
 import type { PaneState, RendererChoice } from "./pane-state.ts";
 
-export type TerminalControllerPane = {
+export type TerminalControllerPane = Pick<
+  ResttyPaneApi,
+  "getMouseStatus" | "setMouseMode" | "setRenderer"
+> & {
   id: number;
-  runtime: {
-    terminal: {
-      setRenderer: (value: RendererChoice) => void;
-    };
-    interaction: {
-      getMouseStatus: () => {
-        mode: string;
-      };
-      setMouseMode: (value: string) => void;
-    };
-  };
 };
 
 type TerminalControllerShellSync = {
@@ -52,15 +45,15 @@ export function createPaneTerminalController(options: CreatePaneTerminalControll
     if (value !== "auto" && value !== "webgpu" && value !== "webgl2") return;
     selectedRendererDefault = value;
     active.state.renderer = value;
-    active.pane.runtime.terminal.setRenderer(value);
+    active.pane.setRenderer(value);
   }
 
   function applyMouseMode(value: string | null | undefined) {
     const active = getActiveContext();
     if (!active) return;
     selectedMouseModeDefault = value ?? "auto";
-    active.pane.runtime.interaction.setMouseMode(selectedMouseModeDefault);
-    active.state.mouseMode = active.pane.runtime.interaction.getMouseStatus().mode;
+    active.pane.setMouseMode(selectedMouseModeDefault);
+    active.state.mouseMode = active.pane.getMouseStatus().mode;
     if (active.pane.id === options.getActivePaneId()) {
       options.shellSync.syncMouseModeValue(active.state.mouseMode);
     }

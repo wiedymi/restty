@@ -22,21 +22,17 @@ function createPane(id = 1) {
   const calls: string[] = [];
   const pane = {
     id,
-    runtime: {
-      terminal: {
-        setFontSize: (value: number) => {
-          calls.push(`font-size:${value}`);
-        },
-        setFontHintTarget: (value: string) => {
-          calls.push(`hint-target:${value}`);
-        },
-        setFontHinting: (value: boolean) => {
-          calls.push(`hinting:${value}`);
-        },
-        setLigatures: (value: boolean) => {
-          calls.push(`ligatures:${value}`);
-        },
-      },
+    setFontSize: (value: number) => {
+      calls.push(`font-size:${value}`);
+    },
+    setFontHintTarget: (value: string) => {
+      calls.push(`hint-target:${value}`);
+    },
+    setFontHinting: (value: boolean) => {
+      calls.push(`hinting:${value}`);
+    },
+    setLigatures: (value: boolean) => {
+      calls.push(`ligatures:${value}`);
     },
   };
   return { pane, calls };
@@ -68,7 +64,9 @@ test("font controller updates font size, font sources, and local font state", as
 
   const controller = createPaneFontController({
     host: {
-      getPanes: () => [pane],
+      forEachPane: (visitor) => {
+        visitor(pane);
+      },
       setFontSources: async (sources) => {
         fontSourceLabels.push(sources.map((source) => source.label));
       },
@@ -122,7 +120,9 @@ test("font controller updates rendering toggles", () => {
 
   const controller = createPaneFontController({
     host: {
-      getPanes: () => [pane],
+      forEachPane: (visitor) => {
+        visitor(pane);
+      },
       setFontSources: async () => {},
     },
     getActivePane: () => pane,

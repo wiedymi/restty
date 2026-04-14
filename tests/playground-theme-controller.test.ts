@@ -22,15 +22,11 @@ function createPane(id = 1) {
   const calls: string[] = [];
   const pane = {
     id,
-    runtime: {
-      terminal: {
-        applyTheme: (_theme: unknown, sourceLabel?: string) => {
-          calls.push(`theme:${sourceLabel ?? ""}`);
-        },
-        resetTheme: () => {
-          calls.push("reset-theme");
-        },
-      },
+    applyTheme: (_theme: unknown, sourceLabel?: string) => {
+      calls.push(`theme:${sourceLabel ?? ""}`);
+    },
+    resetTheme: () => {
+      calls.push("reset-theme");
     },
   };
   return { pane, calls };

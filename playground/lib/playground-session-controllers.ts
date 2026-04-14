@@ -102,7 +102,7 @@ export function createPlaygroundSessionControllers({
       setFontSources: (sources) => getRestty().setFontSources(sources),
       setShaderStages: (stages) => getRestty().setShaderStages(stages),
     },
-    getActivePane,
+    getActivePane: () => getRestty().activePane(),
     getActivePaneState: () => {
       const activePaneId = getActivePaneId();
       return activePaneId === null ? null : (paneStates.get(activePaneId) ?? null);

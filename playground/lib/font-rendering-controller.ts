@@ -1,3 +1,4 @@
+import type { ResttyPaneApi } from "../../src/index.ts";
 import {
   applyFontRenderingOptionsToAllPanes,
   type FontApplicationHost,
@@ -5,13 +6,7 @@ import {
 import { resolveFontHintTarget, type FontHintTarget } from "./font-controls.ts";
 import type { PaneState } from "./pane-state.ts";
 
-export type FontRenderingControllerPane = {
-  runtime: {
-    terminal: {
-      setFontSize: (value: number) => void;
-    };
-  };
-};
+export type FontRenderingControllerPane = Pick<ResttyPaneApi, "setFontSize">;
 
 type FontRenderingControllerShellSync = {
   syncFontRenderingControls: () => void;
@@ -66,7 +61,7 @@ export function createPaneFontRenderingController(
     if (!Number.isFinite(nextValue)) return;
     selectedFontSizeDefault = nextValue;
     active.state.fontSize = nextValue;
-    active.pane.runtime.terminal.setFontSize(nextValue);
+    active.pane.setFontSize(nextValue);
   }
 
   function applyFontHintingChange(value: string | null | undefined) {

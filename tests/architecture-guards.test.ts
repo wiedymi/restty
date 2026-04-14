@@ -1263,6 +1263,41 @@ test("playground font application uses pane-handle methods instead of raw runtim
   expect(sessionControllers).toContain("getRestty().forEachPane(visitor)");
 });
 
+test("playground appearance-side controllers use pane-handle methods instead of raw runtime access", () => {
+  const terminalController = readFileSync(
+    resolve(playgroundRoot, "lib/terminal-controller.ts"),
+    "utf8",
+  );
+  const fontRenderingController = readFileSync(
+    resolve(playgroundRoot, "lib/font-rendering-controller.ts"),
+    "utf8",
+  );
+  const paneTheme = readFileSync(resolve(playgroundRoot, "lib/pane-theme.ts"), "utf8");
+  const sessionControllers = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
+    "utf8",
+  );
+
+  expect(terminalController).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(terminalController).toContain("active.pane.setRenderer(value)");
+  expect(terminalController).toContain("active.pane.setMouseMode(selectedMouseModeDefault)");
+  expect(terminalController).toContain("active.pane.getMouseStatus().mode");
+  expect(terminalController).not.toContain("runtime.terminal.setRenderer");
+  expect(terminalController).not.toContain("runtime.interaction.setMouseMode");
+
+  expect(fontRenderingController).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(fontRenderingController).toContain("active.pane.setFontSize(nextValue)");
+  expect(fontRenderingController).not.toContain("runtime.terminal.setFontSize");
+
+  expect(paneTheme).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(paneTheme).toContain("options.pane.applyTheme(options.theme, options.sourceLabel)");
+  expect(paneTheme).toContain("options.pane.resetTheme()");
+  expect(paneTheme).not.toContain("runtime.terminal.applyTheme");
+  expect(paneTheme).not.toContain("runtime.terminal.resetTheme");
+
+  expect(sessionControllers).toContain("getActivePane: () => getRestty().activePane()");
+});
+
 test("appearance controller delegates terminal policy", () => {
   const appearanceController = readFileSync(
     resolve(playgroundRoot, "lib/appearance-controller.ts"),

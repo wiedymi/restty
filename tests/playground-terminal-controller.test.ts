@@ -22,18 +22,12 @@ function createPane(id = 1) {
   const calls: string[] = [];
   const pane = {
     id,
-    runtime: {
-      terminal: {
-        setRenderer: (value: string) => {
-          calls.push(`renderer:${value}`);
-        },
-      },
-      interaction: {
-        getMouseStatus: () => ({ mode: "drag" }),
-        setMouseMode: (value: string) => {
-          calls.push(`mouse:${value}`);
-        },
-      },
+    setRenderer: (value: string) => {
+      calls.push(`renderer:${value}`);
+    },
+    getMouseStatus: () => ({ mode: "drag" }),
+    setMouseMode: (value: string) => {
+      calls.push(`mouse:${value}`);
     },
   };
   return { pane, calls };

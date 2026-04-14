@@ -11,14 +11,9 @@ import {
 } from "./terminal-controller.ts";
 import { createPaneThemeController } from "./theme-controller.ts";
 
-export type AppearanceControllerPane = PaneThemeTarget & {
-  runtime: PaneThemeTarget["runtime"] & {
-    terminal: FontControllerPane["runtime"]["terminal"] &
-      PaneThemeTarget["runtime"]["terminal"] &
-      TerminalControllerPane["runtime"]["terminal"];
-    interaction: TerminalControllerPane["runtime"]["interaction"];
-  };
-};
+export type AppearanceControllerPane = PaneThemeTarget &
+  FontControllerPane &
+  TerminalControllerPane;
 
 type PaneAppearanceShellSync = {
   syncFontFamilyValue: () => void;

@@ -22,36 +22,30 @@ function createPane(id = 1) {
   const calls: string[] = [];
   const pane = {
     id,
-    runtime: {
-      terminal: {
-        applyTheme: (_theme: unknown, sourceLabel?: string) => {
-          calls.push(`theme:${sourceLabel ?? ""}`);
-        },
-        resetTheme: () => {
-          calls.push("reset-theme");
-        },
-        setFontSize: (value: number) => {
-          calls.push(`font-size:${value}`);
-        },
-        setFontHintTarget: (value: string) => {
-          calls.push(`hint-target:${value}`);
-        },
-        setFontHinting: (value: boolean) => {
-          calls.push(`hinting:${value}`);
-        },
-        setLigatures: (value: boolean) => {
-          calls.push(`ligatures:${value}`);
-        },
-        setRenderer: (value: string) => {
-          calls.push(`renderer:${value}`);
-        },
-      },
-      interaction: {
-        getMouseStatus: () => ({ mode: "drag" }),
-        setMouseMode: (value: string) => {
-          calls.push(`mouse:${value}`);
-        },
-      },
+    applyTheme: (_theme: unknown, sourceLabel?: string) => {
+      calls.push(`theme:${sourceLabel ?? ""}`);
+    },
+    resetTheme: () => {
+      calls.push("reset-theme");
+    },
+    setFontSize: (value: number) => {
+      calls.push(`font-size:${value}`);
+    },
+    setFontHintTarget: (value: string) => {
+      calls.push(`hint-target:${value}`);
+    },
+    setFontHinting: (value: boolean) => {
+      calls.push(`hinting:${value}`);
+    },
+    setLigatures: (value: boolean) => {
+      calls.push(`ligatures:${value}`);
+    },
+    setRenderer: (value: string) => {
+      calls.push(`renderer:${value}`);
+    },
+    getMouseStatus: () => ({ mode: "drag" }),
+    setMouseMode: (value: string) => {
+      calls.push(`mouse:${value}`);
     },
   };
   return { pane, calls };
@@ -92,7 +86,9 @@ test("appearance controller composes theme, font, and terminal controllers", asy
 
   const controller = createPaneAppearanceController({
     host: {
-      getPanes: () => [pane],
+      forEachPane: (visitor) => {
+        visitor(pane);
+      },
       setFontSources: async () => {},
       setShaderStages: () => {
         shaderStages.push("set");

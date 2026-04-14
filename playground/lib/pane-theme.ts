@@ -1,15 +1,10 @@
+import type { ResttyPaneApi } from "../../src/index.ts";
 import { getBuiltinTheme } from "../../src/theme/catalog.ts";
 import type { GhosttyTheme } from "../../src/theme/ghostty.ts";
 import type { PaneState } from "./pane-state.ts";
 
-export type PaneThemeTarget = {
+export type PaneThemeTarget = Pick<ResttyPaneApi, "applyTheme" | "resetTheme"> & {
   id: number;
-  runtime: {
-    terminal: {
-      applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
-      resetTheme: () => void;
-    };
-  };
 };
 
 type PaneThemeOptions = {
@@ -52,7 +47,7 @@ export function applyThemeToPane(
   },
 ): PaneState | null {
   try {
-    options.pane.runtime.terminal.applyTheme(options.theme, options.sourceLabel);
+    options.pane.applyTheme(options.theme, options.sourceLabel);
     const nextState = withPaneTheme(
       options.state,
       options.theme,
@@ -83,7 +78,7 @@ export function applyBuiltinThemeToPane(
 }
 
 export function resetThemeForPane(options: PaneThemeOptions): PaneState {
-  options.pane.runtime.terminal.resetTheme();
+  options.pane.resetTheme();
   return withoutPaneTheme(options.state);
 }
 
