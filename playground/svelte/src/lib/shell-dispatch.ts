@@ -2,7 +2,7 @@ import type { PlaygroundDemoKind } from "../../../lib/demos.ts";
 import { dispatchShellEvent } from "../../../lib/shell-bridge.ts";
 import type { ShaderPreset } from "../../../lib/shader-presets.ts";
 import {
-  CONNECTION_BACKEND_CHANGE_EVENT,
+  CONNECTION_INPUT_EVENT,
   FONT_FAMILY_LOCAL_CHANGE_EVENT,
   FONT_FAMILY_CHANGE_EVENT,
   FONT_HINT_TARGET_CHANGE_EVENT,
@@ -11,7 +11,6 @@ import {
   LOAD_LOCAL_FONTS_EVENT,
   MOUSE_MODE_CHANGE_EVENT,
   PTY_BUTTON_EVENT,
-  PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
@@ -19,8 +18,6 @@ import {
   TERMINAL_ACTION_EVENT,
   THEME_FILE_CHANGE_EVENT,
   THEME_SELECT_CHANGE_EVENT,
-  WC_COMMAND_CHANGE_EVENT,
-  WC_CWD_CHANGE_EVENT,
 } from "../../../lib/shell-events.ts";
 
 export function dispatchSettingsOpen(target: EventTarget = window) {
@@ -35,8 +32,20 @@ export function dispatchDemoRun(kind: PlaygroundDemoKind | string, target: Event
   dispatchShellEvent(RUN_DEMO_EVENT, { kind }, target);
 }
 
+export function dispatchConnectionInput(
+  detail: {
+    backend?: string;
+    ptyUrl?: string;
+    webContainerCommand?: string;
+    webContainerCwd?: string;
+  },
+  target: EventTarget = window,
+) {
+  dispatchShellEvent(CONNECTION_INPUT_EVENT, detail, target);
+}
+
 export function dispatchConnectionBackendChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(CONNECTION_BACKEND_CHANGE_EVENT, { value }, target);
+  dispatchConnectionInput({ backend: value }, target);
 }
 
 export function dispatchTerminalInit(target: EventTarget = window) {
@@ -64,7 +73,7 @@ export function dispatchPtyButton(target: EventTarget = window) {
 }
 
 export function dispatchPtyUrlChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(PTY_URL_CHANGE_EVENT, { value }, target);
+  dispatchConnectionInput({ ptyUrl: value }, target);
 }
 
 export function dispatchFontFamilyChange(value: string, target: EventTarget = window) {
@@ -104,11 +113,11 @@ export function dispatchThemeFileChange(file: File | null, target: EventTarget =
 }
 
 export function dispatchWebContainerCommandChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(WC_COMMAND_CHANGE_EVENT, { value }, target);
+  dispatchConnectionInput({ webContainerCommand: value }, target);
 }
 
 export function dispatchWebContainerCwdChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(WC_CWD_CHANGE_EVENT, { value }, target);
+  dispatchConnectionInput({ webContainerCwd: value }, target);
 }
 
 export function dispatchShaderPresetChange(

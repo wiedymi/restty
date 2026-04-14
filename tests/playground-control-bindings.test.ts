@@ -6,17 +6,14 @@ import {
 } from "../playground/lib/control-bindings.ts";
 import { bindSettingsControls } from "../playground/lib/settings-bindings.ts";
 import {
-  CONNECTION_BACKEND_CHANGE_EVENT,
+  CONNECTION_INPUT_EVENT,
   FONT_FAMILY_CHANGE_EVENT,
   FONT_HINTING_CHANGE_EVENT,
-  PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SETTINGS_CLOSE_EVENT,
   SETTINGS_OPEN_EVENT,
   TERMINAL_ACTION_EVENT,
   THEME_SELECT_CHANGE_EVENT,
-  WC_COMMAND_CHANGE_EVENT,
-  WC_CWD_CHANGE_EVENT,
 } from "../playground/lib/shell-events.ts";
 
 function createMutableTarget<T extends object>(initial: T): EventTarget & T {
@@ -86,11 +83,15 @@ test("control bindings forward svelte shell events", () => {
   });
 
   target.dispatchEvent(
-    new CustomEvent(CONNECTION_BACKEND_CHANGE_EVENT, { detail: { value: "webcontainer" } }),
+    new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { backend: "webcontainer" } }),
   );
-  target.dispatchEvent(new CustomEvent(PTY_URL_CHANGE_EVENT, { detail: { value: "ws://x" } }));
-  target.dispatchEvent(new CustomEvent(WC_COMMAND_CHANGE_EVENT, { detail: { value: "bash" } }));
-  target.dispatchEvent(new CustomEvent(WC_CWD_CHANGE_EVENT, { detail: { value: "/tmp" } }));
+  target.dispatchEvent(new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { ptyUrl: "ws://x" } }));
+  target.dispatchEvent(
+    new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { webContainerCommand: "bash" } }),
+  );
+  target.dispatchEvent(
+    new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { webContainerCwd: "/tmp" } }),
+  );
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "init" } }));
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "pause" } }));
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "clear" } }));

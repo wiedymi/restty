@@ -1,5 +1,5 @@
 import {
-  CONNECTION_BACKEND_CHANGE_EVENT,
+  CONNECTION_INPUT_EVENT,
   FONT_FAMILY_LOCAL_CHANGE_EVENT,
   FONT_FAMILY_CHANGE_EVENT,
   FONT_HINT_TARGET_CHANGE_EVENT,
@@ -8,16 +8,13 @@ import {
   LOAD_LOCAL_FONTS_EVENT,
   MOUSE_MODE_CHANGE_EVENT,
   PTY_BUTTON_EVENT,
-  PTY_URL_CHANGE_EVENT,
   RUN_DEMO_EVENT,
   SHADER_PRESET_CHANGE_EVENT,
   TERMINAL_ACTION_EVENT,
   THEME_FILE_CHANGE_EVENT,
   THEME_SELECT_CHANGE_EVENT,
-  WC_COMMAND_CHANGE_EVENT,
-  WC_CWD_CHANGE_EVENT,
+  type ConnectionInputDetail,
   type DemoRunDetail,
-  type RendererChangeDetail,
   type ShaderPresetChangeDetail,
   type ShellStringValueDetail,
   type TerminalActionDetail,
@@ -32,8 +29,8 @@ type Disposer = () => void;
 
 type StringValueEvent = CustomEvent<ShellStringValueDetail>;
 type DemoRunEvent = CustomEvent<DemoRunDetail>;
+type ConnectionInputEvent = CustomEvent<ConnectionInputDetail>;
 type ThemeFileChangeEvent = CustomEvent<ThemeFileChangeDetail>;
-type RendererChangeEvent = CustomEvent<RendererChangeDetail>;
 type ShaderPresetChangeEvent = CustomEvent<ShaderPresetChangeDetail>;
 type TerminalActionEvent = CustomEvent<TerminalActionDetail>;
 
@@ -74,17 +71,21 @@ export function bindConnectionControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, CONNECTION_BACKEND_CHANGE_EVENT, (event) => {
-        options.onBackendChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, PTY_URL_CHANGE_EVENT, (event) => {
-        options.onPtyUrlChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, WC_COMMAND_CHANGE_EVENT, (event) => {
-        options.onWebContainerCommandChange((event as StringValueEvent).detail?.value);
-      }),
-      listen(options.target, WC_CWD_CHANGE_EVENT, (event) => {
-        options.onWebContainerCwdChange((event as StringValueEvent).detail?.value);
+      listen(options.target, CONNECTION_INPUT_EVENT, (event) => {
+        const detail = (event as ConnectionInputEvent).detail;
+
+        if (detail?.backend !== undefined) {
+          options.onBackendChange(detail.backend);
+        }
+        if (detail?.ptyUrl !== undefined) {
+          options.onPtyUrlChange(detail.ptyUrl);
+        }
+        if (detail?.webContainerCommand !== undefined) {
+          options.onWebContainerCommandChange(detail.webContainerCommand);
+        }
+        if (detail?.webContainerCwd !== undefined) {
+          options.onWebContainerCwdChange(detail.webContainerCwd);
+        }
       }),
     );
   } else {

@@ -930,6 +930,11 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(shellDispatch).not.toContain("new CustomEvent(");
   expect(shellDispatch).toContain("TERMINAL_ACTION_EVENT");
+  expect(shellDispatch).toContain("CONNECTION_INPUT_EVENT");
+  expect(shellDispatch).not.toContain("CONNECTION_BACKEND_CHANGE_EVENT");
+  expect(shellDispatch).not.toContain("PTY_URL_CHANGE_EVENT");
+  expect(shellDispatch).not.toContain("WC_COMMAND_CHANGE_EVENT");
+  expect(shellDispatch).not.toContain("WC_CWD_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("TERMINAL_INIT_EVENT");
   expect(shellDispatch).not.toContain("TERMINAL_PAUSE_EVENT");
   expect(shellDispatch).not.toContain("TERMINAL_CLEAR_EVENT");
