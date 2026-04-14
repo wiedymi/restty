@@ -1048,6 +1048,18 @@ test("svelte app delegates settings shell lifecycle to a dedicated component", (
 
 test("pane shell sync delegates terminal, appearance, and connection reflection", () => {
   const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
+  const terminalEvents = readFileSync(
+    resolve(playgroundRoot, "lib/pane-terminal-shell-events.ts"),
+    "utf8",
+  );
+  const appearanceEvents = readFileSync(
+    resolve(playgroundRoot, "lib/pane-appearance-shell-events.ts"),
+    "utf8",
+  );
+  const connectionEvents = readFileSync(
+    resolve(playgroundRoot, "lib/pane-connection-shell-events.ts"),
+    "utf8",
+  );
   const terminalSync = readFileSync(
     resolve(playgroundRoot, "lib/pane-terminal-shell-sync.ts"),
     "utf8",
@@ -1062,13 +1074,30 @@ test("pane shell sync delegates terminal, appearance, and connection reflection"
   );
 
   expect(paneShellSync).toContain('./pane-terminal-shell-sync.ts"');
+  expect(paneShellSync).toContain('./pane-terminal-shell-events.ts"');
   expect(paneShellSync).toContain('./pane-appearance-shell-sync.ts"');
+  expect(paneShellSync).toContain('./pane-appearance-shell-events.ts"');
   expect(paneShellSync).toContain('./pane-connection-shell-sync.ts"');
+  expect(paneShellSync).toContain('./pane-connection-shell-events.ts"');
+  expect(paneShellSync).toContain("options.usesSvelteShell && options.target");
+  expect(paneShellSync).toContain("if (terminalEvents && appearanceEvents && options.target)");
   expect(paneShellSync).not.toContain("syncHintingControls(");
   expect(paneShellSync).not.toContain("syncFontFamilyControls(");
   expect(terminalSync).toContain("export function createPaneTerminalShellSync");
+  expect(terminalSync).not.toContain("dispatchActivePaneState");
+  expect(terminalSync).not.toContain("usesSvelteShell");
   expect(appearanceSync).toContain("export function createPaneAppearanceShellSync");
+  expect(appearanceSync).not.toContain("dispatchActivePaneState");
+  expect(appearanceSync).not.toContain("usesSvelteShell");
   expect(connectionSync).toContain("export function createPaneConnectionShellSync");
+  expect(connectionSync).not.toContain("dispatchConnectionState");
+  expect(connectionSync).not.toContain("usesSvelteShell");
+  expect(terminalEvents).toContain("export function createPaneTerminalShellEvents");
+  expect(terminalEvents).toContain("dispatchActivePaneState");
+  expect(appearanceEvents).toContain("export function createPaneAppearanceShellEvents");
+  expect(appearanceEvents).toContain("dispatchActivePaneState");
+  expect(connectionEvents).toContain("export function createPaneConnectionShellEvents");
+  expect(connectionEvents).toContain("dispatchConnectionState");
 });
 
 test("src/internal.ts does not import runtime or surface modules directly", () => {
