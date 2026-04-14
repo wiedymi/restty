@@ -1113,17 +1113,42 @@ test("playground shell reflection accepts pane handles instead of raw runtime ba
     "utf8",
   );
   const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
+  const connectionShellEvents = readFileSync(
+    resolve(playgroundRoot, "lib/pane-connection-shell-events.ts"),
+    "utf8",
+  );
+  const surfaceBootstrapEvents = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap-events.ts"),
+    "utf8",
+  );
 
   expect(sessionShell).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
   expect(sessionShell).toContain('if (pane?.isPtyConnected()) return "Disconnect"');
   expect(sessionShell).not.toContain("pane?.runtime.io.isPtyConnected()");
 
   expect(paneShellSync).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
-  expect(paneShellSync).toContain('"getMouseStatus" in pane');
-  expect(paneShellSync).toContain("pane.getMouseStatus().mode");
-  expect(paneShellSync).not.toContain(
-    "state.mouseMode = pane.runtime.interaction.getMouseStatus().mode",
+  expect(paneShellSync).toContain(
+    'type PaneShellRenderPane = Pick<ResttyPaneApi, "getMouseStatus">;',
   );
+  expect(paneShellSync).toContain("pane.getMouseStatus().mode");
+  expect(paneShellSync).not.toContain("pane.runtime.interaction.getMouseStatus().mode");
+
+  expect(connectionShellEvents).toContain(
+    'type PtyButtonPane = Pick<ResttyPaneApi, "isPtyConnected">;',
+  );
+  expect(connectionShellEvents).toContain("const isConnected = pane.isPtyConnected()");
+  expect(connectionShellEvents).not.toContain("pane.runtime.io.isPtyConnected()");
+
+  expect(surfaceBootstrapEvents).toContain(
+    "getPaneHandleById: (id: number) => ResttyPaneApi | null;",
+  );
+  expect(surfaceBootstrapEvents).toContain("const paneHandle = getPaneHandleById(pane.id)");
+  expect(surfaceBootstrapEvents).toContain("paneHandle.setMouseMode(state.mouseMode)");
+  expect(surfaceBootstrapEvents).toContain("paneShellSync.syncPtyButton(paneHandle)");
+  expect(surfaceBootstrapEvents).not.toContain(
+    "pane.runtime.interaction.setMouseMode(state.mouseMode)",
+  );
+  expect(existsSync(resolve(playgroundRoot, "lib/pane-shell-sync.types.ts"))).toBe(false);
 });
 
 test("webcontainer seed provisioning delegates static seed manifest", () => {

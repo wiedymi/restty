@@ -40,6 +40,7 @@ export type CreatePlaygroundSurfaceAssemblyOptions = {
   state: PlaygroundSurfaceState;
   shell: PlaygroundSurfaceShell;
   controllers: PlaygroundSurfaceControllers;
+  getPaneHandleById: (id: number) => ReturnType<Restty["pane"]>;
   onDesktopNotification: (notification: PlaygroundDesktopNotification) => void;
   surfaceStartup: PlaygroundSurfaceStartupBridge;
   createRestty?: (config: ConstructorParameters<typeof Restty>[0]) => Restty;
@@ -55,6 +56,7 @@ export function assemblePlaygroundSurface({
   state: { paneStates, setActivePaneId },
   shell: { isSettingsDialogOpen, paneShellSync },
   controllers: { appearanceController, connectionController, paneLifecycle },
+  getPaneHandleById,
   onDesktopNotification,
   surfaceStartup,
   createRestty = (config) => new Restty(config),
@@ -63,6 +65,7 @@ export function assemblePlaygroundSurface({
 }: CreatePlaygroundSurfaceAssemblyOptions): Restty {
   const surfaceEvents = createPlaygroundSurfaceEvents({
     paneStates,
+    getPaneHandleById,
     setActivePaneId,
     paneShellSync,
     paneLifecycle,

@@ -33,30 +33,36 @@ function createTarget() {
 
 function createPane(id = 1) {
   const calls: string[] = [];
-  const pane = {
+  const handle = {
     id,
-    paused: false,
     updateSize: (force?: boolean) => {
       calls.push(`size:${force === true ? "forced" : "normal"}`);
     },
-    runtime: {
-      interaction: {
-        setMouseMode: (value: string) => {
-          calls.push(`mouse:${value}`);
-        },
-      },
+    setMouseMode: (value: string) => {
+      calls.push(`mouse:${value}`);
     },
+    getMouseStatus: () => ({ mode: "drag" }),
+    isPtyConnected: () => false,
+  };
+  const pane = {
+    id,
+    paused: false,
+    runtime: {},
   };
 
-  return { pane, calls };
+  return { handle, pane, calls };
 }
 
 test("bootstrapPlaygroundSurface boots the first pane and wires surface events", async () => {
   const paneStates = new Map<number, PaneState>();
   let activePaneId: number | null = null;
   const { target, rafCallbacks } = createTarget();
-  const { pane: firstPane, calls: firstPaneCalls } = createPane(1);
-  const { pane: secondPane, calls: secondPaneCalls } = createPane(2);
+  const { handle: firstPane, calls: firstPaneCalls } = createPane(1);
+  const { handle: secondPaneHandle, pane: secondPane, calls: secondPaneCalls } = createPane(2);
+  const paneHandles = new Map<number, typeof firstPane>([
+    [1, firstPane],
+    [2, secondPaneHandle],
+  ]);
   const panes: Array<typeof firstPane> = [];
   const syncCalls: string[] = [];
   const lifecycleCalls: string[] = [];
@@ -149,6 +155,7 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
       capturedConfig = config;
       return {
         getPanes: () => panes as never[],
+        pane: (id: number) => paneHandles.get(id) as never,
         forEachPane: (visitor: (pane: (typeof panes)[number]) => void) => {
           for (const pane of panes) visitor(pane);
         },

@@ -21,14 +21,8 @@ function createPaneState(overrides: Partial<PaneState> = {}): PaneState {
 
 function createPane(isConnected = false, mouseMode = "on") {
   return {
-    runtime: {
-      io: {
-        isPtyConnected: () => isConnected,
-      },
-      interaction: {
-        getMouseStatus: () => ({ mode: mouseMode }),
-      },
-    },
+    isPtyConnected: () => isConnected,
+    getMouseStatus: () => ({ mode: mouseMode }),
   };
 }
 

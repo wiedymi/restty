@@ -10,7 +10,7 @@ type AnimationFrameHost = Pick<Window, "addEventListener" | "requestAnimationFra
 
 type BootstrapPlaygroundSurfaceOptions = Omit<
   CreatePlaygroundSurfaceAssemblyOptions,
-  "surfaceStartup"
+  "getPaneHandleById" | "surfaceStartup"
 > & {
   target: AnimationFrameHost;
 };
@@ -30,6 +30,7 @@ export function bootstrapPlaygroundSurface({
   let restty!: Restty;
   restty = assemblePlaygroundSurface({
     ...assembly,
+    getPaneHandleById: (id) => restty.pane(id),
     surfaceStartup,
   });
 
