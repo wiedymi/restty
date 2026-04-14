@@ -117,7 +117,7 @@ test("getConnectionUiState describes backend-specific shell state", () => {
   });
 });
 
-test("createAdaptivePtyTransport switches transports when backend changes", () => {
+test("createAdaptivePtyTransport switches transports when backend changes", async () => {
   const ws = createMockTransport("ws");
   const webcontainer = createMockTransport("webcontainer");
   let backend: "ws" | "webcontainer" = "ws";
@@ -136,11 +136,64 @@ test("createAdaptivePtyTransport switches transports when backend changes", () =
   expect(webcontainer.events).toEqual([]);
 
   backend = "webcontainer";
-  transport.connect({ callbacks: {} });
+  await transport.connect({ callbacks: {} });
   expect(ws.events).toEqual(["ws:connect", "ws:disconnect"]);
   expect(webcontainer.events).toEqual(["webcontainer:connect"]);
 
   transport.disconnect();
   expect(ws.events).toEqual(["ws:connect", "ws:disconnect", "ws:disconnect"]);
   expect(webcontainer.events).toEqual(["webcontainer:connect", "webcontainer:disconnect"]);
+});
+
+test("createAdaptivePtyTransport lazy-loads webcontainer transport only when selected", async () => {
+  const ws = createMockTransport("ws");
+  const webcontainer = createMockTransport("webcontainer");
+  let backend: "ws" | "webcontainer" = "ws";
+  let webcontainerLoads = 0;
+
+  const transport = createAdaptivePtyTransport({
+    getConnectionBackend: () => backend,
+    getPtyUrl: () => "ws://localhost:8787/pty",
+    getWebContainerCommand: () => "jsh",
+    getWebContainerCwd: () => "/",
+    createWebSocketTransport: () => ws.transport,
+    createWebContainerTransport: async () => {
+      webcontainerLoads += 1;
+      return webcontainer.transport;
+    },
+  });
+
+  transport.connect({ callbacks: {} });
+  expect(webcontainerLoads).toBe(0);
+
+  backend = "webcontainer";
+  await transport.connect({ callbacks: {} });
+  await transport.connect({ callbacks: {} });
+
+  expect(webcontainerLoads).toBe(1);
+  expect(webcontainer.events).toEqual(["webcontainer:connect", "webcontainer:connect"]);
+});
+
+test("createAdaptivePtyTransport ignores stale webcontainer connects during deferred load", async () => {
+  let resolveTransport!: (transport: PtyTransport) => void;
+  const webcontainer = createMockTransport("webcontainer");
+
+  const transport = createAdaptivePtyTransport({
+    getConnectionBackend: () => "webcontainer",
+    getPtyUrl: () => "ws://localhost:8787/pty",
+    getWebContainerCommand: () => "jsh",
+    getWebContainerCwd: () => "/",
+    createWebContainerTransport: () =>
+      new Promise<PtyTransport>((resolve) => {
+        resolveTransport = resolve;
+      }),
+  });
+
+  const connectPromise = transport.connect({ callbacks: {} });
+  transport.disconnect();
+  resolveTransport(webcontainer.transport);
+  await connectPromise;
+
+  expect(webcontainer.events).toEqual([]);
+  expect(transport.isConnected()).toBe(false);
 });

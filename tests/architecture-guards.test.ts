@@ -924,12 +924,15 @@ test("webcontainer pty delegates process lifecycle", () => {
 
 test("webcontainer pty delegates launch orchestration", () => {
   const webcontainerPty = readFileSync(resolve(playgroundRoot, "lib/webcontainer-pty.ts"), "utf8");
+  const ptyConnection = readFileSync(resolve(playgroundRoot, "lib/pty-connection.ts"), "utf8");
   const webcontainerLaunch = readFileSync(
     resolve(playgroundRoot, "lib/webcontainer-launch.ts"),
     "utf8",
   );
 
   expect(webcontainerPty).toContain('./webcontainer-launch.ts"');
+  expect(ptyConnection).not.toContain('from "./webcontainer-pty.ts"');
+  expect(ptyConnection).toContain('await import("./webcontainer-pty.ts")');
   expect(webcontainerPty).not.toContain("WebContainer.boot(");
   expect(webcontainerPty).not.toContain("ensureWebContainerSeedScripts(");
   expect(webcontainerPty).not.toContain("normalizeWebContainerCwd(");
