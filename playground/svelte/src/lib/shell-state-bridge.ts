@@ -1,5 +1,8 @@
 import { listenActivePaneState, listenConnectionState } from "../../../lib/shell-bridge.ts";
-import { applyActivePaneShellState, applyConnectionShellState } from "./stores/shell-state.ts";
+import {
+  applyActivePaneShellState,
+  applyConnectionShellState,
+} from "./stores/shell-state-reducers.ts";
 
 export function startShellStateBridge(target: EventTarget = window) {
   const stopConnectionState = listenConnectionState(target, (detail) => {

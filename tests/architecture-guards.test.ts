@@ -1026,6 +1026,10 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
     resolve(playgroundRoot, "svelte/src/lib/stores/shell-state.ts"),
     "utf8",
   );
+  const shellStateReducers = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/stores/shell-state-reducers.ts"),
+    "utf8",
+  );
   const shellBridge = readFileSync(resolve(playgroundRoot, "lib/shell-bridge.ts"), "utf8");
 
   expect(shellAdapter).toContain('./shell-effects.ts"');
@@ -1041,7 +1045,7 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(existsSync(resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"))).toBe(false);
   expect(settingsShellEffects).toContain('./shell-bridge.ts"');
   expect(shellStateBridge).toContain('../../../lib/shell-bridge.ts"');
-  expect(shellStateBridge).toContain('./stores/shell-state.ts"');
+  expect(shellStateBridge).toContain('./stores/shell-state-reducers.ts"');
   expect(shellState).not.toContain('../../../../lib/shell-bridge.ts"');
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(shellEffects).not.toContain("new CustomEvent(");
@@ -1052,6 +1056,13 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellState).not.toContain("addEventListener(CONNECTION_STATE_EVENT");
   expect(shellState).not.toContain("listenActivePaneState(");
   expect(shellState).not.toContain("listenConnectionState(");
+  expect(shellState).not.toContain("applyConnectionShellState(");
+  expect(shellState).not.toContain("applyAppearanceShellState(");
+  expect(shellState).not.toContain("applyActivePaneShellState(");
+  expect(shellStateReducers).toContain('./shell-state.ts"');
+  expect(shellStateReducers).toContain("applyConnectionShellState");
+  expect(shellStateReducers).toContain("applyAppearanceShellState");
+  expect(shellStateReducers).toContain("applyActivePaneShellState");
   expect(shellBridge).toContain("dispatchShellEvent(");
   expect(shellBridge).toContain("listenActivePaneState(");
   expect(shellBridge).toContain("listenConnectionState(");
