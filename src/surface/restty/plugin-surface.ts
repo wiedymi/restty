@@ -3,7 +3,7 @@ import type { ResttySurfacePane } from "./events";
 import type { ResttyPaneHandle } from "./pane-handle";
 import { createResttyPluginSurfaceApi } from "./controller";
 
-type ResttyPluginSurfaceBridgeSource = Omit<
+export type ResttyPluginSurfaceBridgeSource = Omit<
   ResttyPluginHostApi,
   "createInitialPane" | "splitActivePane" | "splitPane"
 > & {

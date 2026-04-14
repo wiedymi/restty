@@ -511,19 +511,25 @@ test("surface plugin context depends on a plugin host api instead of the full Re
 test("surface restty delegates plugin bridge wiring to the restty controller", () => {
   const resttySource = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
   const resttyController = readFileSync(resolve(surfaceRoot, "restty/controller.ts"), "utf8");
+  const resttyBootstrap = readFileSync(resolve(surfaceRoot, "restty/bootstrap.ts"), "utf8");
   const resttyPluginSurface = readFileSync(
     resolve(surfaceRoot, "restty/plugin-surface.ts"),
     "utf8",
   );
 
   expect(resttySource).toContain('import { ResttyController } from "./restty/controller"');
-  expect(resttySource).toContain('./restty/plugin-surface"');
+  expect(resttySource).toContain('./restty/bootstrap"');
+  expect(resttySource).not.toContain('./restty/plugin-surface"');
   expect(resttySource).not.toContain("createResttyPluginSurfaceApi({");
+  expect(resttySource).not.toContain("createResttyManagedPaneManager({");
+  expect(resttySource).not.toContain("createMergedPaneTerminalConfig({");
   expect(resttySource).not.toContain('from "./plugins/host"');
   expect(resttySource).not.toContain("private createPluginSurfaceApi()");
 
   expect(resttyController).toContain("export function createResttyPluginSurfaceApi");
   expect(resttyController).toContain("new ResttyPluginHost(deps)");
+  expect(resttyBootstrap).toContain("export function bootstrapResttySurface");
+  expect(resttyBootstrap).toContain("createResttyManagedPaneManager({");
   expect(resttyPluginSurface).toContain("export function createResttyPluginSurfaceBridge");
   expect(resttyPluginSurface).toContain("createResttyPluginSurfaceApi({");
 });
@@ -546,13 +552,13 @@ test("surface restty helpers do not import managed-pane-manager for type access"
   ).toEqual([]);
 });
 
-test("surface restty facade imports managed-pane-manager for factory only", () => {
-  const resttyFile = resolve(surfaceRoot, "restty.ts");
-  const source = readFileSync(resttyFile, "utf8");
+test("surface restty bootstrap imports managed-pane-manager for factory only", () => {
+  const resttyBootstrap = resolve(surfaceRoot, "restty/bootstrap.ts");
+  const source = readFileSync(resttyBootstrap, "utf8");
 
   expect(source).not.toMatch(/createResttyManagedPaneManager,\s*type\s+/);
   expect(source).toMatch(
-    /import\s+\{\s*createResttyManagedPaneManager\s*,?\s*\}\s+from\s+"\.\/panes\/managed-pane-manager"/,
+    /import\s+\{\s*createResttyManagedPaneManager\s*,?\s*\}\s+from\s+"\.\.\/panes\/managed-pane-manager"/,
   );
 });
 

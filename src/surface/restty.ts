@@ -1,4 +1,3 @@
-import { createResttyManagedPaneManager } from "./panes/managed-pane-manager";
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
 import type {
   ResttyManagedPaneManager,
@@ -8,12 +7,7 @@ import type {
 } from "./panes/managed-pane-types";
 import { ResttyPaneHandle } from "./restty/pane-handle";
 import { ResttyActivePaneApi } from "./restty/active-pane-api";
-import { createResttyPluginSurfaceBridge } from "./restty/plugin-surface";
-import {
-  createMergedPaneServicesConfig,
-  createMergedPaneTerminalConfig,
-  createPaneManagerEventHandlers,
-} from "./restty/manager-options";
+import { bootstrapResttySurface } from "./restty/bootstrap";
 import {
   RESTTY_PLUGIN_API_VERSION,
   type ResttyPluginApiRange,
@@ -95,81 +89,17 @@ export class Restty extends ResttyActivePaneApi {
 
   constructor(options: ResttyConfig) {
     super();
-    const { root, session, surface, terminal, services } = options;
-    const {
-      paneDom,
-      autoInit,
-      minPaneSize,
-      paneStyles,
-      searchUi,
-      shortcuts,
-      contextMenu,
-      defaultContextMenu,
-      createInitialPane = true,
-      events,
-    } = surface ?? {};
-    const {
-      onPaneCreated,
-      onPaneClosed,
-      onPaneSplit,
-      onActivePaneChange,
-      onLayoutChanged,
-      onDesktopNotification,
-    } = events ?? {};
-
     this.fontSources = undefined;
-    this.shaderOps = new ResttyShaderOps({
+    const { shaderOps, controller, paneManager, createInitialPane } = bootstrapResttySurface({
+      restty: this,
       getPanes: () => this.paneManager.getPanes(),
       getPaneById: (id) => this.paneManager.getPaneById(id),
-    });
-    const pluginSurfaceApi = createResttyPluginSurfaceBridge(this);
-    this.controller = new ResttyController({
-      restty: pluginSurfaceApi,
-      panes: () => this.panes(),
-      pane: (id) => this.pane(id),
-      activePane: () => this.activePane(),
-      focusedPane: () => this.focusedPane(),
-      addRenderStage: (stage, ownerPluginId) =>
-        this.shaderOps.addManagedShaderStage(stage, ownerPluginId),
-    });
-
-    const mergedTerminalConfig = createMergedPaneTerminalConfig({
-      terminal,
       getFontSources: () => this.fontSources,
-      shaderOps: this.shaderOps,
+      options,
     });
-    const mergedServicesConfig = createMergedPaneServicesConfig({
-      services,
-      onDesktopNotification,
-      pluginHost: this.controller,
-      runRenderHooks: (payload) => this.controller.runRenderHooks(payload),
-    });
-
-    const paneManagerEventHandlers = createPaneManagerEventHandlers({
-      shaderOps: this.shaderOps,
-      emitPluginEvent: (event, payload) => this.controller.emitPluginEvent(event, payload),
-      onPaneCreated,
-      onPaneClosed,
-      onPaneSplit,
-      onActivePaneChange,
-      onLayoutChanged,
-    });
-
-    this.paneManager = createResttyManagedPaneManager({
-      root,
-      session,
-      paneDom,
-      autoInit,
-      minPaneSize,
-      paneStyles,
-      searchUi,
-      shortcuts,
-      contextMenu,
-      defaultContextMenu,
-      terminal: mergedTerminalConfig,
-      services: mergedServicesConfig,
-      ...paneManagerEventHandlers,
-    });
+    this.shaderOps = shaderOps;
+    this.controller = controller;
+    this.paneManager = paneManager;
 
     if (createInitialPane) {
       const focus =
