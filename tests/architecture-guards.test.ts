@@ -743,6 +743,9 @@ test("playground app bootstrap delegates controller composition to a dedicated o
   expect(session).toContain("createPaneAppearanceController(");
   expect(session).toContain("createPaneLifecycleController(");
   expect(session).not.toContain("LegacyPlaygroundElements");
+  expect(session).not.toContain("btnPause");
+  expect(session).not.toContain("rendererSelect");
+  expect(session).not.toContain("fontSizeInput");
 });
 
 test("playground orchestrator delegates shell control wiring to a dedicated module", () => {
@@ -1124,6 +1127,8 @@ test("pane shell sync delegates terminal, appearance, and connection reflection"
   expect(paneShellSync).not.toContain("pane-appearance-shell-sync");
   expect(paneShellSync).not.toContain("pane-connection-shell-sync");
   expect(paneShellSync).not.toContain("usesSvelteShell");
+  expect(paneShellSync).not.toContain("PaneShellSyncElements");
+  expect(paneShellSync).not.toContain("elements:");
   expect(paneShellSync).not.toContain("if (terminalEvents && appearanceEvents && options.target)");
   expect(paneShellSync).not.toContain("syncHintingControls(");
   expect(paneShellSync).not.toContain("syncFontFamilyControls(");

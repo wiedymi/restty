@@ -5,7 +5,6 @@ import { createPaneAppearanceController } from "./appearance-controller.ts";
 import { createPaneLifecycleController } from "./pane-lifecycle.ts";
 import { createPaneShellSync } from "./pane-shell-sync.ts";
 import { createPlaygroundShellAdapter } from "./shell-adapter.ts";
-import type { PlaygroundElements } from "./elements.ts";
 import type { ConnectionStateDetail } from "./shell-events.ts";
 import type { PlaygroundAppearanceInitialState } from "./startup-defaults.ts";
 import type { PaneState } from "./pane-state.ts";
@@ -28,25 +27,7 @@ type PlaygroundSessionStartup = {
 
 type PlaygroundSessionShellConfig = {
   window: PlaygroundWindow;
-  elements: Pick<
-    PlaygroundElements,
-    | "btnPause"
-    | "rendererSelect"
-    | "fontSizeInput"
-    | "ptyBtn"
-    | "themeSelect"
-    | "fontFamilySelect"
-    | "ligaturesSelect"
-    | "fontHintingSelect"
-    | "fontHintTargetSelect"
-    | "fontFamilyLocalSelect"
-    | "btnLoadLocalFonts"
-    | "fontFamilyHintEl"
-    | "mouseModeEl"
-    | "shaderPresetEl"
-  > & {
-    settingsDialog: HTMLDialogElement | null;
-  };
+  settingsDialog: HTMLDialogElement | null;
 };
 
 type CreatePlaygroundSessionOptions = {
@@ -86,26 +67,7 @@ export function createPlaygroundSession({
     initialWebContainerCwd,
     appearanceInitialState,
   },
-  shell: {
-    window,
-    elements: {
-      btnPause,
-      rendererSelect,
-      fontSizeInput,
-      ptyBtn,
-      themeSelect,
-      fontFamilySelect,
-      ligaturesSelect,
-      fontHintingSelect,
-      fontHintTargetSelect,
-      fontFamilyLocalSelect,
-      btnLoadLocalFonts,
-      fontFamilyHintEl,
-      mouseModeEl,
-      shaderPresetEl,
-      settingsDialog,
-    },
-  },
+  shell: { window, settingsDialog },
 }: CreatePlaygroundSessionOptions) {
   const paneStates = new Map<number, PaneState>();
   let activePaneId: number | null = null;
@@ -162,22 +124,6 @@ export function createPlaygroundSession({
 
   const paneShellSync = createPaneShellSync({
     target: window,
-    elements: {
-      btnPause,
-      rendererSelect,
-      fontSizeInput,
-      ptyBtn,
-      themeSelect,
-      fontFamilySelect,
-      fontFamilyLocalSelect,
-      btnLoadLocalFonts,
-      fontFamilyHintEl,
-      ligaturesSelect,
-      fontHintingSelect,
-      fontHintTargetSelect,
-      mouseModeEl,
-      shaderPresetEl,
-    },
     getSelectedConnectionBackend: () => connectionController.getBackend(),
     getSelectedFontFamily: () => appearanceController.getFontFamily(),
     getSelectedLocalFontMatcher: () => appearanceController.getLocalFontMatcher(),

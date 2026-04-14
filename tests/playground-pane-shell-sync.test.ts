@@ -48,22 +48,6 @@ test("pane shell sync dispatches active pane state through shell events", () => 
   const syncedStates: PaneState[] = [];
   const sync = createPaneShellSync({
     target,
-    elements: {
-      btnPause: null,
-      rendererSelect: null,
-      fontSizeInput: null,
-      ptyBtn: null,
-      themeSelect: null,
-      fontFamilySelect: null,
-      fontFamilyLocalSelect: null,
-      btnLoadLocalFonts: null,
-      fontFamilyHintEl: null,
-      ligaturesSelect: null,
-      fontHintingSelect: null,
-      fontHintTargetSelect: null,
-      mouseModeEl: null,
-      shaderPresetEl: null,
-    },
     getSelectedConnectionBackend: () => "webcontainer",
     getSelectedFontFamily: () => "jetbrains",
     getSelectedLocalFontMatcher: () => "fira code",

@@ -3,14 +3,13 @@ import { createPaneConnectionShellEvents } from "./pane-connection-shell-events.
 import type { FontHintTarget, LocalFontOption } from "./font-controls.ts";
 import type { PaneState } from "./pane-state.ts";
 import { createPaneTerminalShellEvents } from "./pane-terminal-shell-events.ts";
-import type { PaneShellSyncElements, PaneShellSyncPane } from "./pane-shell-sync.types.ts";
+import type { PaneShellSyncPane } from "./pane-shell-sync.types.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 import { dispatchActivePaneState } from "./shell-bridge.ts";
 
 type CreatePaneShellSyncOptions = {
   target: EventTarget;
-  elements: PaneShellSyncElements;
   getSelectedConnectionBackend: () => ConnectionBackend;
   getSelectedFontFamily: () => string;
   getSelectedLocalFontMatcher: () => string;
