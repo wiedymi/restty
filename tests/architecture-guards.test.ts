@@ -674,20 +674,29 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
     resolve(playgroundRoot, "lib/surface-bootstrap.ts"),
     "utf8",
   );
+  const surfaceAssembly = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap-assembly.ts"),
+    "utf8",
+  );
   const surfaceStartup = readFileSync(resolve(playgroundRoot, "lib/surface-startup.ts"), "utf8");
 
   expect(surfaceBootstrap).toContain('./surface-startup.ts"');
+  expect(surfaceBootstrap).toContain('./surface-bootstrap-assembly.ts"');
   expect(surfaceBootstrap).not.toContain("appearanceController.applyCurrentShaderPreset()");
   expect(surfaceBootstrap).not.toContain('target.addEventListener("resize"');
   expect(surfaceBootstrap).not.toContain("createInitialPane({ focus: true })");
-  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceStartupConfig =");
-  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceState =");
-  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceShell =");
-  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceControllers =");
+  expect(surfaceBootstrap).not.toContain("createRestty({");
+  expect(surfaceBootstrap).not.toContain("onPaneCreated:");
+  expect(surfaceBootstrap).not.toContain("terminal: ({ id, sourcePane }) =>");
+  expect(surfaceBootstrap).toContain("assemblePlaygroundSurface({");
   expect(surfaceStartup).toContain("export function createPlaygroundSurfaceStartup");
   expect(surfaceStartup).toContain("appearanceController.applyCurrentShaderPreset()");
   expect(surfaceStartup).toContain('target.addEventListener("resize"');
   expect(surfaceStartup).toContain("createInitialPane({ focus: true })");
+  expect(surfaceAssembly).toContain("export function assemblePlaygroundSurface");
+  expect(surfaceAssembly).toContain("createRestty({");
+  expect(surfaceAssembly).toContain("onPaneCreated:");
+  expect(surfaceAssembly).toContain("terminal: ({ id, sourcePane }) =>");
 });
 
 test("playground app bootstrap delegates shell element lookup", () => {
