@@ -86,8 +86,16 @@ test("settings shell effects forward shell commands", () => {
 
   bindSettingsShellEffects({
     target: svelteTarget as Window & EventTarget,
-    onOpen: () => svelteCalls.push("open"),
-    onClose: () => svelteCalls.push("close"),
+    host: {
+      hideContextMenu: () => svelteCalls.push("open"),
+      getFocusedPane: () => ({
+        canvas: {
+          focus: () => svelteCalls.push("close"),
+        },
+      }),
+      getActivePane: () => null,
+      getPanes: () => [],
+    },
   });
 
   emitShellCommand({ command: "settings-open" }, svelteTarget);

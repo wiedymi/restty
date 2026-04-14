@@ -1150,6 +1150,7 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(demoSection).toContain("../../../../lib/shell-bridge.ts");
   expect(existsSync(resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"))).toBe(false);
   expect(settingsShellEffects).toContain('./shell-bridge.ts"');
+  expect(settingsShellEffects).toContain('./settings-dialog.ts"');
   expect(shellStateBridge).toContain('../../../lib/shell-bridge.ts"');
   expect(shellStateBridge).toContain('./stores/shell-state-reducers.ts"');
   expect(shellState).not.toContain('../../../../lib/shell-bridge.ts"');
@@ -1189,7 +1190,11 @@ test("playground wiring uses settings shell effects only", () => {
 
   expect(wiring).toContain('./settings-shell-effects.ts"');
   expect(wiring).toContain("bindSettingsShellEffects({");
+  expect(wiring).toContain("host: restty");
+  expect(wiring).not.toContain("openSettings(");
+  expect(wiring).not.toContain("closeSettings(");
   expect(settingsShellEffects).toContain("export function bindSettingsShellEffects");
+  expect(settingsShellEffects).toContain("restoreTerminalFocus");
   expect(existsSync(resolve(playgroundRoot, "lib/settings-bindings.ts"))).toBe(false);
 });
 

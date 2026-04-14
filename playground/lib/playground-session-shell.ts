@@ -19,8 +19,6 @@ type CreatePlaygroundSessionShellOptions = {
 
 export type PlaygroundSessionShell = {
   isSettingsDialogOpen: () => boolean;
-  openSettings: ReturnType<typeof createPlaygroundShellEffects>["openSettings"];
-  closeSettings: ReturnType<typeof createPlaygroundShellEffects>["closeSettings"];
   resetThemeFileInput: ReturnType<typeof createPlaygroundShellEffects>["resetThemeFileInput"];
   syncConnectionState: ReturnType<typeof createPlaygroundShellEffects>["syncConnectionState"];
   paneShellSync: ReturnType<typeof createPaneShellSync>;
@@ -76,8 +74,6 @@ export function createPlaygroundSessionShell({
 
   return {
     isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog),
-    openSettings: shellEffects.openSettings,
-    closeSettings: shellEffects.closeSettings,
     resetThemeFileInput: shellEffects.resetThemeFileInput,
     syncConnectionState: shellEffects.syncConnectionState,
     paneShellSync,

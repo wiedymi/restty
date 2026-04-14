@@ -10,24 +10,13 @@ import type { WirePlaygroundControlsOptions } from "./playground-wiring.types.ts
 export function wirePlaygroundControls({
   restty,
   window,
-  shell: {
-    openSettings,
-    closeSettings,
-    syncConnectionState,
-    paneShellSync,
-    getConnectionShellStateDetail,
-  },
+  shell: { syncConnectionState, paneShellSync, getConnectionShellStateDetail },
   controllers: { paneLifecycle, appearanceController, connectionController },
   state: { paneStates, getActivePaneId },
 }: WirePlaygroundControlsOptions): void {
   bindSettingsShellEffects({
     target: window,
-    onOpen: () => {
-      openSettings(restty);
-    },
-    onClose: () => {
-      closeSettings(restty);
-    },
+    host: restty,
   });
 
   bindConnectionShellEffects({

@@ -9,8 +9,6 @@ import type { createPlaygroundShellEffects } from "./shell-effects.ts";
 export type PlaygroundWindow = Window & typeof globalThis;
 
 export type PlaygroundControlShell = {
-  openSettings: ReturnType<typeof createPlaygroundShellEffects>["openSettings"];
-  closeSettings: ReturnType<typeof createPlaygroundShellEffects>["closeSettings"];
   syncConnectionState: ReturnType<typeof createPlaygroundShellEffects>["syncConnectionState"];
   paneShellSync: ReturnType<typeof createPaneShellSync>;
   getConnectionShellStateDetail: () => {

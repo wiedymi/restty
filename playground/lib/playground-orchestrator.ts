@@ -119,8 +119,6 @@ export function bootstrapPlaygroundOrchestrator({
     restty,
     window,
     shell: {
-      openSettings: session.shell.openSettings,
-      closeSettings: session.shell.closeSettings,
       syncConnectionState: session.shell.syncConnectionState,
       paneShellSync: session.shell.paneShellSync,
       getConnectionShellStateDetail: session.shell.getConnectionShellStateDetail,
