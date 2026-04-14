@@ -8,6 +8,7 @@ import type {
 } from "./panes/managed-pane-types";
 import { ResttyPaneHandle } from "./restty/pane-handle";
 import { ResttyActivePaneApi } from "./restty/active-pane-api";
+import { createResttyPluginSurfaceBridge } from "./restty/plugin-surface";
 import {
   createMergedPaneServicesConfig,
   createMergedPaneTerminalConfig,
@@ -40,7 +41,7 @@ import type {
 } from "./plugins/context.types";
 import type { ResttyConfig } from "./restty/config";
 import type { ResttySurfacePane } from "./restty/events";
-import { ResttyController, createResttyPluginSurfaceApi } from "./restty/controller";
+import { ResttyController } from "./restty/controller";
 import * as paneOps from "./restty/pane-ops";
 import { ResttyShaderOps } from "./restty/shader-ops";
 
@@ -121,66 +122,7 @@ export class Restty extends ResttyActivePaneApi {
       getPanes: () => this.paneManager.getPanes(),
       getPaneById: (id) => this.paneManager.getPaneById(id),
     });
-    const pluginSurfaceApi = createResttyPluginSurfaceApi({
-      panes: () => this.panes(),
-      pane: (id) => this.pane(id),
-      activePane: () => this.activePane(),
-      focusedPane: () => this.focusedPane(),
-      forEachPane: (visitor) => {
-        this.forEachPane(visitor);
-      },
-      isPtyConnected: () => this.isPtyConnected(),
-      setRenderer: (value) => this.setRenderer(value),
-      setPaused: (value) => this.setPaused(value),
-      togglePause: () => this.togglePause(),
-      setFontSize: (value) => this.setFontSize(value),
-      setLigatures: (value) => this.setLigatures(value),
-      setFontHinting: (value) => this.setFontHinting(value),
-      setFontHintTarget: (value) => this.setFontHintTarget(value),
-      setFontSources: (sources) => this.setFontSources(sources),
-      applyTheme: (theme, sourceLabel) => this.applyTheme(theme, sourceLabel),
-      resetTheme: () => this.resetTheme(),
-      sendInput: (text, source) => this.sendInput(text, source),
-      sendKeyInput: (text, source) => this.sendKeyInput(text, source),
-      clearScreen: () => this.clearScreen(),
-      connectPty: (url) => this.connectPty(url),
-      disconnectPty: () => this.disconnectPty(),
-      setMouseMode: (value) => this.setMouseMode(value),
-      getMouseStatus: () => this.getMouseStatus(),
-      copySelectionToClipboard: () => this.copySelectionToClipboard(),
-      pasteFromClipboard: () => this.pasteFromClipboard(),
-      selectWordAtClientPoint: (clientX, clientY) => this.selectWordAtClientPoint(clientX, clientY),
-      setSearchQuery: (query) => this.setSearchQuery(query),
-      clearSearch: () => this.clearSearch(),
-      searchNext: () => this.searchNext(),
-      searchPrevious: () => this.searchPrevious(),
-      getSearchState: () => this.getSearchState(),
-      openSearch: (options) => this.openSearch(options),
-      closeSearch: (options) => this.closeSearch(options),
-      toggleSearch: (options) => this.toggleSearch(options),
-      isSearchOpen: () => this.isSearchOpen(),
-      resize: (cols, rows) => this.resize(cols, rows),
-      focus: () => this.focus(),
-      blur: () => this.blur(),
-      updateSize: (force) => this.updateSize(force),
-      getBackend: () => this.getBackend(),
-      setShaderStages: (stages) => this.setShaderStages(stages),
-      getShaderStages: () => this.getShaderStages(),
-      addShaderStage: (stage) => this.addShaderStage(stage),
-      removeShaderStage: (id) => this.removeShaderStage(id),
-      createInitialPaneSurface: (createOptions) => this.createInitialPane(createOptions),
-      splitActivePaneSurface: (direction) => this.splitActivePane(direction),
-      splitPaneSurface: (id, direction) => this.splitPane(id, direction),
-      closePane: (id) => this.closePane(id),
-      getPaneStyleOptions: () => this.getPaneStyleOptions(),
-      setPaneStyleOptions: (options) => this.setPaneStyleOptions(options),
-      getSearchUiStyleOptions: () => this.getSearchUiStyleOptions(),
-      setSearchUiStyleOptions: (options) => this.setSearchUiStyleOptions(options),
-      setActivePane: (id, activeOptions) => this.setActivePane(id, activeOptions),
-      markPaneFocused: (id, focusOptions) => this.markPaneFocused(id, focusOptions),
-      requestLayoutSync: () => this.requestLayoutSync(),
-      hideContextMenu: () => this.hideContextMenu(),
-    });
+    const pluginSurfaceApi = createResttyPluginSurfaceBridge(this);
     this.controller = new ResttyController({
       restty: pluginSurfaceApi,
       panes: () => this.panes(),

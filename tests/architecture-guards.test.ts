@@ -511,15 +511,21 @@ test("surface plugin context depends on a plugin host api instead of the full Re
 test("surface restty delegates plugin bridge wiring to the restty controller", () => {
   const resttySource = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
   const resttyController = readFileSync(resolve(surfaceRoot, "restty/controller.ts"), "utf8");
-
-  expect(resttySource).toContain(
-    'import { ResttyController, createResttyPluginSurfaceApi } from "./restty/controller"',
+  const resttyPluginSurface = readFileSync(
+    resolve(surfaceRoot, "restty/plugin-surface.ts"),
+    "utf8",
   );
+
+  expect(resttySource).toContain('import { ResttyController } from "./restty/controller"');
+  expect(resttySource).toContain('./restty/plugin-surface"');
+  expect(resttySource).not.toContain("createResttyPluginSurfaceApi({");
   expect(resttySource).not.toContain('from "./plugins/host"');
   expect(resttySource).not.toContain("private createPluginSurfaceApi()");
 
   expect(resttyController).toContain("export function createResttyPluginSurfaceApi");
   expect(resttyController).toContain("new ResttyPluginHost(deps)");
+  expect(resttyPluginSurface).toContain("export function createResttyPluginSurfaceBridge");
+  expect(resttyPluginSurface).toContain("createResttyPluginSurfaceApi({");
 });
 
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
