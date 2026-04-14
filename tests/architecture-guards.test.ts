@@ -657,14 +657,19 @@ test("playground app bootstrap delegates controller composition to a dedicated o
     resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
     "utf8",
   );
+  const session = readFileSync(resolve(playgroundRoot, "lib/playground-session.ts"), "utf8");
 
   expect(appBootstrap).toContain('./playground-orchestrator.ts"');
   expect(appBootstrap).not.toContain("createConnectionController(");
   expect(appBootstrap).not.toContain("createPaneAppearanceController(");
   expect(appBootstrap).not.toContain("createPaneLifecycleController(");
-  expect(orchestrator).toContain("createConnectionController(");
-  expect(orchestrator).toContain("createPaneAppearanceController(");
-  expect(orchestrator).toContain("createPaneLifecycleController(");
+  expect(orchestrator).toContain('./playground-session.ts"');
+  expect(orchestrator).not.toContain("createConnectionController(");
+  expect(orchestrator).not.toContain("createPaneAppearanceController(");
+  expect(orchestrator).not.toContain("createPaneLifecycleController(");
+  expect(session).toContain("createConnectionController(");
+  expect(session).toContain("createPaneAppearanceController(");
+  expect(session).toContain("createPaneLifecycleController(");
 });
 
 test("playground orchestrator delegates shell control wiring to a dedicated module", () => {
@@ -681,6 +686,24 @@ test("playground orchestrator delegates shell control wiring to a dedicated modu
   expect(wiring).toContain("bindConnectionControls(");
   expect(wiring).toContain("bindTerminalControls(");
   expect(wiring).toContain("bindAppearanceControls(");
+});
+
+test("playground orchestrator delegates controller session setup to a dedicated module", () => {
+  const orchestrator = readFileSync(
+    resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
+    "utf8",
+  );
+  const session = readFileSync(resolve(playgroundRoot, "lib/playground-session.ts"), "utf8");
+
+  expect(orchestrator).toContain('./playground-session.ts"');
+  expect(orchestrator).not.toContain("createConnectionController(");
+  expect(orchestrator).not.toContain("createPaneAppearanceController(");
+  expect(orchestrator).not.toContain("createPaneLifecycleController(");
+  expect(orchestrator).not.toContain("createPlaygroundShellAdapter(");
+  expect(session).toContain("createConnectionController(");
+  expect(session).toContain("createPaneAppearanceController(");
+  expect(session).toContain("createPaneLifecycleController(");
+  expect(session).toContain("createPlaygroundShellAdapter(");
 });
 
 test("playground no longer ships legacy runtime status or log widgets", () => {
