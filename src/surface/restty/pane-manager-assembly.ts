@@ -25,6 +25,7 @@ export function createResttyPaneManagerAssembly({
   services,
   events,
 }: CreateResttyPaneManagerAssemblyOptions) {
+  const controllerHooks = controller.paneManagerHooks;
   const {
     onPaneCreated,
     onPaneClosed,
@@ -43,12 +44,12 @@ export function createResttyPaneManagerAssembly({
     services,
     onDesktopNotification,
     pluginHost: controller,
-    runRenderHooks: (payload) => controller.runRenderHooks(payload),
+    runRenderHooks: controllerHooks.runRenderHooks,
   });
 
   const paneManagerEventHandlers = createPaneManagerEventHandlers({
     shaderOps,
-    emitPluginEvent: (event, payload) => controller.emitPluginEvent(event, payload),
+    emitPluginEvent: controllerHooks.emitPluginEvent,
     onPaneCreated,
     onPaneClosed,
     onPaneSplit,

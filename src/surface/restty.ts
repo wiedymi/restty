@@ -180,24 +180,24 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   createInitialPane(options?: { focus?: boolean }): ResttySurfacePane {
-    return paneOps.createInitialPane(this.paneManager, this.controller.lifecycleHooks(), options);
+    return paneOps.createInitialPane(this.paneManager, this.controller.lifecycleHooks, options);
   }
 
   splitActivePane(direction: ResttyPaneSplitDirection): ResttySurfacePane | null {
     return paneOps.splitActivePane(
       this.paneManager,
       this.paneLookupOps,
-      this.controller.lifecycleHooks(),
+      this.controller.lifecycleHooks,
       direction,
     );
   }
 
   splitPane(id: number, direction: ResttyPaneSplitDirection): ResttySurfacePane | null {
-    return paneOps.splitPane(this.paneManager, this.controller.lifecycleHooks(), id, direction);
+    return paneOps.splitPane(this.paneManager, this.controller.lifecycleHooks, id, direction);
   }
 
   closePane(id: number): boolean {
-    return paneOps.closePane(this.paneManager, this.controller.lifecycleHooks(), id);
+    return paneOps.closePane(this.paneManager, this.controller.lifecycleHooks, id);
   }
 
   getPaneStyleOptions(): Readonly<Required<ResttyManagedPaneStyleOptions>> {
@@ -220,7 +220,7 @@ export class Restty extends ResttyActivePaneApi {
     paneOps.setActivePane(
       this.paneManager,
       this.paneLookupOps,
-      this.controller.lifecycleHooks(),
+      this.controller.lifecycleHooks,
       id,
       options,
     );
@@ -230,7 +230,7 @@ export class Restty extends ResttyActivePaneApi {
     paneOps.markPaneFocused(
       this.paneManager,
       this.paneLookupOps,
-      this.controller.lifecycleHooks(),
+      this.controller.lifecycleHooks,
       id,
       options,
     );
@@ -277,23 +277,23 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   connectPty(url = ""): void {
-    paneOps.connectPty(this.paneLookupOps, this.controller.lifecycleHooks(), url);
+    paneOps.connectPty(this.paneLookupOps, this.controller.lifecycleHooks, url);
   }
 
   disconnectPty(): void {
-    paneOps.disconnectPty(this.paneLookupOps, this.controller.lifecycleHooks());
+    paneOps.disconnectPty(this.paneLookupOps, this.controller.lifecycleHooks);
   }
 
   resize(cols: number, rows: number): void {
-    paneOps.resize(this.paneLookupOps, this.controller.lifecycleAndPluginHooks(), cols, rows);
+    paneOps.resize(this.paneLookupOps, this.controller.lifecycleAndPluginHooks, cols, rows);
   }
 
   focus(): void {
-    paneOps.focus(this.paneLookupOps, this.controller.lifecycleAndPluginHooks());
+    paneOps.focus(this.paneLookupOps, this.controller.lifecycleAndPluginHooks);
   }
 
   blur(): void {
-    paneOps.blur(this.paneLookupOps, this.controller.lifecycleAndPluginHooks());
+    paneOps.blur(this.paneLookupOps, this.controller.lifecycleAndPluginHooks);
   }
 
   protected requireActivePaneHandle(): ResttyPaneHandle {

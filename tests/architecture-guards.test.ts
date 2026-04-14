@@ -597,6 +597,9 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
 
   expect(resttyController).toContain("export function createResttyPluginSurfaceApi");
   expect(resttyController).toContain("new ResttyPluginHost(deps)");
+  expect(resttyController).toContain("readonly lifecycleHooks:");
+  expect(resttyController).toContain("readonly lifecycleAndPluginHooks:");
+  expect(resttyController).toContain("readonly paneManagerHooks:");
   expect(resttyBootstrap).toContain("export function bootstrapResttySurface");
   expect(resttyBootstrap).toContain("createResttyManagedPaneManager({");
   expect(resttyBootstrap).toContain('./assembly"');
@@ -615,6 +618,7 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
   expect(resttyAssembly).not.toContain("createMergedPaneTerminalConfig({");
   expect(resttyAssembly).not.toContain("createMergedPaneServicesConfig({");
   expect(resttyPaneManagerAssembly).toContain("export function createResttyPaneManagerAssembly");
+  expect(resttyPaneManagerAssembly).toContain("const controllerHooks = controller.paneManagerHooks");
   expect(resttyPaneManagerAssembly).toContain("createMergedPaneTerminalConfig({");
   expect(resttyPaneManagerAssembly).toContain("createMergedPaneServicesConfig({");
 });

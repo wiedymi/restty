@@ -112,6 +112,14 @@ type ResttyLifecycleAndPluginHooks = ResttyLifecycleHooks & {
   ) => void;
 };
 
+type ResttyPaneManagerHooks = {
+  runRenderHooks: (payload: ResttyRenderHookPayload) => void;
+  emitPluginEvent: <E extends keyof ResttyPluginEvents>(
+    event: E,
+    payload: ResttyPluginEvents[E],
+  ) => void;
+};
+
 export function createResttyPluginSurfaceApi(
   source: ResttyPluginSurfaceApiSource,
 ): ResttyPluginHostApi {
@@ -144,9 +152,23 @@ export function createResttyPluginSurfaceApi(
 
 export class ResttyController {
   private readonly pluginHost: ResttyPluginHost;
+  readonly lifecycleHooks: ResttyLifecycleHooks;
+  readonly lifecycleAndPluginHooks: ResttyLifecycleAndPluginHooks;
+  readonly paneManagerHooks: ResttyPaneManagerHooks;
 
   constructor(deps: ResttyPluginHostDeps) {
     this.pluginHost = new ResttyPluginHost(deps);
+    this.lifecycleHooks = {
+      runLifecycleHooks: (payload) => this.runLifecycleHooks(payload),
+    };
+    this.lifecycleAndPluginHooks = {
+      runLifecycleHooks: (payload) => this.runLifecycleHooks(payload),
+      emitPluginEvent: (event, payload) => this.emitPluginEvent(event, payload),
+    };
+    this.paneManagerHooks = {
+      runRenderHooks: (payload) => this.runRenderHooks(payload),
+      emitPluginEvent: (event, payload) => this.emitPluginEvent(event, payload),
+    };
   }
 
   async use(plugin: ResttyPlugin, options?: unknown): Promise<void> {
@@ -181,19 +203,6 @@ export class ResttyController {
 
   applyOutputInterceptors(paneId: number, text: string, source: string): string | null {
     return this.pluginHost.applyOutputInterceptors(paneId, text, source);
-  }
-
-  lifecycleHooks(): ResttyLifecycleHooks {
-    return {
-      runLifecycleHooks: (payload) => this.runLifecycleHooks(payload),
-    };
-  }
-
-  lifecycleAndPluginHooks(): ResttyLifecycleAndPluginHooks {
-    return {
-      runLifecycleHooks: (payload) => this.runLifecycleHooks(payload),
-      emitPluginEvent: (event, payload) => this.emitPluginEvent(event, payload),
-    };
   }
 
   runLifecycleHooks(payload: ResttyLifecycleHookPayload): void {
