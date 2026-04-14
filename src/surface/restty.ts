@@ -36,6 +36,7 @@ import type {
 import type { ResttyConfig } from "./restty/config";
 import type { ResttySurfacePane } from "./restty/events";
 import { ResttyController } from "./restty/controller";
+import { createResttyPaneLookup, type ResttyPaneLookup } from "./restty/pane-lookup";
 import * as paneOps from "./restty/pane-ops";
 import { ResttyShaderOps } from "./restty/shader-ops";
 
@@ -86,6 +87,7 @@ export class Restty extends ResttyActivePaneApi {
   private fontSources: ResttyFontSource[] | undefined;
   private readonly shaderOps: ResttyShaderOps;
   private readonly controller: ResttyController;
+  private readonly paneLookupOps: ResttyPaneLookup;
 
   constructor(options: ResttyConfig) {
     super();
@@ -100,6 +102,13 @@ export class Restty extends ResttyActivePaneApi {
     this.shaderOps = shaderOps;
     this.controller = controller;
     this.paneManager = paneManager;
+    this.paneLookupOps = createResttyPaneLookup({
+      paneManager: this.paneManager,
+      getPanes: () => this.getPanes(),
+      getPaneById: (id) => this.getPaneById(id),
+      getActivePane: () => this.getActivePane(),
+      getFocusedPane: () => this.getFocusedPane(),
+    });
 
     if (createInitialPane) {
       const focus =
@@ -125,23 +134,23 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   panes(): ResttyPaneHandle[] {
-    return paneOps.panes(this.paneLookup());
+    return paneOps.panes(this.paneLookupOps);
   }
 
   pane(id: number): ResttyPaneHandle | null {
-    return paneOps.pane(this.paneLookup(), id);
+    return paneOps.pane(this.paneLookupOps, id);
   }
 
   activePane(): ResttyPaneHandle | null {
-    return paneOps.activePane(this.paneLookup());
+    return paneOps.activePane(this.paneLookupOps);
   }
 
   focusedPane(): ResttyPaneHandle | null {
-    return paneOps.focusedPane(this.paneLookup());
+    return paneOps.focusedPane(this.paneLookupOps);
   }
 
   forEachPane(visitor: (pane: ResttyPaneHandle) => void): void {
-    paneOps.forEachPane(this.paneLookup(), visitor);
+    paneOps.forEachPane(this.paneLookupOps, visitor);
   }
 
   async setFontSources(sources: ResttyFontSource[]): Promise<void> {
@@ -177,7 +186,7 @@ export class Restty extends ResttyActivePaneApi {
   splitActivePane(direction: ResttyPaneSplitDirection): ResttySurfacePane | null {
     return paneOps.splitActivePane(
       this.paneManager,
-      this.paneLookup(),
+      this.paneLookupOps,
       this.controller.lifecycleHooks(),
       direction,
     );
@@ -210,7 +219,7 @@ export class Restty extends ResttyActivePaneApi {
   setActivePane(id: number, options?: { focus?: boolean }): void {
     paneOps.setActivePane(
       this.paneManager,
-      this.paneLookup(),
+      this.paneLookupOps,
       this.controller.lifecycleHooks(),
       id,
       options,
@@ -220,7 +229,7 @@ export class Restty extends ResttyActivePaneApi {
   markPaneFocused(id: number, options?: { focus?: boolean }): void {
     paneOps.markPaneFocused(
       this.paneManager,
-      this.paneLookup(),
+      this.paneLookupOps,
       this.controller.lifecycleHooks(),
       id,
       options,
@@ -268,62 +277,27 @@ export class Restty extends ResttyActivePaneApi {
   }
 
   connectPty(url = ""): void {
-    paneOps.connectPty(this.paneLookup(), this.controller.lifecycleHooks(), url);
+    paneOps.connectPty(this.paneLookupOps, this.controller.lifecycleHooks(), url);
   }
 
   disconnectPty(): void {
-    paneOps.disconnectPty(this.paneLookup(), this.controller.lifecycleHooks());
+    paneOps.disconnectPty(this.paneLookupOps, this.controller.lifecycleHooks());
   }
 
   resize(cols: number, rows: number): void {
-    paneOps.resize(this.paneLookup(), this.controller.lifecycleAndPluginHooks(), cols, rows);
+    paneOps.resize(this.paneLookupOps, this.controller.lifecycleAndPluginHooks(), cols, rows);
   }
 
   focus(): void {
-    paneOps.focus(this.paneLookup(), this.controller.lifecycleAndPluginHooks());
+    paneOps.focus(this.paneLookupOps, this.controller.lifecycleAndPluginHooks());
   }
 
   blur(): void {
-    paneOps.blur(this.paneLookup(), this.controller.lifecycleAndPluginHooks());
-  }
-
-  private paneLookup(): {
-    getPanes: () => ResttyManagedPane[];
-    getPaneById: (id: number) => ResttyManagedPane | null;
-    getActivePane: () => ResttyManagedPane | null;
-    getFocusedPane: () => ResttyManagedPane | null;
-    openPaneSearch: ResttyManagedPaneManager["openPaneSearch"];
-    closePaneSearch: ResttyManagedPaneManager["closePaneSearch"];
-    togglePaneSearch: ResttyManagedPaneManager["togglePaneSearch"];
-    isPaneSearchOpen: ResttyManagedPaneManager["isPaneSearchOpen"];
-    getSearchUiStyleOptions: ResttyManagedPaneManager["getSearchUiStyleOptions"];
-    setSearchUiStyleOptions: ResttyManagedPaneManager["setSearchUiStyleOptions"];
-  } {
-    const paneManager = this.paneManager;
-    return {
-      getPanes: () => this.getPanes(),
-      getPaneById: (id) => this.getPaneById(id),
-      getActivePane: () => this.getActivePane(),
-      getFocusedPane: () => this.getFocusedPane(),
-      openPaneSearch: (id, options) => {
-        paneManager.openPaneSearch(id, options);
-      },
-      closePaneSearch: (id, options) => {
-        paneManager.closePaneSearch(id, options);
-      },
-      togglePaneSearch: (id, options) => {
-        paneManager.togglePaneSearch(id, options);
-      },
-      isPaneSearchOpen: (id) => paneManager.isPaneSearchOpen(id),
-      getSearchUiStyleOptions: () => paneManager.getSearchUiStyleOptions(),
-      setSearchUiStyleOptions: (options) => {
-        paneManager.setSearchUiStyleOptions(options);
-      },
-    };
+    paneOps.blur(this.paneLookupOps, this.controller.lifecycleAndPluginHooks());
   }
 
   protected requireActivePaneHandle(): ResttyPaneHandle {
-    return paneOps.requireActivePaneHandle(this.paneLookup());
+    return paneOps.requireActivePaneHandle(this.paneLookupOps);
   }
 }
 

@@ -534,6 +534,17 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
   expect(resttyPluginSurface).toContain("createResttyPluginSurfaceApi({");
 });
 
+test("surface restty delegates pane lookup wiring to a dedicated module", () => {
+  const resttySource = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
+  const resttyPaneLookup = readFileSync(resolve(surfaceRoot, "restty/pane-lookup.ts"), "utf8");
+
+  expect(resttySource).toContain('./restty/pane-lookup"');
+  expect(resttySource).toContain("private readonly paneLookupOps:");
+  expect(resttySource).not.toContain("private paneLookup()");
+  expect(resttyPaneLookup).toContain("export function createResttyPaneLookup");
+  expect(resttyPaneLookup).toContain("openPaneSearch: (id, searchOptions) =>");
+});
+
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty/pane-handle.ts"),
