@@ -1126,38 +1126,21 @@ test("pane shell sync delegates terminal, appearance, and connection reflection"
     resolve(playgroundRoot, "lib/pane-connection-shell-events.ts"),
     "utf8",
   );
-  const terminalSync = readFileSync(
-    resolve(playgroundRoot, "lib/pane-terminal-shell-sync.ts"),
-    "utf8",
-  );
-  const appearanceSync = readFileSync(
-    resolve(playgroundRoot, "lib/pane-appearance-shell-sync.ts"),
-    "utf8",
-  );
-  const connectionSync = readFileSync(
-    resolve(playgroundRoot, "lib/pane-connection-shell-sync.ts"),
-    "utf8",
-  );
-
-  expect(paneShellSync).toContain('./pane-terminal-shell-sync.ts"');
   expect(paneShellSync).toContain('./pane-terminal-shell-events.ts"');
-  expect(paneShellSync).toContain('./pane-appearance-shell-sync.ts"');
   expect(paneShellSync).toContain('./pane-appearance-shell-events.ts"');
-  expect(paneShellSync).toContain('./pane-connection-shell-sync.ts"');
   expect(paneShellSync).toContain('./pane-connection-shell-events.ts"');
-  expect(paneShellSync).toContain("options.usesSvelteShell && options.target");
-  expect(paneShellSync).toContain("if (terminalEvents && appearanceEvents && options.target)");
+  expect(paneShellSync).toContain("dispatchActivePaneState(");
+  expect(paneShellSync).not.toContain("pane-terminal-shell-sync");
+  expect(paneShellSync).not.toContain("pane-appearance-shell-sync");
+  expect(paneShellSync).not.toContain("pane-connection-shell-sync");
+  expect(paneShellSync).not.toContain("usesSvelteShell");
+  expect(paneShellSync).not.toContain("if (terminalEvents && appearanceEvents && options.target)");
   expect(paneShellSync).not.toContain("syncHintingControls(");
   expect(paneShellSync).not.toContain("syncFontFamilyControls(");
-  expect(terminalSync).toContain("export function createPaneTerminalShellSync");
-  expect(terminalSync).not.toContain("dispatchActivePaneState");
-  expect(terminalSync).not.toContain("usesSvelteShell");
-  expect(appearanceSync).toContain("export function createPaneAppearanceShellSync");
-  expect(appearanceSync).not.toContain("dispatchActivePaneState");
-  expect(appearanceSync).not.toContain("usesSvelteShell");
-  expect(connectionSync).toContain("export function createPaneConnectionShellSync");
-  expect(connectionSync).not.toContain("dispatchConnectionState");
-  expect(connectionSync).not.toContain("usesSvelteShell");
+  expect(paneShellSync).toContain('./pane-terminal-shell-events.ts"');
+  expect(existsSync(resolve(playgroundRoot, "lib/pane-terminal-shell-sync.ts"))).toBe(false);
+  expect(existsSync(resolve(playgroundRoot, "lib/pane-appearance-shell-sync.ts"))).toBe(false);
+  expect(existsSync(resolve(playgroundRoot, "lib/pane-connection-shell-sync.ts"))).toBe(false);
   expect(terminalEvents).toContain("export function createPaneTerminalShellEvents");
   expect(terminalEvents).toContain("dispatchActivePaneState");
   expect(appearanceEvents).toContain("export function createPaneAppearanceShellEvents");

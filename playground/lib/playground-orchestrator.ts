@@ -88,7 +88,6 @@ export function bootstrapPlaygroundOrchestrator({
     },
     shell: {
       window,
-      usesSvelteShell: true,
       elements: {
         btnPause,
         rendererSelect,

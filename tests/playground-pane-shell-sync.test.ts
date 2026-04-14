@@ -47,7 +47,6 @@ test("pane shell sync dispatches active pane state through shell events", () => 
 
   const syncedStates: PaneState[] = [];
   const sync = createPaneShellSync({
-    usesSvelteShell: true,
     target,
     elements: {
       btnPause: null,
@@ -121,70 +120,4 @@ test("pane shell sync dispatches active pane state through shell events", () => 
       detail: { ptyButtonLabel: "Start WebContainer" },
     },
   ]);
-});
-
-test("pane shell sync updates legacy controls directly", () => {
-  const btnPause = { textContent: "" };
-  const rendererSelect = { value: "" };
-  const fontSizeInput = { value: "" };
-  const ptyBtn = { textContent: "" };
-  const themeSelect = { value: "" };
-  const shaderPresetEl = { value: "" };
-  const mouseModeEl = {
-    value: "",
-    options: [{ value: "auto" }, { value: "on" }],
-  };
-
-  const sync = createPaneShellSync({
-    usesSvelteShell: false,
-    elements: {
-      btnPause,
-      rendererSelect,
-      fontSizeInput,
-      ptyBtn,
-      themeSelect,
-      fontFamilySelect: null,
-      fontFamilyLocalSelect: null,
-      btnLoadLocalFonts: null,
-      fontFamilyHintEl: null,
-      ligaturesSelect: null,
-      fontHintingSelect: null,
-      fontHintTargetSelect: null,
-      mouseModeEl: mouseModeEl as HTMLSelectElement,
-      shaderPresetEl: shaderPresetEl as HTMLSelectElement,
-    },
-    getSelectedConnectionBackend: () => "ws",
-    getSelectedFontFamily: () => "fira-code",
-    getSelectedLocalFontMatcher: () => "",
-    getDetectedLocalFontOptions: () => [],
-    getLocalFontHintText: () => "",
-    getSelectedLigatures: () => true,
-    getSelectedFontHinting: () => false,
-    getSelectedFontHintTarget: () => "auto",
-    getSelectedShaderPreset: () => "scanline",
-    syncSelectedDefaults: () => {},
-  });
-
-  const pane = createPane(true, "on");
-  const state = createPaneState({
-    renderer: "webgl2",
-    fontSize: 18,
-    paused: false,
-    theme: {
-      selectValue: "theme-file",
-      sourceLabel: "theme file",
-      theme: null,
-    },
-  });
-
-  sync.renderActivePaneControls(pane, state);
-  sync.syncPtyButton(pane);
-
-  expect(btnPause.textContent).toBe("");
-  expect(rendererSelect.value).toBe("webgl2");
-  expect(fontSizeInput.value).toBe("18");
-  expect(mouseModeEl.value).toBe("on");
-  expect(shaderPresetEl.value).toBe("scanline");
-  expect(themeSelect.value).toBe("theme-file");
-  expect(ptyBtn.textContent).toBe("Disconnect");
 });

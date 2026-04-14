@@ -28,7 +28,6 @@ type PlaygroundSessionStartup = {
 
 type PlaygroundSessionShellConfig = {
   window: PlaygroundWindow;
-  usesSvelteShell: boolean;
   elements: Pick<
     LegacyPlaygroundElements,
     | "btnPause"
@@ -89,7 +88,6 @@ export function createPlaygroundSession({
   },
   shell: {
     window,
-    usesSvelteShell,
     elements: {
       btnPause,
       rendererSelect,
@@ -163,7 +161,6 @@ export function createPlaygroundSession({
   });
 
   const paneShellSync = createPaneShellSync({
-    usesSvelteShell,
     target: window,
     elements: {
       btnPause,
