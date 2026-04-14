@@ -381,4 +381,3 @@ bun run playground
 Open `http://localhost:5173`, then connect to `ws://localhost:8787/pty` from the UI.
 
 `bun run playground` starts both the PTY websocket server and the Svelte/Vite playground shell.
-Use `bun run playground:legacy` if you need the old Bun-only shell while the migration is in progress.

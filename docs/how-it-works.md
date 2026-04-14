@@ -5,6 +5,7 @@ This page explains the runtime pipeline behind `new Restty(...)`.
 ## Big picture
 
 restty has three main layers:
+
 - PTY transport (`src/pty/`): websocket connection to a shell/backend.
 - Terminal core (`src/wasm/`): WASM wrapper around `libghostty-vt`.
 - Renderer (`src/renderer/`): WebGPU first, WebGL2 fallback.
@@ -60,5 +61,4 @@ restty drains that output (`wasm.drainOutput(...)`) and forwards it to the PTY t
 
 - `bun run build:assets`: builds static playground app bundle into `playground/public/playground.js`.
 - `bun run playground`: starts local dev stack (PTY websocket server + Svelte/Vite playground shell).
-- `bun run playground:legacy`: starts the legacy Bun-only playground shell.
 - `bun run pty`: PTY websocket server only (`ws://localhost:8787/pty`).

@@ -225,12 +225,9 @@ restty.unuse("example/metrics");
 Declarative loading (manifest + registry):
 
 ```ts
-await restty.loadPlugins(
-  [{ id: "example/metrics", options: { sampleRate: 1 } }],
-  {
-    "example/metrics": () => metricsPlugin,
-  },
-);
+await restty.loadPlugins([{ id: "example/metrics", options: { sampleRate: 1 } }], {
+  "example/metrics": () => metricsPlugin,
+});
 ```
 
 See `docs/plugins.md` for full plugin authoring details.
@@ -385,7 +382,6 @@ bun run lint          # lint
 bun run format:check  # formatting check
 bun run build:assets  # static playground bundle (playground/public/playground.js)
 bun run playground    # one-command local dev (PTY + Svelte/Vite playground shell)
-bun run playground:legacy  # legacy Bun playground shell
 bun run pty           # PTY websocket server only
 ```
 
