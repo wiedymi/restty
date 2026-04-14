@@ -601,9 +601,15 @@ test("playground source does not import src/internal.ts", () => {
 
 test("playground app bootstrap delegates restty construction to the surface bootstrap", () => {
   const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
+  const orchestrator = readFileSync(
+    resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
+    "utf8",
+  );
 
-  expect(appBootstrap).toContain('./surface-bootstrap.ts"');
+  expect(appBootstrap).toContain('./playground-orchestrator.ts"');
   expect(appBootstrap).not.toContain("new Restty(");
+  expect(orchestrator).toContain('./surface-bootstrap.ts"');
+  expect(orchestrator).not.toContain("new Restty(");
 });
 
 test("playground app bootstrap delegates shell element lookup", () => {
@@ -616,15 +622,39 @@ test("playground app bootstrap delegates shell element lookup", () => {
 test("playground app entrypoint delegates controller orchestration to app bootstrap", () => {
   const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
   const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
+  const orchestrator = readFileSync(
+    resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
+    "utf8",
+  );
 
   expect(appSource).toContain('./lib/app-bootstrap.ts"');
   expect(appSource).not.toContain("./lib/control-bindings");
   expect(appSource).not.toContain("./lib/appearance-controller");
   expect(appSource).not.toContain("./lib/connection-controller");
   expect(appSource).not.toContain("./lib/pane-lifecycle");
-  expect(appBootstrap).toContain("bindConnectionControls(");
-  expect(appBootstrap).toContain("bindTerminalControls(");
-  expect(appBootstrap).toContain("bindAppearanceControls(");
+  expect(appBootstrap).toContain('./playground-orchestrator.ts"');
+  expect(appBootstrap).not.toContain("bindConnectionControls(");
+  expect(appBootstrap).not.toContain("bindTerminalControls(");
+  expect(appBootstrap).not.toContain("bindAppearanceControls(");
+  expect(orchestrator).toContain("bindConnectionControls(");
+  expect(orchestrator).toContain("bindTerminalControls(");
+  expect(orchestrator).toContain("bindAppearanceControls(");
+});
+
+test("playground app bootstrap delegates controller composition to a dedicated orchestrator", () => {
+  const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
+  const orchestrator = readFileSync(
+    resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
+    "utf8",
+  );
+
+  expect(appBootstrap).toContain('./playground-orchestrator.ts"');
+  expect(appBootstrap).not.toContain("createConnectionController(");
+  expect(appBootstrap).not.toContain("createPaneAppearanceController(");
+  expect(appBootstrap).not.toContain("createPaneLifecycleController(");
+  expect(orchestrator).toContain("createConnectionController(");
+  expect(orchestrator).toContain("createPaneAppearanceController(");
+  expect(orchestrator).toContain("createPaneLifecycleController(");
 });
 
 test("playground no longer ships legacy runtime status or log widgets", () => {
