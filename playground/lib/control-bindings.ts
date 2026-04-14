@@ -1,12 +1,11 @@
 import {
   APPEARANCE_INPUT_EVENT,
   CONNECTION_INPUT_EVENT,
-  PTY_BUTTON_EVENT,
-  RUN_DEMO_EVENT,
+  SHELL_COMMAND_EVENT,
   TERMINAL_ACTION_EVENT,
   type AppearanceInputDetail,
   type ConnectionInputDetail,
-  type DemoRunDetail,
+  type ShellCommandDetail,
   type TerminalActionDetail,
 } from "./shell-events.ts";
 
@@ -16,9 +15,9 @@ type NullableTarget = TargetLike | null | undefined;
 
 type Disposer = () => void;
 
-type DemoRunEvent = CustomEvent<DemoRunDetail>;
 type AppearanceInputEvent = CustomEvent<AppearanceInputDetail>;
 type ConnectionInputEvent = CustomEvent<ConnectionInputDetail>;
+type ShellCommandEvent = CustomEvent<ShellCommandDetail>;
 type TerminalActionEvent = CustomEvent<TerminalActionDetail>;
 
 type ValueTarget = TargetLike & {
@@ -132,9 +131,17 @@ export function bindTerminalControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, PTY_BUTTON_EVENT, options.onPtyButton),
-      listen(options.target, RUN_DEMO_EVENT, (event) => {
-        options.onDemoRun((event as DemoRunEvent).detail?.kind);
+      listen(options.target, SHELL_COMMAND_EVENT, (event) => {
+        const detail = (event as ShellCommandEvent).detail;
+
+        switch (detail?.command) {
+          case "pty-button":
+            options.onPtyButton();
+            break;
+          case "run-demo":
+            options.onDemoRun(detail.demoKind);
+            break;
+        }
       }),
       listen(options.target, TERMINAL_ACTION_EVENT, (event) => {
         const detail = (event as TerminalActionEvent).detail;

@@ -1,10 +1,11 @@
-import { SETTINGS_CLOSE_EVENT, SETTINGS_OPEN_EVENT } from "./shell-events.ts";
+import { SHELL_COMMAND_EVENT, type ShellCommandDetail } from "./shell-events.ts";
 
 type TargetLike = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 type NullableTarget = TargetLike | null | undefined;
 
 type Disposer = () => void;
+type ShellCommandEvent = CustomEvent<ShellCommandDetail>;
 
 function listen(
   target: NullableTarget,
@@ -32,8 +33,16 @@ export function bindSettingsControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, SETTINGS_OPEN_EVENT, options.onOpen),
-      listen(options.target, SETTINGS_CLOSE_EVENT, options.onClose),
+      listen(options.target, SHELL_COMMAND_EVENT, (event) => {
+        switch ((event as ShellCommandEvent).detail?.command) {
+          case "settings-open":
+            options.onOpen();
+            break;
+          case "settings-close":
+            options.onClose();
+            break;
+        }
+      }),
     );
   } else {
     disposers.push(

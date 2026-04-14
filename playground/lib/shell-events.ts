@@ -4,19 +4,21 @@ import type { RendererChoice } from "./pane-state.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 
-export const SETTINGS_OPEN_EVENT = "restty:playground-settings-open";
-export const SETTINGS_CLOSE_EVENT = "restty:playground-settings-close";
 export const CONNECTION_INPUT_EVENT = "restty:playground-connection-input";
 export const CONNECTION_STATE_EVENT = "restty:playground-connection-state";
 export const ACTIVE_PANE_STATE_EVENT = "restty:playground-active-pane-state";
-export const RUN_DEMO_EVENT = "restty:playground-demo-run";
 export const APPEARANCE_INPUT_EVENT = "restty:playground-appearance-input";
 export const THEME_FILE_RESET_EVENT = "restty:playground-theme-file-reset";
 export const TERMINAL_ACTION_EVENT = "restty:playground-terminal-action";
-export const PTY_BUTTON_EVENT = "restty:playground-pty-button";
+export const SHELL_COMMAND_EVENT = "restty:playground-shell-command";
 
 export type DemoRunDetail = {
   kind?: PlaygroundDemoKind | string;
+};
+
+export type ShellCommandDetail = {
+  command?: "settings-open" | "settings-close" | "pty-button" | "run-demo";
+  demoKind?: PlaygroundDemoKind | string;
 };
 
 export type ConnectionInputDetail = {

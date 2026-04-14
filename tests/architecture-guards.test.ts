@@ -932,10 +932,15 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellDispatch).toContain("TERMINAL_ACTION_EVENT");
   expect(shellDispatch).toContain("CONNECTION_INPUT_EVENT");
   expect(shellDispatch).toContain("APPEARANCE_INPUT_EVENT");
+  expect(shellDispatch).toContain("SHELL_COMMAND_EVENT");
   expect(shellDispatch).not.toContain("CONNECTION_BACKEND_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("PTY_URL_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("WC_COMMAND_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("WC_CWD_CHANGE_EVENT");
+  expect(shellDispatch).not.toContain("SETTINGS_OPEN_EVENT");
+  expect(shellDispatch).not.toContain("SETTINGS_CLOSE_EVENT");
+  expect(shellDispatch).not.toContain("PTY_BUTTON_EVENT");
+  expect(shellDispatch).not.toContain("RUN_DEMO_EVENT");
   expect(shellDispatch).not.toContain("FONT_FAMILY_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("FONT_FAMILY_LOCAL_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("FONT_LIGATURES_CHANGE_EVENT");

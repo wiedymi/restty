@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import {
   APPEARANCE_INPUT_EVENT,
   CONNECTION_INPUT_EVENT,
-  RUN_DEMO_EVENT,
+  SHELL_COMMAND_EVENT,
   TERMINAL_ACTION_EVENT,
 } from "../playground/lib/shell-events.ts";
 import {
@@ -29,7 +29,7 @@ test("dispatch helpers emit shell events with expected detail", () => {
     });
   };
 
-  target.addEventListener(RUN_DEMO_EVENT, record(RUN_DEMO_EVENT));
+  target.addEventListener(SHELL_COMMAND_EVENT, record(SHELL_COMMAND_EVENT));
   target.addEventListener(CONNECTION_INPUT_EVENT, record(CONNECTION_INPUT_EVENT));
   target.addEventListener(APPEARANCE_INPUT_EVENT, record(APPEARANCE_INPUT_EVENT));
   target.addEventListener(TERMINAL_ACTION_EVENT, record(TERMINAL_ACTION_EVENT));
@@ -47,7 +47,7 @@ test("dispatch helpers emit shell events with expected detail", () => {
   dispatchTerminalClear(target);
 
   expect(seen).toEqual([
-    { type: RUN_DEMO_EVENT, detail: { kind: "unicode" } },
+    { type: SHELL_COMMAND_EVENT, detail: { command: "run-demo", demoKind: "unicode" } },
     { type: CONNECTION_INPUT_EVENT, detail: { backend: "webcontainer" } },
     { type: APPEARANCE_INPUT_EVENT, detail: { fontFamily: "jetbrains" } },
     { type: CONNECTION_INPUT_EVENT, detail: { ptyUrl: "ws://localhost:8787/pty" } },

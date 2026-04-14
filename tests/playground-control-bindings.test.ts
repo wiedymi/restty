@@ -8,9 +8,7 @@ import { bindSettingsControls } from "../playground/lib/settings-bindings.ts";
 import {
   APPEARANCE_INPUT_EVENT,
   CONNECTION_INPUT_EVENT,
-  RUN_DEMO_EVENT,
-  SETTINGS_CLOSE_EVENT,
-  SETTINGS_OPEN_EVENT,
+  SHELL_COMMAND_EVENT,
   TERMINAL_ACTION_EVENT,
 } from "../playground/lib/shell-events.ts";
 
@@ -93,7 +91,9 @@ test("control bindings forward svelte shell events", () => {
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "init" } }));
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "pause" } }));
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "clear" } }));
-  target.dispatchEvent(new CustomEvent(RUN_DEMO_EVENT, { detail: { kind: "unicode" } }));
+  target.dispatchEvent(
+    new CustomEvent(SHELL_COMMAND_EVENT, { detail: { command: "run-demo", demoKind: "unicode" } }),
+  );
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { renderer: "webgpu" } }));
   target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { fontSize: "24" } }));
   target.dispatchEvent(
@@ -229,8 +229,12 @@ test("settings bindings wire svelte and legacy controls", () => {
     onClose: () => svelteCalls.push("close"),
   });
 
-  svelteTarget.dispatchEvent(new CustomEvent(SETTINGS_OPEN_EVENT));
-  svelteTarget.dispatchEvent(new CustomEvent(SETTINGS_CLOSE_EVENT));
+  svelteTarget.dispatchEvent(
+    new CustomEvent(SHELL_COMMAND_EVENT, { detail: { command: "settings-open" } }),
+  );
+  svelteTarget.dispatchEvent(
+    new CustomEvent(SHELL_COMMAND_EVENT, { detail: { command: "settings-close" } }),
+  );
 
   expect(svelteCalls).toEqual(["open", "close"]);
 

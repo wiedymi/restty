@@ -4,23 +4,30 @@ import type { ShaderPreset } from "../../../lib/shader-presets.ts";
 import {
   APPEARANCE_INPUT_EVENT,
   CONNECTION_INPUT_EVENT,
-  PTY_BUTTON_EVENT,
-  RUN_DEMO_EVENT,
-  SETTINGS_CLOSE_EVENT,
-  SETTINGS_OPEN_EVENT,
+  SHELL_COMMAND_EVENT,
   TERMINAL_ACTION_EVENT,
 } from "../../../lib/shell-events.ts";
 
+export function dispatchShellCommand(
+  detail: {
+    command?: "settings-open" | "settings-close" | "pty-button" | "run-demo";
+    demoKind?: PlaygroundDemoKind | string;
+  },
+  target: EventTarget = window,
+) {
+  dispatchShellEvent(SHELL_COMMAND_EVENT, detail, target);
+}
+
 export function dispatchSettingsOpen(target: EventTarget = window) {
-  dispatchShellEvent(SETTINGS_OPEN_EVENT, undefined, target);
+  dispatchShellCommand({ command: "settings-open" }, target);
 }
 
 export function dispatchSettingsClose(target: EventTarget = window) {
-  dispatchShellEvent(SETTINGS_CLOSE_EVENT, undefined, target);
+  dispatchShellCommand({ command: "settings-close" }, target);
 }
 
 export function dispatchDemoRun(kind: PlaygroundDemoKind | string, target: EventTarget = window) {
-  dispatchShellEvent(RUN_DEMO_EVENT, { kind }, target);
+  dispatchShellCommand({ command: "run-demo", demoKind: kind }, target);
 }
 
 export function dispatchConnectionInput(
@@ -78,7 +85,7 @@ export function dispatchTerminalRendererChange(value: string, target: EventTarge
 }
 
 export function dispatchPtyButton(target: EventTarget = window) {
-  dispatchShellEvent(PTY_BUTTON_EVENT, undefined, target);
+  dispatchShellCommand({ command: "pty-button" }, target);
 }
 
 export function dispatchPtyUrlChange(value: string, target: EventTarget = window) {
