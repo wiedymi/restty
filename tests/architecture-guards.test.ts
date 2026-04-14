@@ -278,6 +278,30 @@ test("runtime controller delegates clipboard behavior to a dedicated module", ()
   expect(runtimeControllerClipboard).toContain("options.ptyInputRuntime.sendPasteText(text)");
 });
 
+test("runtime controller options are grouped by capability", () => {
+  const runtimeControllerApiTypes = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.api.types.ts"),
+    "utf8",
+  );
+  const runtimeController = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.ts"),
+    "utf8",
+  );
+
+  expect(runtimeControllerApiTypes).toContain("export type RuntimeControllerRuntimeDeps =");
+  expect(runtimeControllerApiTypes).toContain("export type RuntimeControllerStateDeps =");
+  expect(runtimeControllerApiTypes).toContain("export type RuntimeControllerPlatformDeps =");
+  expect(runtimeControllerApiTypes).toContain("export type RuntimeControllerHookDeps =");
+  expect(runtimeControllerApiTypes).toContain("export type RuntimeControllerRenderDeps =");
+  expect(runtimeControllerApiTypes).toContain("export type RuntimeControllerLifecycleDeps =");
+  expect(runtimeController).toContain("runtime,");
+  expect(runtimeController).toContain("state,");
+  expect(runtimeController).toContain("platform,");
+  expect(runtimeController).toContain("hooks,");
+  expect(runtimeController).toContain("render,");
+  expect(runtimeController).toContain("lifecycle: lifecycleDeps");
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });

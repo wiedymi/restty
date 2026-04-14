@@ -49,38 +49,52 @@ export type LifecycleThemeRuntime = {
   getActiveTheme: () => GhosttyTheme | null;
 };
 
-export type RuntimeControllerOptions = {
-  runtimeEvents: ResttyRuntimeEventHub;
+export type RuntimeControllerRuntimeDeps = {
   session: ResttyRuntimeSession;
   ptyTransport: PtyTransport;
   inputHandler: InputHandler;
   ptyInputRuntime: PtyInputRuntime;
   interaction: RuntimeInteraction;
   lifecycleThemeSizeRuntime: LifecycleThemeRuntime;
-  cleanupFns: Array<() => void>;
-  cleanupCanvasFns: Array<() => void>;
+};
+
+export type RuntimeControllerStateDeps = {
+  readState: () => RuntimeControllerSharedState;
+  writeState: (patch: Partial<RuntimeControllerSharedState>) => void;
+  resizeState: { lastAt: number };
+  gridState: { cols: number; rows: number };
+  getCanvas: () => HTMLCanvasElement;
+};
+
+export type RuntimeControllerPlatformDeps = {
   imeInput: HTMLTextAreaElement | null;
   attachWindowEvents: boolean;
   isMacPlatform: boolean;
-  readState: () => RuntimeControllerSharedState;
-  writeState: (patch: Partial<RuntimeControllerSharedState>) => void;
+  KITTY_FLAG_REPORT_EVENTS: number;
+};
+
+export type RuntimeControllerHookDeps = {
   runBeforeInputHook: (text: string, source: string) => string | null;
   runBeforeRenderOutputHook: (text: string, source: string) => string | null;
   getSelectionText: () => string;
+  markSearchDirty: () => void;
+  handleSearchWasmReset: () => void;
+};
+
+export type RuntimeControllerRenderDeps = {
   initialPreferredRenderer: PreferredRenderer;
-  maxScrollbackBytes?: number;
-  maxScrollback?: number;
   CURSOR_BLINK_MS: number;
   RESIZE_ACTIVE_MS: number;
   TARGET_RENDER_FPS: number;
   BACKGROUND_RENDER_FPS: number;
-  KITTY_FLAG_REPORT_EVENTS: number;
-  resizeState: { lastAt: number };
   tickWebGPU: (state: WebGPUState) => void;
   tickWebGL: (state: WebGLState) => void;
+};
+
+export type RuntimeControllerLifecycleDeps = {
+  cleanupFns: Array<() => void>;
+  cleanupCanvasFns: Array<() => void>;
   updateGrid: () => void;
-  gridState: { cols: number; rows: number };
-  getCanvas: () => HTMLCanvasElement;
   applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
   ensureFont: () => Promise<void>;
   updateSize: ResttyRuntimeInteractionApi["updateSize"];
@@ -92,6 +106,16 @@ export type RuntimeControllerOptions = {
   destroyWebGPUStageTargets: () => void;
   clearWebGLShaderStages: (state?: WebGLState) => void;
   destroyWebGLStageTargets: (state?: WebGLState) => void;
-  markSearchDirty: () => void;
-  handleSearchWasmReset: () => void;
+  maxScrollbackBytes?: number;
+  maxScrollback?: number;
+};
+
+export type RuntimeControllerOptions = {
+  runtimeEvents: ResttyRuntimeEventHub;
+  runtime: RuntimeControllerRuntimeDeps;
+  state: RuntimeControllerStateDeps;
+  platform: RuntimeControllerPlatformDeps;
+  hooks: RuntimeControllerHookDeps;
+  render: RuntimeControllerRenderDeps;
+  lifecycle: RuntimeControllerLifecycleDeps;
 };
