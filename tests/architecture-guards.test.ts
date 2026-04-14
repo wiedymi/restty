@@ -193,6 +193,25 @@ test("runtime controller delegates lifecycle orchestration to a dedicated module
   expect(runtimeControllerLifecycle).toContain('setLifecycleState("initializing")');
 });
 
+test("runtime controller delegates render loop orchestration to a dedicated module", () => {
+  const runtimeController = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.ts"),
+    "utf8",
+  );
+  const runtimeControllerRenderLoop = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.render-loop.ts"),
+    "utf8",
+  );
+
+  expect(runtimeController).toContain('./runtime-controller.render-loop"');
+  expect(runtimeController).not.toContain("function loop(");
+  expect(runtimeController).not.toContain("function canRenderFrame(");
+  expect(runtimeControllerRenderLoop).toContain(
+    "export function createRuntimeControllerRenderLoop",
+  );
+  expect(runtimeControllerRenderLoop).toContain("requestAnimationFrame(() => loop(state))");
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });

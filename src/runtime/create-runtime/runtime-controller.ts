@@ -1,4 +1,3 @@
-import type { WebGPUState, WebGLState } from "../../renderer";
 import {
   copyToClipboard as writeClipboardText,
   pasteFromClipboard as readClipboardText,
@@ -7,6 +6,7 @@ import { normalizeNewlines } from "./runtime-io-utils";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import { createRuntimeControllerLifecycle } from "./runtime-controller.lifecycle";
 import { createRuntimePublicApi } from "./runtime-controller.public-api";
+import { createRuntimeControllerRenderLoop } from "./runtime-controller.render-loop";
 import type { RuntimeController, RuntimeControllerOptions } from "./runtime-controller.api.types";
 import type {
   RuntimeControllerSharedState,
@@ -66,43 +66,18 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
     nextBlinkTime: performance.now() + CURSOR_BLINK_MS,
   };
   const maxScrollbackBytes = resolveMaxScrollbackBytes(options);
-
-  function canRenderFrame(shared: RuntimeControllerSharedState): boolean {
-    return Boolean(shared.wasmReady && shared.wasm && shared.wasmHandle);
-  }
-
-  function loop(state: WebGPUState | WebGLState) {
-    if (!internalState.paused) {
-      const now = performance.now();
-      if (now >= internalState.nextBlinkTime) {
-        internalState.nextBlinkTime = now + CURSOR_BLINK_MS;
-        writeState({ needsRender: true });
-      }
-      const resizeActive = now - resizeState.lastAt <= RESIZE_ACTIVE_MS;
-      if (resizeActive) {
-        writeState({ needsRender: true });
-      }
-      const hidden =
-        typeof document !== "undefined" &&
-        typeof document.visibilityState === "string" &&
-        document.visibilityState !== "visible";
-      const targetRenderFps = hidden ? BACKGROUND_RENDER_FPS : TARGET_RENDER_FPS;
-      const nextShared = readState();
-      const renderBudget = resizeActive
-        ? true
-        : now - nextShared.lastRenderTime >= 1000 / targetRenderFps;
-      if (nextShared.needsRender && renderBudget) {
-        // Avoid presenting a cleared frame before the terminal core has a live handle.
-        // Leaving needsRender=true retries immediately once startup finishes.
-        if (canRenderFrame(nextShared)) {
-          if (internalState.backend === "webgpu" && "device" in state) tickWebGPU(state);
-          if (internalState.backend === "webgl2" && "gl" in state) tickWebGL(state);
-          writeState({ lastRenderTime: now, needsRender: false });
-        }
-      }
-    }
-    internalState.rafId = requestAnimationFrame(() => loop(state));
-  }
+  const { loop } = createRuntimeControllerRenderLoop({
+    internalState,
+    readState,
+    writeState,
+    resizeState,
+    CURSOR_BLINK_MS,
+    RESIZE_ACTIVE_MS,
+    TARGET_RENDER_FPS,
+    BACKGROUND_RENDER_FPS,
+    tickWebGPU,
+    tickWebGL,
+  });
 
   function writeToWasm(handle: number, text: string) {
     const shared = readState();
