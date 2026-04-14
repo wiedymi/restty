@@ -612,6 +612,23 @@ test("playground app bootstrap delegates restty construction to the surface boot
   expect(orchestrator).not.toContain("new Restty(");
 });
 
+test("playground surface bootstrap delegates startup lifecycle", () => {
+  const surfaceBootstrap = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap.ts"),
+    "utf8",
+  );
+  const surfaceStartup = readFileSync(resolve(playgroundRoot, "lib/surface-startup.ts"), "utf8");
+
+  expect(surfaceBootstrap).toContain('./surface-startup.ts"');
+  expect(surfaceBootstrap).not.toContain("appearanceController.applyCurrentShaderPreset()");
+  expect(surfaceBootstrap).not.toContain('target.addEventListener("resize"');
+  expect(surfaceBootstrap).not.toContain("createInitialPane({ focus: true })");
+  expect(surfaceStartup).toContain("export function createPlaygroundSurfaceStartup");
+  expect(surfaceStartup).toContain("appearanceController.applyCurrentShaderPreset()");
+  expect(surfaceStartup).toContain('target.addEventListener("resize"');
+  expect(surfaceStartup).toContain("createInitialPane({ focus: true })");
+});
+
 test("playground app bootstrap delegates shell element lookup", () => {
   const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
 

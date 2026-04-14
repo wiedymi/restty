@@ -7,6 +7,7 @@ import type { createConnectionController } from "./connection-controller.ts";
 import type { createPaneLifecycleController } from "./pane-lifecycle.ts";
 import { createPaneState, type PaneState } from "./pane-state.ts";
 import type { createPaneShellSync } from "./pane-shell-sync.ts";
+import { createPlaygroundSurfaceStartup } from "./surface-startup.ts";
 
 type AnimationFrameHost = Pick<Window, "addEventListener" | "requestAnimationFrame">;
 
@@ -45,18 +46,15 @@ export function bootstrapPlaygroundSurface({
   createPtyTransport = createAdaptivePtyTransport,
   createDemoController: createDemoControllerForPane = createDemoController,
 }: BootstrapPlaygroundSurfaceOptions) {
-  let resizeRaf = 0;
   let restty!: Restty;
-
-  const queueResizeAllPanes = () => {
-    if (resizeRaf) return;
-    resizeRaf = target.requestAnimationFrame(() => {
-      resizeRaf = 0;
-      for (const pane of restty.getPanes()) {
-        pane.runtime.interaction.updateSize(true);
-      }
-    });
-  };
+  const surfaceStartup = createPlaygroundSurfaceStartup({
+    target,
+    getPanes: () => restty.getPanes(),
+    paneStates,
+    setActivePaneId,
+    paneShellSync,
+    appearanceController,
+  });
 
   restty = createRestty({
     root,
@@ -106,7 +104,7 @@ export function bootstrapPlaygroundSurface({
           paneShellSync.renderActivePaneControls(pane, state);
         },
         onLayoutChanged: () => {
-          queueResizeAllPanes();
+          surfaceStartup.queueResizeAllPanes();
         },
         onDesktopNotification,
       },
@@ -155,20 +153,7 @@ export function bootstrapPlaygroundSurface({
     }),
   });
 
-  appearanceController.applyCurrentShaderPreset();
-
-  target.addEventListener("resize", () => {
-    queueResizeAllPanes();
-  });
-
-  const firstPane = restty.createInitialPane({ focus: true });
-  setActivePaneId(firstPane.id);
-  const firstState = paneStates.get(firstPane.id);
-  if (firstState) {
-    paneShellSync.syncPtyButton(firstPane);
-    paneShellSync.renderActivePaneControls(firstPane, firstState);
-  }
-  queueResizeAllPanes();
+  surfaceStartup.start(restty);
 
   return restty;
 }
