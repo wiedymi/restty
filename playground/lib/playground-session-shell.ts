@@ -2,7 +2,7 @@ import { Restty } from "../../src/index.ts";
 import { createPaneAppearanceController } from "./appearance-controller.ts";
 import { createConnectionController } from "./connection-controller.ts";
 import { createPaneShellSync } from "./pane-shell-sync.ts";
-import { createPlaygroundShellEffects } from "./shell-effects.ts";
+import { dispatchConnectionState, dispatchThemeFileReset } from "./shell-bridge.ts";
 import type { ConnectionStateDetail } from "./shell-events.ts";
 import { isSettingsDialogOpen } from "./settings-dialog.ts";
 
@@ -19,8 +19,8 @@ type CreatePlaygroundSessionShellOptions = {
 
 export type PlaygroundSessionShell = {
   isSettingsDialogOpen: () => boolean;
-  resetThemeFileInput: ReturnType<typeof createPlaygroundShellEffects>["resetThemeFileInput"];
-  syncConnectionState: ReturnType<typeof createPlaygroundShellEffects>["syncConnectionState"];
+  resetThemeFileInput: () => void;
+  syncConnectionState: (detail: ConnectionStateDetail) => void;
   paneShellSync: ReturnType<typeof createPaneShellSync>;
   getConnectionShellStateDetail: () => ConnectionStateDetail;
 };
@@ -52,10 +52,6 @@ export function createPlaygroundSessionShell({
     };
   }
 
-  const shellEffects = createPlaygroundShellEffects({
-    target: window,
-  });
-
   const paneShellSync = createPaneShellSync({
     target: window,
     getSelectedConnectionBackend: () => getConnectionController().getBackend(),
@@ -74,8 +70,12 @@ export function createPlaygroundSessionShell({
 
   return {
     isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog),
-    resetThemeFileInput: shellEffects.resetThemeFileInput,
-    syncConnectionState: shellEffects.syncConnectionState,
+    resetThemeFileInput: () => {
+      dispatchThemeFileReset(window);
+    },
+    syncConnectionState: (detail) => {
+      dispatchConnectionState(detail, window);
+    },
     paneShellSync,
     getConnectionShellStateDetail,
   };

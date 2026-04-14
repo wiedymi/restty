@@ -4,12 +4,12 @@ import type { createConnectionController } from "./connection-controller.ts";
 import type { createPaneLifecycleController } from "./pane-lifecycle.ts";
 import type { createPaneShellSync } from "./pane-shell-sync.ts";
 import type { PaneState } from "./pane-state.ts";
-import type { createPlaygroundShellEffects } from "./shell-effects.ts";
+import type { ConnectionStateDetail } from "./shell-events.ts";
 
 export type PlaygroundWindow = Window & typeof globalThis;
 
 export type PlaygroundControlShell = {
-  syncConnectionState: ReturnType<typeof createPlaygroundShellEffects>["syncConnectionState"];
+  syncConnectionState: (detail: ConnectionStateDetail) => void;
   paneShellSync: ReturnType<typeof createPaneShellSync>;
   getConnectionShellStateDetail: () => {
     backend: string;

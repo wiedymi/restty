@@ -888,7 +888,8 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(sessionState).toContain("export function createPlaygroundSessionState");
   expect(sessionState).toContain("new Map<number, PaneState>()");
   expect(sessionState).toContain("let activePaneId: number | null = null");
-  expect(sessionShell).toContain("createPlaygroundShellEffects(");
+  expect(sessionShell).toContain("dispatchThemeFileReset(window)");
+  expect(sessionShell).toContain("dispatchConnectionState(detail, window)");
   expect(sessionShell).toContain(
     "isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog)",
   );
@@ -1118,7 +1119,6 @@ test("appearance controller delegates terminal policy", () => {
 });
 
 test("shell bridge centralizes custom event dispatch and listeners", () => {
-  const shellEffects = readFileSync(resolve(playgroundRoot, "lib/shell-effects.ts"), "utf8");
   const sessionShell = readFileSync(
     resolve(playgroundRoot, "lib/playground-session-shell.ts"),
     "utf8",
@@ -1162,9 +1162,9 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   );
   const shellBridge = readFileSync(resolve(playgroundRoot, "lib/shell-bridge.ts"), "utf8");
 
-  expect(sessionShell).toContain('./shell-effects.ts"');
+  expect(sessionShell).toContain('./shell-bridge.ts"');
   expect(paneShellSync).toContain('./shell-bridge.ts"');
-  expect(shellEffects).toContain('./shell-bridge.ts"');
+  expect(existsSync(resolve(playgroundRoot, "lib/shell-effects.ts"))).toBe(false);
   expect(existsSync(resolve(playgroundRoot, "lib/shell-adapter.ts"))).toBe(false);
   expect(existsSync(resolve(playgroundRoot, "lib/legacy-shell-adapter.ts"))).toBe(false);
   expect(settingsShell).toContain("../../../../lib/shell-bridge.ts");
@@ -1179,7 +1179,6 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellStateBridge).toContain('./stores/shell-state-reducers.ts"');
   expect(shellState).not.toContain('../../../../lib/shell-bridge.ts"');
   expect(sessionShell).not.toContain("new CustomEvent(");
-  expect(shellEffects).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(settingsShellEffects).not.toContain("new CustomEvent(");
   expect(settingsShellEffects).not.toContain("SHELL_COMMAND_EVENT");
