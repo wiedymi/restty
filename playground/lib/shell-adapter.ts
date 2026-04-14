@@ -1,14 +1,10 @@
-import { syncConnectionUi } from "./pty-connection.ts";
-import { dispatchConnectionState, dispatchThemeFileReset } from "./shell-bridge.ts";
+import { createLegacyPlaygroundShellAdapter } from "./legacy-shell-adapter.ts";
+import { createPlaygroundShellEffects } from "./shell-effects.ts";
 import {
-  closeSettingsDialog,
   isSettingsDialogOpen,
-  openSettingsDialog,
-  restoreTerminalFocus,
   type SettingsDialogElement,
   type SettingsDialogHost,
 } from "./settings-dialog.ts";
-import { type ConnectionStateDetail } from "./shell-events.ts";
 
 type ConnectionUiElements = {
   connectionBackendEl: HTMLSelectElement | null;
@@ -24,58 +20,35 @@ type CreatePlaygroundShellAdapterOptions = {
   themeFileInput: HTMLInputElement | null;
   settingsDialog: SettingsDialogElement;
   connectionUi: ConnectionUiElements;
-  syncConnectionUi?: typeof syncConnectionUi;
+  syncConnectionUi?: typeof import("./pty-connection.ts").syncConnectionUi;
 };
 
-export function createPlaygroundShellAdapter({
-  usesSvelteShell,
-  target,
-  themeFileInput,
-  settingsDialog,
-  connectionUi,
-  syncConnectionUi: syncConnectionUiImpl = syncConnectionUi,
-}: CreatePlaygroundShellAdapterOptions) {
-  function resetThemeFileInput() {
-    if (usesSvelteShell) {
-      dispatchThemeFileReset(target);
-      return;
-    }
-    if (themeFileInput) {
-      themeFileInput.value = "";
-    }
-  }
-
-  function syncConnectionState(detail: ConnectionStateDetail) {
-    if (usesSvelteShell) {
-      dispatchConnectionState(detail, target);
-      return;
-    }
-    syncConnectionUiImpl(connectionUi);
-  }
-
-  function openSettings(host: SettingsDialogHost) {
-    if (usesSvelteShell) {
-      host.hideContextMenu();
-      return;
-    }
-    openSettingsDialog({ host, settingsDialog });
-  }
-
-  function closeSettings(host: SettingsDialogHost) {
-    if (usesSvelteShell) {
-      restoreTerminalFocus(host);
-      return;
-    }
-    if (!isSettingsDialogOpen(settingsDialog)) return;
-    closeSettingsDialog({ host, settingsDialog });
-  }
+export function createPlaygroundShellAdapter(options: CreatePlaygroundShellAdapterOptions) {
+  const adapter = options.usesSvelteShell
+    ? createPlaygroundShellEffects({
+        target: options.target,
+      })
+    : createLegacyPlaygroundShellAdapter({
+        themeFileInput: options.themeFileInput,
+        settingsDialog: options.settingsDialog,
+        connectionUi: options.connectionUi,
+        syncConnectionUi: options.syncConnectionUi,
+      });
 
   return {
-    usesSvelteShell,
-    isSettingsDialogOpen: () => isSettingsDialogOpen(settingsDialog),
-    resetThemeFileInput,
-    syncConnectionState,
-    openSettings,
-    closeSettings,
+    usesSvelteShell: options.usesSvelteShell,
+    isSettingsDialogOpen: () => isSettingsDialogOpen(options.settingsDialog),
+    resetThemeFileInput() {
+      adapter.resetThemeFileInput();
+    },
+    syncConnectionState(detail: import("./shell-events.ts").ConnectionStateDetail) {
+      adapter.syncConnectionState(detail);
+    },
+    openSettings(host: SettingsDialogHost) {
+      adapter.openSettings(host);
+    },
+    closeSettings(host: SettingsDialogHost) {
+      adapter.closeSettings(host);
+    },
   };
 }
