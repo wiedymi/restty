@@ -795,6 +795,8 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
   expect(surfaceStartup).toContain("appearanceController.applyCurrentShaderPreset()");
   expect(surfaceStartup).toContain('target.addEventListener("resize"');
   expect(surfaceStartup).toContain("createInitialPane({ focus: true })");
+  expect(surfaceStartup).toContain("restty.forEachPane((pane) =>");
+  expect(surfaceStartup).not.toContain("pane.runtime.interaction.updateSize(true)");
   expect(surfaceAssembly).toContain("export function assemblePlaygroundSurface");
   expect(surfaceAssembly).toContain('./surface-bootstrap-events.ts"');
   expect(surfaceAssembly).toContain('./surface-bootstrap-runtime.ts"');
@@ -810,6 +812,18 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
   expect(surfaceRuntime).toContain("export function createPlaygroundSurfaceRuntimeFactories");
   expect(surfaceRuntime).toContain("terminal: ({ id, sourcePane }) =>");
   expect(surfaceRuntime).toContain("services: () => ({");
+});
+
+test("playground pane lifecycle resizes panes through surface callbacks", () => {
+  const paneLifecycle = readFileSync(resolve(playgroundRoot, "lib/pane-lifecycle.ts"), "utf8");
+  const sessionControllers = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
+    "utf8",
+  );
+
+  expect(paneLifecycle).toContain("updatePaneSize: (paneId: number, force?: boolean) => void;");
+  expect(paneLifecycle).not.toContain("runtime.interaction.updateSize(true)");
+  expect(sessionControllers).toContain("getRestty().pane(id)?.updateSize(force)");
 });
 
 test("playground app bootstrap delegates shell element lookup", () => {

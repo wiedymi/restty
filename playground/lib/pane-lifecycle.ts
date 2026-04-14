@@ -22,9 +22,6 @@ export type PaneLifecyclePane = {
       disconnectPty: () => void;
       isPtyConnected: () => boolean;
     };
-    interaction: {
-      updateSize: (force?: boolean) => void;
-    };
   };
 };
 
@@ -36,6 +33,7 @@ type CreatePaneLifecycleControllerOptions = {
   getActivePaneId: () => number | null;
   getSelectedConnectionBackend: () => ConnectionBackend;
   getSelectedPtyUrl: () => string;
+  updatePaneSize: (paneId: number, force?: boolean) => void;
   syncPauseButton: (state: PaneState) => void;
   syncPtyButton: (pane: PaneLifecyclePane) => void;
   waitForAnimationFrame?: () => Promise<void>;
@@ -82,12 +80,12 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
   function connectPaneIfNeeded(pane: PaneLifecyclePane) {
     if (options.getSelectedConnectionBackend() !== "webcontainer") return;
     if (pane.runtime.io.isPtyConnected()) return;
-    pane.runtime.interaction.updateSize(true);
+    options.updatePaneSize(pane.id, true);
     pane.runtime.io.connectPty(
       getConnectUrlForState(options.getSelectedConnectionBackend(), options.getSelectedPtyUrl()),
     );
     queueAnimationFrame(() => {
-      pane.runtime.interaction.updateSize(true);
+      options.updatePaneSize(pane.id, true);
     });
   }
 
@@ -101,7 +99,7 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
       }),
     );
     await waitForAnimationFrame();
-    pane.runtime.interaction.updateSize(true);
+    options.updatePaneSize(pane.id, true);
     connectPaneIfNeeded(pane);
     if (pane.id === options.getActivePaneId()) {
       options.syncPtyButton(pane);

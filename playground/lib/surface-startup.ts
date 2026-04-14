@@ -7,7 +7,6 @@ type AnimationFrameHost = Pick<Window, "addEventListener" | "requestAnimationFra
 
 type CreatePlaygroundSurfaceStartupOptions = {
   target: AnimationFrameHost;
-  getPanes: () => ReturnType<Restty["getPanes"]>;
   paneStates: Map<number, PaneState>;
   setActivePaneId: (id: number | null) => void;
   paneShellSync: ReturnType<typeof createPaneShellSync>;
@@ -16,25 +15,28 @@ type CreatePlaygroundSurfaceStartupOptions = {
 
 export function createPlaygroundSurfaceStartup({
   target,
-  getPanes,
   paneStates,
   setActivePaneId,
   paneShellSync,
   appearanceController,
 }: CreatePlaygroundSurfaceStartupOptions) {
   let resizeRaf = 0;
+  let resizeAllPanes: ((force?: boolean) => void) | null = null;
 
   const queueResizeAllPanes = () => {
     if (resizeRaf) return;
     resizeRaf = target.requestAnimationFrame(() => {
       resizeRaf = 0;
-      for (const pane of getPanes()) {
-        pane.runtime.interaction.updateSize(true);
-      }
+      resizeAllPanes?.(true);
     });
   };
 
   function start(restty: Restty) {
+    resizeAllPanes = (force) => {
+      restty.forEachPane((pane) => {
+        pane.updateSize(force);
+      });
+    };
     appearanceController.applyCurrentShaderPreset();
 
     target.addEventListener("resize", () => {

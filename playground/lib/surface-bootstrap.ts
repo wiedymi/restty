@@ -21,7 +21,6 @@ export function bootstrapPlaygroundSurface({
 }: BootstrapPlaygroundSurfaceOptions) {
   const surfaceStartup = createPlaygroundSurfaceStartup({
     target,
-    getPanes: () => restty.getPanes(),
     paneStates: assembly.state.paneStates,
     setActivePaneId: assembly.state.setActivePaneId,
     paneShellSync: assembly.shell.paneShellSync,

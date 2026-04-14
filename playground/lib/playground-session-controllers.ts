@@ -65,6 +65,9 @@ export function createPlaygroundSessionControllers({
     getActivePaneId,
     getSelectedConnectionBackend: () => connectionController.getBackend(),
     getSelectedPtyUrl: () => connectionController.getPtyUrl(),
+    updatePaneSize: (id, force) => {
+      getRestty().pane(id)?.updateSize(force);
+    },
     syncPauseButton: (state) => {
       shell.paneShellSync.syncPauseButton(state);
     },

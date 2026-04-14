@@ -55,11 +55,6 @@ function createPane(id = 1) {
         },
         isPtyConnected: () => connected,
       },
-      interaction: {
-        updateSize: (force?: boolean) => {
-          calls.push(`size:${force === true ? "forced" : "normal"}`);
-        },
-      },
     },
   };
 
@@ -70,6 +65,7 @@ test("pane lifecycle init restores size and auto-connects webcontainer panes", a
   const { pane, calls } = createPane(7);
   const paneStates = new Map<number, PaneState>([[7, createState({ id: 7, paused: true })]]);
   const syncedPty: number[] = [];
+  const resizeCalls: string[] = [];
 
   const lifecycle = createPaneLifecycleController({
     getPaneById: (id) => (id === pane.id ? pane : null),
@@ -81,6 +77,9 @@ test("pane lifecycle init restores size and auto-connects webcontainer panes", a
     getActivePaneId: () => pane.id,
     getSelectedConnectionBackend: () => "webcontainer",
     getSelectedPtyUrl: () => "ws://localhost:8787/pty",
+    updatePaneSize: (id, force) => {
+      resizeCalls.push(`${id}:${force === true ? "forced" : "normal"}`);
+    },
     syncPauseButton: () => {},
     syncPtyButton: (nextPane) => {
       syncedPty.push(nextPane.id);
@@ -94,7 +93,8 @@ test("pane lifecycle init restores size and auto-connects webcontainer panes", a
 
   await lifecycle.initPane(pane, paneStates.get(7)!);
 
-  expect(calls).toEqual(["init", "size:forced", "size:forced", "connect:", "size:forced", "focus"]);
+  expect(calls).toEqual(["init", "connect:", "focus"]);
+  expect(resizeCalls).toEqual(["7:forced", "7:forced", "7:forced"]);
   expect(syncedPty).toEqual([7]);
 });
 
@@ -128,6 +128,7 @@ test("pane lifecycle toggles pause and pty state for the active pane", () => {
     getActivePaneId: () => activePaneId,
     getSelectedConnectionBackend: () => "ws",
     getSelectedPtyUrl: () => "ws://localhost:8787/pty",
+    updatePaneSize: () => {},
     syncPauseButton: (state) => {
       pauseStates.push(state.paused);
     },

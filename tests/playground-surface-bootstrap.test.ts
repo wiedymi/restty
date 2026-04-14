@@ -36,11 +36,11 @@ function createPane(id = 1) {
   const pane = {
     id,
     paused: false,
+    updateSize: (force?: boolean) => {
+      calls.push(`size:${force === true ? "forced" : "normal"}`);
+    },
     runtime: {
       interaction: {
-        updateSize: (force?: boolean) => {
-          calls.push(`size:${force === true ? "forced" : "normal"}`);
-        },
         setMouseMode: (value: string) => {
           calls.push(`mouse:${value}`);
         },
@@ -149,6 +149,9 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
       capturedConfig = config;
       return {
         getPanes: () => panes as never[],
+        forEachPane: (visitor: (pane: (typeof panes)[number]) => void) => {
+          for (const pane of panes) visitor(pane);
+        },
         createInitialPane: (options?: { focus?: boolean }) => {
           createdWithFocus = options?.focus === true;
           void config.terminal?.({ id: 1, sourcePane: null as never });
