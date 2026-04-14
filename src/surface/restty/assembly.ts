@@ -1,10 +1,6 @@
 import type { ResttyFontSource } from "../../runtime/core/models";
 import type { ResttyManagedPane } from "../panes/managed-pane-types";
-import {
-  createMergedPaneServicesConfig,
-  createMergedPaneTerminalConfig,
-  createPaneManagerEventHandlers,
-} from "./manager-options";
+import { createResttyPaneManagerAssembly } from "./pane-manager-assembly";
 import {
   createResttyPluginSurfaceBridge,
   type ResttyPluginSurfaceBridgeSource,
@@ -32,15 +28,6 @@ export function createResttySurfaceAssembly({
   services,
   events,
 }: CreateResttySurfaceAssemblyOptions) {
-  const {
-    onPaneCreated,
-    onPaneClosed,
-    onPaneSplit,
-    onActivePaneChange,
-    onLayoutChanged,
-    onDesktopNotification,
-  } = events ?? {};
-
   const shaderOps = new ResttyShaderOps({
     getPanes,
     getPaneById,
@@ -54,33 +41,18 @@ export function createResttySurfaceAssembly({
     addRenderStage: (stage, ownerPluginId) => shaderOps.addManagedShaderStage(stage, ownerPluginId),
   });
 
-  const mergedTerminalConfig = createMergedPaneTerminalConfig({
-    terminal,
+  const paneManagerAssembly = createResttyPaneManagerAssembly({
+    shaderOps,
+    controller,
     getFontSources,
-    shaderOps,
-  });
-  const mergedServicesConfig = createMergedPaneServicesConfig({
+    terminal,
     services,
-    onDesktopNotification,
-    pluginHost: controller,
-    runRenderHooks: (payload) => controller.runRenderHooks(payload),
-  });
-
-  const paneManagerEventHandlers = createPaneManagerEventHandlers({
-    shaderOps,
-    emitPluginEvent: (event, payload) => controller.emitPluginEvent(event, payload),
-    onPaneCreated,
-    onPaneClosed,
-    onPaneSplit,
-    onActivePaneChange,
-    onLayoutChanged,
+    events,
   });
 
   return {
     shaderOps,
     controller,
-    mergedTerminalConfig,
-    mergedServicesConfig,
-    paneManagerEventHandlers,
+    ...paneManagerAssembly,
   };
 }
