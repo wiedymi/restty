@@ -14,14 +14,6 @@ import { resolvePlaygroundStartupDefaults } from "../playground/lib/startup-defa
 
 test("resolvePlaygroundStartupDefaults honors shell defaults and query params", () => {
   const startup = resolvePlaygroundStartupDefaults({
-    shaderPresetValue: "crt-lite",
-    ptyUrlValue: undefined,
-    webContainerCommandValue: "  jsh  ",
-    webContainerCwdValue: "/workspace",
-    rendererValue: "webgpu",
-    fontSizeValue: "20",
-    mouseModeValue: "sgr",
-    fontFamilyValue: undefined,
     locationSearch: "?ligatures=off&hinting=on&hintTarget=normal",
     localFontPickerSupported: false,
     builtinThemeNames: ["Aizen Dark", "GitHub Dark"],
@@ -30,14 +22,14 @@ test("resolvePlaygroundStartupDefaults honors shell defaults and query params", 
   expect(startup).toMatchObject({
     initialPtyUrl: DEFAULT_PTY_URL,
     initialWebContainerCommand: DEFAULT_WEB_CONTAINER_COMMAND,
-    initialWebContainerCwd: "/workspace",
-    initialFontSize: 20,
+    initialWebContainerCwd: "/",
+    initialFontSize: DEFAULT_TERMINAL_FONT_SIZE,
     defaultThemeName: DEFAULT_THEME_NAME,
     appearanceInitialState: {
-      shaderPreset: "crt-lite",
-      rendererDefault: "webgpu",
-      fontSizeDefault: 20,
-      mouseModeDefault: "sgr",
+      shaderPreset: "none",
+      rendererDefault: "auto",
+      fontSizeDefault: DEFAULT_TERMINAL_FONT_SIZE,
+      mouseModeDefault: "auto",
       fontFamily: DEFAULT_FONT_FAMILY,
       localFontMatcher: "",
       localFontHintText: UNSUPPORTED_LOCAL_FONT_HINT,
@@ -49,16 +41,8 @@ test("resolvePlaygroundStartupDefaults honors shell defaults and query params", 
   expect(startup.appearanceInitialState.detectedLocalFontOptions).toEqual([]);
 });
 
-test("resolvePlaygroundStartupDefaults falls back for invalid control values", () => {
+test("resolvePlaygroundStartupDefaults falls back when the preferred theme is unavailable", () => {
   const startup = resolvePlaygroundStartupDefaults({
-    shaderPresetValue: "weird",
-    ptyUrlValue: null,
-    webContainerCommandValue: "   ",
-    webContainerCwdValue: "   ",
-    rendererValue: "canvas",
-    fontSizeValue: "abc",
-    mouseModeValue: "",
-    fontFamilyValue: "jetbrains",
     locationSearch: "?hinting=0&hintTarget=weird",
     localFontPickerSupported: true,
     builtinThemeNames: ["GitHub Dark"],
@@ -74,12 +58,12 @@ test("resolvePlaygroundStartupDefaults falls back for invalid control values", (
       rendererDefault: "auto",
       fontSizeDefault: DEFAULT_TERMINAL_FONT_SIZE,
       mouseModeDefault: "auto",
-      fontFamily: "jetbrains",
+      fontFamily: DEFAULT_FONT_FAMILY,
       localFontHintText: DEFAULT_LOCAL_FONT_HINT,
       ligatures: true,
       fontHinting: false,
       fontHintTarget: "auto",
     },
   });
-  expect(Number.isNaN(startup.initialFontSize)).toBe(true);
+  expect(startup.initialFontSize).toBe(DEFAULT_TERMINAL_FONT_SIZE);
 });

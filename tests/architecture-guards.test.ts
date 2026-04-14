@@ -812,6 +812,14 @@ test("playground app bootstrap delegates controller composition to a dedicated o
   expect(orchestrator).not.toContain("getConnectionBackend(");
   expect(orchestrator).not.toContain("legacyElements");
   expect(orchestrator).not.toContain("LegacyPlaygroundElements");
+  expect(orchestrator).not.toContain("shaderPresetValue:");
+  expect(orchestrator).not.toContain("rendererValue:");
+  expect(orchestrator).not.toContain("fontSizeValue:");
+  expect(orchestrator).not.toContain("mouseModeValue:");
+  expect(orchestrator).not.toContain("fontFamilyValue:");
+  expect(orchestrator).not.toContain("ptyUrlValue:");
+  expect(orchestrator).not.toContain("webContainerCommandValue:");
+  expect(orchestrator).not.toContain("webContainerCwdValue:");
   expect(orchestrator).toContain("DEFAULT_CONNECTION_BACKEND");
   expect(session).toContain('./playground-session-controllers.ts"');
   expect(session).toContain("createPlaygroundSessionControllers(");

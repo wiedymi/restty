@@ -60,14 +60,6 @@ export function bootstrapPlaygroundOrchestrator({
     defaultThemeName,
     appearanceInitialState,
   } = resolvePlaygroundStartupDefaults({
-    shaderPresetValue: shaderPresetEl?.value,
-    ptyUrlValue: ptyUrlInput?.value,
-    webContainerCommandValue: wcCommandInput?.value,
-    webContainerCwdValue: wcCwdInput?.value,
-    rendererValue: rendererSelect?.value,
-    fontSizeValue: fontSizeInput?.value,
-    mouseModeValue: mouseModeEl?.value,
-    fontFamilyValue: fontFamilySelect?.value,
     locationSearch: window.location.search,
     localFontPickerSupported:
       typeof window === "object" && window !== null && "queryLocalFonts" in window,

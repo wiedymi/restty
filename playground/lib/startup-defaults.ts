@@ -1,7 +1,6 @@
 import type { FontHintTarget } from "./font-controls.ts";
 import { getDefaultLocalFontHintText, type LocalFontOption } from "./font-local-picker.ts";
 import { DEFAULT_FONT_FAMILY } from "./font-source-catalog.ts";
-import type { RendererChoice } from "./pane-state.ts";
 import {
   DEFAULT_FONT_HINT_TARGET,
   DEFAULT_FONT_HINTING,
@@ -15,7 +14,6 @@ import {
   DEFAULT_WEB_CONTAINER_COMMAND,
   DEFAULT_WEB_CONTAINER_CWD,
 } from "./shell-defaults.ts";
-import type { ShaderPreset } from "./shader-presets.ts";
 
 export type PlaygroundAppearanceInitialState = {
   detectedLocalFontOptions: LocalFontOption[];
@@ -41,14 +39,6 @@ export type PlaygroundStartupDefaults = {
 };
 
 type ResolvePlaygroundStartupDefaultsOptions = {
-  shaderPresetValue: string | null | undefined;
-  ptyUrlValue: string | null | undefined;
-  webContainerCommandValue: string | null | undefined;
-  webContainerCwdValue: string | null | undefined;
-  rendererValue: string | null | undefined;
-  fontSizeValue: string | null | undefined;
-  mouseModeValue: string | null | undefined;
-  fontFamilyValue: string | null | undefined;
   locationSearch?: string | null | undefined;
   localFontPickerSupported: boolean;
   builtinThemeNames: string[];
@@ -67,54 +57,23 @@ function isFalsyQueryParam(value: string | null | undefined) {
   return normalized === "0" || normalized === "false" || normalized === "off";
 }
 
-function isRendererChoice(value: string | null | undefined): value is RendererChoice {
-  return value === "auto" || value === "webgpu" || value === "webgl2";
-}
-
-function isShaderPreset(value: string | null | undefined): value is ShaderPreset {
-  return (
-    value === "none" ||
-    value === "scanline" ||
-    value === "aurora" ||
-    value === "crt-lite" ||
-    value === "mono-green"
-  );
-}
-
-function parseFontSize(value: string | null | undefined, fallback = DEFAULT_TERMINAL_FONT_SIZE) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
 function resolveFontHintTarget(value: string | null | undefined): FontHintTarget {
   return value === "light" || value === "normal" ? value : DEFAULT_FONT_HINT_TARGET;
 }
 
 export function resolvePlaygroundStartupDefaults({
-  shaderPresetValue,
-  ptyUrlValue,
-  webContainerCommandValue,
-  webContainerCwdValue,
-  rendererValue,
-  fontSizeValue,
-  mouseModeValue,
-  fontFamilyValue,
   locationSearch,
   localFontPickerSupported,
   builtinThemeNames,
   preferredThemeName = DEFAULT_THEME_NAME,
 }: ResolvePlaygroundStartupDefaultsOptions): PlaygroundStartupDefaults {
   const searchParams = locationSearch ? new URLSearchParams(locationSearch) : null;
-  const initialShaderPreset = isShaderPreset(shaderPresetValue)
-    ? shaderPresetValue
-    : DEFAULT_SHADER_PRESET;
-  const initialRendererDefault = isRendererChoice(rendererValue)
-    ? rendererValue
-    : DEFAULT_TERMINAL_RENDERER;
-  const initialFontSizeDefault = parseFontSize(fontSizeValue, DEFAULT_TERMINAL_FONT_SIZE);
-  const initialMouseModeDefault = mouseModeValue || DEFAULT_MOUSE_MODE;
-  const initialFontSize = fontSizeValue ? Number(fontSizeValue) : DEFAULT_TERMINAL_FONT_SIZE;
-  const initialFontFamily = fontFamilyValue ?? DEFAULT_FONT_FAMILY;
+  const initialShaderPreset = DEFAULT_SHADER_PRESET;
+  const initialRendererDefault = DEFAULT_TERMINAL_RENDERER;
+  const initialFontSizeDefault = DEFAULT_TERMINAL_FONT_SIZE;
+  const initialMouseModeDefault = DEFAULT_MOUSE_MODE;
+  const initialFontSize = DEFAULT_TERMINAL_FONT_SIZE;
+  const initialFontFamily = DEFAULT_FONT_FAMILY;
   const initialLocalFontMatcher = "";
   const initialDetectedLocalFontOptions: LocalFontOption[] = [];
   const initialLocalFontHintText = getDefaultLocalFontHintText(localFontPickerSupported);
@@ -127,9 +86,9 @@ export function resolvePlaygroundStartupDefaults({
   const initialFontHintTarget = resolveFontHintTarget(searchParams?.get("hintTarget"));
 
   return {
-    initialPtyUrl: ptyUrlValue ?? DEFAULT_PTY_URL,
-    initialWebContainerCommand: webContainerCommandValue?.trim() || DEFAULT_WEB_CONTAINER_COMMAND,
-    initialWebContainerCwd: webContainerCwdValue?.trim() || DEFAULT_WEB_CONTAINER_CWD,
+    initialPtyUrl: DEFAULT_PTY_URL,
+    initialWebContainerCommand: DEFAULT_WEB_CONTAINER_COMMAND,
+    initialWebContainerCwd: DEFAULT_WEB_CONTAINER_CWD,
     initialFontSize,
     defaultThemeName: builtinThemeNames.includes(preferredThemeName) ? preferredThemeName : "",
     appearanceInitialState: {
