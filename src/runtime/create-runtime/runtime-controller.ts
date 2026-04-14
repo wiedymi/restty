@@ -141,7 +141,7 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
 
   return {
     sendInput,
-    createPublicApi: (publicApiOptions) =>
+    createPublicApi: (publicApiCapabilities) =>
       createRuntimePublicApi({
         runtimeEvents: options.runtimeEvents,
         getLifecycleState: lifecycle.getLifecycleState,
@@ -157,7 +157,7 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
         sendInput,
         copySelectionToClipboard,
         pasteFromClipboard,
-        publicApiOptions,
+        publicApiCapabilities,
       }),
   };
 }

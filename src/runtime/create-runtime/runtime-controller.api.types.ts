@@ -24,29 +24,24 @@ export type RuntimeSendInput = (
   options?: { skipHooks?: boolean },
 ) => void;
 
-export type RuntimeControllerPublicOptions = {
-  setFontSize: ResttyRuntimeTerminalApi["setFontSize"];
-  setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
-  setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
-  setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
-  setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
-  resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
-  setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
-  clearSearch: ResttyRuntimeSearchApi["clear"];
-  searchNext: ResttyRuntimeSearchApi["next"];
-  searchPrevious: ResttyRuntimeSearchApi["previous"];
-  getSearchState: ResttyRuntimeSearchApi["getState"];
-  resize: ResttyRuntimeInteractionApi["resize"];
-  focus: ResttyRuntimeInteractionApi["focus"];
-  blur: ResttyRuntimeInteractionApi["blur"];
-  updateSize: ResttyRuntimeInteractionApi["updateSize"];
-  setShaderStages: ResttyRuntimeRenderApi["setShaderStages"];
-  getShaderStages: ResttyRuntimeRenderApi["getShaderStages"];
+export type RuntimeControllerPublicCapabilities = {
+  terminal: Pick<
+    ResttyRuntimeTerminalApi,
+    | "setFontSize"
+    | "setLigatures"
+    | "setFontHinting"
+    | "setFontHintTarget"
+    | "setFontSources"
+    | "resetTheme"
+  >;
+  search: ResttyRuntimeSearchApi;
+  interaction: Pick<ResttyRuntimeInteractionApi, "resize" | "focus" | "blur" | "updateSize">;
+  render: Pick<ResttyRuntimeRenderApi, "setShaderStages" | "getShaderStages">;
 };
 
 export type RuntimeController = {
   sendInput: RuntimeSendInput;
-  createPublicApi: (options: RuntimeControllerPublicOptions) => ResttyRuntime;
+  createPublicApi: (capabilities: RuntimeControllerPublicCapabilities) => ResttyRuntime;
 };
 
 export type LifecycleThemeRuntime = {

@@ -107,30 +107,39 @@ test("runtime controller exposes search controls on the public Restty runtime", 
   } as const;
 
   const publicRuntime = runtimeController.createPublicApi({
-    setFontSize: () => undefined,
-    setFontHinting: () => undefined,
-    setFontHintTarget: () => undefined,
-    setFontSources: async () => undefined,
-    resetTheme: () => undefined,
-    setSearchQuery: (query: string) => {
-      calls.push(`set:${query}`);
+    terminal: {
+      setFontSize: () => undefined,
+      setLigatures: () => undefined,
+      setFontHinting: () => undefined,
+      setFontHintTarget: () => undefined,
+      setFontSources: async () => undefined,
+      resetTheme: () => undefined,
     },
-    clearSearch: () => {
-      calls.push("clear");
+    search: {
+      setQuery: (query: string) => {
+        calls.push(`set:${query}`);
+      },
+      clear: () => {
+        calls.push("clear");
+      },
+      next: () => {
+        calls.push("next");
+      },
+      previous: () => {
+        calls.push("prev");
+      },
+      getState: () => expectedState,
     },
-    searchNext: () => {
-      calls.push("next");
+    interaction: {
+      resize: () => undefined,
+      focus: () => undefined,
+      blur: () => undefined,
+      updateSize: () => undefined,
     },
-    searchPrevious: () => {
-      calls.push("prev");
+    render: {
+      setShaderStages: () => undefined,
+      getShaderStages: () => [],
     },
-    getSearchState: () => expectedState,
-    resize: () => undefined,
-    focus: () => undefined,
-    blur: () => undefined,
-    updateSize: () => undefined,
-    setShaderStages: () => undefined,
-    getShaderStages: () => [],
   });
 
   publicRuntime.search.setQuery("foo");

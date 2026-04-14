@@ -14,7 +14,7 @@ import type { ResttyRuntimeEvent, ResttyRuntimeEventHub } from "../core/runtime-
 import type { RuntimeInteraction } from "./interaction-runtime/runtime.types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
 import type {
-  RuntimeControllerPublicOptions,
+  RuntimeControllerPublicCapabilities,
   RuntimeSendInput,
 } from "./runtime-controller.api.types";
 import type { RuntimeControllerInternalState } from "./runtime-controller.state.types";
@@ -36,7 +36,7 @@ type RuntimeTerminalDeps = {
   internalState: RuntimeControllerInternalState;
   applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
   clearScreen: () => void;
-  publicApiOptions: RuntimeControllerPublicOptions;
+  terminalCapabilities: RuntimeControllerPublicCapabilities["terminal"];
 };
 
 type RuntimeIoDeps = {
@@ -49,18 +49,18 @@ type RuntimeInteractionDeps = {
   inputHandler: InputHandler;
   ptyInputRuntime: PtyInputRuntime;
   interaction: Pick<RuntimeInteraction, "selectWordAtClientPoint">;
-  publicApiOptions: RuntimeControllerPublicOptions;
+  interactionCapabilities: RuntimeControllerPublicCapabilities["interaction"];
   copySelectionToClipboard: ResttyRuntimeInteractionApi["copySelectionToClipboard"];
   pasteFromClipboard: ResttyRuntimeInteractionApi["pasteFromClipboard"];
 };
 
 type RuntimeSearchDeps = {
-  publicApiOptions: RuntimeControllerPublicOptions;
+  searchCapabilities: RuntimeControllerPublicCapabilities["search"];
 };
 
 type RuntimeRenderDeps = {
   internalState: RuntimeControllerInternalState;
-  publicApiOptions: RuntimeControllerPublicOptions;
+  renderCapabilities: RuntimeControllerPublicCapabilities["render"];
 };
 
 export function createRuntimeLifecycleView({
@@ -98,7 +98,7 @@ export function createRuntimeTerminalView({
   internalState,
   applyTheme,
   clearScreen,
-  publicApiOptions,
+  terminalCapabilities,
 }: RuntimeTerminalDeps): ResttyRuntimeTerminalApi {
   function setRenderer(value: "auto" | "webgpu" | "webgl2") {
     if (getLifecycleState() === "destroyed") return;
@@ -115,13 +115,13 @@ export function createRuntimeTerminalView({
     togglePause: () => {
       internalState.paused = !internalState.paused;
     },
-    setFontSize: publicApiOptions.setFontSize,
-    setLigatures: publicApiOptions.setLigatures,
-    setFontHinting: publicApiOptions.setFontHinting,
-    setFontHintTarget: publicApiOptions.setFontHintTarget,
-    setFontSources: publicApiOptions.setFontSources,
+    setFontSize: terminalCapabilities.setFontSize,
+    setLigatures: terminalCapabilities.setLigatures,
+    setFontHinting: terminalCapabilities.setFontHinting,
+    setFontHintTarget: terminalCapabilities.setFontHintTarget,
+    setFontSources: terminalCapabilities.setFontSources,
     applyTheme,
-    resetTheme: publicApiOptions.resetTheme,
+    resetTheme: terminalCapabilities.resetTheme,
     clearScreen,
   };
 }
@@ -144,7 +144,7 @@ export function createRuntimeInteractionView({
   inputHandler,
   ptyInputRuntime,
   interaction,
-  publicApiOptions,
+  interactionCapabilities,
   copySelectionToClipboard,
   pasteFromClipboard,
 }: RuntimeInteractionDeps): ResttyRuntimeInteractionApi {
@@ -159,32 +159,32 @@ export function createRuntimeInteractionView({
     copySelectionToClipboard,
     pasteFromClipboard,
     selectWordAtClientPoint: interaction.selectWordAtClientPoint,
-    resize: publicApiOptions.resize,
-    focus: publicApiOptions.focus,
-    blur: publicApiOptions.blur,
-    updateSize: publicApiOptions.updateSize,
+    resize: interactionCapabilities.resize,
+    focus: interactionCapabilities.focus,
+    blur: interactionCapabilities.blur,
+    updateSize: interactionCapabilities.updateSize,
   };
 }
 
 export function createRuntimeSearchView({
-  publicApiOptions,
+  searchCapabilities,
 }: RuntimeSearchDeps): ResttyRuntimeSearchApi {
   return {
-    setQuery: publicApiOptions.setSearchQuery,
-    clear: publicApiOptions.clearSearch,
-    next: publicApiOptions.searchNext,
-    previous: publicApiOptions.searchPrevious,
-    getState: publicApiOptions.getSearchState,
+    setQuery: searchCapabilities.setQuery,
+    clear: searchCapabilities.clear,
+    next: searchCapabilities.next,
+    previous: searchCapabilities.previous,
+    getState: searchCapabilities.getState,
   };
 }
 
 export function createRuntimeRenderView({
   internalState,
-  publicApiOptions,
+  renderCapabilities,
 }: RuntimeRenderDeps): ResttyRuntimeRenderApi {
   return {
     getBackend: () => internalState.backend,
-    setShaderStages: publicApiOptions.setShaderStages,
-    getShaderStages: publicApiOptions.getShaderStages,
+    setShaderStages: renderCapabilities.setShaderStages,
+    getShaderStages: renderCapabilities.getShaderStages,
   };
 }

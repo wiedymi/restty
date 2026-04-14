@@ -19,7 +19,7 @@ import {
   createRuntimeTerminalView,
 } from "./runtime-controller.public-api.capabilities";
 import type {
-  RuntimeControllerPublicOptions,
+  RuntimeControllerPublicCapabilities,
   RuntimeSendInput,
 } from "./runtime-controller.api.types";
 import type { RuntimeControllerInternalState } from "./runtime-controller.state.types";
@@ -39,7 +39,7 @@ type RuntimeControllerPublicApiDeps = {
   sendInput: RuntimeSendInput;
   copySelectionToClipboard: ResttyRuntimeInteractionApi["copySelectionToClipboard"];
   pasteFromClipboard: ResttyRuntimeInteractionApi["pasteFromClipboard"];
-  publicApiOptions: RuntimeControllerPublicOptions;
+  publicApiCapabilities: RuntimeControllerPublicCapabilities;
 };
 
 export function createRuntimePublicApi(deps: RuntimeControllerPublicApiDeps): ResttyRuntime {
@@ -62,7 +62,7 @@ export function createRuntimePublicApi(deps: RuntimeControllerPublicApiDeps): Re
       internalState: deps.internalState,
       applyTheme: deps.applyTheme,
       clearScreen: deps.clearScreen,
-      publicApiOptions: deps.publicApiOptions,
+      terminalCapabilities: deps.publicApiCapabilities.terminal,
     }),
     io: createRuntimeIoView({
       sendInput: deps.sendInput,
@@ -73,16 +73,16 @@ export function createRuntimePublicApi(deps: RuntimeControllerPublicApiDeps): Re
       inputHandler: deps.inputHandler,
       ptyInputRuntime: deps.ptyInputRuntime,
       interaction: deps.interaction,
-      publicApiOptions: deps.publicApiOptions,
+      interactionCapabilities: deps.publicApiCapabilities.interaction,
       copySelectionToClipboard: deps.copySelectionToClipboard,
       pasteFromClipboard: deps.pasteFromClipboard,
     }),
     search: createRuntimeSearchView({
-      publicApiOptions: deps.publicApiOptions,
+      searchCapabilities: deps.publicApiCapabilities.search,
     }),
     render: createRuntimeRenderView({
       internalState: deps.internalState,
-      publicApiOptions: deps.publicApiOptions,
+      renderCapabilities: deps.publicApiCapabilities.render,
     }),
   };
 }

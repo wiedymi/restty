@@ -1171,22 +1171,30 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     maxScrollback: terminal.maxScrollback,
   });
   return runtimeController.createPublicApi({
-    setFontSize: applyFontSize,
-    setLigatures,
-    setFontHinting,
-    setFontHintTarget,
-    setFontSources,
-    resetTheme,
-    setSearchQuery: searchRuntime.setQuery,
-    clearSearch: searchRuntime.clear,
-    searchNext: searchRuntime.next,
-    searchPrevious: searchRuntime.previous,
-    getSearchState: searchRuntime.getState,
-    resize,
-    focus,
-    blur,
-    updateSize,
-    setShaderStages,
-    getShaderStages,
+    terminal: {
+      setFontSize: applyFontSize,
+      setLigatures,
+      setFontHinting,
+      setFontHintTarget,
+      setFontSources,
+      resetTheme,
+    },
+    search: {
+      setQuery: searchRuntime.setQuery,
+      clear: searchRuntime.clear,
+      next: searchRuntime.next,
+      previous: searchRuntime.previous,
+      getState: searchRuntime.getState,
+    },
+    interaction: {
+      resize,
+      focus,
+      blur,
+      updateSize,
+    },
+    render: {
+      setShaderStages,
+      getShaderStages,
+    },
   });
 }
