@@ -978,6 +978,26 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellBridge).toContain("listenTerminalAction(");
 });
 
+test("svelte app delegates settings shell lifecycle to a dedicated component", () => {
+  const appSvelte = readFileSync(resolve(playgroundRoot, "svelte/src/App.svelte"), "utf8");
+  const settingsShell = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/components/SettingsShell.svelte"),
+    "utf8",
+  );
+
+  expect(appSvelte).toContain('./lib/components/SettingsShell.svelte"');
+  expect(appSvelte).toContain("<SettingsShell>");
+  expect(appSvelte).not.toContain("dispatchSettingsOpen");
+  expect(appSvelte).not.toContain("dispatchSettingsClose");
+  expect(appSvelte).not.toContain("settingsShellState");
+  expect(appSvelte).not.toContain("settingsDialog");
+  expect(settingsShell).toContain("../shell-dispatch.ts");
+  expect(settingsShell).toContain("../stores/shell-state.ts");
+  expect(settingsShell).toContain('document.documentElement.dataset.playgroundShell = "svelte"');
+  expect(settingsShell).toContain('id="settingsFab"');
+  expect(settingsShell).toContain('id="settingsDialog"');
+});
+
 test("pane shell sync delegates terminal, appearance, and connection reflection", () => {
   const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
   const terminalSync = readFileSync(
