@@ -1,18 +1,16 @@
-type FocusablePane = {
-  canvas: {
-    focus: (options?: FocusOptions) => void;
-  };
-};
+import type { ResttyPaneApi } from "../../src/index.ts";
+
+type FocusablePane = Pick<ResttyPaneApi, "focus">;
 
 export type SettingsDialogHost = {
   hideContextMenu: () => void;
-  getFocusedPane: () => FocusablePane | null;
-  getActivePane: () => FocusablePane | null;
-  getPanes: () => FocusablePane[];
+  focusedPane: () => FocusablePane | null;
+  activePane: () => FocusablePane | null;
+  panes: () => FocusablePane[];
 };
 
 export function restoreTerminalFocus(host: SettingsDialogHost) {
-  const pane = host.getFocusedPane() ?? host.getActivePane() ?? host.getPanes()[0] ?? null;
+  const pane = host.focusedPane() ?? host.activePane() ?? host.panes()[0] ?? null;
   if (!pane) return;
-  pane.canvas.focus({ preventScroll: true });
+  pane.focus();
 }

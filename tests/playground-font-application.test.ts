@@ -11,7 +11,7 @@ test("applyFontSourcesToAllPanes sends computed sources once", async () => {
     setFontSources: async (sources) => {
       calls.push(sources);
     },
-    getPanes: () => [],
+    forEachPane: () => {},
   };
 
   await applyFontSourcesToAllPanes({
@@ -42,7 +42,7 @@ test("applyFontSourcesToAllPanes reports failures through onError", async () => 
     setFontSources: async () => {
       throw error;
     },
-    getPanes: () => [],
+    forEachPane: () => {},
   };
 
   await applyFontSourcesToAllPanes({
@@ -60,24 +60,23 @@ test("applyFontSourcesToAllPanes reports failures through onError", async () => 
 test("applyFontRenderingOptionsToAllPanes applies ligatures and hinting to each pane", () => {
   const paneCalls: string[] = [];
   const createPane = (label: string) => ({
-    runtime: {
-      terminal: {
-        setLigatures: (value: boolean) => {
-          paneCalls.push(`${label}:ligatures:${value}`);
-        },
-        setFontHintTarget: (value: "auto" | "light" | "normal") => {
-          paneCalls.push(`${label}:target:${value}`);
-        },
-        setFontHinting: (value: boolean) => {
-          paneCalls.push(`${label}:hinting:${value}`);
-        },
-      },
+    setLigatures: (value: boolean) => {
+      paneCalls.push(`${label}:ligatures:${value}`);
+    },
+    setFontHintTarget: (value: "auto" | "light" | "normal") => {
+      paneCalls.push(`${label}:target:${value}`);
+    },
+    setFontHinting: (value: boolean) => {
+      paneCalls.push(`${label}:hinting:${value}`);
     },
   });
+  const panes = [createPane("a"), createPane("b")];
 
   const host: FontApplicationHost = {
     setFontSources: async () => {},
-    getPanes: () => [createPane("a"), createPane("b")],
+    forEachPane: (visitor) => {
+      for (const pane of panes) visitor(pane);
+    },
   };
 
   applyFontRenderingOptionsToAllPanes({

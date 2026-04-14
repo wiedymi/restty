@@ -96,7 +96,9 @@ export function createPlaygroundSessionControllers({
 
   appearanceController = createPaneAppearanceController({
     host: {
-      getPanes: () => getRestty().getPanes(),
+      forEachPane: (visitor) => {
+        getRestty().forEachPane(visitor);
+      },
       setFontSources: (sources) => getRestty().setFontSources(sources),
       setShaderStages: (stages) => getRestty().setShaderStages(stages),
     },

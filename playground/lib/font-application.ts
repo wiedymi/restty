@@ -1,17 +1,15 @@
+import type { ResttyPaneApi } from "../../src/index.ts";
 import type { FontHintTarget } from "./font-controls.ts";
 import { getCurrentFontSources } from "./font-source-catalog.ts";
 
+export type FontApplicationPane = Pick<
+  ResttyPaneApi,
+  "setLigatures" | "setFontHintTarget" | "setFontHinting"
+>;
+
 export type FontApplicationHost = {
   setFontSources: (sources: ReturnType<typeof getCurrentFontSources>) => Promise<void>;
-  getPanes: () => Array<{
-    runtime: {
-      terminal: {
-        setLigatures: (value: boolean) => void;
-        setFontHintTarget: (value: FontHintTarget) => void;
-        setFontHinting: (value: boolean) => void;
-      };
-    };
-  }>;
+  forEachPane: (visitor: (pane: FontApplicationPane) => void) => void;
 };
 
 type FontSourcesOptions = {
@@ -39,11 +37,9 @@ export async function applyFontSourcesToAllPanes(options: FontSourcesOptions) {
 }
 
 export function applyFontRenderingOptionsToAllPanes(options: FontRenderingOptions) {
-  const panes = options.host.getPanes();
-  for (let i = 0; i < panes.length; i += 1) {
-    const pane = panes[i];
-    pane.runtime.terminal.setLigatures(options.selectedLigatures);
-    pane.runtime.terminal.setFontHintTarget(options.selectedFontHintTarget);
-    pane.runtime.terminal.setFontHinting(options.selectedFontHinting);
-  }
+  options.host.forEachPane((pane) => {
+    pane.setLigatures(options.selectedLigatures);
+    pane.setFontHintTarget(options.selectedFontHintTarget);
+    pane.setFontHinting(options.selectedFontHinting);
+  });
 }

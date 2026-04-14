@@ -1246,6 +1246,23 @@ test("appearance controller delegates font policy", () => {
   expect(fontRenderingController).toContain("resolveFontHintTarget");
 });
 
+test("playground font application uses pane-handle methods instead of raw runtime terminals", () => {
+  const fontApplication = readFileSync(resolve(playgroundRoot, "lib/font-application.ts"), "utf8");
+  const sessionControllers = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
+    "utf8",
+  );
+
+  expect(fontApplication).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(fontApplication).toContain(
+    "forEachPane: (visitor: (pane: FontApplicationPane) => void) => void;",
+  );
+  expect(fontApplication).toContain("pane.setLigatures(options.selectedLigatures)");
+  expect(fontApplication).not.toContain("pane.runtime.terminal.setLigatures");
+  expect(fontApplication).not.toContain("getPanes: () => Array<");
+  expect(sessionControllers).toContain("getRestty().forEachPane(visitor)");
+});
+
 test("appearance controller delegates terminal policy", () => {
   const appearanceController = readFileSync(
     resolve(playgroundRoot, "lib/appearance-controller.ts"),
@@ -1366,6 +1383,20 @@ test("playground wiring uses settings shell effects only", () => {
   expect(settingsShellEffects).toContain("export function bindSettingsShellEffects");
   expect(settingsShellEffects).toContain("restoreTerminalFocus");
   expect(existsSync(resolve(playgroundRoot, "lib/settings-bindings.ts"))).toBe(false);
+});
+
+test("settings dialog focus recovery uses pane handles instead of raw canvas access", () => {
+  const settingsDialog = readFileSync(resolve(playgroundRoot, "lib/settings-dialog.ts"), "utf8");
+
+  expect(settingsDialog).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(settingsDialog).toContain("focusedPane: () => FocusablePane | null;");
+  expect(settingsDialog).toContain("activePane: () => FocusablePane | null;");
+  expect(settingsDialog).toContain("panes: () => FocusablePane[];");
+  expect(settingsDialog).toContain("pane.focus()");
+  expect(settingsDialog).not.toContain("canvas.focus");
+  expect(settingsDialog).not.toContain("getFocusedPane:");
+  expect(settingsDialog).not.toContain("getActivePane:");
+  expect(settingsDialog).not.toContain("getPanes:");
 });
 
 test("playground wiring uses shell control effects only", () => {

@@ -7,17 +7,13 @@ import {
 function createHost() {
   const calls: string[] = [];
   const focusedPane = {
-    canvas: {
-      focus: () => {
-        calls.push("focused:focus");
-      },
+    focus: () => {
+      calls.push("focused:focus");
     },
   };
   const activePane = {
-    canvas: {
-      focus: () => {
-        calls.push("active:focus");
-      },
+    focus: () => {
+      calls.push("active:focus");
     },
   };
 
@@ -25,9 +21,9 @@ function createHost() {
     hideContextMenu: () => {
       calls.push("hideContextMenu");
     },
-    getFocusedPane: () => focusedPane,
-    getActivePane: () => activePane,
-    getPanes: () => [activePane],
+    focusedPane: () => focusedPane,
+    activePane: () => activePane,
+    panes: () => [activePane],
   };
 
   return { host, calls };
