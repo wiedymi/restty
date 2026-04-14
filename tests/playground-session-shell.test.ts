@@ -60,7 +60,7 @@ test("playground session shell dispatches theme reset and connection state", () 
   expect(shell.isSettingsDialogOpen()).toBe(false);
 
   shell.resetThemeFileInput();
-  shell.syncConnectionState(shell.getConnectionShellStateDetail());
+  shell.publishConnectionState();
 
   expect(seen).toEqual(["reset"]);
   expect(connectionState).toEqual({

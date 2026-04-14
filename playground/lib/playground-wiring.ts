@@ -10,7 +10,7 @@ import type { WirePlaygroundControlsOptions } from "./playground-wiring.types.ts
 export function wirePlaygroundControls({
   restty,
   window,
-  shell: { syncConnectionState, paneShellSync, getConnectionShellStateDetail },
+  shell: { publishConnectionState, paneShellSync },
   controllers: { paneLifecycle, appearanceController, connectionController },
   state: { paneStates, getActivePaneId },
 }: WirePlaygroundControlsOptions): void {
@@ -86,7 +86,7 @@ export function wirePlaygroundControls({
     },
   });
 
-  syncConnectionState(getConnectionShellStateDetail());
+  publishConnectionState();
   paneShellSync.syncFontFamilyValue();
   paneShellSync.syncLocalFontControls();
   paneShellSync.syncFontRenderingControls();

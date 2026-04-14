@@ -22,9 +22,8 @@ type CreatePlaygroundSessionShellOptions = {
 export type PlaygroundSessionShell = {
   isSettingsDialogOpen: () => boolean;
   resetThemeFileInput: () => void;
-  syncConnectionState: (detail: ConnectionStateDetail) => void;
+  publishConnectionState: () => void;
   paneShellSync: ReturnType<typeof createPaneShellSync>;
-  getConnectionShellStateDetail: () => ConnectionStateDetail;
 };
 
 export function createPlaygroundSessionShell({
@@ -87,10 +86,9 @@ export function createPlaygroundSessionShell({
     resetThemeFileInput: () => {
       dispatchThemeFileReset(window);
     },
-    syncConnectionState: (detail) => {
-      dispatchConnectionState(detail, window);
+    publishConnectionState: () => {
+      dispatchConnectionState(getConnectionShellStateDetail(), window);
     },
     paneShellSync,
-    getConnectionShellStateDetail,
   };
 }

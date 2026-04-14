@@ -81,9 +81,8 @@ export function bootstrapPlaygroundOrchestrator({
     restty,
     window,
     shell: {
-      syncConnectionState: session.shell.syncConnectionState,
+      publishConnectionState: session.shell.publishConnectionState,
       paneShellSync: session.shell.paneShellSync,
-      getConnectionShellStateDetail: session.shell.getConnectionShellStateDetail,
     },
     controllers: {
       paneLifecycle: session.controllers.paneLifecycle,

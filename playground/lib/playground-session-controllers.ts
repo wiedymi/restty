@@ -80,7 +80,7 @@ export function createPlaygroundSessionControllers({
     getPanes: () => getRestty().getPanes(),
     connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
     syncConnectionState: () => {
-      shell.syncConnectionState(shell.getConnectionShellStateDetail());
+      shell.publishConnectionState();
     },
     syncPtyButton: (pane) => {
       shell.paneShellSync.syncPtyButton(pane);
