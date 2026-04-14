@@ -21,14 +21,85 @@ type PaneIdentity = {
   id: number;
 };
 
-type ResttyPluginSurfaceApiDeps = Omit<
+export type ResttyPluginSurfaceApiSource<TPaneIdentity extends PaneIdentity = PaneIdentity> = Omit<
   ResttyPluginHostApi,
   "createInitialPane" | "splitActivePane" | "splitPane"
 > & {
-  createInitialPaneSurface: (options?: { focus?: boolean }) => PaneIdentity;
-  splitActivePaneSurface: (direction: ResttyPaneSplitDirection) => PaneIdentity | null;
-  splitPaneSurface: (id: number, direction: ResttyPaneSplitDirection) => PaneIdentity | null;
+  createInitialPane: (options?: { focus?: boolean }) => TPaneIdentity;
+  splitActivePane: (direction: ResttyPaneSplitDirection) => TPaneIdentity | null;
+  splitPane: (id: number, direction: ResttyPaneSplitDirection) => TPaneIdentity | null;
 };
+
+type ResttyPluginSurfacePassthroughApi = Omit<
+  ResttyPluginSurfaceApiSource,
+  "createInitialPane" | "splitActivePane" | "splitPane"
+>;
+
+const resttyPluginSurfacePassthroughKeys = [
+  "panes",
+  "pane",
+  "activePane",
+  "focusedPane",
+  "forEachPane",
+  "isPtyConnected",
+  "setRenderer",
+  "setPaused",
+  "togglePause",
+  "setFontSize",
+  "setLigatures",
+  "setFontHinting",
+  "setFontHintTarget",
+  "setFontSources",
+  "applyTheme",
+  "resetTheme",
+  "sendInput",
+  "sendKeyInput",
+  "clearScreen",
+  "connectPty",
+  "disconnectPty",
+  "setMouseMode",
+  "getMouseStatus",
+  "copySelectionToClipboard",
+  "pasteFromClipboard",
+  "selectWordAtClientPoint",
+  "setSearchQuery",
+  "clearSearch",
+  "searchNext",
+  "searchPrevious",
+  "getSearchState",
+  "openSearch",
+  "closeSearch",
+  "toggleSearch",
+  "isSearchOpen",
+  "resize",
+  "focus",
+  "blur",
+  "updateSize",
+  "getBackend",
+  "setShaderStages",
+  "getShaderStages",
+  "addShaderStage",
+  "removeShaderStage",
+  "closePane",
+  "getPaneStyleOptions",
+  "setPaneStyleOptions",
+  "getSearchUiStyleOptions",
+  "setSearchUiStyleOptions",
+  "setActivePane",
+  "markPaneFocused",
+  "requestLayoutSync",
+  "hideContextMenu",
+] as const satisfies ReadonlyArray<keyof ResttyPluginSurfacePassthroughApi>;
+
+function createResttyPluginSurfacePassthroughApi(
+  source: ResttyPluginSurfaceApiSource,
+): ResttyPluginSurfacePassthroughApi {
+  const passthrough = {} as ResttyPluginSurfacePassthroughApi;
+  for (const key of resttyPluginSurfacePassthroughKeys) {
+    passthrough[key] = source[key].bind(source);
+  }
+  return passthrough;
+}
 
 type ResttyLifecycleHooks = {
   runLifecycleHooks: (payload: ResttyLifecycleHookPayload) => void;
@@ -42,10 +113,9 @@ type ResttyLifecycleAndPluginHooks = ResttyLifecycleHooks & {
 };
 
 export function createResttyPluginSurfaceApi(
-  deps: ResttyPluginSurfaceApiDeps,
+  source: ResttyPluginSurfaceApiSource,
 ): ResttyPluginHostApi {
-  const { createInitialPaneSurface, splitActivePaneSurface, splitPaneSurface, ...surfaceApi } =
-    deps;
+  const surfaceApi = createResttyPluginSurfacePassthroughApi(source);
 
   const requirePaneHandle = (id: number): ResttyPaneHandle => {
     const handle = surfaceApi.pane(id);
@@ -58,15 +128,15 @@ export function createResttyPluginSurfaceApi(
   return {
     ...surfaceApi,
     createInitialPane: (options) => {
-      const pane = createInitialPaneSurface(options);
+      const pane = source.createInitialPane(options);
       return requirePaneHandle(pane.id);
     },
     splitActivePane: (direction) => {
-      const pane = splitActivePaneSurface(direction);
+      const pane = source.splitActivePane(direction);
       return pane ? requirePaneHandle(pane.id) : null;
     },
     splitPane: (id, direction) => {
-      const pane = splitPaneSurface(id, direction);
+      const pane = source.splitPane(id, direction);
       return pane ? requirePaneHandle(pane.id) : null;
     },
   };

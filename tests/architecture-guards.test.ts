@@ -603,7 +603,7 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
   expect(resttyBootstrap).not.toContain("createMergedPaneTerminalConfig({");
   expect(resttyBootstrap).not.toContain("createMergedPaneServicesConfig({");
   expect(resttyPluginSurface).toContain("export function createResttyPluginSurfaceBridge");
-  expect(resttyPluginSurface).toContain("createResttyPluginSurfaceApi({");
+  expect(resttyPluginSurface).toContain("createResttyPluginSurfaceApi(restty)");
   expect(resttyAssembly).toContain("export function createResttySurfaceAssembly");
   expect(resttyAssembly).toContain("createResttyPluginSurfaceBridge(restty)");
   expect(resttyAssembly).toContain('./pane-manager-assembly"');
