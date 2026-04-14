@@ -771,6 +771,11 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(session).toContain("createPaneAppearanceController(");
   expect(session).toContain("createPaneLifecycleController(");
   expect(session).toContain("createPlaygroundShellAdapter(");
+  expect(orchestrator).toContain("deps: {");
+  expect(orchestrator).toContain("startup: {");
+  expect(orchestrator).toContain("shell: {");
+  expect(session).toContain("type PlaygroundSessionDeps =");
+  expect(session).toContain("type PlaygroundSessionStartup =");
   expect(session).toContain("state: {");
   expect(session).toContain("shell: {");
   expect(session).toContain("controllers: {");

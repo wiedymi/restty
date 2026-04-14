@@ -13,16 +13,22 @@ import type { LegacyPlaygroundElements } from "./elements.ts";
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
 type PlaygroundWindow = Window & typeof globalThis;
 
-type CreatePlaygroundSessionOptions = {
-  window: PlaygroundWindow;
-  usesSvelteShell: boolean;
+type PlaygroundSessionDeps = {
   getRestty: () => Restty;
+  notificationHost?: typeof Notification;
+};
+
+type PlaygroundSessionStartup = {
   initialConnectionBackend: string;
   initialPtyUrl: string;
   initialWebContainerCommand: string;
   initialWebContainerCwd: string;
   appearanceInitialState: PlaygroundAppearanceInitialState;
-  notificationHost?: typeof Notification;
+};
+
+type PlaygroundSessionShellConfig = {
+  window: PlaygroundWindow;
+  usesSvelteShell: boolean;
   elements: Pick<
     LegacyPlaygroundElements,
     | "btnPause"
@@ -50,6 +56,12 @@ type CreatePlaygroundSessionOptions = {
   };
 };
 
+type CreatePlaygroundSessionOptions = {
+  deps: PlaygroundSessionDeps;
+  startup: PlaygroundSessionStartup;
+  shell: PlaygroundSessionShellConfig;
+};
+
 export type PlaygroundSessionState = {
   paneStates: Map<number, PaneState>;
   getActivePaneId: () => number | null;
@@ -73,37 +85,40 @@ export type PlaygroundSessionNotifications = {
 };
 
 export function createPlaygroundSession({
-  window,
-  usesSvelteShell,
-  getRestty,
-  initialConnectionBackend,
-  initialPtyUrl,
-  initialWebContainerCommand,
-  initialWebContainerCwd,
-  appearanceInitialState,
-  notificationHost = globalThis.Notification,
-  elements: {
-    btnPause,
-    rendererSelect,
-    fontSizeInput,
-    ptyBtn,
-    themeSelect,
-    themeFileInput,
-    fontFamilySelect,
-    ligaturesSelect,
-    fontHintingSelect,
-    fontHintTargetSelect,
-    fontFamilyLocalSelect,
-    btnLoadLocalFonts,
-    fontFamilyHintEl,
-    mouseModeEl,
-    shaderPresetEl,
-    connectionBackendEl,
-    ptyUrlInput,
-    wcCommandInput,
-    wcCwdInput,
-    connectionHintEl,
-    settingsDialog,
+  deps: { getRestty, notificationHost = globalThis.Notification },
+  startup: {
+    initialConnectionBackend,
+    initialPtyUrl,
+    initialWebContainerCommand,
+    initialWebContainerCwd,
+    appearanceInitialState,
+  },
+  shell: {
+    window,
+    usesSvelteShell,
+    elements: {
+      btnPause,
+      rendererSelect,
+      fontSizeInput,
+      ptyBtn,
+      themeSelect,
+      themeFileInput,
+      fontFamilySelect,
+      ligaturesSelect,
+      fontHintingSelect,
+      fontHintTargetSelect,
+      fontFamilyLocalSelect,
+      btnLoadLocalFonts,
+      fontFamilyHintEl,
+      mouseModeEl,
+      shaderPresetEl,
+      connectionBackendEl,
+      ptyUrlInput,
+      wcCommandInput,
+      wcCwdInput,
+      connectionHintEl,
+      settingsDialog,
+    },
   },
 }: CreatePlaygroundSessionOptions) {
   const paneStates = new Map<number, PaneState>();
