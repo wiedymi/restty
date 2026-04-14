@@ -1,22 +1,16 @@
+import type { ResttyPaneApi } from "../../src/index.ts";
 import {
   getConnectUrlForState,
   getConnectionBackendForValue,
   type ConnectionBackend,
 } from "./connection-state.ts";
 
-export type ConnectionControllerPane = {
-  runtime: {
-    io: {
-      disconnectPty: () => void;
-      isPtyConnected: () => boolean;
-    };
-  };
-};
+export type ConnectionControllerPane = Pick<ResttyPaneApi, "disconnectPty" | "isPtyConnected">;
 
 type CreateConnectionControllerOptions = {
   getActivePane: () => ConnectionControllerPane | null;
-  getPanes: () => ConnectionControllerPane[];
-  connectPaneIfNeeded: (pane: ConnectionControllerPane) => void;
+  forEachPane: (visitor: (paneId: number, pane: ConnectionControllerPane) => void) => void;
+  connectPaneIfNeeded: (paneId: number) => void;
   syncConnectionState?: () => void;
   syncPtyButton: (pane: ConnectionControllerPane) => void;
   initialBackend: ConnectionBackend;
@@ -34,15 +28,15 @@ export function createConnectionController(options: CreateConnectionControllerOp
   function applyConnectionBackend(value: string | null | undefined) {
     selectedConnectionBackend = getConnectionBackendForValue(value);
     options.syncConnectionState?.();
-    for (const pane of options.getPanes()) {
-      if (pane.runtime.io.isPtyConnected()) {
-        pane.runtime.io.disconnectPty();
+    options.forEachPane((_paneId, pane) => {
+      if (pane.isPtyConnected()) {
+        pane.disconnectPty();
       }
-    }
+    });
     if (selectedConnectionBackend === "webcontainer") {
-      for (const pane of options.getPanes()) {
-        options.connectPaneIfNeeded(pane);
-      }
+      options.forEachPane((paneId) => {
+        options.connectPaneIfNeeded(paneId);
+      });
     }
     const activePane = options.getActivePane();
     if (activePane) {

@@ -1078,6 +1078,35 @@ test("pty connection delegates backend ui state helpers", () => {
   expect(connectionState).not.toContain("type ConnectionBackendElement");
 });
 
+test("playground connection controller routes bulk PTY switching through pane handles", () => {
+  const connectionController = readFileSync(
+    resolve(playgroundRoot, "lib/connection-controller.ts"),
+    "utf8",
+  );
+  const paneLifecycle = readFileSync(resolve(playgroundRoot, "lib/pane-lifecycle.ts"), "utf8");
+  const sessionControllers = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
+    "utf8",
+  );
+
+  expect(connectionController).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(connectionController).toContain(
+    "forEachPane: (visitor: (paneId: number, pane: ConnectionControllerPane) => void) => void;",
+  );
+  expect(connectionController).toContain("if (pane.isPtyConnected()) {");
+  expect(connectionController).toContain("pane.disconnectPty()");
+  expect(connectionController).toContain("options.connectPaneIfNeeded(paneId)");
+  expect(connectionController).not.toContain("getPanes: () => ConnectionControllerPane[]");
+  expect(connectionController).not.toContain("pane.runtime.io.isPtyConnected()");
+  expect(connectionController).not.toContain("pane.runtime.io.disconnectPty()");
+
+  expect(paneLifecycle).toContain("function connectPaneIfNeeded(paneId: number)");
+  expect(paneLifecycle).toContain("const pane = options.getPaneById(paneId)");
+  expect(sessionControllers).toContain("getActivePane: () => getRestty().activePane()");
+  expect(sessionControllers).toContain("getRestty().forEachPane((pane) => {");
+  expect(sessionControllers).toContain("paneLifecycle.connectPaneIfNeeded(paneId)");
+});
+
 test("webcontainer seed provisioning delegates static seed manifest", () => {
   const seedScripts = readFileSync(
     resolve(playgroundRoot, "lib/webcontainer-seed-scripts.ts"),

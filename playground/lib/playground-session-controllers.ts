@@ -79,9 +79,13 @@ export function createPlaygroundSessionControllers({
   });
 
   connectionController = createConnectionController({
-    getActivePane,
-    getPanes: () => getRestty().getPanes(),
-    connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
+    getActivePane: () => getRestty().activePane(),
+    forEachPane: (visitor) => {
+      getRestty().forEachPane((pane) => {
+        visitor(pane.id, pane);
+      });
+    },
+    connectPaneIfNeeded: (paneId) => paneLifecycle.connectPaneIfNeeded(paneId),
     syncConnectionState: () => {
       shell.publishConnectionState();
     },

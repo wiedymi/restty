@@ -1,33 +1,33 @@
 import { expect, test } from "bun:test";
 import { createConnectionController } from "../playground/lib/connection-controller.ts";
 
-function createPane(connected = false) {
+function createPane(id: number, connected = false) {
   const calls: string[] = [];
   let isConnected = connected;
   const pane = {
-    runtime: {
-      io: {
-        disconnectPty: () => {
-          calls.push("disconnect");
-          isConnected = false;
-        },
-        isPtyConnected: () => isConnected,
-      },
+    id,
+    disconnectPty: () => {
+      calls.push("disconnect");
+      isConnected = false;
     },
+    isPtyConnected: () => isConnected,
   };
   return { calls, pane };
 }
 
 test("connection controller updates backend state and reconnect flow", () => {
-  const first = createPane(true);
-  const second = createPane(false);
+  const first = createPane(1, true);
+  const second = createPane(2, false);
   const syncCalls: string[] = [];
 
   const controller = createConnectionController({
     getActivePane: () => first.pane,
-    getPanes: () => [first.pane, second.pane],
-    connectPaneIfNeeded: (pane) => {
-      syncCalls.push(pane === first.pane ? "connect:first" : "connect:second");
+    forEachPane: (visitor) => {
+      visitor(first.pane.id, first.pane);
+      visitor(second.pane.id, second.pane);
+    },
+    connectPaneIfNeeded: (paneId) => {
+      syncCalls.push(paneId === first.pane.id ? "connect:first" : "connect:second");
     },
     syncConnectionState: () => {
       syncCalls.push("sync-state");
@@ -67,7 +67,7 @@ test("connection controller updates backend state and reconnect flow", () => {
 test("connection controller normalizes string inputs", () => {
   const controller = createConnectionController({
     getActivePane: () => null,
-    getPanes: () => [],
+    forEachPane: () => {},
     connectPaneIfNeeded: () => {},
     syncPtyButton: () => {},
     initialBackend: "ws",

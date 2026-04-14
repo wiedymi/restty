@@ -77,7 +77,9 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
     }
   }
 
-  function connectPaneIfNeeded(pane: PaneLifecyclePane) {
+  function connectPaneIfNeeded(paneId: number) {
+    const pane = options.getPaneById(paneId);
+    if (!pane) return;
     if (options.getSelectedConnectionBackend() !== "webcontainer") return;
     if (pane.runtime.io.isPtyConnected()) return;
     options.updatePaneSize(pane.id, true);
@@ -100,7 +102,7 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
     );
     await waitForAnimationFrame();
     options.updatePaneSize(pane.id, true);
-    connectPaneIfNeeded(pane);
+    connectPaneIfNeeded(pane.id);
     if (pane.id === options.getActivePaneId()) {
       options.syncPtyButton(pane);
     }
