@@ -899,11 +899,15 @@ test("pty connection delegates backend ui state helpers", () => {
 
   expect(ptyConnection).toContain('./connection-state.ts"');
   expect(ptyConnection).not.toContain("export function getConnectionBackendForValue");
+  expect(ptyConnection).not.toContain("export function getConnectUrlForState");
   expect(ptyConnection).not.toContain("export function getConnectionUiState");
-  expect(ptyConnection).not.toContain("export function syncConnectionUi");
   expect(connectionState).toContain("export function getConnectionBackendForValue");
+  expect(connectionState).toContain("export function getConnectUrlForState");
   expect(connectionState).toContain("export function getConnectionUiState");
-  expect(connectionState).toContain("export function syncConnectionUi");
+  expect(connectionState).not.toContain("export function getConnectionBackend(");
+  expect(connectionState).not.toContain("export function getConnectUrl(");
+  expect(connectionState).not.toContain("export function syncConnectionUi(");
+  expect(connectionState).not.toContain("type ConnectionBackendElement");
 });
 
 test("webcontainer seed provisioning delegates static seed manifest", () => {
