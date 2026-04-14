@@ -1,63 +1,12 @@
-import {
-  getLocalFontSelectValue,
-  supportsLocalFontPicker,
-  type FontHintTarget,
-  type LocalFontOption,
-} from "./font-controls.ts";
-import {
-  dispatchActivePaneState as emitActivePaneState,
-  dispatchConnectionState,
-} from "./shell-bridge.ts";
-import { syncFontFamilyControls, syncHintingControls } from "./font-control-sync.ts";
+import { createPaneAppearanceShellSync } from "./pane-appearance-shell-sync.ts";
+import { createPaneConnectionShellSync } from "./pane-connection-shell-sync.ts";
+import type { FontHintTarget, LocalFontOption } from "./font-controls.ts";
 import type { PaneState } from "./pane-state.ts";
+import { createPaneTerminalShellSync } from "./pane-terminal-shell-sync.ts";
+import type { PaneShellSyncElements, PaneShellSyncPane } from "./pane-shell-sync.types.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
-import { type ActivePaneStateDetail, type LocalFontStateDetail } from "./shell-events.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
-
-export type PaneShellSyncPane = {
-  runtime: {
-    io: {
-      isPtyConnected: () => boolean;
-    };
-    interaction: {
-      getMouseStatus: () => {
-        mode: string;
-      };
-    };
-  };
-};
-
-type ButtonLike = {
-  textContent?: string | null;
-};
-
-type SelectLike = {
-  value: string;
-  options?: ArrayLike<{
-    value: string;
-  }>;
-};
-
-type TextLike = {
-  textContent?: string | null;
-};
-
-type PaneShellSyncElements = {
-  btnPause: ButtonLike | null;
-  rendererSelect: SelectLike | null;
-  fontSizeInput: SelectLike | null;
-  ptyBtn: ButtonLike | null;
-  themeSelect: SelectLike | null;
-  fontFamilySelect: HTMLSelectElement | null;
-  fontFamilyLocalSelect: HTMLSelectElement | null;
-  btnLoadLocalFonts: HTMLButtonElement | null;
-  fontFamilyHintEl: TextLike | null;
-  ligaturesSelect: HTMLSelectElement | null;
-  fontHintingSelect: HTMLSelectElement | null;
-  fontHintTargetSelect: HTMLSelectElement | null;
-  mouseModeEl: HTMLSelectElement | null;
-  shaderPresetEl: HTMLSelectElement | null;
-};
+import { dispatchActivePaneState } from "./shell-bridge.ts";
 
 type CreatePaneShellSyncOptions = {
   usesSvelteShell: boolean;
@@ -76,237 +25,83 @@ type CreatePaneShellSyncOptions = {
 };
 
 export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
-  const target = options.target;
+  const terminalSync = createPaneTerminalShellSync({
+    usesSvelteShell: options.usesSvelteShell,
+    target: options.target,
+    elements: {
+      btnPause: options.elements.btnPause,
+      rendererSelect: options.elements.rendererSelect,
+      fontSizeInput: options.elements.fontSizeInput,
+    },
+  });
 
-  function dispatchActivePaneState(detail: ActivePaneStateDetail) {
-    if (!target) return;
-    emitActivePaneState(detail, target);
-  }
-
-  function syncPauseButton(state: PaneState) {
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        terminal: {
-          pauseLabel: state.paused ? "Resume" : "Pause",
-        },
-      });
-      return;
-    }
-    if (options.elements.btnPause) {
-      options.elements.btnPause.textContent = state.paused ? "Resume" : "Pause";
-    }
-  }
-
-  function syncTerminalControlValues(state: PaneState) {
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        terminal: {
-          pauseLabel: state.paused ? "Resume" : "Pause",
-          renderer: state.renderer,
-          fontSize: state.fontSize,
-        },
-      });
-      return;
-    }
-    if (options.elements.rendererSelect) {
-      options.elements.rendererSelect.value = state.renderer;
-    }
-    if (options.elements.fontSizeInput) {
-      options.elements.fontSizeInput.value = `${state.fontSize}`;
-    }
-  }
-
-  function syncPtyButton(pane: PaneShellSyncPane) {
-    const label = pane.runtime.io.isPtyConnected()
-      ? "Disconnect"
-      : options.getSelectedConnectionBackend() === "webcontainer"
-        ? "Start WebContainer"
-        : "Connect PTY";
-    if (options.usesSvelteShell) {
-      if (!target) return;
-      dispatchConnectionState({ ptyButtonLabel: label }, target);
-      return;
-    }
-    if (options.elements.ptyBtn) {
-      options.elements.ptyBtn.textContent = label;
-    }
-  }
-
-  function syncThemeSelectValue(value: string) {
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        appearance: {
-          themeSelectValue: value,
-        },
-      });
-      return;
-    }
-    if (options.elements.themeSelect) {
-      options.elements.themeSelect.value = value;
-    }
-  }
-
-  function syncShaderPresetValue(value = options.getSelectedShaderPreset()) {
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        appearance: {
-          shaderPreset: value,
-        },
-      });
-      return;
-    }
-    if (options.elements.shaderPresetEl) {
-      options.elements.shaderPresetEl.value = value;
-    }
-  }
-
-  function syncMouseModeValue(value: string) {
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        appearance: {
-          mouseMode: value,
-        },
-      });
-      return;
-    }
-    if (!options.elements.mouseModeEl) return;
-    const hasOption = Array.from(options.elements.mouseModeEl.options).some(
-      (option) => option.value === value,
-    );
-    options.elements.mouseModeEl.value = hasOption ? value : "auto";
-  }
-
-  function syncFontFamilyValue() {
-    const value = options.getSelectedFontFamily();
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        appearance: {
-          fontFamily: value,
-        },
-      });
-      return;
-    }
-    if (options.elements.fontFamilySelect) {
-      options.elements.fontFamilySelect.value = value;
-    }
-  }
-
-  function syncFontFamilyControlState() {
-    syncFontFamilyControls({
-      fontFamilySelect: options.usesSvelteShell ? null : options.elements.fontFamilySelect,
-      fontFamilyLocalSelect: options.usesSvelteShell
-        ? null
-        : options.elements.fontFamilyLocalSelect,
-      btnLoadLocalFonts: options.usesSvelteShell ? null : options.elements.btnLoadLocalFonts,
-      selectedFontFamily: options.getSelectedFontFamily(),
-      selectedLocalFontMatcher: options.getSelectedLocalFontMatcher(),
-      supportsLocalFontPicker: supportsLocalFontPicker(),
-    });
-  }
-
-  function syncLocalFontControls() {
-    const supportsPicker = supportsLocalFontPicker();
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        appearance: {
-          localFont: {
-            value: getLocalFontSelectValue(options.getSelectedLocalFontMatcher()),
-            hintText: options.getLocalFontHintText(),
-            loadDisabled: !supportsPicker,
-            selectDisabled: !supportsPicker,
-            options: [
-              { value: "", label: "Local Font: None" },
-              ...options.getDetectedLocalFontOptions(),
-            ],
-          } satisfies LocalFontStateDetail,
-        },
-      });
-      return;
-    }
-    syncFontFamilyControlState();
-    if (options.elements.fontFamilyHintEl) {
-      options.elements.fontFamilyHintEl.textContent = options.getLocalFontHintText();
-    }
-  }
-
-  function syncFontRenderingControls() {
-    if (options.usesSvelteShell) {
-      dispatchActivePaneState({
-        appearance: {
-          fontRendering: {
-            ligatures: options.getSelectedLigatures() ? "on" : "off",
-            fontHinting: options.getSelectedFontHinting() ? "on" : "off",
-            fontHintTarget: options.getSelectedFontHintTarget(),
-          },
-        },
-      });
-      return;
-    }
-    syncHintingControls({
+  const appearanceSync = createPaneAppearanceShellSync({
+    usesSvelteShell: options.usesSvelteShell,
+    target: options.target,
+    elements: {
+      themeSelect: options.elements.themeSelect,
+      fontFamilySelect: options.elements.fontFamilySelect,
+      fontFamilyLocalSelect: options.elements.fontFamilyLocalSelect,
+      btnLoadLocalFonts: options.elements.btnLoadLocalFonts,
+      fontFamilyHintEl: options.elements.fontFamilyHintEl,
       ligaturesSelect: options.elements.ligaturesSelect,
       fontHintingSelect: options.elements.fontHintingSelect,
       fontHintTargetSelect: options.elements.fontHintTargetSelect,
-      selectedLigatures: options.getSelectedLigatures(),
-      selectedFontHinting: options.getSelectedFontHinting(),
-      selectedFontHintTarget: options.getSelectedFontHintTarget(),
-    });
-  }
+      mouseModeEl: options.elements.mouseModeEl,
+      shaderPresetEl: options.elements.shaderPresetEl,
+    },
+    getSelectedFontFamily: options.getSelectedFontFamily,
+    getSelectedLocalFontMatcher: options.getSelectedLocalFontMatcher,
+    getDetectedLocalFontOptions: options.getDetectedLocalFontOptions,
+    getLocalFontHintText: options.getLocalFontHintText,
+    getSelectedLigatures: options.getSelectedLigatures,
+    getSelectedFontHinting: options.getSelectedFontHinting,
+    getSelectedFontHintTarget: options.getSelectedFontHintTarget,
+    getSelectedShaderPreset: options.getSelectedShaderPreset,
+  });
+
+  const connectionSync = createPaneConnectionShellSync({
+    usesSvelteShell: options.usesSvelteShell,
+    target: options.target,
+    elements: {
+      ptyBtn: options.elements.ptyBtn,
+    },
+    getSelectedConnectionBackend: options.getSelectedConnectionBackend,
+  });
 
   function renderActivePaneControls(pane: PaneShellSyncPane, state: PaneState) {
     options.syncSelectedDefaults(state);
     state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
     if (options.usesSvelteShell) {
-      const supportsPicker = supportsLocalFontPicker();
-      dispatchActivePaneState({
-        terminal: {
-          pauseLabel: state.paused ? "Resume" : "Pause",
-          renderer: state.renderer,
-          fontSize: state.fontSize,
+      if (!options.target) return;
+      dispatchActivePaneState(
+        {
+          terminal: terminalSync.buildTerminalState(state),
+          appearance: appearanceSync.buildAppearanceState(state),
         },
-        appearance: {
-          fontFamily: options.getSelectedFontFamily(),
-          localFont: {
-            value: getLocalFontSelectValue(options.getSelectedLocalFontMatcher()),
-            hintText: options.getLocalFontHintText(),
-            loadDisabled: !supportsPicker,
-            selectDisabled: !supportsPicker,
-            options: [
-              { value: "", label: "Local Font: None" },
-              ...options.getDetectedLocalFontOptions(),
-            ],
-          },
-          fontRendering: {
-            ligatures: options.getSelectedLigatures() ? "on" : "off",
-            fontHinting: options.getSelectedFontHinting() ? "on" : "off",
-            fontHintTarget: options.getSelectedFontHintTarget(),
-          },
-          mouseMode: state.mouseMode,
-          shaderPreset: options.getSelectedShaderPreset(),
-          themeSelectValue: state.theme.selectValue,
-        },
-      });
+        options.target,
+      );
       return;
     }
-    syncTerminalControlValues(state);
-    syncFontFamilyValue();
-    syncFontFamilyControlState();
-    syncLocalFontControls();
-    syncFontRenderingControls();
-    syncMouseModeValue(state.mouseMode);
-    syncShaderPresetValue();
-    syncThemeSelectValue(state.theme.selectValue);
+    terminalSync.syncTerminalControlValues(state);
+    appearanceSync.syncFontFamilyValue();
+    appearanceSync.syncLocalFontControls();
+    appearanceSync.syncFontRenderingControls();
+    appearanceSync.syncMouseModeValue(state.mouseMode);
+    appearanceSync.syncShaderPresetValue();
+    appearanceSync.syncThemeSelectValue(state.theme.selectValue);
   }
 
   return {
     renderActivePaneControls,
-    syncFontFamilyValue,
-    syncFontRenderingControls,
-    syncLocalFontControls,
-    syncMouseModeValue,
-    syncPauseButton,
-    syncPtyButton,
-    syncShaderPresetValue,
-    syncTerminalControlValues,
-    syncThemeSelectValue,
+    syncFontFamilyValue: appearanceSync.syncFontFamilyValue,
+    syncFontRenderingControls: appearanceSync.syncFontRenderingControls,
+    syncLocalFontControls: appearanceSync.syncLocalFontControls,
+    syncMouseModeValue: appearanceSync.syncMouseModeValue,
+    syncPauseButton: terminalSync.syncPauseButton,
+    syncPtyButton: connectionSync.syncPtyButton,
+    syncShaderPresetValue: appearanceSync.syncShaderPresetValue,
+    syncTerminalControlValues: terminalSync.syncTerminalControlValues,
+    syncThemeSelectValue: appearanceSync.syncThemeSelectValue,
   };
 }

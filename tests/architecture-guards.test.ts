@@ -681,6 +681,31 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellBridge).toContain("listenConnectionState(");
 });
 
+test("pane shell sync delegates terminal, appearance, and connection reflection", () => {
+  const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
+  const terminalSync = readFileSync(
+    resolve(playgroundRoot, "lib/pane-terminal-shell-sync.ts"),
+    "utf8",
+  );
+  const appearanceSync = readFileSync(
+    resolve(playgroundRoot, "lib/pane-appearance-shell-sync.ts"),
+    "utf8",
+  );
+  const connectionSync = readFileSync(
+    resolve(playgroundRoot, "lib/pane-connection-shell-sync.ts"),
+    "utf8",
+  );
+
+  expect(paneShellSync).toContain('./pane-terminal-shell-sync.ts"');
+  expect(paneShellSync).toContain('./pane-appearance-shell-sync.ts"');
+  expect(paneShellSync).toContain('./pane-connection-shell-sync.ts"');
+  expect(paneShellSync).not.toContain("syncHintingControls(");
+  expect(paneShellSync).not.toContain("syncFontFamilyControls(");
+  expect(terminalSync).toContain("export function createPaneTerminalShellSync");
+  expect(appearanceSync).toContain("export function createPaneAppearanceShellSync");
+  expect(connectionSync).toContain("export function createPaneConnectionShellSync");
+});
+
 test("src/internal.ts does not import runtime or surface modules directly", () => {
   const offenders = collectResolvedImports([internalEntry]).filter(({ resolved }) => {
     return (
