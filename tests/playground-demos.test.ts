@@ -1,4 +1,9 @@
 import { expect, test } from "bun:test";
+import {
+  createBasicDemoPayload,
+  createPaletteDemoPayload,
+  createUnicodeDemoPayload,
+} from "../playground/lib/demo-content.ts";
 import { createDemoController, runActivePaneDemo, stopPaneDemo } from "../playground/lib/demos.ts";
 import type { PaneState } from "../playground/lib/pane-state.ts";
 
@@ -124,4 +129,13 @@ test("createDemoController stops the previous animation before starting another 
       value: originalPerformance,
     });
   }
+});
+
+test("demo content builders emit the expected payload headers", () => {
+  expect(createBasicDemoPayload()).toContain("restty demo: basics");
+  expect(createBasicDemoPayload()).toContain("\x1b[2J\x1b[H");
+  expect(createPaletteDemoPayload()).toContain("restty demo: palette");
+  expect(createPaletteDemoPayload()).toContain("Grayscale:");
+  expect(createUnicodeDemoPayload()).toContain("restty demo: unicode");
+  expect(createUnicodeDemoPayload()).toContain("Braille:");
 });

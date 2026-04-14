@@ -867,6 +867,19 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(orchestrator).toContain("session.notifications.handleDesktopNotification");
 });
 
+test("demo controller delegates static demo payload content", () => {
+  const demos = readFileSync(resolve(playgroundRoot, "lib/demos.ts"), "utf8");
+  const demoContent = readFileSync(resolve(playgroundRoot, "lib/demo-content.ts"), "utf8");
+
+  expect(demos).toContain('./demo-content.ts"');
+  expect(demos).not.toContain("function demoBasic()");
+  expect(demos).not.toContain("function demoPalette()");
+  expect(demos).not.toContain("function demoUnicode()");
+  expect(demoContent).toContain("restty demo: basics");
+  expect(demoContent).toContain("restty demo: palette");
+  expect(demoContent).toContain("restty demo: unicode");
+});
+
 test("playground no longer ships legacy runtime status or log widgets", () => {
   const playgroundApp = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
   const playgroundIndex = readFileSync(resolve(playgroundPublicRoot, "index.html"), "utf8");
