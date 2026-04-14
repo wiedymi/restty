@@ -68,7 +68,7 @@ test("fetchFirstScript skips html responses and keeps the first valid script", a
   expect(seenUrls).toEqual(["/bad.js", "/good.js"]);
 });
 
-test("ensureWebContainerSeedScripts writes fallbacks, removes legacy shell scripts, and chmods demos", async () => {
+test("ensureWebContainerSeedScripts writes fallbacks, removes stale shell scripts, and chmods demos", async () => {
   globalThis.fetch = (async () => new Response("missing", { status: 404 })) as typeof fetch;
 
   const { spawnCalls, webcontainer, writes } = createFakeWebContainer({});

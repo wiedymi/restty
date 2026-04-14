@@ -167,11 +167,11 @@ async function ensureScriptsExecutable(
   }
 }
 
-async function removeLegacyShellScripts(
+async function removeStaleShellScripts(
   webcontainer: WebContainerSeedScriptContainer,
 ): Promise<void> {
   const workdir = webcontainer.workdir;
-  const legacyPaths = ["demo.sh", "test.sh", `${workdir}/demo.sh`, `${workdir}/test.sh`];
+  const stalePaths = ["demo.sh", "test.sh", `${workdir}/demo.sh`, `${workdir}/test.sh`];
   const cleanup = await webcontainer.spawn("node", [
     "-e",
     [
@@ -184,7 +184,7 @@ async function removeLegacyShellScripts(
       "  }",
       "}",
     ].join(" "),
-    ...legacyPaths,
+    ...stalePaths,
   ]);
   await cleanup.exit.catch(() => 1);
 }
@@ -192,7 +192,7 @@ async function removeLegacyShellScripts(
 export async function ensureWebContainerSeedScripts(
   webcontainer: WebContainerSeedScriptContainer,
 ): Promise<void> {
-  await removeLegacyShellScripts(webcontainer);
+  await removeStaleShellScripts(webcontainer);
   for (const spec of seedScripts) {
     const text = await fetchFirstScript(spec.urls);
     await webcontainer.fs.writeFile(spec.target, text ?? spec.fallback);

@@ -14,9 +14,9 @@ const isolationHeaders = {
   "cross-origin-embedder-policy": "require-corp",
 };
 
-function copyLegacyPlaygroundPublic() {
+function copyPlaygroundPublicAssets() {
   return {
-    name: "copy-legacy-playground-public",
+    name: "copy-playground-public-assets",
     closeBundle() {
       cpSync(playgroundPublicDir, resolve(outDir, "playground/public"), {
         recursive: true,
@@ -28,7 +28,7 @@ function copyLegacyPlaygroundPublic() {
 
 export default defineConfig({
   root: repoRoot,
-  plugins: [svelte({ configFile: false }), copyLegacyPlaygroundPublic()],
+  plugins: [svelte({ configFile: false }), copyPlaygroundPublicAssets()],
   server: {
     headers: isolationHeaders,
     open: "/playground/svelte/index.html",
