@@ -972,6 +972,10 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
     resolve(playgroundRoot, "lib/settings-shell-effects.ts"),
     "utf8",
   );
+  const shellStateBridge = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/shell-state-bridge.ts"),
+    "utf8",
+  );
   const shellState = readFileSync(
     resolve(playgroundRoot, "svelte/src/lib/stores/shell-state.ts"),
     "utf8",
@@ -990,7 +994,9 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(demoSection).toContain("../../../../lib/shell-bridge.ts");
   expect(existsSync(resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"))).toBe(false);
   expect(settingsShellEffects).toContain('./shell-bridge.ts"');
-  expect(shellState).toContain('../../../../lib/shell-bridge.ts"');
+  expect(shellStateBridge).toContain('../../../lib/shell-bridge.ts"');
+  expect(shellStateBridge).toContain('./stores/shell-state.ts"');
+  expect(shellState).not.toContain('../../../../lib/shell-bridge.ts"');
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(shellEffects).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
@@ -998,6 +1004,8 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(settingsShellEffects).not.toContain("SHELL_COMMAND_EVENT");
   expect(shellState).not.toContain("addEventListener(ACTIVE_PANE_STATE_EVENT");
   expect(shellState).not.toContain("addEventListener(CONNECTION_STATE_EVENT");
+  expect(shellState).not.toContain("listenActivePaneState(");
+  expect(shellState).not.toContain("listenConnectionState(");
   expect(shellBridge).toContain("dispatchShellEvent(");
   expect(shellBridge).toContain("listenActivePaneState(");
   expect(shellBridge).toContain("listenConnectionState(");
@@ -1074,9 +1082,10 @@ test("svelte app delegates settings shell lifecycle to a dedicated component", (
   expect(appSvelte).not.toContain("dispatchSettingsClose");
   expect(appSvelte).not.toContain("settingsShellState");
   expect(appSvelte).not.toContain("settingsDialog");
-  expect(shellMain).toContain('./lib/stores/shell-state.ts"');
+  expect(shellMain).toContain('./lib/shell-state-bridge.ts"');
   expect(shellMain).toContain('document.documentElement.dataset.playgroundShell = "svelte"');
   expect(shellMain).toContain("startShellStateBridge()");
+  expect(shellMain).not.toContain('./lib/stores/shell-state.ts"');
   expect(settingsShell).toContain("../../../../lib/shell-bridge.ts");
   expect(settingsShell).not.toContain("../stores/shell-state.ts");
   expect(settingsShell).not.toContain("startShellStateBridge");

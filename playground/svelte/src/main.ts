@@ -1,7 +1,7 @@
 import { mount, tick } from "svelte";
 import "../../public/style.css";
 import App from "./App.svelte";
-import { startShellStateBridge } from "./lib/stores/shell-state.ts";
+import { startShellStateBridge } from "./lib/shell-state-bridge.ts";
 
 const target = document.getElementById("app");
 if (!target) {

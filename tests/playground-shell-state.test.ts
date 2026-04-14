@@ -9,9 +9,9 @@ import {
   resetShellState,
   setDemoShellKind,
   shellState,
-  startShellStateBridge,
   terminalShellState,
 } from "../playground/svelte/src/lib/stores/shell-state.ts";
+import { startShellStateBridge } from "../playground/svelte/src/lib/shell-state-bridge.ts";
 
 beforeEach(() => {
   resetShellState();
