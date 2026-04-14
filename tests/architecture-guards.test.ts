@@ -557,6 +557,7 @@ test("surface plugin context depends on a plugin host api instead of the full Re
     "export type ResttyPluginContext = {\n  restty: ResttyPluginHostApi;\n  options: unknown;\n  focusedPane:",
   );
 
+  expect(pluginDispatcherDeps).not.toContain("../restty/pane-handle");
   expect(pluginDispatcherDeps).not.toContain('type { Restty } from "../restty"');
   expect(pluginDispatcherDeps).toContain('from "./context.types"');
 });
@@ -606,6 +607,10 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
   expect(resttyPluginSurface).toContain("createResttyPluginSurfaceApi(restty)");
   expect(resttyAssembly).toContain("export function createResttySurfaceAssembly");
   expect(resttyAssembly).toContain("createResttyPluginSurfaceBridge(restty)");
+  expect(resttyAssembly).not.toContain("panes: () => restty.panes()");
+  expect(resttyAssembly).not.toContain("pane: (id) => restty.pane(id)");
+  expect(resttyAssembly).not.toContain("activePane: () => restty.activePane()");
+  expect(resttyAssembly).not.toContain("focusedPane: () => restty.focusedPane()");
   expect(resttyAssembly).toContain('./pane-manager-assembly"');
   expect(resttyAssembly).not.toContain("createMergedPaneTerminalConfig({");
   expect(resttyAssembly).not.toContain("createMergedPaneServicesConfig({");

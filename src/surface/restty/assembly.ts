@@ -34,10 +34,6 @@ export function createResttySurfaceAssembly({
   });
   const controller = new ResttyController({
     restty: createResttyPluginSurfaceBridge(restty),
-    panes: () => restty.panes(),
-    pane: (id) => restty.pane(id),
-    activePane: () => restty.activePane(),
-    focusedPane: () => restty.focusedPane(),
     addRenderStage: (stage, ownerPluginId) => shaderOps.addManagedShaderStage(stage, ownerPluginId),
   });
 
