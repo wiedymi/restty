@@ -6,9 +6,18 @@ import type {
   ResttyRuntimeTerminalApi,
 } from "../core/api";
 import type { ResttyRuntimeLifecycleState } from "../core/lifecycle";
-import type { ResttyRuntimeEvent, ResttyRuntimeEventHub } from "../core/runtime-events";
+import type { ResttyRuntimeEventHub } from "../core/runtime-events";
 import type { RuntimeInteraction } from "./interaction-runtime/runtime.types";
 import type { PtyInputRuntime } from "./pty-input-runtime.types";
+import {
+  createRuntimeEventsView,
+  createRuntimeInteractionView,
+  createRuntimeIoView,
+  createRuntimeLifecycleView,
+  createRuntimeRenderView,
+  createRuntimeSearchView,
+  createRuntimeTerminalView,
+} from "./runtime-controller.public-api.capabilities";
 import type {
   RuntimeControllerPublicOptions,
   RuntimeSendInput,
@@ -37,97 +46,43 @@ export function createRuntimePublicApi(deps: RuntimeControllerPublicApiDeps): Re
   deps.ptyInputRuntime.setPtyStatus("disconnected");
   deps.ptyInputRuntime.updateMouseStatus();
 
-  function setRenderer(value: "auto" | "webgpu" | "webgl2") {
-    if (deps.getLifecycleState() === "destroyed") return;
-    if (value !== "auto" && value !== "webgpu" && value !== "webgl2") return;
-    deps.internalState.preferredRenderer = value;
-    void deps.init();
-  }
-
-  function setPaused(value: boolean) {
-    deps.internalState.paused = Boolean(value);
-  }
-
-  function togglePause() {
-    deps.internalState.paused = !deps.internalState.paused;
-  }
-
-  function setMouseMode(value: Parameters<InputHandler["setMouseMode"]>[0]) {
-    deps.inputHandler.setMouseMode(value);
-    deps.ptyInputRuntime.updateMouseStatus();
-  }
-
-  function getMouseStatus() {
-    return deps.inputHandler.getMouseStatus();
-  }
-
-  const lifecycle = {
-    init: deps.init,
-    destroy: deps.destroy,
-    state: () => deps.getLifecycleState(),
-  };
-  const terminal = {
-    setRenderer,
-    setPaused,
-    togglePause,
-    setFontSize: deps.publicApiOptions.setFontSize,
-    setLigatures: deps.publicApiOptions.setLigatures,
-    setFontHinting: deps.publicApiOptions.setFontHinting,
-    setFontHintTarget: deps.publicApiOptions.setFontHintTarget,
-    setFontSources: deps.publicApiOptions.setFontSources,
-    applyTheme: deps.applyTheme,
-    resetTheme: deps.publicApiOptions.resetTheme,
-    clearScreen: deps.clearScreen,
-  };
-  const io = {
-    sendInput: deps.sendInput,
-    sendKeyInput: deps.ptyInputRuntime.sendKeyInput,
-    connectPty: deps.ptyInputRuntime.connectPty,
-    disconnectPty: deps.ptyInputRuntime.disconnectPty,
-    isPtyConnected: () => deps.ptyTransport.isConnected(),
-  };
-  const interaction = {
-    setMouseMode,
-    getMouseStatus,
-    copySelectionToClipboard: deps.copySelectionToClipboard,
-    pasteFromClipboard: deps.pasteFromClipboard,
-    selectWordAtClientPoint: deps.interaction.selectWordAtClientPoint,
-    resize: deps.publicApiOptions.resize,
-    focus: deps.publicApiOptions.focus,
-    blur: deps.publicApiOptions.blur,
-    updateSize: deps.publicApiOptions.updateSize,
-  };
-  const search = {
-    setQuery: deps.publicApiOptions.setSearchQuery,
-    clear: deps.publicApiOptions.clearSearch,
-    next: deps.publicApiOptions.searchNext,
-    previous: deps.publicApiOptions.searchPrevious,
-    getState: deps.publicApiOptions.getSearchState,
-  };
-  const render = {
-    getBackend: () => deps.internalState.backend,
-    setShaderStages: deps.publicApiOptions.setShaderStages,
-    getShaderStages: deps.publicApiOptions.getShaderStages,
-  };
-  const events = {
-    subscribe: (listener: (event: ResttyRuntimeEvent) => void) => {
-      const dispose = deps.runtimeEvents.subscribe(listener);
-      try {
-        listener({ type: "state", state: deps.getLifecycleState() });
-      } catch {
-        // Ignore runtime event listener errors.
-      }
-      return dispose;
-    },
-  };
-
   return {
-    lifecycle,
-    events,
-    terminal,
-    io,
-    interaction,
-    search,
-    render,
+    lifecycle: createRuntimeLifecycleView({
+      init: deps.init,
+      destroy: deps.destroy,
+      getLifecycleState: deps.getLifecycleState,
+    }),
+    events: createRuntimeEventsView({
+      runtimeEvents: deps.runtimeEvents,
+      getLifecycleState: deps.getLifecycleState,
+    }),
+    terminal: createRuntimeTerminalView({
+      init: deps.init,
+      getLifecycleState: deps.getLifecycleState,
+      internalState: deps.internalState,
+      applyTheme: deps.applyTheme,
+      clearScreen: deps.clearScreen,
+      publicApiOptions: deps.publicApiOptions,
+    }),
+    io: createRuntimeIoView({
+      sendInput: deps.sendInput,
+      ptyInputRuntime: deps.ptyInputRuntime,
+      ptyTransport: deps.ptyTransport,
+    }),
+    interaction: createRuntimeInteractionView({
+      inputHandler: deps.inputHandler,
+      ptyInputRuntime: deps.ptyInputRuntime,
+      interaction: deps.interaction,
+      publicApiOptions: deps.publicApiOptions,
+      copySelectionToClipboard: deps.copySelectionToClipboard,
+      pasteFromClipboard: deps.pasteFromClipboard,
+    }),
+    search: createRuntimeSearchView({
+      publicApiOptions: deps.publicApiOptions,
+    }),
+    render: createRuntimeRenderView({
+      internalState: deps.internalState,
+      publicApiOptions: deps.publicApiOptions,
+    }),
   };
 }

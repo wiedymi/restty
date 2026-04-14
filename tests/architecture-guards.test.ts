@@ -169,11 +169,23 @@ test("runtime controller delegates public api projection to a dedicated module",
     resolve(runtimeCreateRuntimeRoot, "runtime-controller.public-api.ts"),
     "utf8",
   );
+  const runtimeControllerPublicApiCapabilities = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.public-api.capabilities.ts"),
+    "utf8",
+  );
 
   expect(runtimeController).toContain('./runtime-controller.public-api"');
   expect(runtimeController).not.toContain("function createPublicApi(");
   expect(runtimeControllerPublicApi).toContain("export function createRuntimePublicApi");
-  expect(runtimeControllerPublicApi).toContain("deps.runtimeEvents.subscribe(listener)");
+  expect(runtimeControllerPublicApi).toContain('./runtime-controller.public-api.capabilities"');
+  expect(runtimeControllerPublicApi).not.toContain("function setRenderer(");
+  expect(runtimeControllerPublicApi).not.toContain("const terminal =");
+  expect(runtimeControllerPublicApiCapabilities).toContain(
+    "export function createRuntimeTerminalView",
+  );
+  expect(runtimeControllerPublicApiCapabilities).toContain(
+    "export function createRuntimeEventsView",
+  );
 });
 
 test("runtime controller delegates lifecycle orchestration to a dedicated module", () => {
