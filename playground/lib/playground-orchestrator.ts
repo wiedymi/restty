@@ -163,14 +163,20 @@ export function bootstrapPlaygroundOrchestrator({
       settingsFab,
       settingsClose,
     },
-    shellAdapter: session.shell.shellAdapter,
-    paneShellSync: session.shell.paneShellSync,
-    paneLifecycle: session.controllers.paneLifecycle,
-    appearanceController: session.controllers.appearanceController,
-    connectionController: session.controllers.connectionController,
-    paneStates: session.state.paneStates,
-    getActivePaneId: session.state.getActivePaneId,
-    getConnectionShellStateDetail: session.shell.getConnectionShellStateDetail,
+    shell: {
+      shellAdapter: session.shell.shellAdapter,
+      paneShellSync: session.shell.paneShellSync,
+      getConnectionShellStateDetail: session.shell.getConnectionShellStateDetail,
+    },
+    controllers: {
+      paneLifecycle: session.controllers.paneLifecycle,
+      appearanceController: session.controllers.appearanceController,
+      connectionController: session.controllers.connectionController,
+    },
+    state: {
+      paneStates: session.state.paneStates,
+      getActivePaneId: session.state.getActivePaneId,
+    },
   });
 
   return restty;

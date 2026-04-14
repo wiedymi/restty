@@ -736,9 +736,15 @@ test("playground orchestrator delegates shell control wiring to a dedicated modu
   expect(orchestrator).not.toContain("bindConnectionControls(");
   expect(orchestrator).not.toContain("bindTerminalControls(");
   expect(orchestrator).not.toContain("bindAppearanceControls(");
+  expect(orchestrator).toContain("shell: {");
+  expect(orchestrator).toContain("controllers: {");
+  expect(orchestrator).toContain("state: {");
   expect(wiring).toContain("bindConnectionControls(");
   expect(wiring).toContain("bindTerminalControls(");
   expect(wiring).toContain("bindAppearanceControls(");
+  expect(wiring).toContain("type PlaygroundControlShell =");
+  expect(wiring).toContain("type PlaygroundControlControllers =");
+  expect(wiring).toContain("type PlaygroundControlState =");
 });
 
 test("playground orchestrator delegates controller session setup to a dedicated module", () => {

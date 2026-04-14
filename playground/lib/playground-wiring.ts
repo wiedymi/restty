@@ -16,19 +16,9 @@ import type { PaneState } from "./pane-state.ts";
 
 type PlaygroundWindow = Window & typeof globalThis;
 
-type WirePlaygroundControlsOptions = {
-  restty: Restty;
-  window: PlaygroundWindow;
-  usesSvelteShell: boolean;
-  sharedElements: SharedPlaygroundElements;
-  legacyElements: LegacyPlaygroundElements;
+type PlaygroundControlShell = {
   shellAdapter: ReturnType<typeof createPlaygroundShellAdapter>;
   paneShellSync: ReturnType<typeof createPaneShellSync>;
-  paneLifecycle: ReturnType<typeof createPaneLifecycleController>;
-  appearanceController: ReturnType<typeof createPaneAppearanceController>;
-  connectionController: ReturnType<typeof createConnectionController>;
-  paneStates: Map<number, PaneState>;
-  getActivePaneId: () => number | null;
   getConnectionShellStateDetail: () => {
     backend: string;
     ptyUrl: string;
@@ -36,6 +26,28 @@ type WirePlaygroundControlsOptions = {
     webContainerCommand: string;
     webContainerCwd: string;
   };
+};
+
+type PlaygroundControlControllers = {
+  paneLifecycle: ReturnType<typeof createPaneLifecycleController>;
+  appearanceController: ReturnType<typeof createPaneAppearanceController>;
+  connectionController: ReturnType<typeof createConnectionController>;
+};
+
+type PlaygroundControlState = {
+  paneStates: Map<number, PaneState>;
+  getActivePaneId: () => number | null;
+};
+
+type WirePlaygroundControlsOptions = {
+  restty: Restty;
+  window: PlaygroundWindow;
+  usesSvelteShell: boolean;
+  sharedElements: SharedPlaygroundElements;
+  legacyElements: LegacyPlaygroundElements;
+  shell: PlaygroundControlShell;
+  controllers: PlaygroundControlControllers;
+  state: PlaygroundControlState;
 };
 
 export function wirePlaygroundControls({
@@ -69,14 +81,9 @@ export function wirePlaygroundControls({
     settingsFab,
     settingsClose,
   },
-  shellAdapter,
-  paneShellSync,
-  paneLifecycle,
-  appearanceController,
-  connectionController,
-  paneStates,
-  getActivePaneId,
-  getConnectionShellStateDetail,
+  shell: { shellAdapter, paneShellSync, getConnectionShellStateDetail },
+  controllers: { paneLifecycle, appearanceController, connectionController },
+  state: { paneStates, getActivePaneId },
 }: WirePlaygroundControlsOptions): void {
   bindSettingsControls({
     usesSvelteShell,
