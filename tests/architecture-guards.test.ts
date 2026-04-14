@@ -602,6 +602,19 @@ test("surface restty delegates pane lookup wiring to a dedicated module", () => 
   expect(resttyPaneLookup).toContain("openPaneSearch: (id, searchOptions) =>");
 });
 
+test("surface active pane api derives from pane handle contract", () => {
+  const activePaneApi = readFileSync(resolve(surfaceRoot, "restty/active-pane-api.ts"), "utf8");
+
+  expect(activePaneApi).toContain(
+    'import type { ResttyPaneApi, ResttyPaneHandle } from "./pane-handle"',
+  );
+  expect(activePaneApi).toContain("export type ResttyActivePaneSurfaceApi = Omit<");
+  expect(activePaneApi).toContain("ResttyPaneApi,");
+  expect(activePaneApi).not.toContain("../../runtime/core/models");
+  expect(activePaneApi).not.toContain("../../theme");
+  expect(activePaneApi).not.toContain("../../input");
+});
+
 test("surface pane ops split handle, command, and style helpers", () => {
   const paneOps = readFileSync(resolve(surfaceRoot, "restty/pane-ops.ts"), "utf8");
   const paneHandleOps = readFileSync(resolve(surfaceRoot, "restty/pane-handle-ops.ts"), "utf8");

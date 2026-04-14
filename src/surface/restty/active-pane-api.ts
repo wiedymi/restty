@@ -1,26 +1,19 @@
-import type { InputHandler, MouseMode } from "../../input";
-import type { GhosttyTheme } from "../../theme";
-import type {
-  ResttyFontHintTarget,
-  ResttyFontSource,
-  ResttySearchState,
-} from "../../runtime/core/models";
-import type { ResttyPaneHandle } from "./pane-handle";
-import type { ResttyPaneSearchUiCloseOptions, ResttyPaneSearchUiOpenOptions } from "../search-ui";
-import type { ResttyManagedPaneSearchUiStyleOptions } from "../panes/managed-pane-types";
+import type { ResttyPaneApi, ResttyPaneHandle } from "./pane-handle";
 
-export abstract class ResttyActivePaneApi {
+export type ResttyActivePaneSurfaceApi = Omit<ResttyPaneApi, "id" | "resize" | "focus" | "blur">;
+
+export abstract class ResttyActivePaneApi implements ResttyActivePaneSurfaceApi {
   protected abstract requireActivePaneHandle(): ResttyPaneHandle;
 
-  isPtyConnected(): boolean {
+  isPtyConnected(): ReturnType<ResttyPaneApi["isPtyConnected"]> {
     return this.requireActivePaneHandle().isPtyConnected();
   }
 
-  setRenderer(value: "auto" | "webgpu" | "webgl2"): void {
+  setRenderer(value: Parameters<ResttyPaneApi["setRenderer"]>[0]): void {
     this.requireActivePaneHandle().setRenderer(value);
   }
 
-  setPaused(value: boolean): void {
+  setPaused(value: Parameters<ResttyPaneApi["setPaused"]>[0]): void {
     this.requireActivePaneHandle().setPaused(value);
   }
 
@@ -28,27 +21,32 @@ export abstract class ResttyActivePaneApi {
     this.requireActivePaneHandle().togglePause();
   }
 
-  setFontSize(value: number): void {
+  setFontSize(value: Parameters<ResttyPaneApi["setFontSize"]>[0]): void {
     this.requireActivePaneHandle().setFontSize(value);
   }
 
-  setLigatures(value: boolean): void {
+  setLigatures(value: Parameters<ResttyPaneApi["setLigatures"]>[0]): void {
     this.requireActivePaneHandle().setLigatures(value);
   }
 
-  setFontHinting(value: boolean): void {
+  setFontHinting(value: Parameters<ResttyPaneApi["setFontHinting"]>[0]): void {
     this.requireActivePaneHandle().setFontHinting(value);
   }
 
-  setFontHintTarget(value: ResttyFontHintTarget): void {
+  setFontHintTarget(value: Parameters<ResttyPaneApi["setFontHintTarget"]>[0]): void {
     this.requireActivePaneHandle().setFontHintTarget(value);
   }
 
-  setFontSources(sources: ResttyFontSource[]): Promise<void> {
+  setFontSources(
+    sources: Parameters<ResttyPaneApi["setFontSources"]>[0],
+  ): ReturnType<ResttyPaneApi["setFontSources"]> {
     return this.requireActivePaneHandle().setFontSources(sources);
   }
 
-  applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {
+  applyTheme(
+    theme: Parameters<ResttyPaneApi["applyTheme"]>[0],
+    sourceLabel?: Parameters<ResttyPaneApi["applyTheme"]>[1],
+  ): void {
     this.requireActivePaneHandle().applyTheme(theme, sourceLabel);
   }
 
@@ -56,11 +54,17 @@ export abstract class ResttyActivePaneApi {
     this.requireActivePaneHandle().resetTheme();
   }
 
-  sendInput(text: string, source?: string): void {
+  sendInput(
+    text: Parameters<ResttyPaneApi["sendInput"]>[0],
+    source?: Parameters<ResttyPaneApi["sendInput"]>[1],
+  ): void {
     this.requireActivePaneHandle().sendInput(text, source);
   }
 
-  sendKeyInput(text: string, source?: string): void {
+  sendKeyInput(
+    text: Parameters<ResttyPaneApi["sendKeyInput"]>[0],
+    source?: Parameters<ResttyPaneApi["sendKeyInput"]>[1],
+  ): void {
     this.requireActivePaneHandle().sendKeyInput(text, source);
   }
 
@@ -68,7 +72,7 @@ export abstract class ResttyActivePaneApi {
     this.requireActivePaneHandle().clearScreen();
   }
 
-  connectPty(url = ""): void {
+  connectPty(url: Parameters<ResttyPaneApi["connectPty"]>[0] = ""): void {
     this.requireActivePaneHandle().connectPty(url);
   }
 
@@ -76,27 +80,30 @@ export abstract class ResttyActivePaneApi {
     this.requireActivePaneHandle().disconnectPty();
   }
 
-  setMouseMode(value: MouseMode): void {
+  setMouseMode(value: Parameters<ResttyPaneApi["setMouseMode"]>[0]): void {
     this.requireActivePaneHandle().setMouseMode(value);
   }
 
-  getMouseStatus(): ReturnType<InputHandler["getMouseStatus"]> {
+  getMouseStatus(): ReturnType<ResttyPaneApi["getMouseStatus"]> {
     return this.requireActivePaneHandle().getMouseStatus();
   }
 
-  copySelectionToClipboard(): Promise<boolean> {
+  copySelectionToClipboard(): ReturnType<ResttyPaneApi["copySelectionToClipboard"]> {
     return this.requireActivePaneHandle().copySelectionToClipboard();
   }
 
-  pasteFromClipboard(): Promise<boolean> {
+  pasteFromClipboard(): ReturnType<ResttyPaneApi["pasteFromClipboard"]> {
     return this.requireActivePaneHandle().pasteFromClipboard();
   }
 
-  selectWordAtClientPoint(clientX: number, clientY: number): boolean {
+  selectWordAtClientPoint(
+    clientX: Parameters<ResttyPaneApi["selectWordAtClientPoint"]>[0],
+    clientY: Parameters<ResttyPaneApi["selectWordAtClientPoint"]>[1],
+  ): ReturnType<ResttyPaneApi["selectWordAtClientPoint"]> {
     return this.requireActivePaneHandle().selectWordAtClientPoint(clientX, clientY);
   }
 
-  setSearchQuery(query: string): void {
+  setSearchQuery(query: Parameters<ResttyPaneApi["setSearchQuery"]>[0]): void {
     this.requireActivePaneHandle().setSearchQuery(query);
   }
 
@@ -112,19 +119,19 @@ export abstract class ResttyActivePaneApi {
     this.requireActivePaneHandle().searchPrevious();
   }
 
-  getSearchState(): ResttySearchState {
+  getSearchState(): ReturnType<ResttyPaneApi["getSearchState"]> {
     return this.requireActivePaneHandle().getSearchState();
   }
 
-  openSearch(options?: ResttyPaneSearchUiOpenOptions): void {
+  openSearch(options?: Parameters<ResttyPaneApi["openSearch"]>[0]): void {
     this.requireActivePaneHandle().openSearch(options);
   }
 
-  closeSearch(options?: ResttyPaneSearchUiCloseOptions): void {
+  closeSearch(options?: Parameters<ResttyPaneApi["closeSearch"]>[0]): void {
     this.requireActivePaneHandle().closeSearch(options);
   }
 
-  toggleSearch(options?: ResttyPaneSearchUiOpenOptions & ResttyPaneSearchUiCloseOptions): void {
+  toggleSearch(options?: Parameters<ResttyPaneApi["toggleSearch"]>[0]): void {
     this.requireActivePaneHandle().toggleSearch(options);
   }
 
@@ -132,19 +139,19 @@ export abstract class ResttyActivePaneApi {
     return this.requireActivePaneHandle().isSearchOpen();
   }
 
-  getSearchUiStyleOptions(): Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>> {
+  getSearchUiStyleOptions(): ReturnType<ResttyPaneApi["getSearchUiStyleOptions"]> {
     return this.requireActivePaneHandle().getSearchUiStyleOptions();
   }
 
-  setSearchUiStyleOptions(options: ResttyManagedPaneSearchUiStyleOptions): void {
+  setSearchUiStyleOptions(options: Parameters<ResttyPaneApi["setSearchUiStyleOptions"]>[0]): void {
     this.requireActivePaneHandle().setSearchUiStyleOptions(options);
   }
 
-  setShaderStages(stages: ReturnType<ResttyPaneHandle["getShaderStages"]>): void {
+  setShaderStages(stages: Parameters<ResttyPaneApi["setShaderStages"]>[0]): void {
     this.requireActivePaneHandle().setShaderStages(stages);
   }
 
-  getShaderStages(): ReturnType<ResttyPaneHandle["getShaderStages"]> {
+  getShaderStages(): ReturnType<ResttyPaneApi["getShaderStages"]> {
     return this.requireActivePaneHandle().getShaderStages();
   }
 
