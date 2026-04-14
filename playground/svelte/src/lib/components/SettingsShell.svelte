@@ -5,8 +5,6 @@
     settingsShellState,
   } from "../stores/shell-state.ts";
 
-  document.documentElement.dataset.playgroundShell = "svelte";
-
   let settingsDialog: HTMLDialogElement | null = null;
 
   function syncSettingsDialog() {
