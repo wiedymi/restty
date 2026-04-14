@@ -618,7 +618,9 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
   expect(resttyAssembly).not.toContain("createMergedPaneTerminalConfig({");
   expect(resttyAssembly).not.toContain("createMergedPaneServicesConfig({");
   expect(resttyPaneManagerAssembly).toContain("export function createResttyPaneManagerAssembly");
-  expect(resttyPaneManagerAssembly).toContain("const controllerHooks = controller.paneManagerHooks");
+  expect(resttyPaneManagerAssembly).toContain(
+    "const controllerHooks = controller.paneManagerHooks",
+  );
   expect(resttyPaneManagerAssembly).toContain("createMergedPaneTerminalConfig({");
   expect(resttyPaneManagerAssembly).toContain("createMergedPaneServicesConfig({");
 });
@@ -986,6 +988,33 @@ test("demo controller delegates static demo payload content", () => {
   expect(demoContent).toContain("restty demo: basics");
   expect(demoContent).toContain("restty demo: palette");
   expect(demoContent).toContain("restty demo: unicode");
+});
+
+test("playground theme helpers import theme modules directly", () => {
+  const orchestrator = readFileSync(
+    resolve(playgroundRoot, "lib/playground-orchestrator.ts"),
+    "utf8",
+  );
+  const themeController = readFileSync(resolve(playgroundRoot, "lib/theme-controller.ts"), "utf8");
+  const paneTheme = readFileSync(resolve(playgroundRoot, "lib/pane-theme.ts"), "utf8");
+  const paneState = readFileSync(resolve(playgroundRoot, "lib/pane-state.ts"), "utf8");
+  const appearanceSection = readFileSync(
+    resolve(playgroundRoot, "svelte/src/lib/components/AppearanceSection.svelte"),
+    "utf8",
+  );
+
+  expect(orchestrator).toContain('../../src/theme/catalog.ts"');
+  expect(orchestrator).not.toContain("Restty, listBuiltinThemeNames");
+  expect(themeController).toContain('../../src/theme/ghostty.ts"');
+  expect(themeController).not.toContain(
+    'parseGhosttyTheme, type GhosttyTheme } from "../../src/index.ts"',
+  );
+  expect(paneTheme).toContain('../../src/theme/catalog.ts"');
+  expect(paneTheme).toContain('../../src/theme/ghostty.ts"');
+  expect(paneTheme).not.toContain('getBuiltinTheme, type GhosttyTheme } from "../../src/index.ts"');
+  expect(paneState).toContain('../../src/theme/ghostty.ts"');
+  expect(appearanceSection).toContain('../../../../../src/theme/catalog.ts"');
+  expect(appearanceSection).not.toContain("../../../../../src/index.ts");
 });
 
 test("pty connection delegates backend ui state helpers", () => {

@@ -1,4 +1,4 @@
-import type { GhosttyTheme } from "../../src/index.ts";
+import type { GhosttyTheme } from "../../src/theme/ghostty.ts";
 
 export type RendererChoice = "auto" | "webgpu" | "webgl2";
 

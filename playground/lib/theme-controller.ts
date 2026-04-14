@@ -1,4 +1,4 @@
-import { parseGhosttyTheme, type GhosttyTheme } from "../../src/index.ts";
+import { parseGhosttyTheme, type GhosttyTheme } from "../../src/theme/ghostty.ts";
 import type { PaneState } from "./pane-state.ts";
 import {
   applyBuiltinThemeToPane,

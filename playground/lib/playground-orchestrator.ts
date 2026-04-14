@@ -1,4 +1,5 @@
-import { Restty, listBuiltinThemeNames } from "../../src/index.ts";
+import { listBuiltinThemeNames } from "../../src/theme/catalog.ts";
+import type { Restty } from "../../src/index.ts";
 import type { PlaygroundElements } from "./elements.ts";
 import { DEFAULT_CONNECTION_BACKEND } from "./shell-defaults.ts";
 import { resolvePlaygroundStartupDefaults } from "./startup-defaults.ts";

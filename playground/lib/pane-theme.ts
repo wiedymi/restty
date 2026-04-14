@@ -1,4 +1,5 @@
-import { getBuiltinTheme, type GhosttyTheme } from "../../src/index.ts";
+import { getBuiltinTheme } from "../../src/theme/catalog.ts";
+import type { GhosttyTheme } from "../../src/theme/ghostty.ts";
 import type { PaneState } from "./pane-state.ts";
 
 export type PaneThemeTarget = {
