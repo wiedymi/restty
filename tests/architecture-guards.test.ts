@@ -1015,6 +1015,10 @@ test("appearance controller delegates font policy", () => {
   );
   const fontController = readFileSync(resolve(playgroundRoot, "lib/font-controller.ts"), "utf8");
   const fontControls = readFileSync(resolve(playgroundRoot, "lib/font-controls.ts"), "utf8");
+  const fontSourceCatalog = readFileSync(
+    resolve(playgroundRoot, "lib/font-source-catalog.ts"),
+    "utf8",
+  );
   const fontLocalPicker = readFileSync(resolve(playgroundRoot, "lib/font-local-picker.ts"), "utf8");
   const fontSourceController = readFileSync(
     resolve(playgroundRoot, "lib/font-source-controller.ts"),
@@ -1034,12 +1038,16 @@ test("appearance controller delegates font policy", () => {
   expect(fontController).not.toContain("applyFontRenderingOptionsToAllPanes(");
   expect(fontController).not.toContain("const detectLocalFontStateImpl =");
   expect(fontController).toContain('./font-local-picker.ts"');
-  expect(fontControls).toContain("buildFontSourcesForSelection");
+  expect(fontControls).not.toContain("buildFontSourcesForSelection");
+  expect(fontControls).toContain("resolveFontHintTarget");
   expect(fontControls).not.toContain("detectLocalFontState");
   expect(fontControls).not.toContain("supportsLocalFontPicker");
+  expect(fontSourceCatalog).toContain("buildFontSourcesForSelection");
+  expect(fontSourceCatalog).toContain("DEFAULT_FONT_FAMILY");
   expect(fontLocalPicker).toContain("detectLocalFontState");
   expect(fontLocalPicker).toContain("supportsLocalFontPicker");
   expect(fontSourceController).toContain("applyFontSourcesToAllPanes(");
+  expect(fontSourceController).toContain('./font-source-catalog.ts"');
   expect(fontSourceController).toContain("detectLocalFontState");
   expect(fontRenderingController).toContain("applyFontRenderingOptionsToAllPanes(");
   expect(fontRenderingController).toContain("resolveFontHintTarget");

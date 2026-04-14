@@ -1,4 +1,5 @@
-import { getCurrentFontSources, type FontHintTarget } from "./font-controls.ts";
+import type { FontHintTarget } from "./font-controls.ts";
+import { getCurrentFontSources } from "./font-source-catalog.ts";
 
 export type FontApplicationHost = {
   setFontSources: (sources: ReturnType<typeof getCurrentFontSources>) => Promise<void>;

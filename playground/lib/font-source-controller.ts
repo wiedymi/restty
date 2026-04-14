@@ -1,10 +1,10 @@
 import { applyFontSourcesToAllPanes, type FontApplicationHost } from "./font-application.ts";
-import { getCurrentFontSources } from "./font-controls.ts";
 import {
   FONT_FAMILY_LOCAL_PREFIX,
   detectLocalFontState,
   type LocalFontOption,
 } from "./font-local-picker.ts";
+import { getCurrentFontSources } from "./font-source-catalog.ts";
 
 type FontSourceControllerShellSync = {
   syncFontFamilyValue: () => void;

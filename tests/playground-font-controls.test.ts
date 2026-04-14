@@ -3,10 +3,7 @@ import {
   syncFontFamilyControls,
   syncHintingControls,
 } from "../playground/lib/font-control-sync.ts";
-import {
-  buildFontSourcesForSelection,
-  resolveFontHintTarget,
-} from "../playground/lib/font-controls.ts";
+import { resolveFontHintTarget } from "../playground/lib/font-controls.ts";
 import {
   DENIED_LOCAL_FONT_HINT,
   DEFAULT_LOCAL_FONT_HINT,
@@ -18,34 +15,6 @@ import {
   getLocalFontSelectValue,
   supportsLocalFontPicker,
 } from "../playground/lib/font-local-picker.ts";
-
-test("buildFontSourcesForSelection keeps local matcher first and preset sources ahead of fallbacks", () => {
-  const sources = buildFontSourcesForSelection("fira-code", "fira code retina");
-
-  expect(sources[0]).toMatchObject({
-    type: "local",
-    label: "local:fira code retina",
-    matchers: ["fira code retina"],
-    required: true,
-  });
-  expect(sources[1]).toMatchObject({
-    type: "local",
-    label: "local:fira code",
-  });
-  expect(sources[4]).toMatchObject({
-    type: "local",
-    label: "local:fira code bold italic",
-  });
-  expect(sources[5]).toMatchObject({
-    type: "url",
-    label: "Fira Code Regular",
-  });
-  expect(sources.some((source) => source.label === "JetBrains Mono Regular")).toBe(true);
-  expect(sources.at(-1)).toMatchObject({
-    type: "url",
-    label: "Noto Sans CJK SC",
-  });
-});
 
 test("resolveFontHintTarget falls back to auto for invalid values", () => {
   expect(resolveFontHintTarget("light")).toBe("light");

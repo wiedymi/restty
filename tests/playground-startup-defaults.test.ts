@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { DEFAULT_FONT_FAMILY } from "../playground/lib/font-controls.ts";
+import { DEFAULT_FONT_FAMILY } from "../playground/lib/font-source-catalog.ts";
 import {
   DEFAULT_LOCAL_FONT_HINT,
   UNSUPPORTED_LOCAL_FONT_HINT,
