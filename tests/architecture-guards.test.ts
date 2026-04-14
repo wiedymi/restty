@@ -539,14 +539,19 @@ test("playground no longer ships legacy runtime status or log widgets", () => {
 
 test("webcontainer pty delegates seed script bootstrap", () => {
   const webcontainerPty = readFileSync(resolve(playgroundRoot, "lib/webcontainer-pty.ts"), "utf8");
+  const webcontainerLaunch = readFileSync(
+    resolve(playgroundRoot, "lib/webcontainer-launch.ts"),
+    "utf8",
+  );
   const seedScripts = readFileSync(
     resolve(playgroundRoot, "lib/webcontainer-seed-scripts.ts"),
     "utf8",
   );
 
-  expect(webcontainerPty).toContain('./webcontainer-seed-scripts.ts"');
-  expect(webcontainerPty).not.toContain("normalizeFetchedScript(");
-  expect(webcontainerPty).not.toContain("restty demo fallback");
+  expect(webcontainerPty).not.toContain('./webcontainer-seed-scripts.ts"');
+  expect(webcontainerLaunch).toContain('./webcontainer-seed-scripts.ts"');
+  expect(webcontainerLaunch).not.toContain("normalizeFetchedScript(");
+  expect(webcontainerLaunch).not.toContain("restty demo fallback");
   expect(seedScripts).toContain("normalizeFetchedScript(");
   expect(seedScripts).toContain("restty demo fallback");
 });
@@ -565,6 +570,23 @@ test("webcontainer pty delegates process lifecycle", () => {
   expect(processController).toContain("startOutputPump");
   expect(processController).toContain("resetStreams");
   expect(processController).toContain("handleConnectError");
+});
+
+test("webcontainer pty delegates launch orchestration", () => {
+  const webcontainerPty = readFileSync(resolve(playgroundRoot, "lib/webcontainer-pty.ts"), "utf8");
+  const webcontainerLaunch = readFileSync(
+    resolve(playgroundRoot, "lib/webcontainer-launch.ts"),
+    "utf8",
+  );
+
+  expect(webcontainerPty).toContain('./webcontainer-launch.ts"');
+  expect(webcontainerPty).not.toContain("WebContainer.boot(");
+  expect(webcontainerPty).not.toContain("ensureWebContainerSeedScripts(");
+  expect(webcontainerPty).not.toContain("normalizeWebContainerCwd(");
+  expect(webcontainerLaunch).toContain("WebContainer.boot(");
+  expect(webcontainerLaunch).toContain("ensureSeedScripts = ensureWebContainerSeedScripts");
+  expect(webcontainerLaunch).toContain("normalizeWebContainerCwd(");
+  expect(webcontainerLaunch).toContain("parseWebContainerCommand(");
 });
 
 test("appearance controller delegates theme and shader policy", () => {

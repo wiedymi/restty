@@ -1,26 +1,18 @@
-import { WebContainer, type WebContainerProcess } from "@webcontainer/api";
+import type { WebContainerProcess } from "@webcontainer/api";
 import type {
   PtyCallbacks,
   PtyConnectOptions,
   PtyResizeMeta,
   PtyTransport,
 } from "../../src/index.ts";
+import { launchWebContainerCommand, parseWebContainerCommand } from "./webcontainer-launch.ts";
 import { createWebContainerProcessController } from "./webcontainer-process.ts";
-import { ensureWebContainerSeedScripts } from "./webcontainer-seed-scripts.ts";
 
 type WebContainerPtyOptions = {
   getCommand?: () => string;
   getCwd?: () => string;
   getEnv?: () => Record<string, string>;
 };
-
-type CommandSpec = {
-  command: string;
-  args: string[];
-  label: string;
-};
-
-let sharedWebContainerPromise: Promise<WebContainer> | null = null;
 
 const WEB_CONTAINER_WELCOME = (() => {
   const ESC = "\x1b";
@@ -53,39 +45,6 @@ const WEB_CONTAINER_WELCOME = (() => {
   return `${lines.join("\r\n")}\r\n`;
 })();
 
-async function getSharedWebContainer(): Promise<WebContainer> {
-  if (!sharedWebContainerPromise) {
-    sharedWebContainerPromise = WebContainer.boot({ coep: "require-corp" });
-  }
-  return sharedWebContainerPromise;
-}
-
-function parseCommand(spec: string): CommandSpec {
-  const tokens = spec.match(/(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\\.|\S)+/g) ?? [];
-  const cleaned = tokens.map((token) => {
-    if (
-      (token.startsWith('"') && token.endsWith('"')) ||
-      (token.startsWith("'") && token.endsWith("'"))
-    ) {
-      return token.slice(1, -1);
-    }
-    return token.replace(/\\(.)/g, "$1");
-  });
-  return {
-    command: cleaned[0] ?? "",
-    args: cleaned.slice(1),
-    label: cleaned.join(" "),
-  };
-}
-
-function normalizeCwd(cwd: string | undefined): string | undefined {
-  if (!cwd) return undefined;
-  const trimmed = cwd.trim();
-  if (!trimmed) return undefined;
-  if (!trimmed.startsWith("/")) return undefined;
-  return trimmed;
-}
-
 export function createWebContainerPtyTransport(options: WebContainerPtyOptions = {}): PtyTransport {
   let connectionToken = 0;
   let activeCommand = "";
@@ -112,7 +71,7 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
       const token = connectionToken;
 
       const commandRaw = options.getCommand?.().trim() || "jsh";
-      const spec = parseCommand(commandRaw);
+      const spec = parseWebContainerCommand(commandRaw);
       if (!spec.command) {
         cb.onError?.("Missing command", [
           "Provide a shell command for WebContainer (for example: jsh)",
@@ -122,33 +81,15 @@ export function createWebContainerPtyTransport(options: WebContainerPtyOptions =
       }
 
       try {
-        const webcontainer = await getSharedWebContainer();
-        if (connectionToken !== token) return;
-        await ensureWebContainerSeedScripts(webcontainer);
-        if (connectionToken !== token) return;
-
-        const cwd = normalizeCwd(options.getCwd?.());
-        const env = {
-          TERM: "xterm-256color",
-          COLORTERM: "truecolor",
-          COLUMNS: String(cols),
-          LINES: String(rows),
-          ...options.getEnv?.(),
-        };
-        const spawned = await webcontainer.spawn(spec.command, spec.args, {
-          terminal: { cols, rows },
-          cwd,
-          env,
+        const spawned = await launchWebContainerCommand({
+          cols,
+          rows,
+          spec,
+          cwd: options.getCwd?.(),
+          env: options.getEnv?.(),
+          isTokenActive: () => connectionToken === token,
         });
-
-        if (connectionToken !== token) {
-          try {
-            spawned.kill();
-          } catch {
-            // ignore kill errors
-          }
-          return;
-        }
+        if (!spawned) return;
 
         activeCommand = spec.command;
         processController.attachProcess({
