@@ -1,7 +1,4 @@
-import {
-  copyToClipboard as writeClipboardText,
-  pasteFromClipboard as readClipboardText,
-} from "../../selection";
+import { createRuntimeControllerClipboard } from "./runtime-controller.clipboard";
 import { resolveMaxScrollbackBytes } from "./max-scrollback";
 import { createRuntimeControllerInput } from "./runtime-controller.input";
 import { attachRuntimeControllerKeyboardEvents } from "./runtime-controller.keyboard";
@@ -91,22 +88,10 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
     runBeforeInputHook,
     runBeforeRenderOutputHook,
   });
-
-  async function copySelectionToClipboard() {
-    const text = options.getSelectionText();
-    if (!text) return false;
-    return writeClipboardText(text);
-  }
-
-  async function pasteFromClipboard() {
-    const text = await readClipboardText();
-    if (text === null) return false;
-    if (text) {
-      ptyInputRuntime.sendPasteText(text);
-      return true;
-    }
-    return false;
-  }
+  const { copySelectionToClipboard, pasteFromClipboard } = createRuntimeControllerClipboard({
+    getSelectionText: options.getSelectionText,
+    ptyInputRuntime,
+  });
 
   if (attachWindowEvents) {
     attachRuntimeControllerKeyboardEvents({

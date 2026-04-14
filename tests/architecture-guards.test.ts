@@ -249,6 +249,23 @@ test("runtime controller delegates wasm input forwarding to a dedicated module",
   expect(runtimeControllerInput).toContain('sendInput("\\x1b[2J\\x1b[H")');
 });
 
+test("runtime controller delegates clipboard behavior to a dedicated module", () => {
+  const runtimeController = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.ts"),
+    "utf8",
+  );
+  const runtimeControllerClipboard = readFileSync(
+    resolve(runtimeCreateRuntimeRoot, "runtime-controller.clipboard.ts"),
+    "utf8",
+  );
+
+  expect(runtimeController).toContain('./runtime-controller.clipboard"');
+  expect(runtimeController).not.toContain("async function copySelectionToClipboard()");
+  expect(runtimeController).not.toContain("async function pasteFromClipboard()");
+  expect(runtimeControllerClipboard).toContain("export function createRuntimeControllerClipboard");
+  expect(runtimeControllerClipboard).toContain("options.ptyInputRuntime.sendPasteText(text)");
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });
