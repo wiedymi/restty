@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test";
 import {
+  bindAppearanceShellEffects,
+  bindConnectionShellEffects,
+  bindTerminalShellEffects,
+} from "../playground/lib/control-shell-effects.ts";
+import {
   bindAppearanceControls,
   bindConnectionControls,
   bindTerminalControls,
@@ -21,30 +26,16 @@ test("control bindings forward svelte shell events", () => {
   const target = new EventTarget();
   const calls: Array<[string, unknown]> = [];
 
-  bindConnectionControls({
-    usesSvelteShell: true,
+  bindConnectionShellEffects({
     target,
-    connectionBackendEl: null,
-    ptyUrlInput: null,
-    wcCommandInput: null,
-    wcCwdInput: null,
     onBackendChange: (value) => calls.push(["backend", value]),
     onPtyUrlChange: (value) => calls.push(["pty-url", value]),
     onWebContainerCommandChange: (value) => calls.push(["wc-command", value]),
     onWebContainerCwdChange: (value) => calls.push(["wc-cwd", value]),
   });
 
-  bindTerminalControls({
-    usesSvelteShell: true,
+  bindTerminalShellEffects({
     target,
-    btnClear: null,
-    btnInit: null,
-    btnPause: null,
-    btnPty: null,
-    btnRunDemo: null,
-    demoSelect: null,
-    fontSizeInput: null,
-    rendererSelect: null,
     onClear: () => calls.push(["clear", null]),
     onDemoRun: (kind) => calls.push(["demo", kind]),
     onFontSizeChange: (value) => calls.push(["font-size", value]),
@@ -54,19 +45,8 @@ test("control bindings forward svelte shell events", () => {
     onRendererChange: (value) => calls.push(["renderer", value]),
   });
 
-  bindAppearanceControls({
-    usesSvelteShell: true,
+  bindAppearanceShellEffects({
     target,
-    btnLoadLocalFonts: null,
-    fontFamilyLocalSelect: null,
-    fontFamilySelect: null,
-    fontHintTargetSelect: null,
-    fontHintingSelect: null,
-    ligaturesSelect: null,
-    mouseModeEl: null,
-    shaderPresetEl: null,
-    themeFileInput: null,
-    themeSelect: null,
     onFontFamilyChange: (value) => calls.push(["font-family", value]),
     onFontFamilyLocalChange: (value) => calls.push(["font-family-local", value]),
     onFontHintTargetChange: (value) => calls.push(["font-hint-target", value]),
@@ -125,8 +105,6 @@ test("control bindings read legacy control values", () => {
   const fontHintingSelect = createMutableTarget({ value: "on" });
 
   bindConnectionControls({
-    usesSvelteShell: false,
-    target: new EventTarget(),
     connectionBackendEl,
     ptyUrlInput,
     wcCommandInput,
@@ -138,8 +116,6 @@ test("control bindings read legacy control values", () => {
   });
 
   bindTerminalControls({
-    usesSvelteShell: false,
-    target: new EventTarget(),
     btnClear: createMutableTarget({}),
     btnInit: createMutableTarget({}),
     btnPause: createMutableTarget({}),
@@ -158,8 +134,6 @@ test("control bindings read legacy control values", () => {
   });
 
   bindAppearanceControls({
-    usesSvelteShell: false,
-    target: new EventTarget(),
     btnLoadLocalFonts: createMutableTarget({}),
     fontFamilyLocalSelect: createMutableTarget({ value: "local:fira%20code" }),
     fontFamilySelect,

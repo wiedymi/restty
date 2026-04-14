@@ -1,6 +1,11 @@
 import { Restty } from "../../src/index.ts";
 import { runActivePaneDemo } from "./demos.ts";
 import {
+  bindAppearanceShellEffects,
+  bindConnectionShellEffects,
+  bindTerminalShellEffects,
+} from "./control-shell-effects.ts";
+import {
   bindAppearanceControls,
   bindConnectionControls,
   bindTerminalControls,
@@ -111,97 +116,160 @@ export function wirePlaygroundControls({
     });
   }
 
-  bindConnectionControls({
-    usesSvelteShell,
-    target: window,
-    connectionBackendEl,
-    ptyUrlInput,
-    wcCommandInput,
-    wcCwdInput,
-    onBackendChange: (value) => {
-      connectionController.applyConnectionBackend(value);
-    },
-    onPtyUrlChange: (value) => {
-      connectionController.setPtyUrl(value);
-    },
-    onWebContainerCommandChange: (value) => {
-      connectionController.setWebContainerCommand(value);
-    },
-    onWebContainerCwdChange: (value) => {
-      connectionController.setWebContainerCwd(value);
-    },
-  });
+  if (usesSvelteShell) {
+    bindConnectionShellEffects({
+      target: window,
+      onBackendChange: (value) => {
+        connectionController.applyConnectionBackend(value);
+      },
+      onPtyUrlChange: (value) => {
+        connectionController.setPtyUrl(value);
+      },
+      onWebContainerCommandChange: (value) => {
+        connectionController.setWebContainerCommand(value);
+      },
+      onWebContainerCwdChange: (value) => {
+        connectionController.setWebContainerCwd(value);
+      },
+    });
 
-  bindTerminalControls({
-    usesSvelteShell,
-    target: window,
-    btnClear,
-    btnInit,
-    btnPause,
-    btnPty: ptyBtn,
-    btnRunDemo,
-    demoSelect,
-    fontSizeInput,
-    rendererSelect,
-    onClear: () => {
-      paneLifecycle.handleTerminalClear();
-    },
-    onDemoRun: (kind) => {
-      runActivePaneDemo(paneStates, getActivePaneId(), kind);
-    },
-    onFontSizeChange: (value) => {
-      appearanceController.applyFontSizeValue(value);
-    },
-    onInit: () => {
-      paneLifecycle.handleTerminalInit();
-    },
-    onPauseToggle: () => {
-      paneLifecycle.handleTerminalPauseToggle();
-    },
-    onPtyButton: () => {
-      paneLifecycle.handlePtyButtonClick();
-    },
-    onRendererChange: (value) => {
-      appearanceController.applyRendererChoice(value);
-    },
-  });
+    bindTerminalShellEffects({
+      target: window,
+      onClear: () => {
+        paneLifecycle.handleTerminalClear();
+      },
+      onDemoRun: (kind) => {
+        runActivePaneDemo(paneStates, getActivePaneId(), kind);
+      },
+      onFontSizeChange: (value) => {
+        appearanceController.applyFontSizeValue(value);
+      },
+      onInit: () => {
+        paneLifecycle.handleTerminalInit();
+      },
+      onPauseToggle: () => {
+        paneLifecycle.handleTerminalPauseToggle();
+      },
+      onPtyButton: () => {
+        paneLifecycle.handlePtyButtonClick();
+      },
+      onRendererChange: (value) => {
+        appearanceController.applyRendererChoice(value);
+      },
+    });
 
-  bindAppearanceControls({
-    usesSvelteShell,
-    target: window,
-    btnLoadLocalFonts,
-    fontFamilyLocalSelect,
-    fontFamilySelect,
-    fontHintTargetSelect,
-    fontHintingSelect,
-    ligaturesSelect,
-    mouseModeEl,
-    shaderPresetEl,
-    themeFileInput,
-    themeSelect,
-    onFontFamilyChange: (value) => appearanceController.applyFontFamilySelection(value),
-    onFontFamilyLocalChange: (value) => appearanceController.applyLocalFontSelection(value),
-    onFontHintTargetChange: (value) => {
-      appearanceController.applyFontHintTargetChange(value);
-    },
-    onFontHintingChange: (value) => {
-      appearanceController.applyFontHintingChange(value);
-    },
-    onLigaturesChange: (value) => {
-      appearanceController.applyLigaturesChange(value);
-    },
-    onLoadLocalFonts: () => appearanceController.loadLocalFonts(),
-    onMouseModeChange: (value) => {
-      appearanceController.applyMouseMode(value);
-    },
-    onShaderPresetChange: (value) => {
-      appearanceController.applySelectedShaderPreset(value);
-    },
-    onThemeFileChange: (file) => appearanceController.applyUploadedThemeFile(file),
-    onThemeSelectChange: (value) => {
-      appearanceController.applyThemeSelection(value);
-    },
-  });
+    bindAppearanceShellEffects({
+      target: window,
+      onFontFamilyChange: (value) => appearanceController.applyFontFamilySelection(value),
+      onFontFamilyLocalChange: (value) => appearanceController.applyLocalFontSelection(value),
+      onFontHintTargetChange: (value) => {
+        appearanceController.applyFontHintTargetChange(value);
+      },
+      onFontHintingChange: (value) => {
+        appearanceController.applyFontHintingChange(value);
+      },
+      onLigaturesChange: (value) => {
+        appearanceController.applyLigaturesChange(value);
+      },
+      onLoadLocalFonts: () => appearanceController.loadLocalFonts(),
+      onMouseModeChange: (value) => {
+        appearanceController.applyMouseMode(value);
+      },
+      onShaderPresetChange: (value) => {
+        appearanceController.applySelectedShaderPreset(value);
+      },
+      onThemeFileChange: (file) => appearanceController.applyUploadedThemeFile(file),
+      onThemeSelectChange: (value) => {
+        appearanceController.applyThemeSelection(value);
+      },
+    });
+  } else {
+    bindConnectionControls({
+      connectionBackendEl,
+      ptyUrlInput,
+      wcCommandInput,
+      wcCwdInput,
+      onBackendChange: (value) => {
+        connectionController.applyConnectionBackend(value);
+      },
+      onPtyUrlChange: (value) => {
+        connectionController.setPtyUrl(value);
+      },
+      onWebContainerCommandChange: (value) => {
+        connectionController.setWebContainerCommand(value);
+      },
+      onWebContainerCwdChange: (value) => {
+        connectionController.setWebContainerCwd(value);
+      },
+    });
+
+    bindTerminalControls({
+      btnClear,
+      btnInit,
+      btnPause,
+      btnPty: ptyBtn,
+      btnRunDemo,
+      demoSelect,
+      fontSizeInput,
+      rendererSelect,
+      onClear: () => {
+        paneLifecycle.handleTerminalClear();
+      },
+      onDemoRun: (kind) => {
+        runActivePaneDemo(paneStates, getActivePaneId(), kind);
+      },
+      onFontSizeChange: (value) => {
+        appearanceController.applyFontSizeValue(value);
+      },
+      onInit: () => {
+        paneLifecycle.handleTerminalInit();
+      },
+      onPauseToggle: () => {
+        paneLifecycle.handleTerminalPauseToggle();
+      },
+      onPtyButton: () => {
+        paneLifecycle.handlePtyButtonClick();
+      },
+      onRendererChange: (value) => {
+        appearanceController.applyRendererChoice(value);
+      },
+    });
+
+    bindAppearanceControls({
+      btnLoadLocalFonts,
+      fontFamilyLocalSelect,
+      fontFamilySelect,
+      fontHintTargetSelect,
+      fontHintingSelect,
+      ligaturesSelect,
+      mouseModeEl,
+      shaderPresetEl,
+      themeFileInput,
+      themeSelect,
+      onFontFamilyChange: (value) => appearanceController.applyFontFamilySelection(value),
+      onFontFamilyLocalChange: (value) => appearanceController.applyLocalFontSelection(value),
+      onFontHintTargetChange: (value) => {
+        appearanceController.applyFontHintTargetChange(value);
+      },
+      onFontHintingChange: (value) => {
+        appearanceController.applyFontHintingChange(value);
+      },
+      onLigaturesChange: (value) => {
+        appearanceController.applyLigaturesChange(value);
+      },
+      onLoadLocalFonts: () => appearanceController.loadLocalFonts(),
+      onMouseModeChange: (value) => {
+        appearanceController.applyMouseMode(value);
+      },
+      onShaderPresetChange: (value) => {
+        appearanceController.applySelectedShaderPreset(value);
+      },
+      onThemeFileChange: (file) => appearanceController.applyUploadedThemeFile(file),
+      onThemeSelectChange: (value) => {
+        appearanceController.applyThemeSelection(value);
+      },
+    });
+  }
 
   shellAdapter.syncConnectionState(getConnectionShellStateDetail());
   paneShellSync.syncFontFamilyValue();

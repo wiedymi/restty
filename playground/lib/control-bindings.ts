@@ -1,10 +1,3 @@
-import {
-  listenAppearanceInput,
-  listenConnectionInput,
-  listenShellCommand,
-  listenTerminalAction,
-} from "./shell-bridge.ts";
-
 type TargetLike = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 type NullableTarget = TargetLike | null | undefined;
@@ -33,8 +26,6 @@ function listen(
 }
 
 export function bindConnectionControls(options: {
-  usesSvelteShell: boolean;
-  target: TargetLike;
   connectionBackendEl: ValueTarget | null;
   ptyUrlInput: ValueTarget | null;
   wcCommandInput: ValueTarget | null;
@@ -44,62 +35,35 @@ export function bindConnectionControls(options: {
   onWebContainerCommandChange: (value: string | null | undefined) => void;
   onWebContainerCwdChange: (value: string | null | undefined) => void;
 }): Disposer {
-  const disposers: Disposer[] = [];
-
-  if (options.usesSvelteShell) {
-    disposers.push(
-      listenConnectionInput(options.target, (detail) => {
-        if (detail?.backend !== undefined) {
-          options.onBackendChange(detail.backend);
-        }
-        if (detail?.ptyUrl !== undefined) {
-          options.onPtyUrlChange(detail.ptyUrl);
-        }
-        if (detail?.webContainerCommand !== undefined) {
-          options.onWebContainerCommandChange(detail.webContainerCommand);
-        }
-        if (detail?.webContainerCwd !== undefined) {
-          options.onWebContainerCwdChange(detail.webContainerCwd);
-        }
-      }),
-    );
-  } else {
-    disposers.push(
-      listen(options.connectionBackendEl, "change", () => {
-        options.onPtyUrlChange(options.ptyUrlInput?.value);
-        options.onWebContainerCommandChange(options.wcCommandInput?.value);
-        options.onWebContainerCwdChange(options.wcCwdInput?.value);
-        options.onBackendChange(options.connectionBackendEl?.value);
-      }),
-      listen(options.ptyUrlInput, "input", () => {
-        options.onPtyUrlChange(options.ptyUrlInput?.value);
-      }),
-      listen(options.ptyUrlInput, "change", () => {
-        options.onPtyUrlChange(options.ptyUrlInput?.value);
-      }),
-      listen(options.wcCommandInput, "input", () => {
-        options.onWebContainerCommandChange(options.wcCommandInput?.value);
-      }),
-      listen(options.wcCommandInput, "change", () => {
-        options.onWebContainerCommandChange(options.wcCommandInput?.value);
-      }),
-      listen(options.wcCwdInput, "input", () => {
-        options.onWebContainerCwdChange(options.wcCwdInput?.value);
-      }),
-      listen(options.wcCwdInput, "change", () => {
-        options.onWebContainerCwdChange(options.wcCwdInput?.value);
-      }),
-    );
-  }
-
-  return () => {
-    for (const dispose of disposers) dispose();
-  };
+  return chainDisposers(
+    listen(options.connectionBackendEl, "change", () => {
+      options.onPtyUrlChange(options.ptyUrlInput?.value);
+      options.onWebContainerCommandChange(options.wcCommandInput?.value);
+      options.onWebContainerCwdChange(options.wcCwdInput?.value);
+      options.onBackendChange(options.connectionBackendEl?.value);
+    }),
+    listen(options.ptyUrlInput, "input", () => {
+      options.onPtyUrlChange(options.ptyUrlInput?.value);
+    }),
+    listen(options.ptyUrlInput, "change", () => {
+      options.onPtyUrlChange(options.ptyUrlInput?.value);
+    }),
+    listen(options.wcCommandInput, "input", () => {
+      options.onWebContainerCommandChange(options.wcCommandInput?.value);
+    }),
+    listen(options.wcCommandInput, "change", () => {
+      options.onWebContainerCommandChange(options.wcCommandInput?.value);
+    }),
+    listen(options.wcCwdInput, "input", () => {
+      options.onWebContainerCwdChange(options.wcCwdInput?.value);
+    }),
+    listen(options.wcCwdInput, "change", () => {
+      options.onWebContainerCwdChange(options.wcCwdInput?.value);
+    }),
+  );
 }
 
 export function bindTerminalControls(options: {
-  usesSvelteShell: boolean;
-  target: TargetLike;
   btnClear: NullableTarget;
   btnInit: NullableTarget;
   btnPause: NullableTarget;
@@ -116,69 +80,27 @@ export function bindTerminalControls(options: {
   onPtyButton: () => void;
   onRendererChange: (value: string | null | undefined) => void;
 }): Disposer {
-  const disposers: Disposer[] = [];
-
-  if (options.usesSvelteShell) {
-    disposers.push(
-      listenShellCommand(options.target, (detail) => {
-        switch (detail?.command) {
-          case "pty-button":
-            options.onPtyButton();
-            break;
-          case "run-demo":
-            options.onDemoRun(detail.demoKind);
-            break;
-        }
-      }),
-      listenTerminalAction(options.target, (detail) => {
-        switch (detail?.command) {
-          case "init":
-            options.onInit();
-            break;
-          case "pause":
-            options.onPauseToggle();
-            break;
-          case "clear":
-            options.onClear();
-            break;
-        }
-
-        if (detail?.renderer !== undefined) {
-          options.onRendererChange(detail.renderer);
-        }
-        if (detail?.fontSize !== undefined) {
-          options.onFontSizeChange(String(detail.fontSize));
-        }
-      }),
-    );
-  } else {
-    const applyFontSize = () => {
-      options.onFontSizeChange(options.fontSizeInput?.value);
-    };
-    disposers.push(
-      listen(options.btnInit, "click", options.onInit),
-      listen(options.btnPause, "click", options.onPauseToggle),
-      listen(options.btnClear, "click", options.onClear),
-      listen(options.btnPty, "click", options.onPtyButton),
-      listen(options.btnRunDemo, "click", () => {
-        options.onDemoRun(options.demoSelect?.value);
-      }),
-      listen(options.rendererSelect, "change", () => {
-        options.onRendererChange(options.rendererSelect?.value);
-      }),
-      listen(options.fontSizeInput, "change", applyFontSize),
-      listen(options.fontSizeInput, "input", applyFontSize),
-    );
-  }
-
-  return () => {
-    for (const dispose of disposers) dispose();
+  const applyFontSize = () => {
+    options.onFontSizeChange(options.fontSizeInput?.value);
   };
+
+  return chainDisposers(
+    listen(options.btnInit, "click", options.onInit),
+    listen(options.btnPause, "click", options.onPauseToggle),
+    listen(options.btnClear, "click", options.onClear),
+    listen(options.btnPty, "click", options.onPtyButton),
+    listen(options.btnRunDemo, "click", () => {
+      options.onDemoRun(options.demoSelect?.value);
+    }),
+    listen(options.rendererSelect, "change", () => {
+      options.onRendererChange(options.rendererSelect?.value);
+    }),
+    listen(options.fontSizeInput, "change", applyFontSize),
+    listen(options.fontSizeInput, "input", applyFontSize),
+  );
 }
 
 export function bindAppearanceControls(options: {
-  usesSvelteShell: boolean;
-  target: TargetLike;
   btnLoadLocalFonts: NullableTarget;
   fontFamilyLocalSelect: ValueTarget | null;
   fontFamilySelect: ValueTarget | null;
@@ -200,79 +122,44 @@ export function bindAppearanceControls(options: {
   onThemeFileChange: (file: File | null | undefined) => void | Promise<void>;
   onThemeSelectChange: (value: string | null | undefined) => void;
 }): Disposer {
-  const disposers: Disposer[] = [];
+  return chainDisposers(
+    listen(options.themeFileInput, "change", () => {
+      void options.onThemeFileChange(options.themeFileInput?.files?.[0]);
+    }),
+    listen(options.themeSelect, "change", () => {
+      options.onThemeSelectChange(options.themeSelect?.value);
+    }),
+    listen(options.mouseModeEl, "change", () => {
+      options.onMouseModeChange(options.mouseModeEl?.value);
+    }),
+    listen(options.shaderPresetEl, "change", () => {
+      options.onShaderPresetChange(options.shaderPresetEl?.value);
+    }),
+    listen(options.fontHintingSelect, "change", () => {
+      options.onFontHintingChange(options.fontHintingSelect?.value);
+    }),
+    listen(options.ligaturesSelect, "change", () => {
+      options.onLigaturesChange(options.ligaturesSelect?.value);
+    }),
+    listen(options.fontHintTargetSelect, "change", () => {
+      options.onFontHintTargetChange(options.fontHintTargetSelect?.value);
+    }),
+    listen(options.fontFamilySelect, "change", () => {
+      void options.onFontFamilyChange(options.fontFamilySelect?.value);
+    }),
+    listen(options.fontFamilyLocalSelect, "change", () => {
+      void options.onFontFamilyLocalChange(options.fontFamilyLocalSelect?.value);
+    }),
+    listen(options.btnLoadLocalFonts, "click", () => {
+      void options.onLoadLocalFonts();
+    }),
+  );
+}
 
-  if (options.usesSvelteShell) {
-    disposers.push(
-      listenAppearanceInput(options.target, (detail) => {
-        if (detail?.themeFile !== undefined) {
-          void options.onThemeFileChange(detail.themeFile);
-        }
-        if (detail?.themeSelectValue !== undefined) {
-          options.onThemeSelectChange(detail.themeSelectValue);
-        }
-        if (detail?.mouseMode !== undefined) {
-          options.onMouseModeChange(detail.mouseMode);
-        }
-        if (detail?.shaderPreset !== undefined) {
-          options.onShaderPresetChange(detail.shaderPreset);
-        }
-        if (detail?.fontHinting !== undefined) {
-          options.onFontHintingChange(detail.fontHinting);
-        }
-        if (detail?.ligatures !== undefined) {
-          options.onLigaturesChange(detail.ligatures);
-        }
-        if (detail?.fontHintTarget !== undefined) {
-          options.onFontHintTargetChange(detail.fontHintTarget);
-        }
-        if (detail?.fontFamily !== undefined) {
-          void options.onFontFamilyChange(detail.fontFamily);
-        }
-        if (detail?.localFontValue !== undefined) {
-          void options.onFontFamilyLocalChange(detail.localFontValue);
-        }
-        if (detail?.action === "load-local-fonts") {
-          void options.onLoadLocalFonts();
-        }
-      }),
-    );
-  } else {
-    disposers.push(
-      listen(options.themeFileInput, "change", () => {
-        void options.onThemeFileChange(options.themeFileInput?.files?.[0]);
-      }),
-      listen(options.themeSelect, "change", () => {
-        options.onThemeSelectChange(options.themeSelect?.value);
-      }),
-      listen(options.mouseModeEl, "change", () => {
-        options.onMouseModeChange(options.mouseModeEl?.value);
-      }),
-      listen(options.shaderPresetEl, "change", () => {
-        options.onShaderPresetChange(options.shaderPresetEl?.value);
-      }),
-      listen(options.fontHintingSelect, "change", () => {
-        options.onFontHintingChange(options.fontHintingSelect?.value);
-      }),
-      listen(options.ligaturesSelect, "change", () => {
-        options.onLigaturesChange(options.ligaturesSelect?.value);
-      }),
-      listen(options.fontHintTargetSelect, "change", () => {
-        options.onFontHintTargetChange(options.fontHintTargetSelect?.value);
-      }),
-      listen(options.fontFamilySelect, "change", () => {
-        void options.onFontFamilyChange(options.fontFamilySelect?.value);
-      }),
-      listen(options.fontFamilyLocalSelect, "change", () => {
-        void options.onFontFamilyLocalChange(options.fontFamilyLocalSelect?.value);
-      }),
-      listen(options.btnLoadLocalFonts, "click", () => {
-        void options.onLoadLocalFonts();
-      }),
-    );
-  }
-
+function chainDisposers(...disposers: Disposer[]): Disposer {
   return () => {
-    for (const dispose of disposers) dispose();
+    for (const dispose of disposers) {
+      dispose();
+    }
   };
 }
