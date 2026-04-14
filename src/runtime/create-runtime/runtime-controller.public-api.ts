@@ -43,9 +43,6 @@ type RuntimeControllerPublicApiDeps = {
 };
 
 export function createRuntimePublicApi(deps: RuntimeControllerPublicApiDeps): ResttyRuntime {
-  deps.ptyInputRuntime.setPtyStatus("disconnected");
-  deps.ptyInputRuntime.updateMouseStatus();
-
   return {
     lifecycle: createRuntimeLifecycleView({
       init: deps.init,

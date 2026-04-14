@@ -176,10 +176,14 @@ test("runtime controller delegates public api projection to a dedicated module",
 
   expect(runtimeController).toContain('./runtime-controller.public-api"');
   expect(runtimeController).not.toContain("function createPublicApi(");
+  expect(runtimeController).toContain('runtime.ptyInputRuntime.setPtyStatus("disconnected")');
+  expect(runtimeController).toContain("runtime.ptyInputRuntime.updateMouseStatus()");
   expect(runtimeControllerPublicApi).toContain("export function createRuntimePublicApi");
   expect(runtimeControllerPublicApi).toContain('./runtime-controller.public-api.capabilities"');
   expect(runtimeControllerPublicApi).not.toContain("function setRenderer(");
   expect(runtimeControllerPublicApi).not.toContain("const terminal =");
+  expect(runtimeControllerPublicApi).not.toContain('setPtyStatus("disconnected")');
+  expect(runtimeControllerPublicApi).not.toContain("updateMouseStatus()");
   expect(runtimeControllerPublicApiCapabilities).toContain(
     "export function createRuntimeTerminalView",
   );

@@ -53,6 +53,9 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
     ptyInputRuntime: runtime.ptyInputRuntime,
   });
 
+  runtime.ptyInputRuntime.setPtyStatus("disconnected");
+  runtime.ptyInputRuntime.updateMouseStatus();
+
   if (platform.attachWindowEvents) {
     attachRuntimeControllerKeyboardEvents({
       cleanupFns: lifecycleDeps.cleanupFns,
