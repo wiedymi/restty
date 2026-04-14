@@ -5,7 +5,11 @@
   import DemoSection from "./lib/components/DemoSection.svelte";
   import TerminalSection from "./lib/components/TerminalSection.svelte";
   import { dispatchSettingsClose, dispatchSettingsOpen } from "./lib/shell-dispatch.ts";
-  import { settingsShellState, startShellStateBridge } from "./lib/stores/shell-state.ts";
+  import {
+    setSettingsOpen,
+    settingsShellState,
+    startShellStateBridge,
+  } from "./lib/stores/shell-state.ts";
 
   document.documentElement.dataset.playgroundShell = "svelte";
 
@@ -35,12 +39,12 @@
   function openSettings() {
     if ($settingsShellState.open) return;
     dispatchSettingsOpen();
-    settingsShellState.set({ open: true });
+    setSettingsOpen(true);
   }
 
   function closeSettings() {
     if (!$settingsShellState.open) return;
-    settingsShellState.set({ open: false });
+    setSettingsOpen(false);
     dispatchSettingsClose();
   }
 

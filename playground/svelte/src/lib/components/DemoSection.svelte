@@ -1,7 +1,7 @@
-<script lang="ts">
+  <script lang="ts">
   import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
   import { dispatchDemoRun } from "../shell-dispatch.ts";
-  import { demoShellState } from "../stores/shell-state.ts";
+  import { demoShellState, setDemoShellKind } from "../stores/shell-state.ts";
 
   function getDemoKindForValue(value: string): PlaygroundDemoKind {
     switch (value) {
@@ -18,10 +18,7 @@
   function handleDemoKindChange(event: Event) {
     const select = event.currentTarget;
     if (!(select instanceof HTMLSelectElement)) return;
-    demoShellState.update((state) => ({
-      ...state,
-      kind: getDemoKindForValue(select.value),
-    }));
+    setDemoShellKind(getDemoKindForValue(select.value));
   }
 </script>
 

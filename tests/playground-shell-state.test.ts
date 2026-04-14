@@ -7,6 +7,9 @@ import {
   connectionShellState,
   demoShellState,
   resetShellState,
+  setDemoShellKind,
+  setSettingsOpen,
+  shellState,
   settingsShellState,
   startShellStateBridge,
   terminalShellState,
@@ -49,6 +52,18 @@ test("startShellStateBridge syncs terminal and connection state from shell event
     fontSize: "24",
   });
   expect(get(connectionShellState)).toEqual({
+    backend: "ws",
+    ptyUrl: "ws://example.test/pty",
+    webContainerCommand: "bash",
+    webContainerCwd: "/tmp",
+    ptyButtonLabel: "Disconnect",
+  });
+  expect(get(shellState).terminal).toEqual({
+    pauseLabel: "Resume",
+    renderer: "webgpu",
+    fontSize: "24",
+  });
+  expect(get(shellState).connection).toEqual({
     backend: "ws",
     ptyUrl: "ws://example.test/pty",
     webContainerCommand: "bash",
@@ -212,11 +227,15 @@ test("stop bridge removes listeners", () => {
 });
 
 test("resetShellState restores the demo shell default", () => {
-  demoShellState.set({ kind: "unicode" });
-  settingsShellState.set({ open: true });
+  setDemoShellKind("unicode");
+  setSettingsOpen(true);
 
   resetShellState();
 
   expect(get(demoShellState)).toEqual({ kind: "basic" });
   expect(get(settingsShellState)).toEqual({ open: false });
+  expect(get(shellState)).toMatchObject({
+    demo: { kind: "basic" },
+    settings: { open: false },
+  });
 });

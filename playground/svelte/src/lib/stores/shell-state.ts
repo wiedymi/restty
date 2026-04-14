@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
 import type { LocalFontOption } from "../../../../lib/font-controls.ts";
 import { getConnectionBackendForValue } from "../../../../lib/pty-connection.ts";
 import { listenActivePaneState, listenConnectionState } from "../../../../lib/shell-bridge.ts";
@@ -53,6 +53,14 @@ type SettingsShellState = {
   open: boolean;
 };
 
+export type PlaygroundShellState = {
+  terminal: TerminalShellState;
+  connection: ConnectionShellState;
+  appearance: AppearanceShellState;
+  demo: DemoShellState;
+  settings: SettingsShellState;
+};
+
 const initialTerminalShellState: TerminalShellState = {
   pauseLabel: "Pause",
   renderer: DEFAULT_TERMINAL_RENDERER,
@@ -76,23 +84,57 @@ const initialSettingsShellState: SettingsShellState = {
   open: false,
 };
 
-export const terminalShellState = writable<TerminalShellState>(initialTerminalShellState);
-export const connectionShellState = writable<ConnectionShellState>(initialConnectionShellState);
-export const appearanceShellState = writable<AppearanceShellState>(initialAppearanceShellState);
-export const demoShellState = writable<DemoShellState>(initialDemoShellState);
-export const settingsShellState = writable<SettingsShellState>(initialSettingsShellState);
+function createInitialShellState(): PlaygroundShellState {
+  return {
+    terminal: { ...initialTerminalShellState },
+    connection: { ...initialConnectionShellState },
+    appearance: {
+      ...initialAppearanceShellState,
+      localFontOptions: [...initialAppearanceShellState.localFontOptions],
+    },
+    demo: { ...initialDemoShellState },
+    settings: { ...initialSettingsShellState },
+  };
+}
+
+export const shellState = writable<PlaygroundShellState>(createInitialShellState());
+export const terminalShellState = derived(shellState, ($state) => $state.terminal);
+export const connectionShellState = derived(shellState, ($state) => $state.connection);
+export const appearanceShellState = derived(shellState, ($state) => $state.appearance);
+export const demoShellState = derived(shellState, ($state) => $state.demo);
+export const settingsShellState = derived(shellState, ($state) => $state.settings);
+
+function updateShellDomain<K extends keyof PlaygroundShellState>(
+  key: K,
+  update: (state: PlaygroundShellState[K]) => PlaygroundShellState[K],
+) {
+  shellState.update((state) => ({
+    ...state,
+    [key]: update(state[key]),
+  }));
+}
+
+export function setDemoShellKind(kind: PlaygroundDemoKind) {
+  updateShellDomain("demo", (state) => ({
+    ...state,
+    kind,
+  }));
+}
+
+export function setSettingsOpen(open: boolean) {
+  updateShellDomain("settings", (state) => ({
+    ...state,
+    open,
+  }));
+}
 
 export function resetShellState() {
-  terminalShellState.set(initialTerminalShellState);
-  connectionShellState.set(initialConnectionShellState);
-  appearanceShellState.set(initialAppearanceShellState);
-  demoShellState.set(initialDemoShellState);
-  settingsShellState.set(initialSettingsShellState);
+  shellState.set(createInitialShellState());
 }
 
 export function startShellStateBridge(target: EventTarget = window) {
   const stopConnectionState = listenConnectionState(target, (detail: ConnectionStateDetail) => {
-    connectionShellState.update((state) => ({
+    updateShellDomain("connection", (state) => ({
       ...state,
       backend:
         typeof detail.backend === "string"
@@ -111,7 +153,7 @@ export function startShellStateBridge(target: EventTarget = window) {
   });
 
   const applyAppearanceState = (detail: ActivePaneAppearanceStateDetail) => {
-    appearanceShellState.update((state) => ({
+    updateShellDomain("appearance", (state) => ({
       ...state,
       fontFamily: typeof detail.fontFamily === "string" ? detail.fontFamily : state.fontFamily,
       mouseMode: typeof detail.mouseMode === "string" ? detail.mouseMode : state.mouseMode,
@@ -155,7 +197,7 @@ export function startShellStateBridge(target: EventTarget = window) {
 
   const stopActivePaneState = listenActivePaneState(target, (detail: ActivePaneStateDetail) => {
     if (detail.terminal) {
-      terminalShellState.update((state) => ({
+      updateShellDomain("terminal", (state) => ({
         pauseLabel:
           typeof detail.terminal?.pauseLabel === "string"
             ? detail.terminal.pauseLabel
