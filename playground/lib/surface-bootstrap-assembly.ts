@@ -1,12 +1,13 @@
 import { Restty } from "../../src/index.ts";
 import { createAdaptivePtyTransport } from "./pty-connection.ts";
-import { createDemoController, stopPaneDemo } from "./demos.ts";
+import { createDemoController } from "./demos.ts";
 import type { PlaygroundDesktopNotification } from "./desktop-notifications.ts";
 import type { createPaneAppearanceController } from "./appearance-controller.ts";
 import type { createConnectionController } from "./connection-controller.ts";
 import type { createPaneLifecycleController } from "./pane-lifecycle.ts";
 import { createPaneState, type PaneState } from "./pane-state.ts";
 import type { createPaneShellSync } from "./pane-shell-sync.ts";
+import { createPlaygroundSurfaceEvents } from "./surface-bootstrap-events.ts";
 
 export type PlaygroundSurfaceStartupConfig = {
   initialFontSize: number;
@@ -58,6 +59,16 @@ export function assemblePlaygroundSurface({
   createPtyTransport = createAdaptivePtyTransport,
   createDemoController: createDemoControllerForPane = createDemoController,
 }: CreatePlaygroundSurfaceAssemblyOptions): Restty {
+  const surfaceEvents = createPlaygroundSurfaceEvents({
+    paneStates,
+    setActivePaneId,
+    paneShellSync,
+    paneLifecycle,
+    queueResizeAllPanes: surfaceStartup.queueResizeAllPanes,
+    onDesktopNotification,
+    createDemoController: createDemoControllerForPane,
+  });
+
   return createRestty({
     root,
     surface: {
@@ -78,38 +89,7 @@ export function assemblePlaygroundSurface({
           statusActiveTextColor: "#e0bc72",
         },
       },
-      events: {
-        onPaneCreated: (pane) => {
-          const state = paneStates.get(pane.id);
-          if (!state) return;
-
-          pane.paused = state.paused;
-          pane.setPaused = (value: boolean) => {
-            paneLifecycle.setPanePaused(pane.id, value);
-          };
-
-          state.demos = createDemoControllerForPane(pane.runtime);
-          pane.runtime.interaction.setMouseMode(state.mouseMode);
-          void paneLifecycle.initPane(pane, state);
-        },
-        onPaneClosed: (pane) => {
-          const state = paneStates.get(pane.id);
-          stopPaneDemo(state);
-          paneStates.delete(pane.id);
-        },
-        onActivePaneChange: (pane) => {
-          setActivePaneId(pane?.id ?? null);
-          if (!pane) return;
-          const state = paneStates.get(pane.id);
-          if (!state) return;
-          paneShellSync.syncPtyButton(pane);
-          paneShellSync.renderActivePaneControls(pane, state);
-        },
-        onLayoutChanged: () => {
-          surfaceStartup.queueResizeAllPanes();
-        },
-        onDesktopNotification,
-      },
+      events: surfaceEvents,
       defaultContextMenu: {
         canOpen: () => !isSettingsDialogOpen(),
         getPtyUrl: () => connectionController.getConnectUrl(),

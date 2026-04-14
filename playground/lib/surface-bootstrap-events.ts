@@ -1,0 +1,61 @@
+import type { ResttyConfig } from "../../src/index.ts";
+import { createDemoController, stopPaneDemo } from "./demos.ts";
+import type { PlaygroundDesktopNotification } from "./desktop-notifications.ts";
+import type { createPaneLifecycleController } from "./pane-lifecycle.ts";
+import type { PaneState } from "./pane-state.ts";
+import type { createPaneShellSync } from "./pane-shell-sync.ts";
+
+type PlaygroundSurfaceEventPolicyOptions = {
+  paneStates: Map<number, PaneState>;
+  setActivePaneId: (id: number | null) => void;
+  paneShellSync: ReturnType<typeof createPaneShellSync>;
+  paneLifecycle: ReturnType<typeof createPaneLifecycleController>;
+  queueResizeAllPanes: () => void;
+  onDesktopNotification: (notification: PlaygroundDesktopNotification) => void;
+  createDemoController?: typeof createDemoController;
+};
+
+export function createPlaygroundSurfaceEvents({
+  paneStates,
+  setActivePaneId,
+  paneShellSync,
+  paneLifecycle,
+  queueResizeAllPanes,
+  onDesktopNotification,
+  createDemoController: createDemoControllerForPane = createDemoController,
+}: PlaygroundSurfaceEventPolicyOptions): NonNullable<
+  NonNullable<ResttyConfig["surface"]>["events"]
+> {
+  return {
+    onPaneCreated: (pane) => {
+      const state = paneStates.get(pane.id);
+      if (!state) return;
+
+      pane.paused = state.paused;
+      pane.setPaused = (value: boolean) => {
+        paneLifecycle.setPanePaused(pane.id, value);
+      };
+
+      state.demos = createDemoControllerForPane(pane.runtime);
+      pane.runtime.interaction.setMouseMode(state.mouseMode);
+      void paneLifecycle.initPane(pane, state);
+    },
+    onPaneClosed: (pane) => {
+      const state = paneStates.get(pane.id);
+      stopPaneDemo(state);
+      paneStates.delete(pane.id);
+    },
+    onActivePaneChange: (pane) => {
+      setActivePaneId(pane?.id ?? null);
+      if (!pane) return;
+      const state = paneStates.get(pane.id);
+      if (!state) return;
+      paneShellSync.syncPtyButton(pane);
+      paneShellSync.renderActivePaneControls(pane, state);
+    },
+    onLayoutChanged: () => {
+      queueResizeAllPanes();
+    },
+    onDesktopNotification,
+  };
+}

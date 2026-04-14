@@ -678,6 +678,10 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
     resolve(playgroundRoot, "lib/surface-bootstrap-assembly.ts"),
     "utf8",
   );
+  const surfaceEvents = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap-events.ts"),
+    "utf8",
+  );
   const surfaceStartup = readFileSync(resolve(playgroundRoot, "lib/surface-startup.ts"), "utf8");
 
   expect(surfaceBootstrap).toContain('./surface-startup.ts"');
@@ -694,9 +698,14 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
   expect(surfaceStartup).toContain('target.addEventListener("resize"');
   expect(surfaceStartup).toContain("createInitialPane({ focus: true })");
   expect(surfaceAssembly).toContain("export function assemblePlaygroundSurface");
+  expect(surfaceAssembly).toContain('./surface-bootstrap-events.ts"');
   expect(surfaceAssembly).toContain("createRestty({");
-  expect(surfaceAssembly).toContain("onPaneCreated:");
+  expect(surfaceAssembly).not.toContain("onPaneCreated:");
+  expect(surfaceAssembly).toContain("events: surfaceEvents");
   expect(surfaceAssembly).toContain("terminal: ({ id, sourcePane }) =>");
+  expect(surfaceEvents).toContain("export function createPlaygroundSurfaceEvents");
+  expect(surfaceEvents).toContain("onPaneCreated:");
+  expect(surfaceEvents).toContain("onActivePaneChange:");
 });
 
 test("playground app bootstrap delegates shell element lookup", () => {
