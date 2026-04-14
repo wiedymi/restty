@@ -739,9 +739,11 @@ test("playground app bootstrap delegates controller composition to a dedicated o
   expect(orchestrator).not.toContain("legacyElements");
   expect(orchestrator).not.toContain("LegacyPlaygroundElements");
   expect(orchestrator).toContain("DEFAULT_CONNECTION_BACKEND");
-  expect(session).toContain("createConnectionController(");
-  expect(session).toContain("createPaneAppearanceController(");
-  expect(session).toContain("createPaneLifecycleController(");
+  expect(session).toContain('./playground-session-controllers.ts"');
+  expect(session).toContain("createPlaygroundSessionControllers(");
+  expect(session).not.toContain("createConnectionController(");
+  expect(session).not.toContain("createPaneAppearanceController(");
+  expect(session).not.toContain("createPaneLifecycleController(");
   expect(session).not.toContain("LegacyPlaygroundElements");
   expect(session).not.toContain("btnPause");
   expect(session).not.toContain("rendererSelect");
@@ -784,6 +786,10 @@ test("playground orchestrator delegates controller session setup to a dedicated 
     "utf8",
   );
   const session = readFileSync(resolve(playgroundRoot, "lib/playground-session.ts"), "utf8");
+  const sessionControllers = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
+    "utf8",
+  );
   const sessionShell = readFileSync(
     resolve(playgroundRoot, "lib/playground-session-shell.ts"),
     "utf8",
@@ -794,9 +800,11 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(orchestrator).not.toContain("createPaneAppearanceController(");
   expect(orchestrator).not.toContain("createPaneLifecycleController(");
   expect(orchestrator).not.toContain("createPlaygroundShellAdapter(");
-  expect(session).toContain("createConnectionController(");
-  expect(session).toContain("createPaneAppearanceController(");
-  expect(session).toContain("createPaneLifecycleController(");
+  expect(session).toContain('./playground-session-controllers.ts"');
+  expect(session).toContain("createPlaygroundSessionControllers(");
+  expect(session).not.toContain("createConnectionController(");
+  expect(session).not.toContain("createPaneAppearanceController(");
+  expect(session).not.toContain("createPaneLifecycleController(");
   expect(session).toContain('./playground-session-shell.ts"');
   expect(session).toContain("createPlaygroundSessionShell(");
   expect(session).not.toContain("createPlaygroundShellAdapter(");
@@ -808,8 +816,12 @@ test("playground orchestrator delegates controller session setup to a dedicated 
   expect(session).toContain("type PlaygroundSessionStartup =");
   expect(session).toContain("state: {");
   expect(session).toContain("shell: {");
-  expect(session).toContain("controllers: {");
+  expect(session).toContain("controllers = createPlaygroundSessionControllers(");
+  expect(session).toContain("controllers,");
   expect(session).toContain("notifications: {");
+  expect(sessionControllers).toContain("createConnectionController(");
+  expect(sessionControllers).toContain("createPaneAppearanceController(");
+  expect(sessionControllers).toContain("createPaneLifecycleController(");
   expect(sessionShell).toContain("createPlaygroundShellAdapter(");
   expect(sessionShell).toContain("createPaneShellSync(");
   expect(orchestrator).toContain("session.state.paneStates");

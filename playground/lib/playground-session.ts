@@ -1,8 +1,9 @@
 import { Restty } from "../../src/index.ts";
-import { createConnectionController } from "./connection-controller.ts";
 import { createDesktopNotificationHandler } from "./desktop-notifications.ts";
-import { createPaneAppearanceController } from "./appearance-controller.ts";
-import { createPaneLifecycleController } from "./pane-lifecycle.ts";
+import {
+  createPlaygroundSessionControllers,
+  type PlaygroundSessionControllers,
+} from "./playground-session-controllers.ts";
 import {
   createPlaygroundSessionShell,
   type PlaygroundSessionShell,
@@ -43,12 +44,6 @@ export type PlaygroundSessionState = {
   setActivePaneId: (id: number | null) => void;
 };
 
-export type PlaygroundSessionControllers = {
-  paneLifecycle: ReturnType<typeof createPaneLifecycleController>;
-  connectionController: ReturnType<typeof createConnectionController>;
-  appearanceController: ReturnType<typeof createPaneAppearanceController>;
-};
-
 export type PlaygroundSessionNotifications = {
   handleDesktopNotification: ReturnType<typeof createDesktopNotificationHandler>;
 };
@@ -67,18 +62,9 @@ export function createPlaygroundSession({
   const paneStates = new Map<number, PaneState>();
   let activePaneId: number | null = null;
 
-  function waitForAnimationFrame(): Promise<void> {
-    return new Promise((resolve) => {
-      window.requestAnimationFrame(() => resolve());
-    });
-  }
-
   function getActivePane(): ManagedPane | null {
     return getRestty().getActivePane();
   }
-
-  let appearanceController: ReturnType<typeof createPaneAppearanceController>;
-  let connectionController: ReturnType<typeof createConnectionController>;
 
   const handleDesktopNotification = createDesktopNotificationHandler({
     sink:
@@ -94,6 +80,9 @@ export function createPlaygroundSession({
           },
   });
 
+  let connectionController: PlaygroundSessionControllers["connectionController"];
+  let appearanceController: PlaygroundSessionControllers["appearanceController"];
+
   const shell = createPlaygroundSessionShell({
     window,
     settingsDialog,
@@ -102,67 +91,23 @@ export function createPlaygroundSession({
     getAppearanceController: () => appearanceController,
   });
 
-  const paneLifecycle = createPaneLifecycleController({
-    getPaneById: (id) => getRestty().getPaneById(id),
+  const controllers = createPlaygroundSessionControllers({
+    getRestty,
     getActivePane,
-    getPaneState: (id) => paneStates.get(id),
-    setPaneState: (id, state) => {
-      paneStates.set(id, state);
-    },
     getActivePaneId: () => activePaneId,
-    getSelectedConnectionBackend: () => connectionController.getBackend(),
-    getSelectedPtyUrl: () => connectionController.getPtyUrl(),
-    syncPauseButton: (state) => {
-      shell.paneShellSync.syncPauseButton(state);
+    paneStates,
+    window,
+    shell,
+    startup: {
+      initialConnectionBackend,
+      initialPtyUrl,
+      initialWebContainerCommand,
+      initialWebContainerCwd,
+      appearanceInitialState,
     },
-    syncPtyButton: (pane) => {
-      shell.paneShellSync.syncPtyButton(pane);
-    },
-    waitForAnimationFrame,
-    requestAnimationFrame: window.requestAnimationFrame.bind(window),
   });
-
-  connectionController = createConnectionController({
-    getActivePane,
-    getPanes: () => getRestty().getPanes(),
-    connectPaneIfNeeded: (pane) => paneLifecycle.connectPaneIfNeeded(pane),
-    syncConnectionState: () => {
-      shell.shellAdapter.syncConnectionState(shell.getConnectionShellStateDetail());
-    },
-    syncPtyButton: (pane) => {
-      shell.paneShellSync.syncPtyButton(pane);
-    },
-    initialBackend: initialConnectionBackend,
-    initialPtyUrl,
-    initialWebContainerCommand,
-    initialWebContainerCwd,
-  });
-
-  appearanceController = createPaneAppearanceController({
-    host: {
-      getPanes: () => getRestty().getPanes(),
-      setFontSources: (sources) => getRestty().setFontSources(sources),
-      setShaderStages: (stages) => getRestty().setShaderStages(stages),
-    },
-    getActivePane,
-    getActivePaneState: () => {
-      return activePaneId === null ? null : (paneStates.get(activePaneId) ?? null);
-    },
-    getActivePaneId: () => activePaneId,
-    setPaneState: (id, state) => {
-      paneStates.set(id, state);
-    },
-    shellSync: {
-      syncFontFamilyValue: () => shell.paneShellSync.syncFontFamilyValue(),
-      syncFontRenderingControls: () => shell.paneShellSync.syncFontRenderingControls(),
-      syncLocalFontControls: () => shell.paneShellSync.syncLocalFontControls(),
-      syncMouseModeValue: (value) => shell.paneShellSync.syncMouseModeValue(value),
-      syncShaderPresetValue: (value) => shell.paneShellSync.syncShaderPresetValue(value),
-      syncThemeSelectValue: (value) => shell.paneShellSync.syncThemeSelectValue(value),
-    },
-    onThemeFileReset: shell.shellAdapter.resetThemeFileInput,
-    initialState: appearanceInitialState,
-  });
+  connectionController = controllers.connectionController;
+  appearanceController = controllers.appearanceController;
 
   return {
     state: {
@@ -173,11 +118,7 @@ export function createPlaygroundSession({
       },
     } satisfies PlaygroundSessionState,
     shell,
-    controllers: {
-      paneLifecycle,
-      connectionController,
-      appearanceController,
-    } satisfies PlaygroundSessionControllers,
+    controllers,
     notifications: {
       handleDesktopNotification,
     } satisfies PlaygroundSessionNotifications,
