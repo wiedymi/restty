@@ -1,3 +1,4 @@
+import type { ResttyPaneApi } from "../../src/index.ts";
 import { createPaneAppearanceShellEvents } from "./pane-appearance-shell-events.ts";
 import { createPaneConnectionShellEvents } from "./pane-connection-shell-events.ts";
 import type { FontHintTarget } from "./font-controls.ts";
@@ -8,6 +9,8 @@ import type { PaneShellSyncPane } from "./pane-shell-sync.types.ts";
 import type { ConnectionBackend } from "./connection-state.ts";
 import type { ShaderPreset } from "./shader-presets.ts";
 import { dispatchActivePaneState } from "./shell-bridge.ts";
+
+type PaneShellRenderPane = PaneShellSyncPane | Pick<ResttyPaneApi, "getMouseStatus">;
 
 type CreatePaneShellSyncOptions = {
   target: EventTarget;
@@ -45,9 +48,12 @@ export function createPaneShellSync(options: CreatePaneShellSyncOptions) {
     getSelectedConnectionBackend: options.getSelectedConnectionBackend,
   });
 
-  function renderActivePaneControls(pane: PaneShellSyncPane, state: PaneState) {
+  function renderActivePaneControls(pane: PaneShellRenderPane, state: PaneState) {
     options.syncSelectedDefaults(state);
-    state.mouseMode = pane.runtime.interaction.getMouseStatus().mode;
+    state.mouseMode =
+      "getMouseStatus" in pane
+        ? pane.getMouseStatus().mode
+        : pane.runtime.interaction.getMouseStatus().mode;
     dispatchActivePaneState(
       {
         terminal: terminalEvents.buildTerminalState(state),

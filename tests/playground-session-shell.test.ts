@@ -5,12 +5,7 @@ import { CONNECTION_STATE_EVENT, THEME_FILE_RESET_EVENT } from "../playground/li
 
 function createPane() {
   return {
-    id: 1,
-    runtime: {
-      io: {
-        isPtyConnected: () => false,
-      },
-    },
+    isPtyConnected: () => false,
   };
 }
 

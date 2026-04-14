@@ -1054,7 +1054,7 @@ test("playground helper layers use Restty as a type-only dependency", () => {
 
   expect(appBootstrap).toContain('import type { Restty } from "../../src/index.ts"');
   expect(session).toContain('import type { Restty } from "../../src/index.ts"');
-  expect(sessionShell).toContain('import type { Restty } from "../../src/index.ts"');
+  expect(sessionShell).toContain('import type { ResttyPaneApi } from "../../src/index.ts"');
   expect(sessionControllers).toContain('import type { Restty } from "../../src/index.ts"');
   expect(wiringTypes).toContain('import type { Restty } from "../../src/index.ts"');
   expect(surfaceBootstrap).toContain('import type { Restty } from "../../src/index.ts"');
@@ -1105,6 +1105,25 @@ test("playground connection controller routes bulk PTY switching through pane ha
   expect(sessionControllers).toContain("getActivePane: () => getRestty().activePane()");
   expect(sessionControllers).toContain("getRestty().forEachPane((pane) => {");
   expect(sessionControllers).toContain("paneLifecycle.connectPaneIfNeeded(paneId)");
+});
+
+test("playground shell reflection accepts pane handles instead of raw runtime bags", () => {
+  const sessionShell = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-shell.ts"),
+    "utf8",
+  );
+  const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
+
+  expect(sessionShell).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(sessionShell).toContain('if (pane?.isPtyConnected()) return "Disconnect"');
+  expect(sessionShell).not.toContain("pane?.runtime.io.isPtyConnected()");
+
+  expect(paneShellSync).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(paneShellSync).toContain('"getMouseStatus" in pane');
+  expect(paneShellSync).toContain("pane.getMouseStatus().mode");
+  expect(paneShellSync).not.toContain(
+    "state.mouseMode = pane.runtime.interaction.getMouseStatus().mode",
+  );
 });
 
 test("webcontainer seed provisioning delegates static seed manifest", () => {

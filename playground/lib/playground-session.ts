@@ -61,6 +61,10 @@ export function createPlaygroundSession({
     return getRestty().getActivePane();
   }
 
+  function getActiveShellPane() {
+    return getRestty().activePane();
+  }
+
   const handleDesktopNotification = createDesktopNotificationHandler({
     sink:
       typeof notificationHost === "undefined"
@@ -80,7 +84,7 @@ export function createPlaygroundSession({
 
   const shell = createPlaygroundSessionShell({
     window,
-    getActivePane,
+    getActivePane: getActiveShellPane,
     getConnectionController: () => connectionController,
     getAppearanceController: () => appearanceController,
   });

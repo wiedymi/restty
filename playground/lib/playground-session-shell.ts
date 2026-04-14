@@ -1,4 +1,4 @@
-import type { Restty } from "../../src/index.ts";
+import type { ResttyPaneApi } from "../../src/index.ts";
 import { createPaneAppearanceController } from "./appearance-controller.ts";
 import { createConnectionController } from "./connection-controller.ts";
 import { createPaneShellSync } from "./pane-shell-sync.ts";
@@ -9,12 +9,12 @@ import {
 } from "./shell-bridge.ts";
 import type { ConnectionStateDetail } from "./shell-events.ts";
 
-type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;
+type PlaygroundSessionShellPane = Pick<ResttyPaneApi, "isPtyConnected">;
 type PlaygroundWindow = Window & typeof globalThis;
 
 type CreatePlaygroundSessionShellOptions = {
   window: PlaygroundWindow;
-  getActivePane: () => ManagedPane | null;
+  getActivePane: () => PlaygroundSessionShellPane | null;
   getConnectionController: () => ReturnType<typeof createConnectionController>;
   getAppearanceController: () => ReturnType<typeof createPaneAppearanceController>;
 };
@@ -47,7 +47,7 @@ export function createPlaygroundSessionShell({
 
   function getPtyButtonLabel() {
     const pane = getActivePane();
-    if (pane?.runtime.io.isPtyConnected()) return "Disconnect";
+    if (pane?.isPtyConnected()) return "Disconnect";
     return getConnectionController().getBackend() === "webcontainer"
       ? "Start WebContainer"
       : "Connect PTY";
