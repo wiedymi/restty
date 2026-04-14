@@ -1,54 +1,34 @@
-import { createLegacyPlaygroundShellAdapter } from "./legacy-shell-adapter.ts";
 import { createPlaygroundShellEffects } from "./shell-effects.ts";
 import {
   isSettingsDialogOpen,
   type SettingsDialogElement,
   type SettingsDialogHost,
 } from "./settings-dialog.ts";
-
-type ConnectionUiElements = {
-  connectionBackendEl: HTMLSelectElement | null;
-  ptyUrlInput: HTMLInputElement | null;
-  wcCommandInput: HTMLInputElement | null;
-  wcCwdInput: HTMLInputElement | null;
-  connectionHintEl: HTMLElement | null;
-};
+import type { ConnectionStateDetail } from "./shell-events.ts";
 
 type CreatePlaygroundShellAdapterOptions = {
-  usesSvelteShell: boolean;
   target: EventTarget;
-  themeFileInput: HTMLInputElement | null;
   settingsDialog: SettingsDialogElement;
-  connectionUi: ConnectionUiElements;
-  syncConnectionUi?: typeof import("./pty-connection.ts").syncConnectionUi;
 };
 
 export function createPlaygroundShellAdapter(options: CreatePlaygroundShellAdapterOptions) {
-  const adapter = options.usesSvelteShell
-    ? createPlaygroundShellEffects({
-        target: options.target,
-      })
-    : createLegacyPlaygroundShellAdapter({
-        themeFileInput: options.themeFileInput,
-        settingsDialog: options.settingsDialog,
-        connectionUi: options.connectionUi,
-        syncConnectionUi: options.syncConnectionUi,
-      });
+  const shellEffects = createPlaygroundShellEffects({
+    target: options.target,
+  });
 
   return {
-    usesSvelteShell: options.usesSvelteShell,
     isSettingsDialogOpen: () => isSettingsDialogOpen(options.settingsDialog),
     resetThemeFileInput() {
-      adapter.resetThemeFileInput();
+      shellEffects.resetThemeFileInput();
     },
-    syncConnectionState(detail: import("./shell-events.ts").ConnectionStateDetail) {
-      adapter.syncConnectionState(detail);
+    syncConnectionState(detail: ConnectionStateDetail) {
+      shellEffects.syncConnectionState(detail);
     },
     openSettings(host: SettingsDialogHost) {
-      adapter.openSettings(host);
+      shellEffects.openSettings(host);
     },
     closeSettings(host: SettingsDialogHost) {
-      adapter.closeSettings(host);
+      shellEffects.closeSettings(host);
     },
   };
 }

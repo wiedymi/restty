@@ -932,10 +932,6 @@ test("appearance controller delegates terminal policy", () => {
 test("shell bridge centralizes custom event dispatch and listeners", () => {
   const shellAdapter = readFileSync(resolve(playgroundRoot, "lib/shell-adapter.ts"), "utf8");
   const shellEffects = readFileSync(resolve(playgroundRoot, "lib/shell-effects.ts"), "utf8");
-  const legacyShellAdapter = readFileSync(
-    resolve(playgroundRoot, "lib/legacy-shell-adapter.ts"),
-    "utf8",
-  );
   const paneShellSync = readFileSync(resolve(playgroundRoot, "lib/pane-shell-sync.ts"), "utf8");
   const shellDispatch = readFileSync(
     resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"),
@@ -956,17 +952,16 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   const shellBridge = readFileSync(resolve(playgroundRoot, "lib/shell-bridge.ts"), "utf8");
 
   expect(shellAdapter).toContain('./shell-effects.ts"');
-  expect(shellAdapter).toContain('./legacy-shell-adapter.ts"');
+  expect(shellAdapter).not.toContain("legacy-shell-adapter");
   expect(paneShellSync).toContain('./shell-bridge.ts"');
   expect(shellEffects).toContain('./shell-bridge.ts"');
-  expect(legacyShellAdapter).not.toContain('./shell-bridge.ts"');
+  expect(existsSync(resolve(playgroundRoot, "lib/legacy-shell-adapter.ts"))).toBe(false);
   expect(shellDispatch).toContain('../../../lib/shell-bridge.ts"');
   expect(settingsShellEffects).toContain('./shell-bridge.ts"');
   expect(settingsBindings).not.toContain('./shell-bridge.ts"');
   expect(shellState).toContain('../../../../lib/shell-bridge.ts"');
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(shellEffects).not.toContain("new CustomEvent(");
-  expect(legacyShellAdapter).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(shellDispatch).not.toContain("new CustomEvent(");
   expect(settingsBindings).not.toContain("new CustomEvent(");

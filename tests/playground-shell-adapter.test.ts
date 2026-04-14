@@ -25,27 +25,6 @@ function createHost() {
   };
 }
 
-function createDialog() {
-  let open = false;
-  return {
-    get open() {
-      return open;
-    },
-    showModal() {
-      open = true;
-    },
-    close() {
-      open = false;
-    },
-    setAttribute(name: string) {
-      if (name === "open") open = true;
-    },
-    removeAttribute(name: string) {
-      if (name === "open") open = false;
-    },
-  };
-}
-
 test("shell adapter dispatches theme reset and handles settings focus in svelte mode", () => {
   const target = new EventTarget();
   const seen: string[] = [];
@@ -59,17 +38,8 @@ test("shell adapter dispatches theme reset and handles settings focus in svelte 
   const { host, calls } = createHost();
 
   const adapter = createPlaygroundShellAdapter({
-    usesSvelteShell: true,
     target,
-    themeFileInput: null,
     settingsDialog: null,
-    connectionUi: {
-      connectionBackendEl: null,
-      ptyUrlInput: null,
-      wcCommandInput: null,
-      wcCwdInput: null,
-      connectionHintEl: null,
-    },
   });
 
   adapter.resetThemeFileInput();
@@ -92,49 +62,4 @@ test("shell adapter dispatches theme reset and handles settings focus in svelte 
     webContainerCwd: "/tmp",
   });
   expect(calls).toEqual(["hide", "focus"]);
-});
-
-test("shell adapter drives legacy settings and connection ui directly", () => {
-  const target = new EventTarget();
-  const themeFileInput = { value: "theme-file" } as HTMLInputElement;
-  const dialog = createDialog();
-  const { host, calls } = createHost();
-  const syncCalls: string[] = [];
-
-  const adapter = createPlaygroundShellAdapter({
-    usesSvelteShell: false,
-    target,
-    themeFileInput,
-    settingsDialog: dialog,
-    connectionUi: {
-      connectionBackendEl: null,
-      ptyUrlInput: null,
-      wcCommandInput: null,
-      wcCwdInput: null,
-      connectionHintEl: null,
-    },
-    syncConnectionUi: () => {
-      syncCalls.push("sync");
-    },
-  });
-
-  adapter.syncConnectionState({
-    backend: "ws",
-    ptyUrl: "ws://localhost:8787/pty",
-    ptyButtonLabel: "Connect PTY",
-    webContainerCommand: "jsh",
-    webContainerCwd: "/",
-  });
-  adapter.openSettings(host);
-  expect(dialog.open).toBe(true);
-  expect(calls).toEqual(["hide"]);
-  expect(adapter.isSettingsDialogOpen()).toBe(true);
-
-  adapter.closeSettings(host);
-  expect(dialog.open).toBe(false);
-  expect(calls).toEqual(["hide", "focus"]);
-
-  adapter.resetThemeFileInput();
-  expect(themeFileInput.value).toBe("");
-  expect(syncCalls).toEqual(["sync"]);
 });

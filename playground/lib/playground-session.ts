@@ -36,7 +36,6 @@ type PlaygroundSessionShellConfig = {
     | "fontSizeInput"
     | "ptyBtn"
     | "themeSelect"
-    | "themeFileInput"
     | "fontFamilySelect"
     | "ligaturesSelect"
     | "fontHintingSelect"
@@ -46,11 +45,6 @@ type PlaygroundSessionShellConfig = {
     | "fontFamilyHintEl"
     | "mouseModeEl"
     | "shaderPresetEl"
-    | "connectionBackendEl"
-    | "ptyUrlInput"
-    | "wcCommandInput"
-    | "wcCwdInput"
-    | "connectionHintEl"
   > & {
     settingsDialog: HTMLDialogElement | null;
   };
@@ -102,7 +96,6 @@ export function createPlaygroundSession({
       fontSizeInput,
       ptyBtn,
       themeSelect,
-      themeFileInput,
       fontFamilySelect,
       ligaturesSelect,
       fontHintingSelect,
@@ -112,11 +105,6 @@ export function createPlaygroundSession({
       fontFamilyHintEl,
       mouseModeEl,
       shaderPresetEl,
-      connectionBackendEl,
-      ptyUrlInput,
-      wcCommandInput,
-      wcCwdInput,
-      connectionHintEl,
       settingsDialog,
     },
   },
@@ -170,17 +158,8 @@ export function createPlaygroundSession({
   });
 
   const shellAdapter = createPlaygroundShellAdapter({
-    usesSvelteShell,
     target: window,
-    themeFileInput,
     settingsDialog,
-    connectionUi: {
-      connectionBackendEl,
-      ptyUrlInput,
-      wcCommandInput,
-      wcCwdInput,
-      connectionHintEl,
-    },
   });
 
   const paneShellSync = createPaneShellSync({
