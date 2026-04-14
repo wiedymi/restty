@@ -5,22 +5,12 @@ import {
   bindTerminalShellEffects,
 } from "../playground/lib/control-shell-effects.ts";
 import {
-  bindAppearanceControls,
-  bindConnectionControls,
-  bindTerminalControls,
-} from "../playground/lib/control-bindings.ts";
-import {
   dispatchAppearanceInput as emitAppearanceInput,
   dispatchConnectionInput as emitConnectionInput,
   dispatchShellCommand as emitShellCommand,
   dispatchTerminalAction as emitTerminalAction,
 } from "../playground/lib/shell-bridge.ts";
 import { bindSettingsShellEffects } from "../playground/lib/settings-shell-effects.ts";
-import { bindLegacySettingsControls } from "../playground/lib/settings-bindings.ts";
-
-function createMutableTarget<T extends object>(initial: T): EventTarget & T {
-  return Object.assign(new EventTarget(), initial);
-}
 
 test("control bindings forward svelte shell events", () => {
   const target = new EventTarget();
@@ -90,94 +80,6 @@ test("control bindings forward svelte shell events", () => {
   ]);
 });
 
-test("control bindings read legacy control values", () => {
-  const calls: Array<[string, unknown]> = [];
-  const connectionBackendEl = createMutableTarget({ value: "webcontainer" });
-  const ptyUrlInput = createMutableTarget({ value: "ws://legacy" });
-  const wcCommandInput = createMutableTarget({ value: "bash" });
-  const wcCwdInput = createMutableTarget({ value: "/tmp" });
-  const rendererSelect = createMutableTarget({ value: "webgl2" });
-  const fontSizeInput = createMutableTarget({ value: "22" });
-  const demoSelect = createMutableTarget({ value: "unicode" });
-  const btnRunDemo = createMutableTarget({});
-  const themeSelect = createMutableTarget({ value: "Aizen Dark" });
-  const fontFamilySelect = createMutableTarget({ value: "jetbrains" });
-  const fontHintingSelect = createMutableTarget({ value: "on" });
-
-  bindConnectionControls({
-    connectionBackendEl,
-    ptyUrlInput,
-    wcCommandInput,
-    wcCwdInput,
-    onBackendChange: (value) => calls.push(["backend", value]),
-    onPtyUrlChange: (value) => calls.push(["pty-url", value]),
-    onWebContainerCommandChange: (value) => calls.push(["wc-command", value]),
-    onWebContainerCwdChange: (value) => calls.push(["wc-cwd", value]),
-  });
-
-  bindTerminalControls({
-    btnClear: createMutableTarget({}),
-    btnInit: createMutableTarget({}),
-    btnPause: createMutableTarget({}),
-    btnPty: createMutableTarget({}),
-    btnRunDemo,
-    demoSelect,
-    fontSizeInput,
-    rendererSelect,
-    onClear: () => {},
-    onDemoRun: (kind) => calls.push(["demo", kind]),
-    onFontSizeChange: (value) => calls.push(["font-size", value]),
-    onInit: () => {},
-    onPauseToggle: () => {},
-    onPtyButton: () => {},
-    onRendererChange: (value) => calls.push(["renderer", value]),
-  });
-
-  bindAppearanceControls({
-    btnLoadLocalFonts: createMutableTarget({}),
-    fontFamilyLocalSelect: createMutableTarget({ value: "local:fira%20code" }),
-    fontFamilySelect,
-    fontHintTargetSelect: createMutableTarget({ value: "light" }),
-    fontHintingSelect,
-    ligaturesSelect: createMutableTarget({ value: "off" }),
-    mouseModeEl: createMutableTarget({ value: "drag" }),
-    shaderPresetEl: createMutableTarget({ value: "aurora" }),
-    themeFileInput: createMutableTarget({ files: [{ name: "theme.conf" }] }),
-    themeSelect,
-    onFontFamilyChange: (value) => calls.push(["font-family", value]),
-    onFontFamilyLocalChange: (value) => calls.push(["font-family-local", value]),
-    onFontHintTargetChange: (value) => calls.push(["font-hint-target", value]),
-    onFontHintingChange: (value) => calls.push(["font-hinting", value]),
-    onLigaturesChange: (value) => calls.push(["ligatures", value]),
-    onLoadLocalFonts: () => calls.push(["load-local-fonts", null]),
-    onMouseModeChange: (value) => calls.push(["mouse-mode", value]),
-    onShaderPresetChange: (value) => calls.push(["shader", value]),
-    onThemeFileChange: (file) => calls.push(["theme-file", (file as File | undefined)?.name]),
-    onThemeSelectChange: (value) => calls.push(["theme-select", value]),
-  });
-
-  connectionBackendEl.dispatchEvent(new Event("change"));
-  rendererSelect.dispatchEvent(new Event("change"));
-  fontSizeInput.dispatchEvent(new Event("input"));
-  btnRunDemo.dispatchEvent(new Event("click"));
-  themeSelect.dispatchEvent(new Event("change"));
-  fontFamilySelect.dispatchEvent(new Event("change"));
-  fontHintingSelect.dispatchEvent(new Event("change"));
-
-  expect(calls).toEqual([
-    ["pty-url", "ws://legacy"],
-    ["wc-command", "bash"],
-    ["wc-cwd", "/tmp"],
-    ["backend", "webcontainer"],
-    ["renderer", "webgl2"],
-    ["font-size", "22"],
-    ["demo", "unicode"],
-    ["theme-select", "Aizen Dark"],
-    ["font-family", "jetbrains"],
-    ["font-hinting", "on"],
-  ]);
-});
-
 test("settings shell effects forward shell commands", () => {
   const svelteCalls: string[] = [];
   const svelteTarget = new EventTarget();
@@ -192,28 +94,4 @@ test("settings shell effects forward shell commands", () => {
   emitShellCommand({ command: "settings-close" }, svelteTarget);
 
   expect(svelteCalls).toEqual(["open", "close"]);
-});
-
-test("legacy settings bindings wire legacy controls", () => {
-  const legacyCalls: string[] = [];
-  const legacyTarget = new EventTarget();
-  const settingsFab = createMutableTarget({});
-  const settingsClose = createMutableTarget({});
-  const settingsDialog = createMutableTarget({ open: true }) as HTMLDialogElement & EventTarget;
-
-  bindLegacySettingsControls({
-    target: legacyTarget as Window & EventTarget,
-    settingsDialog,
-    settingsFab,
-    settingsClose,
-    onOpen: () => legacyCalls.push("open"),
-    onClose: () => legacyCalls.push("close"),
-  });
-
-  settingsFab.dispatchEvent(new Event("click"));
-  settingsClose.dispatchEvent(new Event("click"));
-  settingsDialog.dispatchEvent(new Event("cancel", { cancelable: true }));
-  legacyTarget.dispatchEvent(Object.assign(new Event("keydown"), { key: "Escape" }));
-
-  expect(legacyCalls).toEqual(["open", "close", "close", "close"]);
 });

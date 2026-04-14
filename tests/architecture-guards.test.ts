@@ -953,10 +953,6 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
     resolve(playgroundRoot, "lib/settings-shell-effects.ts"),
     "utf8",
   );
-  const settingsBindings = readFileSync(
-    resolve(playgroundRoot, "lib/settings-bindings.ts"),
-    "utf8",
-  );
   const shellState = readFileSync(
     resolve(playgroundRoot, "svelte/src/lib/stores/shell-state.ts"),
     "utf8",
@@ -970,13 +966,11 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(existsSync(resolve(playgroundRoot, "lib/legacy-shell-adapter.ts"))).toBe(false);
   expect(shellDispatch).toContain('../../../lib/shell-bridge.ts"');
   expect(settingsShellEffects).toContain('./shell-bridge.ts"');
-  expect(settingsBindings).not.toContain('./shell-bridge.ts"');
   expect(shellState).toContain('../../../../lib/shell-bridge.ts"');
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(shellEffects).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(shellDispatch).not.toContain("new CustomEvent(");
-  expect(settingsBindings).not.toContain("new CustomEvent(");
   expect(settingsShellEffects).not.toContain("new CustomEvent(");
   expect(shellDispatch).toContain("emitTerminalAction");
   expect(shellDispatch).toContain("emitConnectionInput");
@@ -1020,10 +1014,10 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellBridge).toContain("listenAppearanceInput(");
   expect(shellBridge).toContain("listenTerminalAction(");
   expect(settingsShellEffects).toContain("listenShellCommand");
-  expect(settingsBindings).not.toContain("listenShellCommand");
+  expect(existsSync(resolve(playgroundRoot, "lib/settings-bindings.ts"))).toBe(false);
 });
 
-test("playground wiring splits settings shell effects from legacy settings bindings", () => {
+test("playground wiring uses settings shell effects only", () => {
   const wiring = readFileSync(resolve(playgroundRoot, "lib/playground-wiring.ts"), "utf8");
   const svelteWiring = readFileSync(
     resolve(playgroundRoot, "lib/playground-wiring.svelte.ts"),
@@ -1033,21 +1027,16 @@ test("playground wiring splits settings shell effects from legacy settings bindi
     resolve(playgroundRoot, "lib/settings-shell-effects.ts"),
     "utf8",
   );
-  const settingsBindings = readFileSync(
-    resolve(playgroundRoot, "lib/settings-bindings.ts"),
-    "utf8",
-  );
 
   expect(wiring).toContain('./playground-wiring.svelte.ts"');
   expect(wiring).not.toContain("if (options.usesSvelteShell)");
   expect(svelteWiring).toContain('./settings-shell-effects.ts"');
   expect(svelteWiring).toContain("bindSettingsShellEffects({");
-  expect(svelteWiring).not.toContain("bindLegacySettingsControls({");
   expect(settingsShellEffects).toContain("export function bindSettingsShellEffects");
-  expect(settingsBindings).toContain("export function bindLegacySettingsControls");
+  expect(existsSync(resolve(playgroundRoot, "lib/settings-bindings.ts"))).toBe(false);
 });
 
-test("playground wiring splits shell control effects from legacy control bindings", () => {
+test("playground wiring uses shell control effects only", () => {
   const wiring = readFileSync(resolve(playgroundRoot, "lib/playground-wiring.ts"), "utf8");
   const svelteWiring = readFileSync(
     resolve(playgroundRoot, "lib/playground-wiring.svelte.ts"),
@@ -1057,7 +1046,6 @@ test("playground wiring splits shell control effects from legacy control binding
     resolve(playgroundRoot, "lib/control-shell-effects.ts"),
     "utf8",
   );
-  const legacyBindings = readFileSync(resolve(playgroundRoot, "lib/control-bindings.ts"), "utf8");
 
   expect(wiring).toContain('./playground-wiring.svelte.ts"');
   expect(wiring).not.toContain("if (options.usesSvelteShell)");
@@ -1065,18 +1053,13 @@ test("playground wiring splits shell control effects from legacy control binding
   expect(svelteWiring).toContain("bindConnectionShellEffects({");
   expect(svelteWiring).toContain("bindTerminalShellEffects({");
   expect(svelteWiring).toContain("bindAppearanceShellEffects({");
-  expect(svelteWiring).not.toContain("bindConnectionControls({");
-  expect(svelteWiring).not.toContain("bindTerminalControls({");
-  expect(svelteWiring).not.toContain("bindAppearanceControls({");
   expect(shellEffects).toContain("export function bindConnectionShellEffects");
   expect(shellEffects).toContain("export function bindTerminalShellEffects");
   expect(shellEffects).toContain("export function bindAppearanceShellEffects");
   expect(shellEffects).toContain("listenConnectionInput");
   expect(shellEffects).toContain("listenTerminalAction");
   expect(shellEffects).toContain("listenAppearanceInput");
-  expect(legacyBindings).not.toContain("listenConnectionInput");
-  expect(legacyBindings).not.toContain("listenTerminalAction");
-  expect(legacyBindings).not.toContain("listenAppearanceInput");
+  expect(existsSync(resolve(playgroundRoot, "lib/control-bindings.ts"))).toBe(false);
 });
 
 test("svelte app delegates settings shell lifecycle to a dedicated component", () => {
