@@ -6,11 +6,11 @@ import {
 } from "../playground/lib/control-bindings.ts";
 import { bindSettingsControls } from "../playground/lib/settings-bindings.ts";
 import {
-  APPEARANCE_INPUT_EVENT,
-  CONNECTION_INPUT_EVENT,
-  SHELL_COMMAND_EVENT,
-  TERMINAL_ACTION_EVENT,
-} from "../playground/lib/shell-events.ts";
+  dispatchAppearanceInput as emitAppearanceInput,
+  dispatchConnectionInput as emitConnectionInput,
+  dispatchShellCommand as emitShellCommand,
+  dispatchTerminalAction as emitTerminalAction,
+} from "../playground/lib/shell-bridge.ts";
 
 function createMutableTarget<T extends object>(initial: T): EventTarget & T {
   return Object.assign(new EventTarget(), initial);
@@ -78,31 +78,19 @@ test("control bindings forward svelte shell events", () => {
     onThemeSelectChange: (value) => calls.push(["theme-select", value]),
   });
 
-  target.dispatchEvent(
-    new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { backend: "webcontainer" } }),
-  );
-  target.dispatchEvent(new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { ptyUrl: "ws://x" } }));
-  target.dispatchEvent(
-    new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { webContainerCommand: "bash" } }),
-  );
-  target.dispatchEvent(
-    new CustomEvent(CONNECTION_INPUT_EVENT, { detail: { webContainerCwd: "/tmp" } }),
-  );
-  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "init" } }));
-  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "pause" } }));
-  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { command: "clear" } }));
-  target.dispatchEvent(
-    new CustomEvent(SHELL_COMMAND_EVENT, { detail: { command: "run-demo", demoKind: "unicode" } }),
-  );
-  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { renderer: "webgpu" } }));
-  target.dispatchEvent(new CustomEvent(TERMINAL_ACTION_EVENT, { detail: { fontSize: "24" } }));
-  target.dispatchEvent(
-    new CustomEvent(APPEARANCE_INPUT_EVENT, { detail: { themeSelectValue: "Aizen Dark" } }),
-  );
-  target.dispatchEvent(
-    new CustomEvent(APPEARANCE_INPUT_EVENT, { detail: { fontFamily: "jetbrains" } }),
-  );
-  target.dispatchEvent(new CustomEvent(APPEARANCE_INPUT_EVENT, { detail: { fontHinting: "on" } }));
+  emitConnectionInput({ backend: "webcontainer" }, target);
+  emitConnectionInput({ ptyUrl: "ws://x" }, target);
+  emitConnectionInput({ webContainerCommand: "bash" }, target);
+  emitConnectionInput({ webContainerCwd: "/tmp" }, target);
+  emitTerminalAction({ command: "init" }, target);
+  emitTerminalAction({ command: "pause" }, target);
+  emitTerminalAction({ command: "clear" }, target);
+  emitShellCommand({ command: "run-demo", demoKind: "unicode" }, target);
+  emitTerminalAction({ renderer: "webgpu" }, target);
+  emitTerminalAction({ fontSize: "24" }, target);
+  emitAppearanceInput({ themeSelectValue: "Aizen Dark" }, target);
+  emitAppearanceInput({ fontFamily: "jetbrains" }, target);
+  emitAppearanceInput({ fontHinting: "on" }, target);
 
   expect(calls).toEqual([
     ["backend", "webcontainer"],
@@ -229,12 +217,8 @@ test("settings bindings wire svelte and legacy controls", () => {
     onClose: () => svelteCalls.push("close"),
   });
 
-  svelteTarget.dispatchEvent(
-    new CustomEvent(SHELL_COMMAND_EVENT, { detail: { command: "settings-open" } }),
-  );
-  svelteTarget.dispatchEvent(
-    new CustomEvent(SHELL_COMMAND_EVENT, { detail: { command: "settings-close" } }),
-  );
+  emitShellCommand({ command: "settings-open" }, svelteTarget);
+  emitShellCommand({ command: "settings-close" }, svelteTarget);
 
   expect(svelteCalls).toEqual(["open", "close"]);
 

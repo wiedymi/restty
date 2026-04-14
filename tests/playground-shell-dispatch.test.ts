@@ -10,7 +10,10 @@ import {
   dispatchDemoRun,
   dispatchFontFamilyChange,
   dispatchLoadLocalFonts,
+  dispatchPtyButton,
   dispatchPtyUrlChange,
+  dispatchSettingsClose,
+  dispatchSettingsOpen,
   dispatchTerminalClear,
   dispatchTerminalFontSizeChange,
   dispatchThemeFileChange,
@@ -40,10 +43,13 @@ test("dispatch helpers emit shell events with expected detail", () => {
   dispatchFontFamilyChange("jetbrains", target);
   dispatchPtyUrlChange("ws://localhost:8787/pty", target);
   dispatchTerminalFontSizeChange("22", target);
+  dispatchSettingsOpen(target);
   dispatchThemeFileChange(file, target);
   dispatchWebContainerCommandChange("bash", target);
   dispatchWebContainerCwdChange("/tmp", target);
   dispatchLoadLocalFonts(target);
+  dispatchPtyButton(target);
+  dispatchSettingsClose(target);
   dispatchTerminalClear(target);
 
   expect(seen).toEqual([
@@ -52,10 +58,13 @@ test("dispatch helpers emit shell events with expected detail", () => {
     { type: APPEARANCE_INPUT_EVENT, detail: { fontFamily: "jetbrains" } },
     { type: CONNECTION_INPUT_EVENT, detail: { ptyUrl: "ws://localhost:8787/pty" } },
     { type: TERMINAL_ACTION_EVENT, detail: { fontSize: "22" } },
+    { type: SHELL_COMMAND_EVENT, detail: { command: "settings-open" } },
     { type: APPEARANCE_INPUT_EVENT, detail: { themeFile: file } },
     { type: CONNECTION_INPUT_EVENT, detail: { webContainerCommand: "bash" } },
     { type: CONNECTION_INPUT_EVENT, detail: { webContainerCwd: "/tmp" } },
     { type: APPEARANCE_INPUT_EVENT, detail: { action: "load-local-fonts" } },
+    { type: SHELL_COMMAND_EVENT, detail: { command: "pty-button" } },
+    { type: SHELL_COMMAND_EVENT, detail: { command: "settings-close" } },
     { type: TERMINAL_ACTION_EVENT, detail: { command: "clear" } },
   ]);
 });

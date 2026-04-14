@@ -1,12 +1,11 @@
 import type { PlaygroundDemoKind } from "../../../lib/demos.ts";
-import { dispatchShellEvent } from "../../../lib/shell-bridge.ts";
-import type { ShaderPreset } from "../../../lib/shader-presets.ts";
 import {
-  APPEARANCE_INPUT_EVENT,
-  CONNECTION_INPUT_EVENT,
-  SHELL_COMMAND_EVENT,
-  TERMINAL_ACTION_EVENT,
-} from "../../../lib/shell-events.ts";
+  dispatchAppearanceInput as emitAppearanceInput,
+  dispatchConnectionInput as emitConnectionInput,
+  dispatchShellCommand as emitShellCommand,
+  dispatchTerminalAction as emitTerminalAction,
+} from "../../../lib/shell-bridge.ts";
+import type { ShaderPreset } from "../../../lib/shader-presets.ts";
 
 export function dispatchShellCommand(
   detail: {
@@ -15,7 +14,7 @@ export function dispatchShellCommand(
   },
   target: EventTarget = window,
 ) {
-  dispatchShellEvent(SHELL_COMMAND_EVENT, detail, target);
+  emitShellCommand(detail, target);
 }
 
 export function dispatchSettingsOpen(target: EventTarget = window) {
@@ -39,7 +38,7 @@ export function dispatchConnectionInput(
   },
   target: EventTarget = window,
 ) {
-  dispatchShellEvent(CONNECTION_INPUT_EVENT, detail, target);
+  emitConnectionInput(detail, target);
 }
 
 export function dispatchConnectionBackendChange(value: string, target: EventTarget = window) {
@@ -61,27 +60,27 @@ export function dispatchAppearanceInput(
   },
   target: EventTarget = window,
 ) {
-  dispatchShellEvent(APPEARANCE_INPUT_EVENT, detail, target);
+  emitAppearanceInput(detail, target);
 }
 
 export function dispatchTerminalInit(target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_ACTION_EVENT, { command: "init" }, target);
+  emitTerminalAction({ command: "init" }, target);
 }
 
 export function dispatchTerminalPause(target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_ACTION_EVENT, { command: "pause" }, target);
+  emitTerminalAction({ command: "pause" }, target);
 }
 
 export function dispatchTerminalClear(target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_ACTION_EVENT, { command: "clear" }, target);
+  emitTerminalAction({ command: "clear" }, target);
 }
 
 export function dispatchTerminalFontSizeChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_ACTION_EVENT, { fontSize: value }, target);
+  emitTerminalAction({ fontSize: value }, target);
 }
 
 export function dispatchTerminalRendererChange(value: string, target: EventTarget = window) {
-  dispatchShellEvent(TERMINAL_ACTION_EVENT, { renderer: value }, target);
+  emitTerminalAction({ renderer: value }, target);
 }
 
 export function dispatchPtyButton(target: EventTarget = window) {

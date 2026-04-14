@@ -1,24 +1,15 @@
 import {
-  APPEARANCE_INPUT_EVENT,
-  CONNECTION_INPUT_EVENT,
-  SHELL_COMMAND_EVENT,
-  TERMINAL_ACTION_EVENT,
-  type AppearanceInputDetail,
-  type ConnectionInputDetail,
-  type ShellCommandDetail,
-  type TerminalActionDetail,
-} from "./shell-events.ts";
+  listenAppearanceInput,
+  listenConnectionInput,
+  listenShellCommand,
+  listenTerminalAction,
+} from "./shell-bridge.ts";
 
 type TargetLike = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 type NullableTarget = TargetLike | null | undefined;
 
 type Disposer = () => void;
-
-type AppearanceInputEvent = CustomEvent<AppearanceInputDetail>;
-type ConnectionInputEvent = CustomEvent<ConnectionInputDetail>;
-type ShellCommandEvent = CustomEvent<ShellCommandDetail>;
-type TerminalActionEvent = CustomEvent<TerminalActionDetail>;
 
 type ValueTarget = TargetLike & {
   value?: string;
@@ -57,9 +48,7 @@ export function bindConnectionControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, CONNECTION_INPUT_EVENT, (event) => {
-        const detail = (event as ConnectionInputEvent).detail;
-
+      listenConnectionInput(options.target, (detail) => {
         if (detail?.backend !== undefined) {
           options.onBackendChange(detail.backend);
         }
@@ -131,9 +120,7 @@ export function bindTerminalControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, SHELL_COMMAND_EVENT, (event) => {
-        const detail = (event as ShellCommandEvent).detail;
-
+      listenShellCommand(options.target, (detail) => {
         switch (detail?.command) {
           case "pty-button":
             options.onPtyButton();
@@ -143,9 +130,7 @@ export function bindTerminalControls(options: {
             break;
         }
       }),
-      listen(options.target, TERMINAL_ACTION_EVENT, (event) => {
-        const detail = (event as TerminalActionEvent).detail;
-
+      listenTerminalAction(options.target, (detail) => {
         switch (detail?.command) {
           case "init":
             options.onInit();
@@ -219,9 +204,7 @@ export function bindAppearanceControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, APPEARANCE_INPUT_EVENT, (event) => {
-        const detail = (event as AppearanceInputEvent).detail;
-
+      listenAppearanceInput(options.target, (detail) => {
         if (detail?.themeFile !== undefined) {
           void options.onThemeFileChange(detail.themeFile);
         }

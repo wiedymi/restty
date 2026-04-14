@@ -1,12 +1,10 @@
-import { SHELL_COMMAND_EVENT, type ShellCommandDetail } from "./shell-events.ts";
+import { listenShellCommand } from "./shell-bridge.ts";
 
 type TargetLike = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 type NullableTarget = TargetLike | null | undefined;
 
 type Disposer = () => void;
-type ShellCommandEvent = CustomEvent<ShellCommandDetail>;
-
 function listen(
   target: NullableTarget,
   type: string,
@@ -33,8 +31,8 @@ export function bindSettingsControls(options: {
 
   if (options.usesSvelteShell) {
     disposers.push(
-      listen(options.target, SHELL_COMMAND_EVENT, (event) => {
-        switch ((event as ShellCommandEvent).detail?.command) {
+      listenShellCommand(options.target, (detail) => {
+        switch (detail?.command) {
           case "settings-open":
             options.onOpen();
             break;

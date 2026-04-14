@@ -916,6 +916,10 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
     resolve(playgroundRoot, "svelte/src/lib/shell-dispatch.ts"),
     "utf8",
   );
+  const settingsBindings = readFileSync(
+    resolve(playgroundRoot, "lib/settings-bindings.ts"),
+    "utf8",
+  );
   const shellState = readFileSync(
     resolve(playgroundRoot, "svelte/src/lib/stores/shell-state.ts"),
     "utf8",
@@ -925,14 +929,20 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellAdapter).toContain('./shell-bridge.ts"');
   expect(paneShellSync).toContain('./shell-bridge.ts"');
   expect(shellDispatch).toContain('../../../lib/shell-bridge.ts"');
+  expect(settingsBindings).toContain('./shell-bridge.ts"');
   expect(shellState).toContain('../../../../lib/shell-bridge.ts"');
   expect(shellAdapter).not.toContain("new CustomEvent(");
   expect(paneShellSync).not.toContain("new CustomEvent(");
   expect(shellDispatch).not.toContain("new CustomEvent(");
-  expect(shellDispatch).toContain("TERMINAL_ACTION_EVENT");
-  expect(shellDispatch).toContain("CONNECTION_INPUT_EVENT");
-  expect(shellDispatch).toContain("APPEARANCE_INPUT_EVENT");
-  expect(shellDispatch).toContain("SHELL_COMMAND_EVENT");
+  expect(settingsBindings).not.toContain("new CustomEvent(");
+  expect(shellDispatch).toContain("emitTerminalAction");
+  expect(shellDispatch).toContain("emitConnectionInput");
+  expect(shellDispatch).toContain("emitAppearanceInput");
+  expect(shellDispatch).toContain("emitShellCommand");
+  expect(shellDispatch).not.toContain("TERMINAL_ACTION_EVENT");
+  expect(shellDispatch).not.toContain("CONNECTION_INPUT_EVENT");
+  expect(shellDispatch).not.toContain("APPEARANCE_INPUT_EVENT");
+  expect(shellDispatch).not.toContain("SHELL_COMMAND_EVENT");
   expect(shellDispatch).not.toContain("CONNECTION_BACKEND_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("PTY_URL_CHANGE_EVENT");
   expect(shellDispatch).not.toContain("WC_COMMAND_CHANGE_EVENT");
@@ -956,11 +966,16 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
   expect(shellDispatch).not.toContain("TERMINAL_CLEAR_EVENT");
   expect(shellDispatch).not.toContain("TERMINAL_RENDERER_EVENT");
   expect(shellDispatch).not.toContain("TERMINAL_FONT_SIZE_EVENT");
+  expect(settingsBindings).not.toContain("SHELL_COMMAND_EVENT");
   expect(shellState).not.toContain("addEventListener(ACTIVE_PANE_STATE_EVENT");
   expect(shellState).not.toContain("addEventListener(CONNECTION_STATE_EVENT");
   expect(shellBridge).toContain("dispatchShellEvent(");
   expect(shellBridge).toContain("listenActivePaneState(");
   expect(shellBridge).toContain("listenConnectionState(");
+  expect(shellBridge).toContain("listenShellCommand(");
+  expect(shellBridge).toContain("listenConnectionInput(");
+  expect(shellBridge).toContain("listenAppearanceInput(");
+  expect(shellBridge).toContain("listenTerminalAction(");
 });
 
 test("pane shell sync delegates terminal, appearance, and connection reflection", () => {
