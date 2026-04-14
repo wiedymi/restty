@@ -1,5 +1,5 @@
 import type { FontHintTarget } from "./font-controls.ts";
-import { getLocalFontSelectValue } from "./font-controls.ts";
+import { getLocalFontSelectValue } from "./font-local-picker.ts";
 
 export type SyncFontFamilyControlsOptions = {
   fontFamilySelect: HTMLSelectElement | null;

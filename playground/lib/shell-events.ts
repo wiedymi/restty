@@ -1,5 +1,5 @@
 import type { PlaygroundDemoKind } from "./demos.ts";
-import type { LocalFontOption } from "./font-controls.ts";
+import type { LocalFontOption } from "./font-local-picker.ts";
 import type { RendererChoice } from "./pane-state.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";
 import type { ShaderPreset } from "./shader-presets.ts";

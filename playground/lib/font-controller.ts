@@ -4,13 +4,15 @@ import {
   type FontApplicationHost,
 } from "./font-application.ts";
 import {
-  FONT_FAMILY_LOCAL_PREFIX,
-  detectLocalFontState,
   getCurrentFontSources,
   resolveFontHintTarget,
   type FontHintTarget,
-  type LocalFontOption,
 } from "./font-controls.ts";
+import {
+  FONT_FAMILY_LOCAL_PREFIX,
+  detectLocalFontState,
+  type LocalFontOption,
+} from "./font-local-picker.ts";
 import type { PaneState } from "./pane-state.ts";
 
 export type FontControllerPane = {

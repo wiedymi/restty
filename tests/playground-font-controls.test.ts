@@ -4,6 +4,10 @@ import {
   syncHintingControls,
 } from "../playground/lib/font-control-sync.ts";
 import {
+  buildFontSourcesForSelection,
+  resolveFontHintTarget,
+} from "../playground/lib/font-controls.ts";
+import {
   DENIED_LOCAL_FONT_HINT,
   DEFAULT_LOCAL_FONT_HINT,
   FONT_FAMILY_LOCAL_PREFIX,
@@ -12,10 +16,8 @@ import {
   detectLocalFontState,
   getDefaultLocalFontHintText,
   getLocalFontSelectValue,
-  buildFontSourcesForSelection,
-  resolveFontHintTarget,
   supportsLocalFontPicker,
-} from "../playground/lib/font-controls.ts";
+} from "../playground/lib/font-local-picker.ts";
 
 test("buildFontSourcesForSelection keeps local matcher first and preset sources ahead of fallbacks", () => {
   const sources = buildFontSourcesForSelection("fira-code", "fira code retina");

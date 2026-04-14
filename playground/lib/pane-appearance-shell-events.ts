@@ -1,9 +1,9 @@
+import { type FontHintTarget } from "./font-controls.ts";
 import {
   getLocalFontSelectValue,
   supportsLocalFontPicker,
-  type FontHintTarget,
   type LocalFontOption,
-} from "./font-controls.ts";
+} from "./font-local-picker.ts";
 import type { PaneState } from "./pane-state.ts";
 import { dispatchActivePaneState } from "./shell-bridge.ts";
 import { type ActivePaneStateDetail, type LocalFontStateDetail } from "./shell-events.ts";

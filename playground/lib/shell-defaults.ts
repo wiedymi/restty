@@ -1,8 +1,5 @@
-import {
-  DEFAULT_FONT_FAMILY,
-  getDefaultLocalFontHintText,
-  supportsLocalFontPicker,
-} from "./font-controls.ts";
+import { DEFAULT_FONT_FAMILY } from "./font-controls.ts";
+import { getDefaultLocalFontHintText, supportsLocalFontPicker } from "./font-local-picker.ts";
 import type { PlaygroundDemoKind } from "./demos.ts";
 import type { RendererChoice } from "./pane-state.ts";
 import type { ConnectionBackend } from "./pty-connection.ts";

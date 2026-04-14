@@ -1,5 +1,6 @@
 import { type FontApplicationHost } from "./font-application.ts";
-import { type FontHintTarget, type LocalFontOption } from "./font-controls.ts";
+import type { FontHintTarget } from "./font-controls.ts";
+import type { LocalFontOption } from "./font-local-picker.ts";
 import { createPaneFontController, type FontControllerPane } from "./font-controller.ts";
 import type { PaneState, RendererChoice } from "./pane-state.ts";
 import { type PaneThemeTarget } from "./pane-theme.ts";

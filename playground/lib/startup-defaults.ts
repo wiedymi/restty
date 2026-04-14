@@ -1,9 +1,5 @@
-import {
-  DEFAULT_FONT_FAMILY,
-  getDefaultLocalFontHintText,
-  type FontHintTarget,
-  type LocalFontOption,
-} from "./font-controls.ts";
+import { DEFAULT_FONT_FAMILY, type FontHintTarget } from "./font-controls.ts";
+import { getDefaultLocalFontHintText, type LocalFontOption } from "./font-local-picker.ts";
 import type { RendererChoice } from "./pane-state.ts";
 import {
   DEFAULT_FONT_HINT_TARGET,

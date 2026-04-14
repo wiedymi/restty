@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
+import { DEFAULT_FONT_FAMILY } from "../playground/lib/font-controls.ts";
 import {
-  DEFAULT_FONT_FAMILY,
   DEFAULT_LOCAL_FONT_HINT,
   UNSUPPORTED_LOCAL_FONT_HINT,
-} from "../playground/lib/font-controls.ts";
+} from "../playground/lib/font-local-picker.ts";
 import {
   DEFAULT_PTY_URL,
   DEFAULT_TERMINAL_FONT_SIZE,

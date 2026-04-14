@@ -1,5 +1,5 @@
 import { derived, writable } from "svelte/store";
-import type { LocalFontOption } from "../../../../lib/font-controls.ts";
+import type { LocalFontOption } from "../../../../lib/font-local-picker.ts";
 import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
 import {
   createInitialAppearanceShellValues,

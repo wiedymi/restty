@@ -962,6 +962,8 @@ test("appearance controller delegates font policy", () => {
     "utf8",
   );
   const fontController = readFileSync(resolve(playgroundRoot, "lib/font-controller.ts"), "utf8");
+  const fontControls = readFileSync(resolve(playgroundRoot, "lib/font-controls.ts"), "utf8");
+  const fontLocalPicker = readFileSync(resolve(playgroundRoot, "lib/font-local-picker.ts"), "utf8");
 
   expect(appearanceController).toContain('./font-controller.ts"');
   expect(appearanceController).not.toContain("applyFontSourcesToAllPanes(");
@@ -969,6 +971,12 @@ test("appearance controller delegates font policy", () => {
   expect(fontController).toContain("applyFontSourcesToAllPanes(");
   expect(fontController).toContain("applyFontRenderingOptionsToAllPanes(");
   expect(fontController).toContain("detectLocalFontState");
+  expect(fontController).toContain('./font-local-picker.ts"');
+  expect(fontControls).toContain("buildFontSourcesForSelection");
+  expect(fontControls).not.toContain("detectLocalFontState");
+  expect(fontControls).not.toContain("supportsLocalFontPicker");
+  expect(fontLocalPicker).toContain("detectLocalFontState");
+  expect(fontLocalPicker).toContain("supportsLocalFontPicker");
 });
 
 test("appearance controller delegates terminal policy", () => {

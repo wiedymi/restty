@@ -1,6 +1,6 @@
 import { beforeEach, expect, test } from "bun:test";
 import { get } from "svelte/store";
-import type { LocalFontOption } from "../playground/lib/font-controls.ts";
+import type { LocalFontOption } from "../playground/lib/font-local-picker.ts";
 import { ACTIVE_PANE_STATE_EVENT, CONNECTION_STATE_EVENT } from "../playground/lib/shell-events.ts";
 import {
   appearanceShellState,

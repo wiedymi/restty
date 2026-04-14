@@ -1,6 +1,7 @@
 import { createPaneAppearanceShellEvents } from "./pane-appearance-shell-events.ts";
 import { createPaneConnectionShellEvents } from "./pane-connection-shell-events.ts";
-import type { FontHintTarget, LocalFontOption } from "./font-controls.ts";
+import type { FontHintTarget } from "./font-controls.ts";
+import type { LocalFontOption } from "./font-local-picker.ts";
 import type { PaneState } from "./pane-state.ts";
 import { createPaneTerminalShellEvents } from "./pane-terminal-shell-events.ts";
 import type { PaneShellSyncPane } from "./pane-shell-sync.types.ts";
