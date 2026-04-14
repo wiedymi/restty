@@ -512,6 +512,7 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
   const resttySource = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
   const resttyController = readFileSync(resolve(surfaceRoot, "restty/controller.ts"), "utf8");
   const resttyBootstrap = readFileSync(resolve(surfaceRoot, "restty/bootstrap.ts"), "utf8");
+  const resttyAssembly = readFileSync(resolve(surfaceRoot, "restty/assembly.ts"), "utf8");
   const resttyPluginSurface = readFileSync(
     resolve(surfaceRoot, "restty/plugin-surface.ts"),
     "utf8",
@@ -530,8 +531,16 @@ test("surface restty delegates plugin bridge wiring to the restty controller", (
   expect(resttyController).toContain("new ResttyPluginHost(deps)");
   expect(resttyBootstrap).toContain("export function bootstrapResttySurface");
   expect(resttyBootstrap).toContain("createResttyManagedPaneManager({");
+  expect(resttyBootstrap).toContain('./assembly"');
+  expect(resttyBootstrap).not.toContain("createResttyPluginSurfaceBridge(restty)");
+  expect(resttyBootstrap).not.toContain("createMergedPaneTerminalConfig({");
+  expect(resttyBootstrap).not.toContain("createMergedPaneServicesConfig({");
   expect(resttyPluginSurface).toContain("export function createResttyPluginSurfaceBridge");
   expect(resttyPluginSurface).toContain("createResttyPluginSurfaceApi({");
+  expect(resttyAssembly).toContain("export function createResttySurfaceAssembly");
+  expect(resttyAssembly).toContain("createResttyPluginSurfaceBridge(restty)");
+  expect(resttyAssembly).toContain("createMergedPaneTerminalConfig({");
+  expect(resttyAssembly).toContain("createMergedPaneServicesConfig({");
 });
 
 test("surface restty delegates pane lookup wiring to a dedicated module", () => {
