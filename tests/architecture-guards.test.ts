@@ -598,6 +598,23 @@ test("surface restty delegates pane lookup wiring to a dedicated module", () => 
   expect(resttyPaneLookup).toContain("openPaneSearch: (id, searchOptions) =>");
 });
 
+test("surface pane ops split handle, command, and style helpers", () => {
+  const paneOps = readFileSync(resolve(surfaceRoot, "restty/pane-ops.ts"), "utf8");
+  const paneHandleOps = readFileSync(resolve(surfaceRoot, "restty/pane-handle-ops.ts"), "utf8");
+  const paneCommandOps = readFileSync(resolve(surfaceRoot, "restty/pane-command-ops.ts"), "utf8");
+  const paneStyleOps = readFileSync(resolve(surfaceRoot, "restty/pane-style-ops.ts"), "utf8");
+
+  expect(paneOps).toContain('./pane-handle-ops"');
+  expect(paneOps).toContain('./pane-command-ops"');
+  expect(paneOps).toContain('./pane-style-ops"');
+  expect(paneOps).not.toContain("export function makePaneHandle");
+  expect(paneOps).not.toContain("export function createInitialPane");
+  expect(paneOps).not.toContain("export function getPaneStyleOptions");
+  expect(paneHandleOps).toContain("export function makePaneHandle");
+  expect(paneCommandOps).toContain("export function createInitialPane");
+  expect(paneStyleOps).toContain("export function getPaneStyleOptions");
+});
+
 test("surface restty helpers do not import managed-pane-manager for type access", () => {
   const helperFiles = [
     resolve(surfaceRoot, "restty/pane-handle.ts"),
@@ -605,6 +622,9 @@ test("surface restty helpers do not import managed-pane-manager for type access"
     resolve(surfaceRoot, "restty/config.ts"),
     resolve(surfaceRoot, "restty/events.ts"),
     resolve(surfaceRoot, "restty/pane-ops.ts"),
+    resolve(surfaceRoot, "restty/pane-handle-ops.ts"),
+    resolve(surfaceRoot, "restty/pane-command-ops.ts"),
+    resolve(surfaceRoot, "restty/pane-style-ops.ts"),
     resolve(surfaceRoot, "restty/shader-ops.ts"),
   ];
   const offenders = collectResolvedImports(helperFiles).filter(({ resolved }) => {
