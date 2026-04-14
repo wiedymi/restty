@@ -323,11 +323,13 @@ test("plugin lifecycle: use/unuse/plugins and cleanup", async () => {
 test("plugin context exposes a narrowed restty host surface adapter", async () => {
   const restty = createRestty();
   let pluginRestty: Record<string, unknown> | null = null;
+  let pluginContextKeys: string[] = [];
 
   await restty.use({
     id: "plugin/context-surface",
     activate(ctx) {
       pluginRestty = ctx.restty as Record<string, unknown>;
+      pluginContextKeys = Object.keys(ctx).sort();
     },
   });
 
@@ -349,6 +351,10 @@ test("plugin context exposes a narrowed restty host surface adapter", async () =
       }
     ).activePane()?.sendInput,
   ).toBe("function");
+  expect(pluginContextKeys).not.toContain("panes");
+  expect(pluginContextKeys).not.toContain("pane");
+  expect(pluginContextKeys).not.toContain("activePane");
+  expect(pluginContextKeys).not.toContain("focusedPane");
 
   restty.sendInput("ok");
   expect(activeWrites(restty)).toEqual([{ kind: "input", text: "ok", source: "program" }]);

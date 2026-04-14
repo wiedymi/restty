@@ -46,10 +46,6 @@ export class ResttyPluginDispatcher {
     return {
       restty: this.deps.restty,
       options: runtime.options,
-      panes: this.deps.panes,
-      pane: this.deps.pane,
-      activePane: this.deps.activePane,
-      focusedPane: this.deps.focusedPane,
       on: <E extends keyof ResttyPluginEvents>(
         event: E,
         listener: (payload: ResttyPluginEvents[E]) => void,

@@ -543,9 +543,32 @@ test("surface plugin context depends on a plugin host api instead of the full Re
   expect(pluginContext).not.toContain("restty: Restty;");
   expect(pluginContext).toContain("export type ResttyPluginHostApi =");
   expect(pluginContext).toContain("restty: ResttyPluginHostApi;");
+  expect(pluginContext).toContain("export type ResttyPluginContext = {");
+  expect(pluginContext).not.toContain(
+    "export type ResttyPluginContext = {\n  restty: ResttyPluginHostApi;\n  options: unknown;\n  panes:",
+  );
+  expect(pluginContext).not.toContain(
+    "export type ResttyPluginContext = {\n  restty: ResttyPluginHostApi;\n  options: unknown;\n  pane:",
+  );
+  expect(pluginContext).not.toContain(
+    "export type ResttyPluginContext = {\n  restty: ResttyPluginHostApi;\n  options: unknown;\n  activePane:",
+  );
+  expect(pluginContext).not.toContain(
+    "export type ResttyPluginContext = {\n  restty: ResttyPluginHostApi;\n  options: unknown;\n  focusedPane:",
+  );
 
   expect(pluginDispatcherDeps).not.toContain('type { Restty } from "../restty"');
   expect(pluginDispatcherDeps).toContain('from "./context.types"');
+});
+
+test("plugin dispatcher builds context through ctx.restty without redundant pane aliases", () => {
+  const pluginDispatcher = readFileSync(resolve(surfaceRoot, "plugins/dispatcher.ts"), "utf8");
+
+  expect(pluginDispatcher).toContain("restty: this.deps.restty");
+  expect(pluginDispatcher).not.toContain("panes: this.deps.panes");
+  expect(pluginDispatcher).not.toContain("pane: this.deps.pane");
+  expect(pluginDispatcher).not.toContain("activePane: this.deps.activePane");
+  expect(pluginDispatcher).not.toContain("focusedPane: this.deps.focusedPane");
 });
 
 test("surface restty delegates plugin bridge wiring to the restty controller", () => {

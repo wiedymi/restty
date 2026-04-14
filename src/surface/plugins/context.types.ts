@@ -117,10 +117,6 @@ export type ResttyPluginHostApi = Omit<ResttyPaneApi, "id"> & {
 export type ResttyPluginContext = {
   restty: ResttyPluginHostApi;
   options: unknown;
-  panes: () => ResttyPaneHandle[];
-  pane: (id: number) => ResttyPaneHandle | null;
-  activePane: () => ResttyPaneHandle | null;
-  focusedPane: () => ResttyPaneHandle | null;
   on: <E extends keyof ResttyPluginEvents>(
     event: E,
     listener: (payload: ResttyPluginEvents[E]) => void,
