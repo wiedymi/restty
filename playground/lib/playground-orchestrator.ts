@@ -118,15 +118,23 @@ export function bootstrapPlaygroundOrchestrator({
   restty = bootstrapPlaygroundSurface({
     root: paneRoot,
     target: window,
-    initialFontSize,
-    defaultThemeName,
-    paneStates: session.state.paneStates,
-    setActivePaneId: session.state.setActivePaneId,
-    isSettingsDialogOpen: session.shell.shellAdapter.isSettingsDialogOpen,
-    appearanceController: session.controllers.appearanceController,
-    connectionController: session.controllers.connectionController,
-    paneLifecycle: session.controllers.paneLifecycle,
-    paneShellSync: session.shell.paneShellSync,
+    startup: {
+      initialFontSize,
+      defaultThemeName,
+    },
+    state: {
+      paneStates: session.state.paneStates,
+      setActivePaneId: session.state.setActivePaneId,
+    },
+    shell: {
+      isSettingsDialogOpen: session.shell.shellAdapter.isSettingsDialogOpen,
+      paneShellSync: session.shell.paneShellSync,
+    },
+    controllers: {
+      appearanceController: session.controllers.appearanceController,
+      connectionController: session.controllers.connectionController,
+      paneLifecycle: session.controllers.paneLifecycle,
+    },
     onDesktopNotification: session.notifications.handleDesktopNotification,
   });
 

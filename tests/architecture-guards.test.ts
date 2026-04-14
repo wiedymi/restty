@@ -663,6 +663,10 @@ test("playground app bootstrap delegates restty construction to the surface boot
   expect(appBootstrap).not.toContain("new Restty(");
   expect(orchestrator).toContain('./surface-bootstrap.ts"');
   expect(orchestrator).not.toContain("new Restty(");
+  expect(orchestrator).toContain("startup: {");
+  expect(orchestrator).toContain("state: {");
+  expect(orchestrator).toContain("shell: {");
+  expect(orchestrator).toContain("controllers: {");
 });
 
 test("playground surface bootstrap delegates startup lifecycle", () => {
@@ -676,6 +680,10 @@ test("playground surface bootstrap delegates startup lifecycle", () => {
   expect(surfaceBootstrap).not.toContain("appearanceController.applyCurrentShaderPreset()");
   expect(surfaceBootstrap).not.toContain('target.addEventListener("resize"');
   expect(surfaceBootstrap).not.toContain("createInitialPane({ focus: true })");
+  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceStartupConfig =");
+  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceState =");
+  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceShell =");
+  expect(surfaceBootstrap).toContain("type PlaygroundSurfaceControllers =");
   expect(surfaceStartup).toContain("export function createPlaygroundSurfaceStartup");
   expect(surfaceStartup).toContain("appearanceController.applyCurrentShaderPreset()");
   expect(surfaceStartup).toContain('target.addEventListener("resize"');

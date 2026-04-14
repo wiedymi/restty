@@ -107,25 +107,33 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
   const restty = bootstrapPlaygroundSurface({
     root: {} as HTMLElement,
     target,
-    initialFontSize: 18,
-    defaultThemeName: "Aizen Dark",
-    paneStates,
-    setActivePaneId: (id) => {
-      activePaneId = id;
+    startup: {
+      initialFontSize: 18,
+      defaultThemeName: "Aizen Dark",
     },
-    isSettingsDialogOpen: () => false,
-    appearanceController: appearanceController as unknown as Parameters<
-      typeof bootstrapPlaygroundSurface
-    >[0]["appearanceController"],
-    connectionController: connectionController as unknown as Parameters<
-      typeof bootstrapPlaygroundSurface
-    >[0]["connectionController"],
-    paneLifecycle: paneLifecycle as unknown as Parameters<
-      typeof bootstrapPlaygroundSurface
-    >[0]["paneLifecycle"],
-    paneShellSync: paneShellSync as unknown as Parameters<
-      typeof bootstrapPlaygroundSurface
-    >[0]["paneShellSync"],
+    state: {
+      paneStates,
+      setActivePaneId: (id) => {
+        activePaneId = id;
+      },
+    },
+    shell: {
+      isSettingsDialogOpen: () => false,
+      paneShellSync: paneShellSync as unknown as Parameters<
+        typeof bootstrapPlaygroundSurface
+      >[0]["shell"]["paneShellSync"],
+    },
+    controllers: {
+      appearanceController: appearanceController as unknown as Parameters<
+        typeof bootstrapPlaygroundSurface
+      >[0]["controllers"]["appearanceController"],
+      connectionController: connectionController as unknown as Parameters<
+        typeof bootstrapPlaygroundSurface
+      >[0]["controllers"]["connectionController"],
+      paneLifecycle: paneLifecycle as unknown as Parameters<
+        typeof bootstrapPlaygroundSurface
+      >[0]["controllers"]["paneLifecycle"],
+    },
     onDesktopNotification: () => {},
     createDemoController: () => ({
       run: () => {},

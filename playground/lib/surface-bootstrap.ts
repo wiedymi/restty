@@ -11,18 +11,34 @@ import { createPlaygroundSurfaceStartup } from "./surface-startup.ts";
 
 type AnimationFrameHost = Pick<Window, "addEventListener" | "requestAnimationFrame">;
 
-type BootstrapPlaygroundSurfaceOptions = {
-  root: HTMLElement;
-  target: AnimationFrameHost;
+type PlaygroundSurfaceStartupConfig = {
   initialFontSize: number;
   defaultThemeName: string;
+};
+
+type PlaygroundSurfaceState = {
   paneStates: Map<number, PaneState>;
   setActivePaneId: (id: number | null) => void;
+};
+
+type PlaygroundSurfaceShell = {
   isSettingsDialogOpen: () => boolean;
+  paneShellSync: ReturnType<typeof createPaneShellSync>;
+};
+
+type PlaygroundSurfaceControllers = {
   appearanceController: ReturnType<typeof createPaneAppearanceController>;
   connectionController: ReturnType<typeof createConnectionController>;
   paneLifecycle: ReturnType<typeof createPaneLifecycleController>;
-  paneShellSync: ReturnType<typeof createPaneShellSync>;
+};
+
+type BootstrapPlaygroundSurfaceOptions = {
+  root: HTMLElement;
+  target: AnimationFrameHost;
+  startup: PlaygroundSurfaceStartupConfig;
+  state: PlaygroundSurfaceState;
+  shell: PlaygroundSurfaceShell;
+  controllers: PlaygroundSurfaceControllers;
   onDesktopNotification: (notification: PlaygroundDesktopNotification) => void;
   createRestty?: (config: ConstructorParameters<typeof Restty>[0]) => Restty;
   createPtyTransport?: typeof createAdaptivePtyTransport;
@@ -32,15 +48,10 @@ type BootstrapPlaygroundSurfaceOptions = {
 export function bootstrapPlaygroundSurface({
   root,
   target,
-  initialFontSize,
-  defaultThemeName,
-  paneStates,
-  setActivePaneId,
-  isSettingsDialogOpen,
-  appearanceController,
-  connectionController,
-  paneLifecycle,
-  paneShellSync,
+  startup: { initialFontSize, defaultThemeName },
+  state: { paneStates, setActivePaneId },
+  shell: { isSettingsDialogOpen, paneShellSync },
+  controllers: { appearanceController, connectionController, paneLifecycle },
   onDesktopNotification,
   createRestty = (config) => new Restty(config),
   createPtyTransport = createAdaptivePtyTransport,
