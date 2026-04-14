@@ -36,40 +36,43 @@ function createPane(id = 1) {
           calls.push("init");
         },
       },
-      terminal: {
-        clearScreen: () => {
-          calls.push("clear");
-        },
-        setPaused: (value: boolean) => {
-          calls.push(`pause:${value}`);
-        },
-      },
-      io: {
-        connectPty: (url: string) => {
-          calls.push(`connect:${url}`);
-          connected = true;
-        },
-        disconnectPty: () => {
-          calls.push("disconnect");
-          connected = false;
-        },
-        isPtyConnected: () => connected,
-      },
+    },
+  };
+  const handle = {
+    id,
+    applyTheme: () => {},
+    clearScreen: () => {
+      calls.push("clear");
+    },
+    connectPty: (url: string) => {
+      calls.push(`connect:${url}`);
+      connected = true;
+    },
+    disconnectPty: () => {
+      calls.push("disconnect");
+      connected = false;
+    },
+    isPtyConnected: () => connected,
+    resetTheme: () => {},
+    setPaused: (value: boolean) => {
+      calls.push(`pause:${value}`);
     },
   };
 
-  return { pane, calls };
+  return { pane, handle, calls };
 }
 
 test("pane lifecycle init restores size and auto-connects webcontainer panes", async () => {
-  const { pane, calls } = createPane(7);
+  const { pane, handle, calls } = createPane(7);
   const paneStates = new Map<number, PaneState>([[7, createState({ id: 7, paused: true })]]);
   const syncedPty: number[] = [];
   const resizeCalls: string[] = [];
 
   const lifecycle = createPaneLifecycleController({
     getPaneById: (id) => (id === pane.id ? pane : null),
+    getPaneHandleById: (id) => (id === pane.id ? handle : null),
     getActivePane: () => pane,
+    getActivePaneHandle: () => handle,
     getPaneState: (id) => paneStates.get(id),
     setPaneState: (id, state) => {
       paneStates.set(id, state);
@@ -99,7 +102,7 @@ test("pane lifecycle init restores size and auto-connects webcontainer panes", a
 });
 
 test("pane lifecycle toggles pause and pty state for the active pane", () => {
-  const { pane, calls } = createPane(3);
+  const { pane, handle, calls } = createPane(3);
   const paneStates = new Map<number, PaneState>([
     [
       3,
@@ -120,7 +123,9 @@ test("pane lifecycle toggles pause and pty state for the active pane", () => {
 
   const lifecycle = createPaneLifecycleController({
     getPaneById: (id) => (id === pane.id ? pane : null),
+    getPaneHandleById: (id) => (id === pane.id ? handle : null),
     getActivePane: () => (activePaneId === pane.id ? pane : null),
+    getActivePaneHandle: () => (activePaneId === pane.id ? handle : null),
     getPaneState: (id) => paneStates.get(id),
     setPaneState: (id, state) => {
       paneStates.set(id, state);

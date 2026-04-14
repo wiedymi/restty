@@ -57,7 +57,9 @@ export function createPlaygroundSessionControllers({
 
   const paneLifecycle = createPaneLifecycleController({
     getPaneById: (id) => getRestty().getPaneById(id),
+    getPaneHandleById: (id) => getRestty().pane(id),
     getActivePane,
+    getActivePaneHandle: () => getRestty().activePane(),
     getPaneState: (id) => paneStates.get(id),
     setPaneState: (id, state) => {
       paneStates.set(id, state);

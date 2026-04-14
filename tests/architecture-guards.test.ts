@@ -1101,10 +1101,36 @@ test("playground connection controller routes bulk PTY switching through pane ha
   expect(connectionController).not.toContain("pane.runtime.io.disconnectPty()");
 
   expect(paneLifecycle).toContain("function connectPaneIfNeeded(paneId: number)");
-  expect(paneLifecycle).toContain("const pane = options.getPaneById(paneId)");
+  expect(paneLifecycle).toContain("const paneHandle = options.getPaneHandleById(paneId)");
   expect(sessionControllers).toContain("getActivePane: () => getRestty().activePane()");
   expect(sessionControllers).toContain("getRestty().forEachPane((pane) => {");
   expect(sessionControllers).toContain("paneLifecycle.connectPaneIfNeeded(paneId)");
+});
+
+test("playground pane lifecycle routes terminal and pty controls through pane handles", () => {
+  const paneLifecycle = readFileSync(resolve(playgroundRoot, "lib/pane-lifecycle.ts"), "utf8");
+  const sessionControllers = readFileSync(
+    resolve(playgroundRoot, "lib/playground-session-controllers.ts"),
+    "utf8",
+  );
+
+  expect(paneLifecycle).toContain('type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(paneLifecycle).toContain("type PaneLifecyclePaneHandle = Pick<\n  ResttyPaneApi,");
+  expect(paneLifecycle).toContain("paneHandle.setPaused(nextState.paused)");
+  expect(paneLifecycle).toContain("if (paneHandle.isPtyConnected()) return;");
+  expect(paneLifecycle).toContain("paneHandle.connectPty(");
+  expect(paneLifecycle).toContain("active.paneHandle.clearScreen()");
+  expect(paneLifecycle).toContain("active.paneHandle.disconnectPty()");
+  expect(paneLifecycle).not.toContain("pane.runtime.terminal.setPaused(");
+  expect(paneLifecycle).not.toContain("pane.runtime.terminal.clearScreen()");
+  expect(paneLifecycle).not.toContain("pane.runtime.io.connectPty(");
+  expect(paneLifecycle).not.toContain("pane.runtime.io.disconnectPty()");
+  expect(paneLifecycle).not.toContain("pane.runtime.io.isPtyConnected()");
+  expect(paneLifecycle).toContain("await pane.runtime.lifecycle.init()");
+  expect(paneLifecycle).toContain("pane.canvas.focus({ preventScroll: true })");
+
+  expect(sessionControllers).toContain("getPaneHandleById: (id) => getRestty().pane(id)");
+  expect(sessionControllers).toContain("getActivePaneHandle: () => getRestty().activePane()");
 });
 
 test("playground shell reflection accepts pane handles instead of raw runtime bags", () => {
