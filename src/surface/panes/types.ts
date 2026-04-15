@@ -180,13 +180,16 @@ export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {
   disconnectPty: () => void;
   isPtyConnected: () => boolean;
   togglePause: () => void;
-  initRuntime: () => Promise<void>;
-  destroyRuntime: () => void;
   setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
   clearSearch: ResttyRuntimeSearchApi["clear"];
   searchNext: ResttyRuntimeSearchApi["next"];
   searchPrevious: ResttyRuntimeSearchApi["previous"];
   getSearchState: ResttyRuntimeSearchApi["getState"];
+};
+
+export type ResttyPaneWithManagedRuntime = ResttyPaneWithRuntimeActions & {
+  initRuntime: () => Promise<void>;
+  destroyRuntime: () => void;
 };
 
 /**

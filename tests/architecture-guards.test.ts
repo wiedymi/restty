@@ -722,6 +722,9 @@ test("default context menu routes pane actions through managed pane methods", ()
   expect(paneTypes).toContain(
     "export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {",
   );
+  expect(paneTypes).toContain(
+    "export type ResttyPaneWithManagedRuntime = ResttyPaneWithRuntimeActions & {",
+  );
   expect(defaultContextMenu).toContain("ResttyPaneWithRuntimeActions");
   expect(defaultContextMenu).toContain("await pane.copySelectionToClipboard()");
   expect(defaultContextMenu).toContain("await pane.pasteFromClipboard()");
@@ -749,6 +752,9 @@ test("default context menu routes pane actions through managed pane methods", ()
   expect(managedPaneCreate).toContain("disconnectPty: () => runtime.io.disconnectPty()");
   expect(managedPaneCreate).toContain("isPtyConnected: () => runtime.io.isPtyConnected()");
   expect(managedPaneCreate).toContain("togglePause: () => runtime.terminal.togglePause()");
+  expect(paneTypes).not.toContain(
+    "export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {\n  copySelectionToClipboard: () => Promise<void>;\n  pasteFromClipboard: () => Promise<void>;\n  clearScreen: () => void;\n  connectPty: (url?: string) => void;\n  disconnectPty: () => void;\n  isPtyConnected: () => boolean;\n  togglePause: () => void;\n  initRuntime: () => Promise<void>;\n  destroyRuntime: () => void;",
+  );
   expect(managedPaneCreate).toContain("initRuntime: () => runtime.lifecycle.init()");
   expect(managedPaneCreate).toContain("destroyRuntime: () => runtime.lifecycle.destroy()");
 });
