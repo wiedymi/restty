@@ -311,7 +311,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   let lastKeydownSeqAt = 0;
   let runtimeController: RuntimeController | null = null;
   function sendInput(text: string, source = "program", config: { skipHooks?: boolean } = {}) {
-    runtimeApi?.sendInput(text, source, config);
+    runtimeController?.sendInput(text, source, config);
   }
   const ptyTransport: PtyTransport = services.ptyTransport ?? createWebSocketPtyTransport();
   const PTY_OUTPUT_IDLE_MS = 10;
