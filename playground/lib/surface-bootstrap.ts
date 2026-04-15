@@ -13,10 +13,12 @@ type BootstrapPlaygroundSurfaceOptions = Omit<
   "getPaneHandleById" | "surfaceStartup"
 > & {
   target: AnimationFrameHost;
+  onResttyReady?: (restty: Restty) => void;
 };
 
 export function bootstrapPlaygroundSurface({
   target,
+  onResttyReady,
   ...assembly
 }: BootstrapPlaygroundSurfaceOptions) {
   const surfaceStartup = createPlaygroundSurfaceStartup({
@@ -33,6 +35,7 @@ export function bootstrapPlaygroundSurface({
     surfaceStartup,
   });
 
+  onResttyReady?.(restty);
   surfaceStartup.start(restty);
 
   return restty;

@@ -20,7 +20,7 @@ export function bootstrapPlaygroundOrchestrator({
   elements: { paneRoot },
   notificationHost = globalThis.Notification,
 }: BootstrapPlaygroundOrchestratorOptions): Restty {
-  let restty: Restty;
+  let restty: Restty | null = null;
 
   const initialConnectionBackend = DEFAULT_CONNECTION_BACKEND;
   const builtinThemeNames = listBuiltinThemeNames();
@@ -40,7 +40,12 @@ export function bootstrapPlaygroundOrchestrator({
 
   const session = createPlaygroundSession({
     deps: {
-      getRestty: () => restty,
+      getRestty: () => {
+        if (!restty) {
+          throw new Error("Playground Restty instance is not ready yet.");
+        }
+        return restty;
+      },
       notificationHost,
     },
     startup: {
@@ -55,7 +60,7 @@ export function bootstrapPlaygroundOrchestrator({
     },
   });
 
-  restty = bootstrapPlaygroundSurface({
+  const bootstrappedRestty = bootstrapPlaygroundSurface({
     root: paneRoot,
     target: window,
     startup: {
@@ -76,11 +81,15 @@ export function bootstrapPlaygroundOrchestrator({
       paneLifecycle: session.controllers.paneLifecycle,
     },
     onDesktopNotification: session.notifications.handleDesktopNotification,
+    onResttyReady: (nextRestty) => {
+      restty = nextRestty;
+    },
   });
+  restty = bootstrappedRestty;
   session.controllers.appearanceController.applyCurrentShaderPreset();
 
   wirePlaygroundControls({
-    restty,
+    restty: bootstrappedRestty,
     window,
     shell: {
       publishConnectionState: session.shell.publishConnectionState,
@@ -97,5 +106,5 @@ export function bootstrapPlaygroundOrchestrator({
     },
   });
 
-  return restty;
+  return bootstrappedRestty;
 }

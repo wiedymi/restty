@@ -78,6 +78,7 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
   const transportCalls: string[] = [];
   let capturedConfig: ResttyConfig | null = null;
   let createdWithFocus = false;
+  let readyRestty: unknown = null;
 
   const appearanceController = {
     getRendererDefault: () => "webgpu" as const,
@@ -173,9 +174,13 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
         },
       } as unknown as ReturnType<typeof bootstrapPlaygroundSurface>;
     },
+    onResttyReady: (value) => {
+      readyRestty = value;
+    },
   });
 
   expect(restty).toBeTruthy();
+  expect(readyRestty).toBe(restty);
   expect(capturedConfig?.surface?.createInitialPane).toBe(false);
   expect(capturedConfig?.surface?.autoInit).toBe(false);
   expect(createdWithFocus).toBe(true);
