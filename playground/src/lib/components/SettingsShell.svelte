@@ -4,27 +4,6 @@
   let settingsDialog: HTMLDialogElement | null = null;
   let isOpen = false;
 
-  function syncSettingsDialog() {
-    if (!settingsDialog) return;
-    if (isOpen) {
-      if (!settingsDialog.open) {
-        if (typeof settingsDialog.showModal === "function") {
-          settingsDialog.showModal();
-        } else {
-          settingsDialog.setAttribute("open", "");
-        }
-      }
-      return;
-    }
-    if (settingsDialog.open) {
-      if (typeof settingsDialog.close === "function") {
-        settingsDialog.close();
-      } else {
-        settingsDialog.removeAttribute("open");
-      }
-    }
-  }
-
   function openSettings() {
     if (isOpen) return;
     isOpen = true;
@@ -53,7 +32,23 @@
     closeSettings();
   }
 
-  $: syncSettingsDialog();
+  $: if (settingsDialog) {
+    if (isOpen) {
+      if (!settingsDialog.open) {
+        if (typeof settingsDialog.showModal === "function") {
+          settingsDialog.showModal();
+        } else {
+          settingsDialog.setAttribute("open", "");
+        }
+      }
+    } else if (settingsDialog.open) {
+      if (typeof settingsDialog.close === "function") {
+        settingsDialog.close();
+      } else {
+        settingsDialog.removeAttribute("open");
+      }
+    }
+  }
 </script>
 
 <svelte:window onkeydown={handleWindowKeydown} />

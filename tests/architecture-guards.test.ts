@@ -1889,6 +1889,8 @@ test("svelte app delegates settings shell lifecycle to a dedicated component", (
   expect(settingsShell).toContain("let isOpen = false");
   expect(settingsShell).toContain('id="settingsFab"');
   expect(settingsShell).toContain('id="settingsDialog"');
+  expect(settingsShell).toContain("$: if (settingsDialog)");
+  expect(settingsShell).not.toContain("syncSettingsDialog()");
   expect(existsSync(resolve(playgroundRoot, "src/lib/components/ShellBridge.svelte"))).toBe(
     false,
   );
