@@ -1070,6 +1070,10 @@ test("demo controller delegates static demo payload content", () => {
   const demoContent = readFileSync(resolve(playgroundRoot, "lib/demo-content.ts"), "utf8");
 
   expect(demos).toContain('./demo-content.ts"');
+  expect(demos).toContain("type DemoRuntime = {");
+  expect(demos).toContain("export function createDemoController(runtime: DemoRuntime)");
+  expect(demos).not.toContain("type DemoApp = {");
+  expect(demos).not.toContain("createDemoController(app: DemoApp)");
   expect(demos).not.toContain("function demoBasic()");
   expect(demos).not.toContain("function demoPalette()");
   expect(demos).not.toContain("function demoUnicode()");

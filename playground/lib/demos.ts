@@ -5,7 +5,7 @@ import {
 } from "./demo-content.ts";
 import { getActivePaneState, type PaneState } from "./pane-state.ts";
 
-type DemoApp = {
+type DemoRuntime = {
   terminal: {
     clearScreen: () => void;
   };
@@ -16,7 +16,7 @@ type DemoApp = {
 
 export type PlaygroundDemoKind = "basic" | "palette" | "unicode" | "anim";
 
-export function createDemoController(app: DemoApp) {
+export function createDemoController(runtime: DemoRuntime) {
   let timer = 0;
 
   const stop = () => {
@@ -28,7 +28,7 @@ export function createDemoController(app: DemoApp) {
 
   const startAnimation = () => {
     stop();
-    app.terminal.clearScreen();
+    runtime.terminal.clearScreen();
     const start = performance.now();
     let tick = 0;
     timer = window.setInterval(() => {
@@ -53,7 +53,7 @@ export function createDemoController(app: DemoApp) {
         "type to echo input below...",
         "",
       ];
-      app.io.sendInput(`\x1b[H\x1b[J${lines.join("\r\n")}`);
+      runtime.io.sendInput(`\x1b[H\x1b[J${lines.join("\r\n")}`);
       tick += 1;
     }, 80);
   };
@@ -62,17 +62,17 @@ export function createDemoController(app: DemoApp) {
     stop();
     switch (kind) {
       case "palette":
-        app.io.sendInput(createPaletteDemoPayload());
+        runtime.io.sendInput(createPaletteDemoPayload());
         break;
       case "unicode":
-        app.io.sendInput(createUnicodeDemoPayload());
+        runtime.io.sendInput(createUnicodeDemoPayload());
         break;
       case "anim":
         startAnimation();
         break;
       case "basic":
       default:
-        app.io.sendInput(createBasicDemoPayload());
+        runtime.io.sendInput(createBasicDemoPayload());
         break;
     }
   };
