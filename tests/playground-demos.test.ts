@@ -98,15 +98,11 @@ test("createDemoController stops the previous animation before starting another 
 
   try {
     const demos = createDemoController({
-      terminal: {
-        clearScreen: () => {
-          clears += 1;
-        },
+      clearScreen: () => {
+        clears += 1;
       },
-      io: {
-        sendInput: (text) => {
-          inputs.push(text);
-        },
+      sendInput: (text) => {
+        inputs.push(text);
       },
     });
 

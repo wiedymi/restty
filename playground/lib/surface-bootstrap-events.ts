@@ -40,7 +40,7 @@ export function createPlaygroundSurfaceEvents({
         paneLifecycle.setPanePaused(pane.id, value);
       };
 
-      state.demos = createDemoControllerForPane(pane.runtime);
+      state.demos = createDemoControllerForPane(paneHandle);
       paneHandle.setMouseMode(state.mouseMode);
       void paneLifecycle.initPane(pane, state);
     },

@@ -1121,16 +1121,26 @@ test("playground orchestrator delegates controller session setup to a dedicated 
 
 test("demo controller delegates static demo payload content", () => {
   const demos = readFileSync(resolve(playgroundRoot, "lib/demos.ts"), "utf8");
+  const surfaceBootstrapEvents = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap-events.ts"),
+    "utf8",
+  );
   const demoContent = readFileSync(resolve(playgroundRoot, "lib/demo-content.ts"), "utf8");
 
   expect(demos).toContain('./demo-content.ts"');
-  expect(demos).toContain("type DemoRuntime = {");
-  expect(demos).toContain("export function createDemoController(runtime: DemoRuntime)");
+  expect(demos).toContain('import type { ResttyPaneApi } from "../../src/index.ts"');
+  expect(demos).toContain('type DemoPane = Pick<ResttyPaneApi, "clearScreen" | "sendInput">;');
+  expect(demos).toContain("export function createDemoController(pane: DemoPane)");
   expect(demos).not.toContain("type DemoApp = {");
-  expect(demos).not.toContain("createDemoController(app: DemoApp)");
+  expect(demos).not.toContain("type DemoRuntime = {");
+  expect(demos).not.toContain("createDemoController(runtime: DemoRuntime)");
   expect(demos).not.toContain("function demoBasic()");
   expect(demos).not.toContain("function demoPalette()");
   expect(demos).not.toContain("function demoUnicode()");
+  expect(surfaceBootstrapEvents).toContain("state.demos = createDemoControllerForPane(paneHandle)");
+  expect(surfaceBootstrapEvents).not.toContain(
+    "state.demos = createDemoControllerForPane(pane.runtime)",
+  );
   expect(demoContent).toContain("restty demo: basics");
   expect(demoContent).toContain("restty demo: palette");
   expect(demoContent).toContain("restty demo: unicode");

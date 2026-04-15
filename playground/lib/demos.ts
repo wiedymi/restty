@@ -1,3 +1,4 @@
+import type { ResttyPaneApi } from "../../src/index.ts";
 import {
   createBasicDemoPayload,
   createPaletteDemoPayload,
@@ -5,18 +6,11 @@ import {
 } from "./demo-content.ts";
 import { getActivePaneState, type PaneState } from "./pane-state.ts";
 
-type DemoRuntime = {
-  terminal: {
-    clearScreen: () => void;
-  };
-  io: {
-    sendInput: (text: string) => void;
-  };
-};
+type DemoPane = Pick<ResttyPaneApi, "clearScreen" | "sendInput">;
 
 export type PlaygroundDemoKind = "basic" | "palette" | "unicode" | "anim";
 
-export function createDemoController(runtime: DemoRuntime) {
+export function createDemoController(pane: DemoPane) {
   let timer = 0;
 
   const stop = () => {
@@ -28,7 +22,7 @@ export function createDemoController(runtime: DemoRuntime) {
 
   const startAnimation = () => {
     stop();
-    runtime.terminal.clearScreen();
+    pane.clearScreen();
     const start = performance.now();
     let tick = 0;
     timer = window.setInterval(() => {
@@ -53,7 +47,7 @@ export function createDemoController(runtime: DemoRuntime) {
         "type to echo input below...",
         "",
       ];
-      runtime.io.sendInput(`\x1b[H\x1b[J${lines.join("\r\n")}`);
+      pane.sendInput(`\x1b[H\x1b[J${lines.join("\r\n")}`);
       tick += 1;
     }, 80);
   };
@@ -62,17 +56,17 @@ export function createDemoController(runtime: DemoRuntime) {
     stop();
     switch (kind) {
       case "palette":
-        runtime.io.sendInput(createPaletteDemoPayload());
+        pane.sendInput(createPaletteDemoPayload());
         break;
       case "unicode":
-        runtime.io.sendInput(createUnicodeDemoPayload());
+        pane.sendInput(createUnicodeDemoPayload());
         break;
       case "anim":
         startAnimation();
         break;
       case "basic":
       default:
-        runtime.io.sendInput(createBasicDemoPayload());
+        pane.sendInput(createBasicDemoPayload());
         break;
     }
   };
