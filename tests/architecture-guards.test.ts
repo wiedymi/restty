@@ -681,6 +681,30 @@ test("surface pane handle derives pane api types from runtime contracts", () => 
   expect(paneHandle).not.toContain("../../theme");
   expect(paneHandle).not.toContain("../../input");
   expect(paneHandle).not.toContain("../../runtime/core/models");
+  expect(paneHandle).toContain("this.resolvePane().togglePause()");
+  expect(paneHandle).toContain("this.resolvePane().clearScreen()");
+  expect(paneHandle).toContain("this.resolvePane().connectPty(url)");
+  expect(paneHandle).toContain("this.resolvePane().disconnectPty()");
+  expect(paneHandle).toContain("return this.resolvePane().isPtyConnected()");
+  expect(paneHandle).toContain("return this.resolvePane().copySelectionToClipboard()");
+  expect(paneHandle).toContain("return this.resolvePane().pasteFromClipboard()");
+  expect(paneHandle).toContain("this.resolvePane().setSearchQuery(query)");
+  expect(paneHandle).toContain("this.resolvePane().clearSearch()");
+  expect(paneHandle).toContain("this.resolvePane().searchNext()");
+  expect(paneHandle).toContain("this.resolvePane().searchPrevious()");
+  expect(paneHandle).toContain("return this.resolvePane().getSearchState()");
+  expect(paneHandle).not.toContain("runtime.terminal.togglePause()");
+  expect(paneHandle).not.toContain("runtime.terminal.clearScreen()");
+  expect(paneHandle).not.toContain("runtime.io.connectPty(url)");
+  expect(paneHandle).not.toContain("runtime.io.disconnectPty()");
+  expect(paneHandle).not.toContain("runtime.io.isPtyConnected()");
+  expect(paneHandle).not.toContain("runtime.interaction.copySelectionToClipboard()");
+  expect(paneHandle).not.toContain("runtime.interaction.pasteFromClipboard()");
+  expect(paneHandle).not.toContain("runtime.search.setQuery(query)");
+  expect(paneHandle).not.toContain("runtime.search.clear()");
+  expect(paneHandle).not.toContain("runtime.search.next()");
+  expect(paneHandle).not.toContain("runtime.search.previous()");
+  expect(paneHandle).not.toContain("runtime.search.getState()");
 });
 
 test("surface restty routes bulk font source updates through pane handles", () => {

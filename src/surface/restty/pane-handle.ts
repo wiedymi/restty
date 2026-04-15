@@ -96,7 +96,7 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   togglePause(): void {
-    this.resolvePane().runtime.terminal.togglePause();
+    this.resolvePane().togglePause();
   }
 
   setFontSize(value: number): void {
@@ -136,19 +136,19 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   clearScreen(): void {
-    this.resolvePane().runtime.terminal.clearScreen();
+    this.resolvePane().clearScreen();
   }
 
   connectPty(url = ""): void {
-    this.resolvePane().runtime.io.connectPty(url);
+    this.resolvePane().connectPty(url);
   }
 
   disconnectPty(): void {
-    this.resolvePane().runtime.io.disconnectPty();
+    this.resolvePane().disconnectPty();
   }
 
   isPtyConnected(): boolean {
-    return this.resolvePane().runtime.io.isPtyConnected();
+    return this.resolvePane().isPtyConnected();
   }
 
   setMouseMode(value: MouseMode): void {
@@ -160,11 +160,11 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   copySelectionToClipboard(): Promise<boolean> {
-    return this.resolvePane().runtime.interaction.copySelectionToClipboard();
+    return this.resolvePane().copySelectionToClipboard();
   }
 
   pasteFromClipboard(): Promise<boolean> {
-    return this.resolvePane().runtime.interaction.pasteFromClipboard();
+    return this.resolvePane().pasteFromClipboard();
   }
 
   selectWordAtClientPoint(clientX: number, clientY: number): boolean {
@@ -172,23 +172,23 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setSearchQuery(query: string): void {
-    this.resolvePane().runtime.search.setQuery(query);
+    this.resolvePane().setSearchQuery(query);
   }
 
   clearSearch(): void {
-    this.resolvePane().runtime.search.clear();
+    this.resolvePane().clearSearch();
   }
 
   searchNext(): void {
-    this.resolvePane().runtime.search.next();
+    this.resolvePane().searchNext();
   }
 
   searchPrevious(): void {
-    this.resolvePane().runtime.search.previous();
+    this.resolvePane().searchPrevious();
   }
 
   getSearchState(): ResttySearchState {
-    return this.resolvePane().runtime.search.getState();
+    return this.resolvePane().getSearchState();
   }
 
   openSearch(options?: ResttyPaneSearchUiOpenOptions): void {

@@ -51,6 +51,82 @@ describe("ResttyPaneHandle", () => {
       ["setFontSources", fontSources],
     ]);
   });
+
+  test("delegates pane action and search methods through the pane contract", async () => {
+    const calls: Array<[string, unknown[]]> = [];
+    const searchState: ResttySearchState = {
+      query: "foo",
+      active: true,
+      pending: false,
+      complete: true,
+      total: 2,
+      selectedIndex: 1,
+    };
+    const pane = {
+      id: 2,
+      togglePause: () => void calls.push(["togglePause", []]),
+      clearScreen: () => void calls.push(["clearScreen", []]),
+      connectPty: (url = "") => void calls.push(["connectPty", [url]]),
+      disconnectPty: () => void calls.push(["disconnectPty", []]),
+      isPtyConnected: () => {
+        calls.push(["isPtyConnected", []]);
+        return true;
+      },
+      copySelectionToClipboard: async () => {
+        calls.push(["copySelectionToClipboard", []]);
+        return true;
+      },
+      pasteFromClipboard: async () => {
+        calls.push(["pasteFromClipboard", []]);
+        return false;
+      },
+      setSearchQuery: (query: string) => void calls.push(["setSearchQuery", [query]]),
+      clearSearch: () => void calls.push(["clearSearch", []]),
+      searchNext: () => void calls.push(["searchNext", []]),
+      searchPrevious: () => void calls.push(["searchPrevious", []]),
+      getSearchState: () => {
+        calls.push(["getSearchState", []]);
+        return searchState;
+      },
+    } as any;
+
+    const handle = new ResttyPaneHandle(() => pane, {
+      open: () => undefined,
+      close: () => undefined,
+      toggle: () => undefined,
+      isOpen: () => false,
+      getStyleOptions: () => ({}),
+      setStyleOptions: () => undefined,
+    });
+
+    handle.togglePause();
+    handle.clearScreen();
+    handle.connectPty("ws://localhost:8787/pty");
+    handle.disconnectPty();
+    expect(handle.isPtyConnected()).toBe(true);
+    expect(await handle.copySelectionToClipboard()).toBe(true);
+    expect(await handle.pasteFromClipboard()).toBe(false);
+    handle.setSearchQuery("foo");
+    handle.clearSearch();
+    handle.searchNext();
+    handle.searchPrevious();
+    expect(handle.getSearchState()).toEqual(searchState);
+
+    expect(calls).toEqual([
+      ["togglePause", []],
+      ["clearScreen", []],
+      ["connectPty", ["ws://localhost:8787/pty"]],
+      ["disconnectPty", []],
+      ["isPtyConnected", []],
+      ["copySelectionToClipboard", []],
+      ["pasteFromClipboard", []],
+      ["setSearchQuery", ["foo"]],
+      ["clearSearch", []],
+      ["searchNext", []],
+      ["searchPrevious", []],
+      ["getSearchState", []],
+    ]);
+  });
 });
 
 describe("ResttyActivePaneApi", () => {
