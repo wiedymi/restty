@@ -1,5 +1,8 @@
 import { expect, test } from "bun:test";
-import { createPaneLifecycleController } from "../playground/lib/pane-lifecycle.ts";
+import {
+  createPaneLifecycleController,
+  isPaneLifecyclePane,
+} from "../playground/lib/pane-lifecycle.ts";
 import type { PaneState } from "../playground/lib/pane-state.ts";
 
 function createState(overrides: Partial<PaneState> = {}): PaneState {
@@ -158,4 +161,24 @@ test("pane lifecycle toggles pause and pty state for the active pane", () => {
   activePaneId = null;
   lifecycle.handleTerminalPauseToggle();
   expect(pauseStates).toEqual([false]);
+});
+
+test("isPaneLifecyclePane narrows panes that expose initRuntime and canvas focus", () => {
+  expect(isPaneLifecyclePane(null)).toBe(false);
+  expect(
+    isPaneLifecyclePane({
+      id: 1,
+      paused: false,
+      canvas: {},
+      initRuntime: async () => {},
+    }),
+  ).toBe(false);
+  expect(
+    isPaneLifecyclePane({
+      id: 1,
+      paused: false,
+      canvas: { focus: () => {} },
+      initRuntime: async () => {},
+    }),
+  ).toBe(true);
 });

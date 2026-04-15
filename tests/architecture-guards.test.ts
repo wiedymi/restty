@@ -1276,17 +1276,14 @@ test("playground pane lifecycle routes terminal and pty controls through pane ha
   expect(paneLifecycle).not.toContain("pane.runtime.io.connectPty(");
   expect(paneLifecycle).not.toContain("pane.runtime.io.disconnectPty()");
   expect(paneLifecycle).not.toContain("pane.runtime.io.isPtyConnected()");
+  expect(paneLifecycle).toContain("export function isPaneLifecyclePane");
   expect(paneLifecycle).toContain("await pane.initRuntime()");
   expect(paneLifecycle).not.toContain("await pane.runtime.lifecycle.init()");
   expect(paneLifecycle).toContain("pane.canvas.focus({ preventScroll: true })");
 
-  expect(sessionControllers).toContain(
-    "getPaneById: (id) => getRestty().getPaneById(id) as PaneLifecyclePane | null",
-  );
+  expect(sessionControllers).toContain("return isPaneLifecyclePane(pane) ? pane : null;");
   expect(sessionControllers).toContain("getPaneHandleById: (id) => getRestty().pane(id)");
-  expect(sessionControllers).toContain(
-    "getActivePane: () => getActivePane() as PaneLifecyclePane | null",
-  );
+  expect(sessionControllers).not.toContain("as PaneLifecyclePane | null");
   expect(sessionControllers).toContain("getActivePaneHandle: () => getRestty().activePane()");
 });
 
@@ -1303,9 +1300,9 @@ test("managed pane lifecycle is routed through internal pane methods", () => {
   expect(managedPaneManager).toContain("pane.destroyRuntime()");
   expect(managedPaneManager).not.toContain("pane.runtime.lifecycle.destroy()");
 
-  expect(surfaceBootstrapEvents).toContain(
-    "void paneLifecycle.initPane(pane as PaneLifecyclePane, state)",
-  );
+  expect(surfaceBootstrapEvents).toContain("if (!isPaneLifecyclePane(pane)) return;");
+  expect(surfaceBootstrapEvents).toContain("void paneLifecycle.initPane(pane, state)");
+  expect(surfaceBootstrapEvents).not.toContain("as PaneLifecyclePane");
 });
 
 test("playground shell reflection accepts pane handles instead of raw runtime bags", () => {

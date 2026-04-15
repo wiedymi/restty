@@ -13,6 +13,19 @@ export type PaneLifecyclePane = {
   initRuntime: () => Promise<void>;
 };
 
+export function isPaneLifecyclePane(value: unknown): value is PaneLifecyclePane {
+  if (!value || typeof value !== "object") return false;
+  const pane = value as {
+    canvas?: { focus?: unknown };
+    initRuntime?: unknown;
+  };
+  return (
+    typeof pane.initRuntime === "function" &&
+    !!pane.canvas &&
+    typeof pane.canvas.focus === "function"
+  );
+}
+
 type PaneLifecyclePaneHandle = Pick<
   ResttyPaneApi,
   | "applyTheme"

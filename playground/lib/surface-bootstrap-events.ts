@@ -1,7 +1,7 @@
 import type { ResttyConfig, ResttyPaneApi } from "../../src/index.ts";
 import { createDemoController, stopPaneDemo } from "./demos.ts";
 import type { PlaygroundDesktopNotification } from "./desktop-notifications.ts";
-import type { PaneLifecyclePane, createPaneLifecycleController } from "./pane-lifecycle.ts";
+import { isPaneLifecyclePane, type createPaneLifecycleController } from "./pane-lifecycle.ts";
 import type { PaneState } from "./pane-state.ts";
 import type { createPaneShellSync } from "./pane-shell-sync.ts";
 
@@ -42,7 +42,8 @@ export function createPlaygroundSurfaceEvents({
 
       state.demos = createDemoControllerForPane(paneHandle);
       paneHandle.setMouseMode(state.mouseMode);
-      void paneLifecycle.initPane(pane as PaneLifecyclePane, state);
+      if (!isPaneLifecyclePane(pane)) return;
+      void paneLifecycle.initPane(pane, state);
     },
     onPaneClosed: (pane) => {
       const state = paneStates.get(pane.id);

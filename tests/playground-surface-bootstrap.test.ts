@@ -47,6 +47,14 @@ function createPane(id = 1) {
   const pane = {
     id,
     paused: false,
+    canvas: {
+      focus: () => {
+        calls.push("focus");
+      },
+    },
+    initRuntime: async () => {
+      calls.push("init");
+    },
     runtime: {},
   };
 

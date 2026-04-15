@@ -1,7 +1,7 @@
 import type { Restty } from "../../src/index.ts";
 import { createConnectionController } from "./connection-controller.ts";
 import { createPaneAppearanceController } from "./appearance-controller.ts";
-import { createPaneLifecycleController, type PaneLifecyclePane } from "./pane-lifecycle.ts";
+import { createPaneLifecycleController, isPaneLifecyclePane } from "./pane-lifecycle.ts";
 import type { PlaygroundSessionShell } from "./playground-session-shell.ts";
 import type { PlaygroundAppearanceInitialState } from "./startup-defaults.ts";
 import type { PaneState } from "./pane-state.ts";
@@ -56,9 +56,15 @@ export function createPlaygroundSessionControllers({
   let connectionController: ReturnType<typeof createConnectionController>;
 
   const paneLifecycle = createPaneLifecycleController({
-    getPaneById: (id) => getRestty().getPaneById(id) as PaneLifecyclePane | null,
+    getPaneById: (id) => {
+      const pane = getRestty().getPaneById(id);
+      return isPaneLifecyclePane(pane) ? pane : null;
+    },
     getPaneHandleById: (id) => getRestty().pane(id),
-    getActivePane: () => getActivePane() as PaneLifecyclePane | null,
+    getActivePane: () => {
+      const pane = getActivePane();
+      return isPaneLifecyclePane(pane) ? pane : null;
+    },
     getActivePaneHandle: () => getRestty().activePane(),
     getPaneState: (id) => paneStates.get(id),
     setPaneState: (id, state) => {
