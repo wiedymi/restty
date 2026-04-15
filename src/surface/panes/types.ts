@@ -172,10 +172,22 @@ export type ResttyPaneWithRuntime = ResttyPaneDefinition & {
   setPaused?: (value: boolean) => void;
 };
 
+export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {
+  copySelectionToClipboard: () => Promise<boolean>;
+  pasteFromClipboard: () => Promise<boolean>;
+  clearScreen: () => void;
+  connectPty: (url?: string) => void;
+  disconnectPty: () => void;
+  isPtyConnected: () => boolean;
+  togglePause: () => void;
+};
+
 /**
  * Options for building the default set of context menu items for a pane with a runtime.
  */
-export type CreateDefaultResttyPaneContextMenuItemsOptions<TPane extends ResttyPaneWithRuntime> = {
+export type CreateDefaultResttyPaneContextMenuItemsOptions<
+  TPane extends ResttyPaneWithRuntimeActions,
+> = {
   /** The pane the context menu was opened on. */
   pane: TPane;
   /** Subset of the pane manager API needed for split/close actions. */

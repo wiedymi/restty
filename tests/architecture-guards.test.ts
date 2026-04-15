@@ -671,6 +671,49 @@ test("surface restty routes bulk font source updates through pane handles", () =
   expect(restty).not.toContain("runtime.terminal.setFontSources(this.fontSources ?? [])");
 });
 
+test("default context menu routes pane actions through managed pane methods", () => {
+  const defaultContextMenu = readFileSync(
+    resolve(surfaceRoot, "panes/default-context-menu-items.ts"),
+    "utf8",
+  );
+  const managedPaneCreate = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-create.ts"),
+    "utf8",
+  );
+  const paneTypes = readFileSync(resolve(surfaceRoot, "panes/types.ts"), "utf8");
+
+  expect(paneTypes).toContain(
+    "export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {",
+  );
+  expect(defaultContextMenu).toContain("ResttyPaneWithRuntimeActions");
+  expect(defaultContextMenu).toContain("await pane.copySelectionToClipboard()");
+  expect(defaultContextMenu).toContain("await pane.pasteFromClipboard()");
+  expect(defaultContextMenu).toContain("pane.clearScreen()");
+  expect(defaultContextMenu).toContain("pane.isPtyConnected()");
+  expect(defaultContextMenu).toContain("pane.disconnectPty()");
+  expect(defaultContextMenu).toContain("pane.connectPty(url)");
+  expect(defaultContextMenu).toContain("pane.togglePause()");
+  expect(defaultContextMenu).not.toContain("pane.runtime.interaction.copySelectionToClipboard()");
+  expect(defaultContextMenu).not.toContain("pane.runtime.interaction.pasteFromClipboard()");
+  expect(defaultContextMenu).not.toContain("pane.runtime.terminal.clearScreen()");
+  expect(defaultContextMenu).not.toContain("pane.runtime.io.isPtyConnected()");
+  expect(defaultContextMenu).not.toContain("pane.runtime.io.disconnectPty()");
+  expect(defaultContextMenu).not.toContain("pane.runtime.io.connectPty(url)");
+  expect(defaultContextMenu).not.toContain("pane.runtime.terminal.togglePause()");
+
+  expect(managedPaneCreate).toContain(
+    "copySelectionToClipboard: () => runtime.interaction.copySelectionToClipboard()",
+  );
+  expect(managedPaneCreate).toContain(
+    "pasteFromClipboard: () => runtime.interaction.pasteFromClipboard()",
+  );
+  expect(managedPaneCreate).toContain("clearScreen: () => runtime.terminal.clearScreen()");
+  expect(managedPaneCreate).toContain('connectPty: (url = "") => runtime.io.connectPty(url)');
+  expect(managedPaneCreate).toContain("disconnectPty: () => runtime.io.disconnectPty()");
+  expect(managedPaneCreate).toContain("isPtyConnected: () => runtime.io.isPtyConnected()");
+  expect(managedPaneCreate).toContain("togglePause: () => runtime.terminal.togglePause()");
+});
+
 test("surface pane ops split handle, command, and style helpers", () => {
   const paneOps = readFileSync(resolve(surfaceRoot, "restty/pane-ops.ts"), "utf8");
   const paneHandleOps = readFileSync(resolve(surfaceRoot, "restty/pane-handle-ops.ts"), "utf8");

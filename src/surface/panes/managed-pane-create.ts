@@ -25,6 +25,13 @@ export function createManagedPane(options: CreateManagedPaneOptions): ResttyMana
     container,
     focusTarget: canvas,
     runtime,
+    copySelectionToClipboard: () => runtime.interaction.copySelectionToClipboard(),
+    pasteFromClipboard: () => runtime.interaction.pasteFromClipboard(),
+    clearScreen: () => runtime.terminal.clearScreen(),
+    connectPty: (url = "") => runtime.io.connectPty(url),
+    disconnectPty: () => runtime.io.disconnectPty(),
+    isPtyConnected: () => runtime.io.isPtyConnected(),
+    togglePause: () => runtime.terminal.togglePause(),
     canvas,
     imeInput,
   };

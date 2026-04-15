@@ -14,6 +14,7 @@ export type {
   CreateResttyPaneManagerOptions,
   ResttyPaneManager,
   ResttyPaneWithRuntime,
+  ResttyPaneWithRuntimeActions,
   CreateDefaultResttyPaneContextMenuItemsOptions,
 } from "../surface/panes/types";
 

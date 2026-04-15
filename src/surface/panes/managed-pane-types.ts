@@ -4,7 +4,7 @@ import type {
   ResttyPaneShortcutsOptions,
   ResttyPaneStyleOptions,
   ResttyPaneStylesOptions,
-  ResttyPaneWithRuntime,
+  ResttyPaneWithRuntimeActions,
 } from "./types";
 import type { ResttyRuntimeServicesConfig, ResttyTerminalConfig } from "../../runtime/core/config";
 import type { ResttyRuntimeSession } from "../../runtime/core/resources";
@@ -19,7 +19,7 @@ import type {
  * A pane created by the managed-pane manager, extending the base pane
  * with DOM elements needed by the terminal runtime.
  */
-export type ResttyManagedPane = ResttyPaneWithRuntime & {
+export type ResttyManagedPane = ResttyPaneWithRuntimeActions & {
   /** The canvas element used for terminal rendering. */
   canvas: HTMLCanvasElement;
   /** Hidden textarea for IME composition input. */

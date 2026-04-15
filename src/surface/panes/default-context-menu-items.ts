@@ -1,7 +1,7 @@
 import type {
   CreateDefaultResttyPaneContextMenuItemsOptions,
   ResttyPaneContextMenuItem,
-  ResttyPaneWithRuntime,
+  ResttyPaneWithRuntimeActions,
 } from "./types";
 
 /** Return the platform-appropriate shortcut modifier label ("Cmd" on macOS, "Ctrl" elsewhere). */
@@ -14,7 +14,7 @@ export function getResttyShortcutModifierLabel(): "Cmd" | "Ctrl" {
  * Build the standard right-click context menu items for a pane
  * (copy, paste, split, close, clear, PTY toggle, pause toggle).
  */
-export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPaneWithRuntime>(
+export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPaneWithRuntimeActions>(
   options: CreateDefaultResttyPaneContextMenuItemsOptions<TPane>,
 ): Array<ResttyPaneContextMenuItem | "separator"> {
   const { pane, manager, getPtyUrl } = options;
@@ -32,14 +32,14 @@ export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPane
       label: "Copy",
       shortcut: `${mod}+C`,
       action: async () => {
-        await pane.runtime.interaction.copySelectionToClipboard();
+        await pane.copySelectionToClipboard();
       },
     },
     {
       label: "Paste",
       shortcut: `${mod}+V`,
       action: async () => {
-        await pane.runtime.interaction.pasteFromClipboard();
+        await pane.pasteFromClipboard();
       },
     },
     "separator",
@@ -69,18 +69,18 @@ export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPane
     {
       label: "Clear Screen",
       action: () => {
-        pane.runtime.terminal.clearScreen();
+        pane.clearScreen();
       },
     },
     {
-      label: pane.runtime.io.isPtyConnected() ? "Disconnect PTY" : "Connect PTY",
+      label: pane.isPtyConnected() ? "Disconnect PTY" : "Connect PTY",
       action: () => {
-        if (pane.runtime.io.isPtyConnected()) {
-          pane.runtime.io.disconnectPty();
+        if (pane.isPtyConnected()) {
+          pane.disconnectPty();
           return;
         }
         const url = (getPtyUrl?.() ?? "").trim();
-        pane.runtime.io.connectPty(url);
+        pane.connectPty(url);
       },
     },
     {
@@ -90,7 +90,7 @@ export function createDefaultResttyPaneContextMenuItems<TPane extends ResttyPane
           pane.setPaused(!(pane.paused ?? false));
           return;
         }
-        pane.runtime.terminal.togglePause();
+        pane.togglePause();
       },
     },
   ];
