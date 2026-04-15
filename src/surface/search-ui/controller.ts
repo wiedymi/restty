@@ -102,7 +102,7 @@ export function createPaneSearchUiController(
     if (!paneState) return;
     closeAllExcept(paneId);
     paneState.open = true;
-    paneState.state = { ...paneState.pane.runtime.search.getState() };
+    paneState.state = { ...paneState.pane.getSearchState() };
     syncPaneUi(paneState);
     focusSearchInput(paneState, config.selectAll ?? true);
   }
@@ -193,12 +193,12 @@ export function createPaneSearchUiController(
       closeButton,
       status,
       cleanupFns: [],
-      state: { ...pane.runtime.search.getState() },
+      state: { ...pane.getSearchState() },
       open: false,
     };
 
     const onInput = () => {
-      pane.runtime.search.setQuery(input.value);
+      pane.setSearchQuery(input.value);
     };
     input.addEventListener("input", onInput);
     paneState.cleanupFns.push(() => {
@@ -209,9 +209,9 @@ export function createPaneSearchUiController(
       if (event.key === "Enter") {
         event.preventDefault();
         if (event.shiftKey) {
-          pane.runtime.search.next();
+          pane.searchNext();
         } else {
-          pane.runtime.search.previous();
+          pane.searchPrevious();
         }
         return;
       }
@@ -226,7 +226,7 @@ export function createPaneSearchUiController(
     });
 
     const onPrev = () => {
-      pane.runtime.search.next();
+      pane.searchNext();
       focusSearchInput(paneState);
     };
     prevButton.addEventListener("click", onPrev);
@@ -235,7 +235,7 @@ export function createPaneSearchUiController(
     });
 
     const onNext = () => {
-      pane.runtime.search.previous();
+      pane.searchPrevious();
       focusSearchInput(paneState);
     };
     nextButton.addEventListener("click", onNext);
@@ -244,8 +244,8 @@ export function createPaneSearchUiController(
     });
 
     const onClear = () => {
-      pane.runtime.search.clear();
-      paneState.state = { ...pane.runtime.search.getState() };
+      pane.clearSearch();
+      paneState.state = { ...pane.getSearchState() };
       syncPaneUi(paneState);
       focusSearchInput(paneState);
     };

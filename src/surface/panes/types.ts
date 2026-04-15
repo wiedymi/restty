@@ -1,4 +1,4 @@
-import type { ResttyRuntime } from "../runtime/core/api";
+import type { ResttyRuntime, ResttyRuntimeSearchApi } from "../runtime/core/api";
 
 /**
  * Direction for splitting a pane.
@@ -180,6 +180,11 @@ export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {
   disconnectPty: () => void;
   isPtyConnected: () => boolean;
   togglePause: () => void;
+  setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
+  clearSearch: ResttyRuntimeSearchApi["clear"];
+  searchNext: ResttyRuntimeSearchApi["next"];
+  searchPrevious: ResttyRuntimeSearchApi["previous"];
+  getSearchState: ResttyRuntimeSearchApi["getState"];
 };
 
 /**

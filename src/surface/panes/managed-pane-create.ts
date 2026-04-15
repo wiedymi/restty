@@ -32,6 +32,11 @@ export function createManagedPane(options: CreateManagedPaneOptions): ResttyMana
     disconnectPty: () => runtime.io.disconnectPty(),
     isPtyConnected: () => runtime.io.isPtyConnected(),
     togglePause: () => runtime.terminal.togglePause(),
+    setSearchQuery: (query) => runtime.search.setQuery(query),
+    clearSearch: () => runtime.search.clear(),
+    searchNext: () => runtime.search.next(),
+    searchPrevious: () => runtime.search.previous(),
+    getSearchState: () => runtime.search.getState(),
     canvas,
     imeInput,
   };

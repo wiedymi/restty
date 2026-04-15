@@ -734,6 +734,43 @@ test("default context menu routes pane actions through managed pane methods", ()
   expect(managedPaneCreate).toContain("togglePause: () => runtime.terminal.togglePause()");
 });
 
+test("surface search ui routes pane search through pane methods", () => {
+  const paneTypes = readFileSync(resolve(surfaceRoot, "panes/types.ts"), "utf8");
+  const managedPaneCreate = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-create.ts"),
+    "utf8",
+  );
+  const searchUiTypes = readFileSync(resolve(surfaceRoot, "search-ui/types.ts"), "utf8");
+  const searchUiController = readFileSync(resolve(surfaceRoot, "search-ui/controller.ts"), "utf8");
+
+  expect(paneTypes).toContain('setSearchQuery: ResttyRuntimeSearchApi["setQuery"]');
+  expect(paneTypes).toContain('clearSearch: ResttyRuntimeSearchApi["clear"]');
+  expect(paneTypes).toContain('searchNext: ResttyRuntimeSearchApi["next"]');
+  expect(paneTypes).toContain('searchPrevious: ResttyRuntimeSearchApi["previous"]');
+  expect(paneTypes).toContain('getSearchState: ResttyRuntimeSearchApi["getState"]');
+
+  expect(managedPaneCreate).toContain("setSearchQuery: (query) => runtime.search.setQuery(query)");
+  expect(managedPaneCreate).toContain("clearSearch: () => runtime.search.clear()");
+  expect(managedPaneCreate).toContain("searchNext: () => runtime.search.next()");
+  expect(managedPaneCreate).toContain("searchPrevious: () => runtime.search.previous()");
+  expect(managedPaneCreate).toContain("getSearchState: () => runtime.search.getState()");
+
+  expect(searchUiTypes).toContain('setSearchQuery: ResttyRuntimeSearchApi["setQuery"]');
+  expect(searchUiTypes).toContain('clearSearch: ResttyRuntimeSearchApi["clear"]');
+  expect(searchUiTypes).toContain('searchNext: ResttyRuntimeSearchApi["next"]');
+  expect(searchUiTypes).toContain('searchPrevious: ResttyRuntimeSearchApi["previous"]');
+  expect(searchUiTypes).toContain('getSearchState: ResttyRuntimeSearchApi["getState"]');
+  expect(searchUiTypes).not.toContain("runtime: SearchUiPaneRuntime");
+
+  expect(searchUiController).toContain("paneState.pane.getSearchState()");
+  expect(searchUiController).toContain("pane.getSearchState()");
+  expect(searchUiController).toContain("pane.setSearchQuery(input.value)");
+  expect(searchUiController).toContain("pane.searchNext()");
+  expect(searchUiController).toContain("pane.searchPrevious()");
+  expect(searchUiController).toContain("pane.clearSearch()");
+  expect(searchUiController).not.toContain("pane.runtime.search.");
+});
+
 test("surface pane ops split handle, command, and style helpers", () => {
   const paneOps = readFileSync(resolve(surfaceRoot, "restty/pane-ops.ts"), "utf8");
   const paneHandleOps = readFileSync(resolve(surfaceRoot, "restty/pane-handle-ops.ts"), "utf8");

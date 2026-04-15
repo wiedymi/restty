@@ -1,20 +1,15 @@
+import type { ResttyRuntimeSearchApi } from "../../runtime/core/api";
 import type { ResttySearchState } from "../../runtime/core/models";
-
-type SearchUiPaneRuntime = {
-  search: {
-    setQuery: (query: string) => void;
-    clear: () => void;
-    next: () => void;
-    previous: () => void;
-    getState: () => ResttySearchState;
-  };
-};
 
 export type ResttyPaneSearchUiPane = {
   id: number;
   container: HTMLDivElement;
   focusTarget?: HTMLElement | null;
-  runtime: SearchUiPaneRuntime;
+  setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
+  clearSearch: ResttyRuntimeSearchApi["clear"];
+  searchNext: ResttyRuntimeSearchApi["next"];
+  searchPrevious: ResttyRuntimeSearchApi["previous"];
+  getSearchState: ResttyRuntimeSearchApi["getState"];
 };
 
 export type ResttyPaneSearchUiStyleOptions = {

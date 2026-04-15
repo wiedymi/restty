@@ -376,29 +376,25 @@ function setupController() {
     id: 1,
     container: container as unknown as HTMLDivElement,
     focusTarget: focusTarget as unknown as HTMLElement,
-    runtime: {
-      search: {
-        setQuery: (query) => {
-          calls.push(`set:${query}`);
-          searchState = createSearchState({
-            query,
-            active: query.length > 0,
-            pending: query.length > 0,
-          });
-        },
-        clear: () => {
-          calls.push("clear");
-          searchState = createSearchState();
-        },
-        next: () => {
-          calls.push("next");
-        },
-        previous: () => {
-          calls.push("prev");
-        },
-        getState: () => searchState,
-      },
+    setSearchQuery: (query) => {
+      calls.push(`set:${query}`);
+      searchState = createSearchState({
+        query,
+        active: query.length > 0,
+        pending: query.length > 0,
+      });
     },
+    clearSearch: () => {
+      calls.push("clear");
+      searchState = createSearchState();
+    },
+    searchNext: () => {
+      calls.push("next");
+    },
+    searchPrevious: () => {
+      calls.push("prev");
+    },
+    getSearchState: () => searchState,
   };
 
   const controller = createPaneSearchUiController({
@@ -433,7 +429,7 @@ afterEach(() => {
   restoreGlobals();
 });
 
-test("pane search ui opens from Cmd/Ctrl+F and routes search controls to the pane runtime", () => {
+test("pane search ui opens from Cmd/Ctrl+F and routes search controls through pane methods", () => {
   const { pane, calls, controller, input, status } = setupController();
 
   const shortcutEvent = createKeydownEvent("f", {
