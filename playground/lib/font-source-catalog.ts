@@ -1,6 +1,6 @@
 import type { ResttyFontSource } from "../../src/index.ts";
 
-const FONT_URL_FIRA_CODE = "/playground/public/fonts/FiraCode-Regular.ttf";
+const FONT_URL_FIRA_CODE = "/fonts/FiraCode-Regular.ttf";
 const FONT_URL_JETBRAINS_MONO =
   "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/Regular/JetBrainsMonoNLNerdFontMono-Regular.ttf";
 const FONT_URL_JETBRAINS_MONO_BOLD =

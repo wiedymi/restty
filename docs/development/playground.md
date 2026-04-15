@@ -11,12 +11,12 @@ Hosted demo: `https://restty.pages.dev/`
 
 Run components separately when needed:
 
-- `bun run pty`
+- `bun run playground:pty`
 
-Static-file-only option:
+Build/preview the standalone playground:
 
-- `bun run build:assets`
-- `bun run playground:static`
+- `bun run playground:build`
+- `bun run playground:preview`
 
 Hinting experiments (playground URL params):
 
@@ -43,9 +43,9 @@ WebContainer mode note:
 
 Cloudflare Pages static deploy:
 
-1. Run `bun run build:assets`
-2. Deploy `playground/public/` as the output directory.
-3. Keep `playground/public/_headers` so COOP/COEP headers are applied (required for WebContainer mode).
+1. Run `bun run playground:build`
+2. Deploy `playground/dist/` as the output directory.
+3. Copy `playground/public/_headers` into the deployed output so COOP/COEP headers are applied (required for WebContainer mode).
 
 ## Build the WASM module
 

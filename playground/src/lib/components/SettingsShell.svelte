@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { dispatchShellCommand } from "../../../../lib/shell-bridge.ts";
+  import { dispatchShellCommand } from "../../../lib/shell-bridge.ts";
 
   let settingsDialog: HTMLDialogElement | null = null;
   let isOpen = false;

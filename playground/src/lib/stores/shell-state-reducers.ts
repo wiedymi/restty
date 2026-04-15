@@ -1,9 +1,9 @@
-import { getConnectionBackendForValue } from "../../../../lib/connection-state.ts";
+import { getConnectionBackendForValue } from "../../../lib/connection-state.ts";
 import type {
   ActivePaneAppearanceStateDetail,
   ActivePaneStateDetail,
   ConnectionStateDetail,
-} from "../../../../lib/shell-events.ts";
+} from "../../../lib/shell-events.ts";
 import { shellState, type PlaygroundShellState } from "./shell-state.ts";
 
 function updateShellDomain<K extends keyof PlaygroundShellState>(

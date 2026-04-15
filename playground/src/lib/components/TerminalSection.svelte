@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { dispatchTerminalAction } from "../../../../lib/shell-bridge.ts";
+  import { dispatchTerminalAction } from "../../../lib/shell-bridge.ts";
   import { terminalShellState } from "../stores/shell-state.ts";
 
   function handleFontSizeEvent(event: Event) {

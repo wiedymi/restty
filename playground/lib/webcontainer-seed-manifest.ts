@@ -22,32 +22,32 @@ console.log("Run: node kitty.js");
 
 export const WEBCONTAINER_SEED_SCRIPTS: WebContainerSeedScriptSpec[] = [
   {
-    urls: ["/demo.js", "/playground/public/demo.js"],
+    urls: ["/demo.js"],
     target: "demo.js",
     fallback: FALLBACK_DEMO_JS,
   },
   {
-    urls: ["/test.js", "/playground/public/test.js"],
+    urls: ["/test.js"],
     target: "test.js",
     fallback: FALLBACK_TEST_JS,
   },
   {
-    urls: ["/ansi-art.js", "/playground/public/ansi-art.js"],
+    urls: ["/ansi-art.js"],
     target: "ansi-art.js",
     fallback: "#!/usr/bin/env node\nconsole.log('ansi-art fallback');\n",
   },
   {
-    urls: ["/animation.js", "/playground/public/animation.js"],
+    urls: ["/animation.js"],
     target: "animation.js",
     fallback: "#!/usr/bin/env node\nconsole.log('animation fallback');\n",
   },
   {
-    urls: ["/colors.js", "/playground/public/colors.js"],
+    urls: ["/colors.js"],
     target: "colors.js",
     fallback: "#!/usr/bin/env node\nconsole.log('colors fallback');\n",
   },
   {
-    urls: ["/kitty.js", "/playground/public/kitty.js"],
+    urls: ["/kitty.js"],
     target: "kitty.js",
     fallback: "#!/usr/bin/env node\nconsole.log('kitty fallback');\n",
   },

@@ -1,4 +1,4 @@
-import { listenActivePaneState, listenConnectionState } from "../../../lib/shell-bridge.ts";
+import { listenActivePaneState, listenConnectionState } from "../../lib/shell-bridge.ts";
 import {
   applyActivePaneShellState,
   applyConnectionShellState,

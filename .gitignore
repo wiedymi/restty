@@ -4,7 +4,7 @@ node_modules/
 # Build outputs and temp
 .tmp/
 dist/
-playground/dist-svelte/
+playground/dist/
 coverage/
 *.log
 
@@ -25,8 +25,6 @@ wasm/zig-out/
 
 # Generated bundles (can be re-built via npm scripts)
 playground/public/app.js
-playground/public/playground.js
-playground/public/playground.js.map
 playground/public/restty-input.js
 playground/public/restty-input.js.map
 playground/public/restty-wasm.js

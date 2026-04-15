@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { listBuiltinThemeNames } from "../../../../../src/theme/catalog.ts";
-  import { dispatchAppearanceInput } from "../../../../lib/shell-bridge.ts";
-  import { THEME_FILE_RESET_EVENT } from "../../../../lib/shell-events.ts";
+  import { listBuiltinThemeNames } from "../../../../src/theme/catalog.ts";
+  import { dispatchAppearanceInput } from "../../../lib/shell-bridge.ts";
   import { appearanceShellState } from "../stores/shell-state.ts";
 
   const builtinThemeNames = listBuiltinThemeNames();

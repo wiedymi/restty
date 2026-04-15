@@ -1,13 +1,13 @@
 import { derived, writable } from "svelte/store";
-import type { LocalFontOption } from "../../../../lib/font-local-picker.ts";
-import type { PlaygroundDemoKind } from "../../../../lib/demos.ts";
+import type { LocalFontOption } from "../../../lib/font-local-picker.ts";
+import type { PlaygroundDemoKind } from "../../../lib/demos.ts";
 import {
   createInitialAppearanceShellValues,
   createInitialConnectionShellValues,
   DEFAULT_DEMO_KIND,
   DEFAULT_TERMINAL_FONT_SIZE,
   DEFAULT_TERMINAL_RENDERER,
-} from "../../../../lib/shell-defaults.ts";
+} from "../../../lib/shell-defaults.ts";
 
 type TerminalShellState = {
   pauseLabel: string;

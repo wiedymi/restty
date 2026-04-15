@@ -20,6 +20,6 @@ restty is an experimental browser terminal stack focused on control and iteratio
 ## What “working” means in this repo today
 
 - Playground boots with `bun run playground`.
-- Local shell can be attached through `bun run pty`.
+- Local shell can be attached through `bun run playground:pty`.
 - WASM render state is consumed and drawn through WebGPU or WebGL2.
 - Core behavior is validated by Bun tests in `tests/` (input mapping, PTY decoding, output filters, renderer checks).

@@ -97,9 +97,7 @@
     "build:esm": "bun run scripts/build-esm.ts",
     "build:types": "tsc -p tsconfig.build.json",
     "build": "bun run build:themes && bun run clean:dist && bun run build:lib && bun run build:esm && bun run build:types",
-    "build:playground-app": "bun run playground/build-playground-app.ts",
-    "build:playground:svelte": "bunx vite build --config playground/svelte/vite.config.ts",
-    "build:assets": "bun run build:playground-app",
+    "playground:build": "bunx vite build --config playground/vite.config.ts",
     "check:themes": "bun run build:themes && git diff --exit-code -- src/theme/builtin-themes.ts",
     "lint": "oxlint src playground scripts tests",
     "format:base": "oxfmt src --config .oxfmtrc.json --ignore-path .gitignore --ignore-path .oxfmtignore",
@@ -108,10 +106,9 @@
     "prepublishOnly": "bun run build",
     "test": "bun test ./tests",
     "test:ci": "bun test $(find tests -name '*.test.ts' ! -name 'webgpu-glyph.test.ts' | sort)",
-    "pty": "bun run playground/pty-server.ts",
     "playground": "bun run scripts/playground-dev.ts",
-    "playground:svelte": "bunx vite --config playground/svelte/vite.config.ts",
-    "playground:static": "bun run playground/server.ts"
+    "playground:pty": "bun run playground/pty-server.ts",
+    "playground:preview": "bun run playground/server.ts"
   },
   "dependencies": {
     "text-shaper": "0.1.22"

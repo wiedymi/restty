@@ -1,5 +1,4 @@
 import { mount, tick } from "svelte";
-import "../../public/style.css";
 import App from "./App.svelte";
 import { startShellStateBridge } from "./lib/shell-state-bridge.ts";
 
@@ -13,4 +12,4 @@ startShellStateBridge();
 
 mount(App, { target });
 await tick();
-await import("../../app.ts");
+await import("../app.ts");

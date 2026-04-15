@@ -1,10 +1,10 @@
 const children = [
-  Bun.spawn(["bun", "run", "playground/pty-server.ts"], {
+  Bun.spawn(["bun", "run", "playground:pty"], {
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",
   }),
-  Bun.spawn(["bun", "run", "playground:svelte"], {
+  Bun.spawn(["bunx", "vite", "--config", "playground/vite.config.ts"], {
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",

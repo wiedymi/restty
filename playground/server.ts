@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
-const root = resolve("playground/public");
+const root = resolve("playground/dist");
 const port = Number(process.env.PORT ?? 5173);
 const isolationHeaders = {
   "cross-origin-opener-policy": "same-origin",
@@ -50,4 +50,4 @@ Bun.serve({
   },
 });
 
-console.log(`restty playground: http://localhost:${port}`);
+console.log(`restty playground preview: http://localhost:${port}`);

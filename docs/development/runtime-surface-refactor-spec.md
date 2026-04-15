@@ -800,7 +800,7 @@ Architecture work will drift again if the repo keeps rewarding shortcuts.
 
 ### 1. Stop tracking generated playground bundles
 
-Generated assets such as `playground/public/playground.js` and its source map should be build output, not committed source.
+Generated playground build output should live under `playground/dist/`, not as committed source files in `playground/public/`.
 
 Spec direction:
 
