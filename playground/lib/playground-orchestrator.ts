@@ -77,6 +77,7 @@ export function bootstrapPlaygroundOrchestrator({
     },
     onDesktopNotification: session.notifications.handleDesktopNotification,
   });
+  session.controllers.appearanceController.applyCurrentShaderPreset();
 
   wirePlaygroundControls({
     restty,

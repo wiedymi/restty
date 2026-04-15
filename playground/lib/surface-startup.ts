@@ -1,5 +1,4 @@
 import type { Restty } from "../../src/index.ts";
-import type { createPaneAppearanceController } from "./appearance-controller.ts";
 import type { createPaneShellSync } from "./pane-shell-sync.ts";
 import type { PaneState } from "./pane-state.ts";
 
@@ -10,7 +9,6 @@ type CreatePlaygroundSurfaceStartupOptions = {
   paneStates: Map<number, PaneState>;
   setActivePaneId: (id: number | null) => void;
   paneShellSync: ReturnType<typeof createPaneShellSync>;
-  appearanceController: ReturnType<typeof createPaneAppearanceController>;
 };
 
 export function createPlaygroundSurfaceStartup({
@@ -18,7 +16,6 @@ export function createPlaygroundSurfaceStartup({
   paneStates,
   setActivePaneId,
   paneShellSync,
-  appearanceController,
 }: CreatePlaygroundSurfaceStartupOptions) {
   let resizeRaf = 0;
   let resizeAllPanes: ((force?: boolean) => void) | null = null;
@@ -37,7 +34,6 @@ export function createPlaygroundSurfaceStartup({
         pane.updateSize(force);
       });
     };
-    appearanceController.applyCurrentShaderPreset();
 
     target.addEventListener("resize", () => {
       queueResizeAllPanes();

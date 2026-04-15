@@ -67,7 +67,6 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
   const syncCalls: string[] = [];
   const lifecycleCalls: string[] = [];
   const demoStops: number[] = [];
-  const shaderCalls: string[] = [];
   const transportCalls: string[] = [];
   let capturedConfig: ResttyConfig | null = null;
   let createdWithFocus = false;
@@ -80,9 +79,7 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
     getFontHinting: () => false,
     getFontHintTarget: () => "auto" as const,
     getFontSources: () => [],
-    applyCurrentShaderPreset: () => {
-      shaderCalls.push("apply");
-    },
+    applyCurrentShaderPreset: () => {},
   };
 
   const connectionController = {
@@ -175,7 +172,6 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
   expect(capturedConfig?.surface?.autoInit).toBe(false);
   expect(createdWithFocus).toBe(true);
   expect(activePaneId).toBe(1);
-  expect(shaderCalls).toEqual(["apply"]);
   expect(transportCalls).toEqual(["ws://localhost:8787/pty"]);
   expect(paneStates.get(1)).toMatchObject({
     id: 1,

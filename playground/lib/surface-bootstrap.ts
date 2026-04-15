@@ -24,7 +24,6 @@ export function bootstrapPlaygroundSurface({
     paneStates: assembly.state.paneStates,
     setActivePaneId: assembly.state.setActivePaneId,
     paneShellSync: assembly.shell.paneShellSync,
-    appearanceController: assembly.controllers.appearanceController,
   });
 
   let restty!: Restty;
