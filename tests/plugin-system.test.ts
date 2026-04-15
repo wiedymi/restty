@@ -9,6 +9,38 @@ type FakePane = {
   paused: boolean;
   setPaused: (value: boolean) => void;
   runtime: ResttyRuntime;
+  setRenderer: (value: "auto" | "webgpu" | "webgl2") => void;
+  setFontSize: (value: number) => void;
+  setLigatures: (value: boolean) => void;
+  setFontHinting: (value: boolean) => void;
+  setFontHintTarget: (value: string) => void;
+  setFontSources: (sources: unknown[]) => Promise<void>;
+  applyTheme: (theme: unknown, sourceLabel?: string) => void;
+  resetTheme: () => void;
+  sendInput: (text: string, source?: string) => void;
+  sendKeyInput: (text: string, source?: string) => void;
+  copySelectionToClipboard: () => Promise<boolean>;
+  pasteFromClipboard: () => Promise<boolean>;
+  clearScreen: () => void;
+  connectPty: (url?: string) => void;
+  disconnectPty: () => void;
+  isPtyConnected: () => boolean;
+  togglePause: () => void;
+  setMouseMode: (value: string) => void;
+  getMouseStatus: () => { mode: string; active: boolean; detail: string; enabled: boolean };
+  selectWordAtClientPoint: (clientX: number, clientY: number) => boolean;
+  setSearchQuery: (query: string) => void;
+  clearSearch: () => void;
+  searchNext: () => void;
+  searchPrevious: () => void;
+  getSearchState: () => ResttySearchState;
+  resize: (cols: number, rows: number) => void;
+  focus: () => void;
+  blur: () => void;
+  updateSize: (force?: boolean) => void;
+  getBackend: () => string;
+  setShaderStages: (stages: Array<Record<string, unknown>>) => void;
+  getShaderStages: () => Array<Record<string, unknown>>;
   __writes: Array<{ kind: "input" | "key"; text: string; source: string }>;
   __callbacks: {
     onDesktopNotification?: (notification: {
@@ -199,6 +231,38 @@ function createFakeManager(options: any): FakeManager {
         pane.paused = value;
       },
       runtime,
+      setRenderer: runtime.terminal.setRenderer,
+      setFontSize: runtime.terminal.setFontSize,
+      setLigatures: runtime.terminal.setLigatures,
+      setFontHinting: runtime.terminal.setFontHinting,
+      setFontHintTarget: runtime.terminal.setFontHintTarget,
+      setFontSources: runtime.terminal.setFontSources,
+      applyTheme: runtime.terminal.applyTheme,
+      resetTheme: runtime.terminal.resetTheme,
+      sendInput: runtime.io.sendInput,
+      sendKeyInput: runtime.io.sendKeyInput,
+      copySelectionToClipboard: runtime.interaction.copySelectionToClipboard,
+      pasteFromClipboard: runtime.interaction.pasteFromClipboard,
+      clearScreen: runtime.terminal.clearScreen,
+      connectPty: runtime.io.connectPty,
+      disconnectPty: runtime.io.disconnectPty,
+      isPtyConnected: runtime.io.isPtyConnected,
+      togglePause: runtime.terminal.togglePause,
+      setMouseMode: runtime.interaction.setMouseMode,
+      getMouseStatus: runtime.interaction.getMouseStatus,
+      selectWordAtClientPoint: runtime.interaction.selectWordAtClientPoint,
+      setSearchQuery: runtime.search.setQuery,
+      clearSearch: runtime.search.clear,
+      searchNext: runtime.search.next,
+      searchPrevious: runtime.search.previous,
+      getSearchState: runtime.search.getState,
+      resize: runtime.interaction.resize,
+      focus: runtime.interaction.focus,
+      blur: runtime.interaction.blur,
+      updateSize: runtime.interaction.updateSize,
+      getBackend: runtime.render.getBackend,
+      setShaderStages: runtime.render.setShaderStages,
+      getShaderStages: runtime.render.getShaderStages,
       __writes: writes,
       __callbacks: {
         onDesktopNotification: services.callbacks?.onDesktopNotification,
