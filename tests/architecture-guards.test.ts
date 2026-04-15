@@ -671,6 +671,11 @@ test("surface active pane api derives from pane handle contract", () => {
 
 test("surface pane handle derives pane api types from runtime contracts", () => {
   const paneHandle = readFileSync(resolve(surfaceRoot, "restty/pane-handle.ts"), "utf8");
+  const managedPaneCreate = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-create.ts"),
+    "utf8",
+  );
+  const paneTypes = readFileSync(resolve(surfaceRoot, "panes/types.ts"), "utf8");
 
   expect(paneHandle).toContain('from "../../runtime/core/api"');
   expect(paneHandle).toContain('setRenderer: ResttyRuntimeTerminalApi["setRenderer"]');
@@ -681,30 +686,129 @@ test("surface pane handle derives pane api types from runtime contracts", () => 
   expect(paneHandle).not.toContain("../../theme");
   expect(paneHandle).not.toContain("../../input");
   expect(paneHandle).not.toContain("../../runtime/core/models");
+  expect(paneTypes).toContain('setRenderer: ResttyRuntimeTerminalApi["setRenderer"]');
+  expect(paneTypes).toContain('setPaused: ResttyRuntimeTerminalApi["setPaused"]');
+  expect(paneTypes).toContain('sendInput: ResttyRuntimeIoApi["sendInput"]');
+  expect(paneTypes).toContain('setMouseMode: ResttyRuntimeInteractionApi["setMouseMode"]');
+  expect(paneTypes).toContain('getBackend: ResttyRuntimeRenderApi["getBackend"]');
+  expect(paneTypes).toContain('setShaderStages: ResttyRuntimeRenderApi["setShaderStages"]');
+  expect(managedPaneCreate).toContain(
+    "setRenderer: (value) => runtime.terminal.setRenderer(value)",
+  );
+  expect(managedPaneCreate).toContain("setPaused: (value) => runtime.terminal.setPaused(value)");
+  expect(managedPaneCreate).toContain(
+    "setFontSize: (value) => runtime.terminal.setFontSize(value)",
+  );
+  expect(managedPaneCreate).toContain(
+    "setLigatures: (value) => runtime.terminal.setLigatures(value)",
+  );
+  expect(managedPaneCreate).toContain(
+    "setFontHinting: (value) => runtime.terminal.setFontHinting(value)",
+  );
+  expect(managedPaneCreate).toContain(
+    "setFontHintTarget: (value) => runtime.terminal.setFontHintTarget(value)",
+  );
+  expect(managedPaneCreate).toContain(
+    "setFontSources: (sources) => runtime.terminal.setFontSources(sources)",
+  );
+  expect(managedPaneCreate).toContain(
+    "applyTheme: (theme, sourceLabel) => runtime.terminal.applyTheme(theme, sourceLabel)",
+  );
+  expect(managedPaneCreate).toContain("resetTheme: () => runtime.terminal.resetTheme()");
+  expect(managedPaneCreate).toContain(
+    "sendInput: (text, source) => runtime.io.sendInput(text, source)",
+  );
+  expect(managedPaneCreate).toContain(
+    "sendKeyInput: (text, source) => runtime.io.sendKeyInput(text, source)",
+  );
+  expect(managedPaneCreate).toContain(
+    "setMouseMode: (value) => runtime.interaction.setMouseMode(value)",
+  );
+  expect(managedPaneCreate).toContain("getMouseStatus: () => runtime.interaction.getMouseStatus()");
+  expect(managedPaneCreate).toContain(
+    "runtime.interaction.selectWordAtClientPoint(clientX, clientY)",
+  );
+  expect(managedPaneCreate).toContain(
+    "resize: (cols, rows) => runtime.interaction.resize(cols, rows)",
+  );
+  expect(managedPaneCreate).toContain("focus: () => runtime.interaction.focus()");
+  expect(managedPaneCreate).toContain("blur: () => runtime.interaction.blur()");
+  expect(managedPaneCreate).toContain(
+    "updateSize: (force) => runtime.interaction.updateSize(force)",
+  );
+  expect(managedPaneCreate).toContain("getBackend: () => runtime.render.getBackend()");
+  expect(managedPaneCreate).toContain(
+    "setShaderStages: (stages) => runtime.render.setShaderStages(stages)",
+  );
+  expect(managedPaneCreate).toContain("getShaderStages: () => runtime.render.getShaderStages()");
+  expect(paneHandle).toContain("this.resolvePane().setRenderer(value)");
+  expect(paneHandle).toContain("this.resolvePane().setPaused(value)");
+  expect(paneHandle).toContain("this.resolvePane().setFontSize(value)");
+  expect(paneHandle).toContain("this.resolvePane().setLigatures(value)");
+  expect(paneHandle).toContain("this.resolvePane().setFontHinting(value)");
+  expect(paneHandle).toContain("this.resolvePane().setFontHintTarget(value)");
+  expect(paneHandle).toContain("return this.resolvePane().setFontSources(sources)");
+  expect(paneHandle).toContain("this.resolvePane().applyTheme(theme, sourceLabel)");
+  expect(paneHandle).toContain("this.resolvePane().resetTheme()");
+  expect(paneHandle).toContain("this.resolvePane().sendInput(text, source)");
+  expect(paneHandle).toContain("this.resolvePane().sendKeyInput(text, source)");
   expect(paneHandle).toContain("this.resolvePane().togglePause()");
   expect(paneHandle).toContain("this.resolvePane().clearScreen()");
   expect(paneHandle).toContain("this.resolvePane().connectPty(url)");
   expect(paneHandle).toContain("this.resolvePane().disconnectPty()");
   expect(paneHandle).toContain("return this.resolvePane().isPtyConnected()");
+  expect(paneHandle).toContain("this.resolvePane().setMouseMode(value)");
+  expect(paneHandle).toContain("return this.resolvePane().getMouseStatus()");
   expect(paneHandle).toContain("return this.resolvePane().copySelectionToClipboard()");
   expect(paneHandle).toContain("return this.resolvePane().pasteFromClipboard()");
+  expect(paneHandle).toContain(
+    "return this.resolvePane().selectWordAtClientPoint(clientX, clientY)",
+  );
   expect(paneHandle).toContain("this.resolvePane().setSearchQuery(query)");
   expect(paneHandle).toContain("this.resolvePane().clearSearch()");
   expect(paneHandle).toContain("this.resolvePane().searchNext()");
   expect(paneHandle).toContain("this.resolvePane().searchPrevious()");
   expect(paneHandle).toContain("return this.resolvePane().getSearchState()");
+  expect(paneHandle).toContain("this.resolvePane().resize(cols, rows)");
+  expect(paneHandle).toContain("this.resolvePane().focus()");
+  expect(paneHandle).toContain("this.resolvePane().blur()");
+  expect(paneHandle).toContain("this.resolvePane().updateSize(force)");
+  expect(paneHandle).toContain("return this.resolvePane().getBackend()");
+  expect(paneHandle).toContain("this.resolvePane().setShaderStages(stages)");
+  expect(paneHandle).toContain("return this.resolvePane().getShaderStages()");
+  expect(paneHandle).not.toContain("runtime.terminal.setRenderer(value)");
+  expect(paneHandle).not.toContain("runtime.terminal.setPaused(value)");
+  expect(paneHandle).not.toContain("runtime.terminal.setFontSize(value)");
+  expect(paneHandle).not.toContain("runtime.terminal.setLigatures(value)");
+  expect(paneHandle).not.toContain("runtime.terminal.setFontHinting(value)");
+  expect(paneHandle).not.toContain("runtime.terminal.setFontHintTarget(value)");
+  expect(paneHandle).not.toContain("runtime.terminal.setFontSources(sources)");
+  expect(paneHandle).not.toContain("runtime.terminal.applyTheme(theme, sourceLabel)");
+  expect(paneHandle).not.toContain("runtime.terminal.resetTheme()");
+  expect(paneHandle).not.toContain("runtime.io.sendInput(text, source)");
+  expect(paneHandle).not.toContain("runtime.io.sendKeyInput(text, source)");
   expect(paneHandle).not.toContain("runtime.terminal.togglePause()");
   expect(paneHandle).not.toContain("runtime.terminal.clearScreen()");
   expect(paneHandle).not.toContain("runtime.io.connectPty(url)");
   expect(paneHandle).not.toContain("runtime.io.disconnectPty()");
   expect(paneHandle).not.toContain("runtime.io.isPtyConnected()");
+  expect(paneHandle).not.toContain("runtime.interaction.setMouseMode(value)");
+  expect(paneHandle).not.toContain("runtime.interaction.getMouseStatus()");
   expect(paneHandle).not.toContain("runtime.interaction.copySelectionToClipboard()");
   expect(paneHandle).not.toContain("runtime.interaction.pasteFromClipboard()");
+  expect(paneHandle).not.toContain("runtime.interaction.selectWordAtClientPoint(clientX, clientY)");
   expect(paneHandle).not.toContain("runtime.search.setQuery(query)");
   expect(paneHandle).not.toContain("runtime.search.clear()");
   expect(paneHandle).not.toContain("runtime.search.next()");
   expect(paneHandle).not.toContain("runtime.search.previous()");
   expect(paneHandle).not.toContain("runtime.search.getState()");
+  expect(paneHandle).not.toContain("runtime.interaction.resize(cols, rows)");
+  expect(paneHandle).not.toContain("runtime.interaction.focus()");
+  expect(paneHandle).not.toContain("runtime.interaction.blur()");
+  expect(paneHandle).not.toContain("runtime.interaction.updateSize(force)");
+  expect(paneHandle).not.toContain("runtime.render.getBackend()");
+  expect(paneHandle).not.toContain("runtime.render.setShaderStages(stages)");
+  expect(paneHandle).not.toContain("runtime.render.getShaderStages()");
 });
 
 test("surface restty routes bulk font source updates through pane handles", () => {

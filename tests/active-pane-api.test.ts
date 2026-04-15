@@ -14,20 +14,15 @@ class TestActivePaneApi extends ResttyActivePaneApi {
 }
 
 describe("ResttyPaneHandle", () => {
-  test("delegates font tuning methods to the underlying pane runtime", async () => {
+  test("delegates font tuning methods through the pane contract", async () => {
     const calls: Array<[string, unknown]> = [];
     const fontSources = [{ type: "url" as const, url: "https://example.com/font.woff2" }];
     const pane = {
       id: 1,
-      runtime: {
-        terminal: {
-          setLigatures: (value: boolean) => void calls.push(["setLigatures", value]),
-          setFontHinting: (value: boolean) => void calls.push(["setFontHinting", value]),
-          setFontHintTarget: (value: string) => void calls.push(["setFontHintTarget", value]),
-          setFontSources: async (sources: unknown[]) =>
-            void calls.push(["setFontSources", sources]),
-        },
-      },
+      setLigatures: (value: boolean) => void calls.push(["setLigatures", value]),
+      setFontHinting: (value: boolean) => void calls.push(["setFontHinting", value]),
+      setFontHintTarget: (value: string) => void calls.push(["setFontHintTarget", value]),
+      setFontSources: async (sources: unknown[]) => void calls.push(["setFontSources", sources]),
     } as any;
 
     const handle = new ResttyPaneHandle(() => pane, {
@@ -125,6 +120,93 @@ describe("ResttyPaneHandle", () => {
       ["searchNext", []],
       ["searchPrevious", []],
       ["getSearchState", []],
+    ]);
+  });
+
+  test("delegates terminal, io, interaction, and render methods through the pane contract", async () => {
+    const calls: Array<[string, unknown[]]> = [];
+    const shaderStages = [{ id: "fx/test", shader: { wgsl: "fn resttyStage() {}" } }];
+    const pane = {
+      id: 3,
+      setRenderer: (value: string) => void calls.push(["setRenderer", [value]]),
+      setPaused: (value: boolean) => void calls.push(["setPaused", [value]]),
+      setFontSize: (value: number) => void calls.push(["setFontSize", [value]]),
+      applyTheme: (theme: unknown, sourceLabel?: string) =>
+        void calls.push(["applyTheme", [theme, sourceLabel]]),
+      resetTheme: () => void calls.push(["resetTheme", []]),
+      sendInput: (text: string, source?: string) => void calls.push(["sendInput", [text, source]]),
+      sendKeyInput: (text: string, source?: string) =>
+        void calls.push(["sendKeyInput", [text, source]]),
+      setMouseMode: (value: string) => void calls.push(["setMouseMode", [value]]),
+      getMouseStatus: () => {
+        calls.push(["getMouseStatus", []]);
+        return { mode: "drag" };
+      },
+      selectWordAtClientPoint: (x: number, y: number) => {
+        calls.push(["selectWordAtClientPoint", [x, y]]);
+        return true;
+      },
+      resize: (cols: number, rows: number) => void calls.push(["resize", [cols, rows]]),
+      focus: () => void calls.push(["focus", []]),
+      blur: () => void calls.push(["blur", []]),
+      updateSize: (force?: boolean) => void calls.push(["updateSize", [force]]),
+      getBackend: () => {
+        calls.push(["getBackend", []]);
+        return "webgpu";
+      },
+      setShaderStages: (stages: unknown[]) => void calls.push(["setShaderStages", [stages]]),
+      getShaderStages: () => {
+        calls.push(["getShaderStages", []]);
+        return shaderStages;
+      },
+    } as any;
+
+    const handle = new ResttyPaneHandle(() => pane, {
+      open: () => undefined,
+      close: () => undefined,
+      toggle: () => undefined,
+      isOpen: () => false,
+      getStyleOptions: () => ({}),
+      setStyleOptions: () => undefined,
+    });
+
+    const theme = { background: "#000" };
+    handle.setRenderer("webgpu");
+    handle.setPaused(true);
+    handle.setFontSize(18);
+    handle.applyTheme(theme as never, "builtin");
+    handle.resetTheme();
+    handle.sendInput("ls\n", "test");
+    handle.sendKeyInput("\u0003", "test");
+    handle.setMouseMode("drag" as never);
+    expect(handle.getMouseStatus()).toEqual({ mode: "drag" });
+    expect(handle.selectWordAtClientPoint(10, 12)).toBe(true);
+    handle.resize(80, 24);
+    handle.focus();
+    handle.blur();
+    handle.updateSize(true);
+    expect(handle.getBackend()).toBe("webgpu");
+    handle.setShaderStages(shaderStages as never);
+    expect(handle.getShaderStages()).toEqual(shaderStages);
+
+    expect(calls).toEqual([
+      ["setRenderer", ["webgpu"]],
+      ["setPaused", [true]],
+      ["setFontSize", [18]],
+      ["applyTheme", [theme, "builtin"]],
+      ["resetTheme", []],
+      ["sendInput", ["ls\n", "test"]],
+      ["sendKeyInput", ["\u0003", "test"]],
+      ["setMouseMode", ["drag"]],
+      ["getMouseStatus", []],
+      ["selectWordAtClientPoint", [10, 12]],
+      ["resize", [80, 24]],
+      ["focus", []],
+      ["blur", []],
+      ["updateSize", [true]],
+      ["getBackend", []],
+      ["setShaderStages", [shaderStages]],
+      ["getShaderStages", []],
     ]);
   });
 });

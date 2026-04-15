@@ -1,4 +1,11 @@
-import type { ResttyRuntime, ResttyRuntimeSearchApi } from "../runtime/core/api";
+import type {
+  ResttyRuntime,
+  ResttyRuntimeInteractionApi,
+  ResttyRuntimeIoApi,
+  ResttyRuntimeRenderApi,
+  ResttyRuntimeSearchApi,
+  ResttyRuntimeTerminalApi,
+} from "../runtime/core/api";
 
 /**
  * Direction for splitting a pane.
@@ -173,6 +180,17 @@ export type ResttyPaneWithRuntime = ResttyPaneDefinition & {
 };
 
 export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {
+  setRenderer: ResttyRuntimeTerminalApi["setRenderer"];
+  setPaused: ResttyRuntimeTerminalApi["setPaused"];
+  setFontSize: ResttyRuntimeTerminalApi["setFontSize"];
+  setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
+  setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
+  setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
+  setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
+  applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
+  resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
+  sendInput: ResttyRuntimeIoApi["sendInput"];
+  sendKeyInput: ResttyRuntimeIoApi["sendKeyInput"];
   copySelectionToClipboard: () => Promise<boolean>;
   pasteFromClipboard: () => Promise<boolean>;
   clearScreen: () => void;
@@ -180,11 +198,21 @@ export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {
   disconnectPty: () => void;
   isPtyConnected: () => boolean;
   togglePause: () => void;
+  setMouseMode: ResttyRuntimeInteractionApi["setMouseMode"];
+  getMouseStatus: ResttyRuntimeInteractionApi["getMouseStatus"];
+  selectWordAtClientPoint: ResttyRuntimeInteractionApi["selectWordAtClientPoint"];
   setSearchQuery: ResttyRuntimeSearchApi["setQuery"];
   clearSearch: ResttyRuntimeSearchApi["clear"];
   searchNext: ResttyRuntimeSearchApi["next"];
   searchPrevious: ResttyRuntimeSearchApi["previous"];
   getSearchState: ResttyRuntimeSearchApi["getState"];
+  resize: ResttyRuntimeInteractionApi["resize"];
+  focus: ResttyRuntimeInteractionApi["focus"];
+  blur: ResttyRuntimeInteractionApi["blur"];
+  updateSize: ResttyRuntimeInteractionApi["updateSize"];
+  getBackend: ResttyRuntimeRenderApi["getBackend"];
+  setShaderStages: ResttyRuntimeRenderApi["setShaderStages"];
+  getShaderStages: ResttyRuntimeRenderApi["getShaderStages"];
 };
 
 export type ResttyPaneWithManagedRuntime = ResttyPaneWithRuntimeActions & {

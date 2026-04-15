@@ -88,11 +88,11 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setRenderer(value: "auto" | "webgpu" | "webgl2"): void {
-    this.resolvePane().runtime.terminal.setRenderer(value);
+    this.resolvePane().setRenderer(value);
   }
 
   setPaused(value: boolean): void {
-    this.resolvePane().runtime.terminal.setPaused(value);
+    this.resolvePane().setPaused(value);
   }
 
   togglePause(): void {
@@ -100,39 +100,39 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setFontSize(value: number): void {
-    this.resolvePane().runtime.terminal.setFontSize(value);
+    this.resolvePane().setFontSize(value);
   }
 
   setLigatures(value: boolean): void {
-    this.resolvePane().runtime.terminal.setLigatures(value);
+    this.resolvePane().setLigatures(value);
   }
 
   setFontHinting(value: boolean): void {
-    this.resolvePane().runtime.terminal.setFontHinting(value);
+    this.resolvePane().setFontHinting(value);
   }
 
   setFontHintTarget(value: ResttyFontHintTarget): void {
-    this.resolvePane().runtime.terminal.setFontHintTarget(value);
+    this.resolvePane().setFontHintTarget(value);
   }
 
   setFontSources(sources: ResttyFontSource[]): Promise<void> {
-    return this.resolvePane().runtime.terminal.setFontSources(sources);
+    return this.resolvePane().setFontSources(sources);
   }
 
   applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {
-    this.resolvePane().runtime.terminal.applyTheme(theme, sourceLabel);
+    this.resolvePane().applyTheme(theme, sourceLabel);
   }
 
   resetTheme(): void {
-    this.resolvePane().runtime.terminal.resetTheme();
+    this.resolvePane().resetTheme();
   }
 
   sendInput(text: string, source?: string): void {
-    this.resolvePane().runtime.io.sendInput(text, source);
+    this.resolvePane().sendInput(text, source);
   }
 
   sendKeyInput(text: string, source?: string): void {
-    this.resolvePane().runtime.io.sendKeyInput(text, source);
+    this.resolvePane().sendKeyInput(text, source);
   }
 
   clearScreen(): void {
@@ -152,11 +152,11 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setMouseMode(value: MouseMode): void {
-    this.resolvePane().runtime.interaction.setMouseMode(value);
+    this.resolvePane().setMouseMode(value);
   }
 
   getMouseStatus(): ReturnType<InputHandler["getMouseStatus"]> {
-    return this.resolvePane().runtime.interaction.getMouseStatus();
+    return this.resolvePane().getMouseStatus();
   }
 
   copySelectionToClipboard(): Promise<boolean> {
@@ -168,7 +168,7 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   selectWordAtClientPoint(clientX: number, clientY: number): boolean {
-    return this.resolvePane().runtime.interaction.selectWordAtClientPoint(clientX, clientY);
+    return this.resolvePane().selectWordAtClientPoint(clientX, clientY);
   }
 
   setSearchQuery(query: string): void {
@@ -208,23 +208,23 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   resize(cols: number, rows: number): void {
-    this.resolvePane().runtime.interaction.resize(cols, rows);
+    this.resolvePane().resize(cols, rows);
   }
 
   focus(): void {
-    this.resolvePane().runtime.interaction.focus();
+    this.resolvePane().focus();
   }
 
   blur(): void {
-    this.resolvePane().runtime.interaction.blur();
+    this.resolvePane().blur();
   }
 
   updateSize(force?: boolean): void {
-    this.resolvePane().runtime.interaction.updateSize(force);
+    this.resolvePane().updateSize(force);
   }
 
   getBackend(): string {
-    return this.resolvePane().runtime.render.getBackend();
+    return this.resolvePane().getBackend();
   }
 
   getSearchUiStyleOptions(): Readonly<Required<ResttyManagedPaneSearchUiStyleOptions>> {
@@ -236,10 +236,10 @@ export class ResttyPaneHandle implements ResttyPaneApi {
   }
 
   setShaderStages(stages: ResttyShaderStage[]): void {
-    this.resolvePane().runtime.render.setShaderStages(stages);
+    this.resolvePane().setShaderStages(stages);
   }
 
   getShaderStages(): ResttyShaderStage[] {
-    return this.resolvePane().runtime.render.getShaderStages();
+    return this.resolvePane().getShaderStages();
   }
 }
