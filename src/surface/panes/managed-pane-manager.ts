@@ -65,7 +65,7 @@ export function createResttyManagedPaneManager(
     },
     destroyPane: (pane) => {
       searchUiController.unregisterPane(pane.id);
-      pane.runtime.lifecycle.destroy();
+      pane.destroyRuntime();
     },
     onPaneCreated: options.onPaneCreated,
     onPaneClosed: options.onPaneClosed,

@@ -32,6 +32,8 @@ export function createManagedPane(options: CreateManagedPaneOptions): ResttyMana
     disconnectPty: () => runtime.io.disconnectPty(),
     isPtyConnected: () => runtime.io.isPtyConnected(),
     togglePause: () => runtime.terminal.togglePause(),
+    initRuntime: () => runtime.lifecycle.init(),
+    destroyRuntime: () => runtime.lifecycle.destroy(),
     setSearchQuery: (query) => runtime.search.setQuery(query),
     clearSearch: () => runtime.search.clear(),
     searchNext: () => runtime.search.next(),

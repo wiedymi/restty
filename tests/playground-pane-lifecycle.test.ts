@@ -30,12 +30,8 @@ function createPane(id = 1) {
         calls.push("focus");
       },
     },
-    runtime: {
-      lifecycle: {
-        init: async () => {
-          calls.push("init");
-        },
-      },
+    initRuntime: async () => {
+      calls.push("init");
     },
   };
   const handle = {

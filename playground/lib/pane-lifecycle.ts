@@ -10,11 +10,7 @@ export type PaneLifecyclePane = {
   canvas: {
     focus: (options?: FocusOptions) => void;
   };
-  runtime: {
-    lifecycle: {
-      init: () => Promise<void>;
-    };
-  };
+  initRuntime: () => Promise<void>;
 };
 
 type PaneLifecyclePaneHandle = Pick<
@@ -103,7 +99,7 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
   async function initPane(pane: PaneLifecyclePane, state: PaneState) {
     const paneHandle = options.getPaneHandleById(pane.id);
     if (!paneHandle) return;
-    await pane.runtime.lifecycle.init();
+    await pane.initRuntime();
     options.setPaneState(
       pane.id,
       applySavedThemeForPane({

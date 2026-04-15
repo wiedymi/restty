@@ -749,6 +749,8 @@ test("default context menu routes pane actions through managed pane methods", ()
   expect(managedPaneCreate).toContain("disconnectPty: () => runtime.io.disconnectPty()");
   expect(managedPaneCreate).toContain("isPtyConnected: () => runtime.io.isPtyConnected()");
   expect(managedPaneCreate).toContain("togglePause: () => runtime.terminal.togglePause()");
+  expect(managedPaneCreate).toContain("initRuntime: () => runtime.lifecycle.init()");
+  expect(managedPaneCreate).toContain("destroyRuntime: () => runtime.lifecycle.destroy()");
 });
 
 test("surface search ui routes pane search through pane methods", () => {
@@ -1268,11 +1270,36 @@ test("playground pane lifecycle routes terminal and pty controls through pane ha
   expect(paneLifecycle).not.toContain("pane.runtime.io.connectPty(");
   expect(paneLifecycle).not.toContain("pane.runtime.io.disconnectPty()");
   expect(paneLifecycle).not.toContain("pane.runtime.io.isPtyConnected()");
-  expect(paneLifecycle).toContain("await pane.runtime.lifecycle.init()");
+  expect(paneLifecycle).toContain("await pane.initRuntime()");
+  expect(paneLifecycle).not.toContain("await pane.runtime.lifecycle.init()");
   expect(paneLifecycle).toContain("pane.canvas.focus({ preventScroll: true })");
 
+  expect(sessionControllers).toContain(
+    "getPaneById: (id) => getRestty().getPaneById(id) as PaneLifecyclePane | null",
+  );
   expect(sessionControllers).toContain("getPaneHandleById: (id) => getRestty().pane(id)");
+  expect(sessionControllers).toContain(
+    "getActivePane: () => getActivePane() as PaneLifecyclePane | null",
+  );
   expect(sessionControllers).toContain("getActivePaneHandle: () => getRestty().activePane()");
+});
+
+test("managed pane lifecycle is routed through internal pane methods", () => {
+  const managedPaneManager = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-manager.ts"),
+    "utf8",
+  );
+  const surfaceBootstrapEvents = readFileSync(
+    resolve(playgroundRoot, "lib/surface-bootstrap-events.ts"),
+    "utf8",
+  );
+
+  expect(managedPaneManager).toContain("pane.destroyRuntime()");
+  expect(managedPaneManager).not.toContain("pane.runtime.lifecycle.destroy()");
+
+  expect(surfaceBootstrapEvents).toContain(
+    "void paneLifecycle.initPane(pane as PaneLifecyclePane, state)",
+  );
 });
 
 test("playground shell reflection accepts pane handles instead of raw runtime bags", () => {
