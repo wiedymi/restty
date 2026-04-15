@@ -155,11 +155,10 @@ export class Restty extends ResttyActivePaneApi {
 
   async setFontSources(sources: ResttyFontSource[]): Promise<void> {
     this.fontSources = sources.length ? [...sources] : undefined;
-    const panes = this.getPanes();
-    const updates: Array<Promise<void>> = new Array(panes.length);
-    for (let i = 0; i < panes.length; i += 1) {
-      updates[i] = panes[i].runtime.terminal.setFontSources(this.fontSources ?? []);
-    }
+    const updates: Array<Promise<void>> = [];
+    this.forEachPane((pane) => {
+      updates.push(pane.setFontSources(this.fontSources ?? []));
+    });
     await Promise.all(updates);
   }
 

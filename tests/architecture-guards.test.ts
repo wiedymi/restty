@@ -663,6 +663,14 @@ test("surface pane handle derives pane api types from runtime contracts", () => 
   expect(paneHandle).not.toContain("../../runtime/core/models");
 });
 
+test("surface restty routes bulk font source updates through pane handles", () => {
+  const restty = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
+
+  expect(restty).toContain("this.forEachPane((pane) => {");
+  expect(restty).toContain("updates.push(pane.setFontSources(this.fontSources ?? []))");
+  expect(restty).not.toContain("runtime.terminal.setFontSources(this.fontSources ?? [])");
+});
+
 test("surface pane ops split handle, command, and style helpers", () => {
   const paneOps = readFileSync(resolve(surfaceRoot, "restty/pane-ops.ts"), "utf8");
   const paneHandleOps = readFileSync(resolve(surfaceRoot, "restty/pane-handle-ops.ts"), "utf8");
@@ -761,7 +769,9 @@ test("playground app bootstrap delegates restty construction to the surface boot
   expect(orchestrator).toContain("state: {");
   expect(orchestrator).toContain("shell: {");
   expect(orchestrator).toContain("controllers: {");
-  expect(orchestrator).toContain("session.controllers.appearanceController.applyCurrentShaderPreset()");
+  expect(orchestrator).toContain(
+    "session.controllers.appearanceController.applyCurrentShaderPreset()",
+  );
 });
 
 test("playground surface bootstrap delegates startup lifecycle", () => {
