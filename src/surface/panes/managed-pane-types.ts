@@ -103,7 +103,7 @@ export type CreateResttyManagedPaneManagerOptions = {
   services?: ResttyRuntimeServicesConfigInput;
   /** Override default CSS class names for pane DOM elements. */
   paneDom?: ResttyPaneDomDefaults;
-  /** Automatically call app.init() after pane creation (default true). */
+  /** Automatically call runtime.lifecycle.init() after pane creation (default true). */
   autoInit?: boolean;
   /** Minimum pane size in pixels during split-resize (default 96). */
   minPaneSize?: number;

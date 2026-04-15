@@ -510,6 +510,26 @@ test("surface public config and events do not expose ResttyManagedPane", () => {
   expect(surfaceRestty).not.toContain("getFocusedPane(): ResttyManagedPane | null");
 });
 
+test("surface managed pane runtime uses runtime terminology instead of app wording", () => {
+  const surfaceConfig = readFileSync(resolve(surfaceRoot, "restty/config.ts"), "utf8");
+  const managedPaneTypes = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-types.ts"),
+    "utf8",
+  );
+  const managedPaneRuntime = readFileSync(
+    resolve(surfaceRoot, "panes/managed-pane-runtime.ts"),
+    "utf8",
+  );
+
+  expect(surfaceConfig).toContain("runtime.lifecycle.init()");
+  expect(surfaceConfig).not.toContain("app.init()");
+  expect(managedPaneTypes).toContain("runtime.lifecycle.init()");
+  expect(managedPaneTypes).not.toContain("app.init()");
+  expect(managedPaneRuntime).toContain("const runtime = createResttyRuntime");
+  expect(managedPaneRuntime).toContain("void runtime.lifecycle.init()");
+  expect(managedPaneRuntime).not.toContain("const app = createResttyRuntime");
+});
+
 test("surface plugin runtime and dispatcher contracts are split from implementation", () => {
   const pluginRuntime = readFileSync(resolve(surfaceRoot, "plugins/runtime.ts"), "utf8");
   const pluginDispatcher = readFileSync(resolve(surfaceRoot, "plugins/dispatcher.ts"), "utf8");

@@ -5,11 +5,11 @@ import type { CreateManagedPaneRuntimeOptions } from "./managed-pane-runtime.typ
 
 export function createManagedPaneRuntime(options: CreateManagedPaneRuntimeOptions): ResttyRuntime {
   const { autoInit } = options;
-  const app = createResttyRuntime(createManagedPaneRuntimeConfig(options));
+  const runtime = createResttyRuntime(createManagedPaneRuntimeConfig(options));
 
   if (autoInit) {
-    void app.lifecycle.init();
+    void runtime.lifecycle.init();
   }
 
-  return app;
+  return runtime;
 }
