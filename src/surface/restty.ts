@@ -94,8 +94,10 @@ export class Restty extends ResttyActivePaneApi {
     this.fontSources = undefined;
     const { shaderOps, controller, paneManager, createInitialPane } = bootstrapResttySurface({
       restty: this,
-      getPanes: () => this.paneManager.getPanes(),
-      getPaneById: (id) => this.paneManager.getPaneById(id),
+      forEachPane: (visitor) => {
+        this.forEachPane(visitor);
+      },
+      getPaneHandleById: (id) => this.pane(id),
       getFontSources: () => this.fontSources,
       options,
     });

@@ -1,7 +1,7 @@
-import type { ResttyManagedPane } from "../panes/managed-pane-types";
 import type { ResttyRenderStageHandle } from "../plugins/context.types";
 import type { ResttyShaderStage } from "../../runtime/core/models";
 import type { ResttyManagedShaderStage } from "../plugins/runtime.types";
+import type { ResttyPaneApi } from "./pane-handle";
 import {
   cloneShaderStages,
   normalizeShaderStage,
@@ -9,9 +9,11 @@ import {
   sortShaderStages,
 } from "../../runtime/shader-stages";
 
+type ShaderStagePane = Pick<ResttyPaneApi, "id" | "setShaderStages">;
+
 type ResttyShaderOpsDeps = {
-  getPanes: () => ResttyManagedPane[];
-  getPaneById: (id: number) => ResttyManagedPane | null;
+  forEachPane: (visitor: (pane: ShaderStagePane) => void) => void;
+  getPaneHandleById: (id: number) => ShaderStagePane | null;
 };
 
 export class ResttyShaderOps {
@@ -153,17 +155,19 @@ export class ResttyShaderOps {
   }
 
   syncPaneShaderStages(paneId?: number): void {
-    const panes: ResttyManagedPane[] = [];
+    const panes: ShaderStagePane[] = [];
     if (paneId === undefined) {
-      panes.push(...this.deps.getPanes());
+      this.deps.forEachPane((pane) => {
+        panes.push(pane);
+      });
     } else {
-      const pane = this.deps.getPaneById(paneId);
+      const pane = this.deps.getPaneHandleById(paneId);
       if (pane) panes.push(pane);
     }
     for (let i = 0; i < panes.length; i += 1) {
       const pane = panes[i];
       const base = this.paneBaseShaderStages.get(pane.id) ?? [];
-      pane.runtime.render.setShaderStages(this.buildMergedShaderStages(base));
+      pane.setShaderStages(this.buildMergedShaderStages(base));
     }
   }
 

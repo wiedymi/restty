@@ -691,6 +691,23 @@ test("surface restty routes bulk font source updates through pane handles", () =
   expect(restty).not.toContain("runtime.terminal.setFontSources(this.fontSources ?? [])");
 });
 
+test("surface shader ops route bulk shader updates through pane handles", () => {
+  const restty = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
+  const shaderOps = readFileSync(resolve(surfaceRoot, "restty/shader-ops.ts"), "utf8");
+
+  expect(restty).toContain("forEachPane: (visitor) => {");
+  expect(restty).toContain("this.forEachPane(visitor);");
+  expect(restty).toContain("getPaneHandleById: (id) => this.pane(id)");
+
+  expect(shaderOps).toContain(
+    'type ShaderStagePane = Pick<ResttyPaneApi, "id" | "setShaderStages">;',
+  );
+  expect(shaderOps).toContain("this.deps.forEachPane((pane) => {");
+  expect(shaderOps).toContain("const pane = this.deps.getPaneHandleById(paneId)");
+  expect(shaderOps).toContain("pane.setShaderStages(this.buildMergedShaderStages(base))");
+  expect(shaderOps).not.toContain("pane.runtime.render.setShaderStages");
+});
+
 test("default context menu routes pane actions through managed pane methods", () => {
   const defaultContextMenu = readFileSync(
     resolve(surfaceRoot, "panes/default-context-menu-items.ts"),

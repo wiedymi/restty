@@ -1,5 +1,4 @@
 import type { ResttyFontSource } from "../../runtime/core/models";
-import type { ResttyManagedPane } from "../panes/managed-pane-types";
 import { createResttyPaneManagerAssembly } from "./pane-manager-assembly";
 import {
   createResttyPluginSurfaceBridge,
@@ -7,12 +6,13 @@ import {
 } from "./plugin-surface";
 import { ResttyController } from "./controller";
 import type { ResttyConfig } from "./config";
+import type { ResttyPaneApi } from "./pane-handle";
 import { ResttyShaderOps } from "./shader-ops";
 
 type CreateResttySurfaceAssemblyOptions = {
   restty: ResttyPluginSurfaceBridgeSource;
-  getPanes: () => ResttyManagedPane[];
-  getPaneById: (id: number) => ResttyManagedPane | null;
+  forEachPane: (visitor: (pane: Pick<ResttyPaneApi, "id" | "setShaderStages">) => void) => void;
+  getPaneHandleById: (id: number) => Pick<ResttyPaneApi, "id" | "setShaderStages"> | null;
   getFontSources: () => ResttyFontSource[] | undefined;
   terminal: ResttyConfig["terminal"];
   services: ResttyConfig["services"];
@@ -21,16 +21,16 @@ type CreateResttySurfaceAssemblyOptions = {
 
 export function createResttySurfaceAssembly({
   restty,
-  getPanes,
-  getPaneById,
+  forEachPane,
+  getPaneHandleById,
   getFontSources,
   terminal,
   services,
   events,
 }: CreateResttySurfaceAssemblyOptions) {
   const shaderOps = new ResttyShaderOps({
-    getPanes,
-    getPaneById,
+    forEachPane,
+    getPaneHandleById,
   });
   const controller = new ResttyController({
     restty: createResttyPluginSurfaceBridge(restty),

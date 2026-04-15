@@ -1,7 +1,8 @@
 import type { ResttyFontSource } from "../../runtime/core/models";
 import { createResttyManagedPaneManager } from "../panes/managed-pane-manager";
-import type { ResttyManagedPane, ResttyManagedPaneManager } from "../panes/managed-pane-types";
+import type { ResttyManagedPaneManager } from "../panes/managed-pane-types";
 import type { ResttyConfig } from "./config";
+import type { ResttyPaneApi } from "./pane-handle";
 import type { ResttyPluginSurfaceBridgeSource } from "./plugin-surface";
 import { createResttySurfaceAssembly } from "./assembly";
 import { ResttyController } from "./controller";
@@ -9,16 +10,16 @@ import { ResttyShaderOps } from "./shader-ops";
 
 type BootstrapResttySurfaceOptions = {
   restty: ResttyPluginSurfaceBridgeSource;
-  getPanes: () => ResttyManagedPane[];
-  getPaneById: (id: number) => ResttyManagedPane | null;
+  forEachPane: (visitor: (pane: Pick<ResttyPaneApi, "id" | "setShaderStages">) => void) => void;
+  getPaneHandleById: (id: number) => Pick<ResttyPaneApi, "id" | "setShaderStages"> | null;
   getFontSources: () => ResttyFontSource[] | undefined;
   options: ResttyConfig;
 };
 
 export function bootstrapResttySurface({
   restty,
-  getPanes,
-  getPaneById,
+  forEachPane,
+  getPaneHandleById,
   getFontSources,
   options,
 }: BootstrapResttySurfaceOptions): {
@@ -48,8 +49,8 @@ export function bootstrapResttySurface({
     paneManagerEventHandlers,
   } = createResttySurfaceAssembly({
     restty,
-    getPanes,
-    getPaneById,
+    forEachPane,
+    getPaneHandleById,
     getFontSources,
     terminal,
     services,
