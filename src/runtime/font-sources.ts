@@ -79,6 +79,7 @@ export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
   {
     type: "url",
     url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+    label: "Symbols Nerd Font",
   },
   // Ghostty parity on macOS: prefer system symbols/emoji when available.
   {
@@ -89,10 +90,12 @@ export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
   {
     type: "url",
     url: "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf",
+    label: "Noto Sans Symbols 2",
   },
   {
     type: "url",
     url: "https://cdn.jsdelivr.net/gh/ChiefMikeK/ttf-symbola@master/Symbola.ttf",
+    label: "Symbola",
   },
   {
     type: "local",
@@ -117,14 +120,17 @@ export const DEFAULT_FONT_SOURCES: ResttyFontSource[] = [
   {
     type: "url",
     url: "https://cdn.jsdelivr.net/gh/googlefonts/noto-emoji@main/fonts/NotoColorEmoji.ttf",
+    label: "Noto Color Emoji",
   },
   {
     type: "url",
     url: "https://cdn.jsdelivr.net/gh/hfg-gmuend/openmoji@master/font/OpenMoji-black-glyf/OpenMoji-black-glyf.ttf",
+    label: "OpenMoji",
   },
   {
     type: "url",
     url: "https://cdn.jsdelivr.net/gh/notofonts/noto-cjk@main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf",
+    label: "Noto Sans CJK SC",
   },
 ];
 

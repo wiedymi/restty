@@ -1,12 +1,26 @@
 import type { FontEntry, FontScaleOverride } from "../types";
 
-const SYMBOL_FONT_HINTS = [/symbols nerd font/i, /noto sans symbols/i, /apple symbols/i, /symbola/i];
-const NERD_SYMBOL_FONT_HINTS = [/symbols nerd font/i, /nerd fonts symbols/i];
+const SYMBOL_FONT_HINTS = [
+  /symbols nerd font/i,
+  /symbolsnerd/i,
+  /noto sans symbols/i,
+  /notosanssymbols/i,
+  /apple symbols/i,
+  /symbola/i,
+];
+const NERD_SYMBOL_FONT_HINTS = [
+  /symbols nerd font/i,
+  /symbolsnerd/i,
+  /nerd fonts symbols/i,
+  /nerdfontssymbols/i,
+];
 const COLOR_EMOJI_FONT_HINTS = [
   /apple color emoji/i,
   /noto color emoji/i,
+  /notocoloremoji/i,
   /segoe ui emoji/i,
   /twemoji/i,
+  /openmoji/i,
 ];
 const WIDE_FONT_HINTS = [
   /cjk/i,

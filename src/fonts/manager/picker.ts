@@ -4,8 +4,11 @@ import { isColorEmojiFont, isNerdSymbolFont, isSymbolFont } from "./classificati
 import { fontHasGlyph } from "./entries";
 
 function isLikelyEmojiCodepoint(cp: number): boolean {
-  if (cp >= 0x1f1e6 && cp <= 0x1f1ff) return true;
-  if (cp >= 0x1f300 && cp <= 0x1faff) return true;
+  if (cp >= 0x1f1e6 && cp <= 0x1f1ff) return true; // regional indicators
+  if (cp >= 0x1f300 && cp <= 0x1faff) return true; // misc symbols & pictographs, emoticons, etc.
+  if (cp >= 0x2300 && cp <= 0x23ff) return true; // misc technical (⏱ ⌘ ⏏ etc.)
+  if (cp >= 0x2600 && cp <= 0x27bf) return true; // misc symbols + dingbats (✍ ☀ ✂ ⟳ etc.)
+  if (cp >= 0x2b50 && cp <= 0x2b55) return true; // stars, circles (⭐ ⭕ etc.)
   return false;
 }
 
