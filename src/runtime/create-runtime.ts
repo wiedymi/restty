@@ -1,7 +1,5 @@
 import { createInputHandler, type InputHandler } from "../input";
 import {
-  isNerdSymbolCodepoint,
-  getNerdConstraint,
   isSymbolFont,
   isColorEmojiFont,
   fontMaxCellSpan,
@@ -30,7 +28,6 @@ import {
   isBoxDrawing,
   isBraille,
   isPowerline,
-  isSymbolCp,
   isSpaceCp,
   isGraphicsElement,
   type Color,
@@ -109,7 +106,6 @@ import {
   padAtlasRGBA,
   resolveGlyphPixelMode as resolveGlyphPixelModeFromEntry,
 } from "./create-runtime/atlas-bitmap-utils";
-import { formatCodepoint } from "./create-runtime/format-utils";
 import { createShaderStageRuntime } from "./create-runtime/shader-stage-runtime";
 import { createColorGlyphAtlasHelpers } from "./create-runtime/font-runtime/color-glyph-atlas";
 import { createRuntimeInputHooks } from "./create-runtime/input-hooks";
@@ -623,7 +619,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const {
     shapeClusterWithFont,
     noteColorGlyphText,
-    fontHasGlyph,
     pickFontIndexForText,
     computeCellMetrics,
     updateGrid,

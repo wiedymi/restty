@@ -7,7 +7,6 @@ import type {
   ResttyPlugin,
   ResttyPluginHostApi,
   ResttyRenderHookPayload,
-  ResttyRenderStageHandle,
 } from "../plugins/context.types";
 import type {
   ResttyPluginEvents,

@@ -1,7 +1,6 @@
 import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
 import type {
   ResttyManagedPaneManager,
-  ResttyManagedPane,
   ResttyManagedPaneSearchUiStyleOptions,
   ResttyManagedPaneStyleOptions,
 } from "./panes/managed-pane-types";

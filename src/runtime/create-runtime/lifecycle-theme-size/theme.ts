@@ -3,7 +3,7 @@ import { runtimeTerminalColorFromTheme } from "../highlight-terminal-color-utils
 import type { LifecycleThemeSizeDeps } from "./types";
 
 export function createLifecycleThemeHandlers(deps: LifecycleThemeSizeDeps) {
-  function applyTheme(theme: GhosttyTheme | null | undefined, sourceLabel = "theme") {
+  function applyTheme(theme: GhosttyTheme | null | undefined, _sourceLabel = "theme") {
     if (!theme) return;
 
     if (theme.colors.background) {

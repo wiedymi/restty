@@ -2,7 +2,7 @@ import {
   selectionForRow as selectionRangeForRow,
   getSelectionText as extractSelectionText,
 } from "../../selection";
-import type { CursorInfo, RenderState, ResttyWasm, ResttyWasmExports } from "../../wasm";
+import type { CursorInfo, RenderState } from "../../wasm";
 import type { RuntimeReportingOptions } from "./runtime-reporting.types";
 
 export function createRuntimeReporting(options: RuntimeReportingOptions) {

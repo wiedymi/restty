@@ -5,7 +5,6 @@ import type {
   ResttyPaneStyleOptions,
   ResttyPaneStylesOptions,
   ResttyPaneWithManagedRuntime,
-  ResttyPaneWithRuntimeActions,
 } from "./types";
 import type { ResttyRuntimeServicesConfig, ResttyTerminalConfig } from "../../runtime/core/config";
 import type { ResttyRuntimeSession } from "../../runtime/core/resources";

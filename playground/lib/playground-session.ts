@@ -4,14 +4,8 @@ import {
   createPlaygroundSessionControllers,
   type PlaygroundSessionControllers,
 } from "./playground-session-controllers.ts";
-import {
-  createPlaygroundSessionState,
-  type PlaygroundSessionState,
-} from "./playground-session-state.ts";
-import {
-  createPlaygroundSessionShell,
-  type PlaygroundSessionShell,
-} from "./playground-session-shell.ts";
+import { createPlaygroundSessionState } from "./playground-session-state.ts";
+import { createPlaygroundSessionShell } from "./playground-session-shell.ts";
 import type { PlaygroundAppearanceInitialState } from "./startup-defaults.ts";
 
 type ManagedPane = NonNullable<ReturnType<Restty["getActivePane"]>>;

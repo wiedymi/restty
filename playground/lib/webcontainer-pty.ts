@@ -1,10 +1,4 @@
-import type { WebContainerProcess } from "@webcontainer/api";
-import type {
-  PtyCallbacks,
-  PtyConnectOptions,
-  PtyResizeMeta,
-  PtyTransport,
-} from "../../src/index.ts";
+import type { PtyConnectOptions, PtyResizeMeta, PtyTransport } from "../../src/index.ts";
 import { launchWebContainerCommand, parseWebContainerCommand } from "./webcontainer-launch.ts";
 import { createWebContainerProcessController } from "./webcontainer-process.ts";
 

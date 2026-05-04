@@ -1,5 +1,4 @@
 import type { Restty } from "../../src/index.ts";
-import type { PaneState } from "./pane-state.ts";
 import {
   assemblePlaygroundSurface,
   type CreatePlaygroundSurfaceAssemblyOptions,
