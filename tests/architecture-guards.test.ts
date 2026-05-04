@@ -1105,15 +1105,22 @@ test("playground app bootstrap delegates shell element lookup", () => {
   expect(appBootstrap).not.toContain("queryLegacyPlaygroundElements");
 });
 
-test("playground app entrypoint delegates controller orchestration to app bootstrap", () => {
-  const appSource = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+test("playground restty bootstrap lives under the svelte source tree", () => {
+  const bootstrapSource = readFileSync(resolve(playgroundRoot, "src/bootstrap-restty.ts"), "utf8");
+  const shellMain = readFileSync(resolve(playgroundRoot, "src/main.ts"), "utf8");
   const appBootstrap = readFileSync(resolve(playgroundRoot, "lib/app-bootstrap.ts"), "utf8");
 
-  expect(appSource).toContain('./lib/app-bootstrap.ts"');
-  expect(appSource).not.toContain("./lib/control-bindings");
-  expect(appSource).not.toContain("./lib/appearance-controller");
-  expect(appSource).not.toContain("./lib/connection-controller");
-  expect(appSource).not.toContain("./lib/pane-lifecycle");
+  expect(existsSync(resolve(playgroundRoot, "app.ts"))).toBe(false);
+  expect(bootstrapSource).toContain('../lib/app-bootstrap.ts"');
+  expect(bootstrapSource).toContain("bootstrapPlaygroundApp({");
+  expect(bootstrapSource).not.toContain("../src/internal");
+  expect(bootstrapSource).not.toContain("./lib/control-bindings");
+  expect(bootstrapSource).not.toContain("./lib/appearance-controller");
+  expect(bootstrapSource).not.toContain("./lib/connection-controller");
+  expect(bootstrapSource).not.toContain("./lib/pane-lifecycle");
+  expect(shellMain).toContain('./bootstrap-restty.ts"');
+  expect(shellMain).toContain("bootstrapResttyPlayground()");
+  expect(shellMain).not.toContain('import("../app.ts")');
   expect(appBootstrap).toContain('./playground-orchestrator.ts"');
   expect(appBootstrap).not.toContain("bindConnectionControls(");
   expect(appBootstrap).not.toContain("bindTerminalControls(");
@@ -1504,14 +1511,17 @@ test("webcontainer seed provisioning delegates static seed manifest", () => {
 });
 
 test("playground no longer ships legacy runtime status or log widgets", () => {
-  const playgroundApp = readFileSync(resolve(playgroundRoot, "app.ts"), "utf8");
+  const playgroundBootstrap = readFileSync(
+    resolve(playgroundRoot, "src/bootstrap-restty.ts"),
+    "utf8",
+  );
   const playgroundIndex = readFileSync(resolve(playgroundRoot, "index.html"), "utf8");
   const webcontainerPty = readFileSync(resolve(playgroundRoot, "lib/webcontainer-pty.ts"), "utf8");
 
-  expect(playgroundApp).not.toContain('getElementById("backend")');
-  expect(playgroundApp).not.toContain('getElementById("termSize")');
-  expect(playgroundApp).not.toContain('getElementById("ptyStatus")');
-  expect(playgroundApp).not.toContain("pane.runtime.events.subscribe(");
+  expect(playgroundBootstrap).not.toContain('getElementById("backend")');
+  expect(playgroundBootstrap).not.toContain('getElementById("termSize")');
+  expect(playgroundBootstrap).not.toContain('getElementById("ptyStatus")');
+  expect(playgroundBootstrap).not.toContain("pane.runtime.events.subscribe(");
 
   expect(playgroundIndex).not.toContain('id="backend"');
   expect(playgroundIndex).not.toContain('id="termSize"');
@@ -1753,10 +1763,7 @@ test("shell bridge centralizes custom event dispatch and listeners", () => {
     resolve(playgroundRoot, "src/lib/shell-state-bridge.ts"),
     "utf8",
   );
-  const shellState = readFileSync(
-    resolve(playgroundRoot, "src/lib/stores/shell-state.ts"),
-    "utf8",
-  );
+  const shellState = readFileSync(resolve(playgroundRoot, "src/lib/stores/shell-state.ts"), "utf8");
   const shellStateReducers = readFileSync(
     resolve(playgroundRoot, "src/lib/stores/shell-state-reducers.ts"),
     "utf8",
@@ -1859,10 +1866,7 @@ test("playground wiring uses shell control effects only", () => {
 test("svelte app delegates settings shell lifecycle to a dedicated component", () => {
   const appSvelte = readFileSync(resolve(playgroundRoot, "src/App.svelte"), "utf8");
   const shellMain = readFileSync(resolve(playgroundRoot, "src/main.ts"), "utf8");
-  const shellState = readFileSync(
-    resolve(playgroundRoot, "src/lib/stores/shell-state.ts"),
-    "utf8",
-  );
+  const shellState = readFileSync(resolve(playgroundRoot, "src/lib/stores/shell-state.ts"), "utf8");
   const settingsShell = readFileSync(
     resolve(playgroundRoot, "src/lib/components/SettingsShell.svelte"),
     "utf8",
@@ -1891,9 +1895,7 @@ test("svelte app delegates settings shell lifecycle to a dedicated component", (
   expect(settingsShell).toContain('id="settingsDialog"');
   expect(settingsShell).toContain("$: if (settingsDialog)");
   expect(settingsShell).not.toContain("syncSettingsDialog()");
-  expect(existsSync(resolve(playgroundRoot, "src/lib/components/ShellBridge.svelte"))).toBe(
-    false,
-  );
+  expect(existsSync(resolve(playgroundRoot, "src/lib/components/ShellBridge.svelte"))).toBe(false);
   expect(shellState).not.toContain("settingsShellState");
   expect(shellState).not.toContain("setSettingsOpen");
   expect(shellState).not.toContain("settings:");

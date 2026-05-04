@@ -868,7 +868,6 @@ Target structure:
 
 ```txt
 playground/
-  app.ts
   src/
     lib/
       components/
@@ -877,6 +876,7 @@ playground/
       demos/
       services/
     App.svelte
+    bootstrap-restty.ts
     main.ts
   public/
   index.html
@@ -970,13 +970,13 @@ Exit criteria:
 - create Svelte + Vite playground
 - move state into stores and services
 - route all playground integration through public `restty` exports
-- keep `playground/app.ts` as a tiny bootstrap entrypoint while controller logic lives under `playground/lib/`
+- keep Restty initialization in a tiny Svelte-side bootstrap module under `playground/src/`
 - remove committed generated playground bundles
 
 Exit criteria:
 
 - playground no longer imports from `src/internal.ts`
-- `playground/app.ts` only delegates to the playground bootstrap
+- no root-level legacy `playground/app.ts` entrypoint remains
 - generated bundle files are not tracked
 
 ### Phase 5: enforce repo boundaries

@@ -1,5 +1,6 @@
 import { mount, tick } from "svelte";
 import App from "./App.svelte";
+import { bootstrapResttyPlayground } from "./bootstrap-restty.ts";
 import { startShellStateBridge } from "./lib/shell-state-bridge.ts";
 
 const target = document.getElementById("app");
@@ -12,4 +13,4 @@ startShellStateBridge();
 
 mount(App, { target });
 await tick();
-await import("../app.ts");
+bootstrapResttyPlayground();
