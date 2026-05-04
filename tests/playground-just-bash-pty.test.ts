@@ -12,7 +12,7 @@ class FakeBash {
 
   constructor(options?: { cwd?: string; env?: Record<string, string> }) {
     this.cwd = options?.cwd ?? this.cwd;
-    this.env = { ...this.env, ...(options?.env ?? {}), PWD: this.cwd };
+    this.env = { ...this.env, ...options?.env, PWD: this.cwd };
   }
 
   getCwd() {
@@ -25,7 +25,7 @@ class FakeBash {
 
   async exec(command: string, options?: FakeExecOptions) {
     const cwd = options?.cwd ?? this.cwd;
-    const env = { ...this.env, ...(options?.env ?? {}), PWD: cwd };
+    const env = { ...this.env, ...options?.env, PWD: cwd };
     if (command === "pwd") {
       return { stdout: `${cwd}\n`, stderr: "", exitCode: 0, env };
     }

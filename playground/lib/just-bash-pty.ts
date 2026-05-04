@@ -218,9 +218,10 @@ export function createJustBashPtyTransport(options: JustBashPtyOptions = {}): Pt
           write("\b \b");
           continue;
         }
-        if (ch === "\x1b") {
-          const rest = data.slice(i);
-          if (/^\x1b\[[ABCD]/.test(rest)) {
+        if (ch.charCodeAt(0) === 0x1b) {
+          const next = data[i + 1];
+          const direction = data[i + 2];
+          if (next === "[" && !!direction && "ABCD".includes(direction)) {
             i += 2;
             continue;
           }
