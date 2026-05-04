@@ -62,9 +62,41 @@ Use Bun `>=1.2.0`.
 ## Commit & Pull Request Guidelines
 
 - Preferred commit format follows existing history: `feat:`, `fix(scope):`, `docs:`, `test:`, `chore:`.
+- Mark breaking public API commits with `!` or a `BREAKING CHANGE:` footer.
 - Keep commits scoped to one logical change.
 - PRs should include:
   - a short impact summary,
   - linked issue(s),
   - validation commands run (`bun run lint`, `bun run format:check`, relevant tests),
   - screenshots/GIFs for playground or rendering-visible changes.
+
+## Release Flow
+
+- Releases are tag-driven. Do not publish from an arbitrary workflow dispatch.
+- A release commit on `main` must update `package.json` and `CHANGELOG.md` before tagging.
+- The tag must be annotated and match the package version exactly: `v0.2.0` for `"version": "0.2.0"`.
+- The publish workflow validates the tag, package version, changelog section, generated themes, formatting, lint, package build, playground build, and `test:ci` before publishing.
+- The publish workflow then publishes to npm and creates a GitHub Release from the matching `CHANGELOG.md` section.
+- Do not edit `package.json` from the publish workflow; the repository commit is the source of truth.
+- Release command shape:
+
+```sh
+git checkout main
+git pull --ff-only
+# prepare package.json + CHANGELOG.md in a release PR/commit first
+git tag -a v0.2.0 -m "v0.2.0"
+git push origin v0.2.0
+```
+
+## Changelog Guidelines
+
+- Keep an `[Unreleased]` section at the top of `CHANGELOG.md`.
+- For a release, move relevant entries from `[Unreleased]` into a version heading like `## [0.2.0] - 2026-05-04`.
+- Use only these categories when they apply: `Breaking Changes`, `Migration`, `Features`, `Fixes`, `Internal`, `Playground`, `Docs`.
+- Put user-facing API breaks under `Breaking Changes` and include concrete `before -> after` migration notes under `Migration`.
+- Keep internal refactors under `Internal`; do not present them as user-facing features unless they change public behavior.
+- Before tagging, verify release notes can be extracted:
+
+```sh
+bun run scripts/extract-changelog-release-notes.ts 0.2.0 /tmp/release-notes.md
+```

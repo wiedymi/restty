@@ -1,12 +1,6 @@
 name: Publish
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to publish (for example: 0.1.1, no v prefix)"
-        required: true
-        type: string
   push:
     tags:
       - "v*.*.*"
@@ -15,9 +9,13 @@ permissions:
   contents: write
   id-token: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  publish:
-    name: Build and Publish to npm
+  validate:
+    name: Validate Release Tag
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -25,9 +23,59 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: recursive
           fetch-depth: 0
-          persist-credentials: true
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Verify tag matches package version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION="$(bun -e "console.log((await Bun.file('package.json').json()).version)")"
+          if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
+            echo "Tag version $VERSION does not match package.json version $PACKAGE_VERSION"
+            exit 1
+          fi
+
+      - name: Verify changelog release notes
+        run: bun run scripts/extract-changelog-release-notes.ts "${GITHUB_REF_NAME#v}" /tmp/release-notes.md
+
+      - name: Verify generated themes
+        run: bun run check:themes
+
+      - name: Check formatting
+        run: bun run format:check
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Build package
+        run: bun run build
+
+      - name: Build playground
+        run: bun run playground:build
+
+      - name: Run tests
+        run: bun run test:ci
+
+  publish:
+    name: Publish to npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: validate
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -45,50 +93,40 @@ jobs:
           npm install -g npm@latest
           npm --version
 
-      - name: Configure Git
-        run: |
-          git config user.name "${{ github.actor }}"
-          git config user.email "${{ github.actor }}@users.noreply.github.com"
-
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Resolve version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/v}"
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Update package.json version
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          node -e "
-            const fs = require('fs');
-            const p = 'package.json';
-            const pkg = JSON.parse(fs.readFileSync(p, 'utf8'));
-            pkg.version = process.env.VERSION;
-            fs.writeFileSync(p, JSON.stringify(pkg, null, 2) + '\n');
-          "
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
 
       - name: Build package
         run: bun run build
 
-      - name: Publish to npm
+      - name: Publish package
         run: npm publish --provenance --access public
 
-      - name: Commit version bump
-        if: success() && github.event_name == 'workflow_dispatch'
-        run: |
-          git add package.json
-          git diff --cached --quiet && exit 0
-          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: publish
 
-      - name: Push version bump
-        if: success() && github.event_name == 'workflow_dispatch'
-        run: git push origin HEAD:main
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Extract changelog release notes
+        run: bun run scripts/extract-changelog-release-notes.ts "${GITHUB_REF_NAME#v}" RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file RELEASE_NOTES.md \
+            --verify-tag
