@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import type { PtyConnectOptions, PtyResizeMeta, PtyTransport } from "../src/index.ts";
 import { createAdaptivePtyTransport } from "../playground/lib/pty-connection.ts";
+import type { ConnectionBackend } from "../playground/lib/connection-state.ts";
 
 function createMockTransport(name: string) {
   const events: string[] = [];
@@ -36,7 +37,7 @@ function createMockTransport(name: string) {
 test("createAdaptivePtyTransport switches transports when backend changes", async () => {
   const ws = createMockTransport("ws");
   const webcontainer = createMockTransport("webcontainer");
-  let backend: "ws" | "webcontainer" = "ws";
+  let backend: ConnectionBackend = "ws";
 
   const transport = createAdaptivePtyTransport({
     getConnectionBackend: () => backend,
@@ -64,7 +65,7 @@ test("createAdaptivePtyTransport switches transports when backend changes", asyn
 test("createAdaptivePtyTransport lazy-loads webcontainer transport only when selected", async () => {
   const ws = createMockTransport("ws");
   const webcontainer = createMockTransport("webcontainer");
-  let backend: "ws" | "webcontainer" = "ws";
+  let backend: ConnectionBackend = "ws";
   let webcontainerLoads = 0;
 
   const transport = createAdaptivePtyTransport({
@@ -88,6 +89,27 @@ test("createAdaptivePtyTransport lazy-loads webcontainer transport only when sel
 
   expect(webcontainerLoads).toBe(1);
   expect(webcontainer.events).toEqual(["webcontainer:connect", "webcontainer:connect"]);
+});
+
+test("createAdaptivePtyTransport uses fixed shell command for just-bash", async () => {
+  const webcontainer = createMockTransport("webcontainer");
+  let capturedCommand = "";
+
+  const transport = createAdaptivePtyTransport({
+    getConnectionBackend: () => "just-bash",
+    getPtyUrl: () => "ws://localhost:8787/pty",
+    getWebContainerCommand: () => "node demo.js",
+    getWebContainerCwd: () => "/",
+    createWebContainerTransport: ({ getCommand }) => {
+      capturedCommand = getCommand();
+      return webcontainer.transport;
+    },
+  });
+
+  await transport.connect({ callbacks: {} });
+
+  expect(capturedCommand).toBe("jsh");
+  expect(webcontainer.events).toEqual(["webcontainer:connect"]);
 });
 
 test("createAdaptivePtyTransport ignores stale webcontainer connects during deferred load", async () => {

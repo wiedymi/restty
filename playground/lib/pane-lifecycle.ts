@@ -2,7 +2,11 @@ import type { ResttyPaneApi } from "../../src/index.ts";
 import { stopPaneDemo } from "./demos.ts";
 import { applySavedThemeForPane } from "./pane-theme.ts";
 import { withPanePaused, type PaneState } from "./pane-state.ts";
-import { getConnectUrlForState, type ConnectionBackend } from "./connection-state.ts";
+import {
+  getConnectUrlForState,
+  isWebContainerConnectionBackend,
+  type ConnectionBackend,
+} from "./connection-state.ts";
 
 export type PaneLifecyclePane = {
   id: number;
@@ -98,7 +102,7 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
   function connectPaneIfNeeded(paneId: number) {
     const paneHandle = options.getPaneHandleById(paneId);
     if (!paneHandle) return;
-    if (options.getSelectedConnectionBackend() !== "webcontainer") return;
+    if (!isWebContainerConnectionBackend(options.getSelectedConnectionBackend())) return;
     if (paneHandle.isPtyConnected()) return;
     options.updatePaneSize(paneId, true);
     paneHandle.connectPty(

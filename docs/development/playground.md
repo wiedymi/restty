@@ -6,7 +6,7 @@ Hosted demo: `https://restty.pages.dev/`
 
 1. Start local playground stack:
    - `bun run playground`
-   - Starts PTY websocket server (`ws://localhost:8787/pty`) and playground dev server (`http://localhost:5173`).
+   - Starts the playground dev server (`http://localhost:5173`) plus the optional OS PTY websocket server (`ws://localhost:8787/pty`).
 2. Open the URL shown in the console.
 
 Run components separately when needed:
@@ -37,9 +37,13 @@ Playground font defaults:
 - `Ligatures: On`
 - bundled Fira Code is served from `playground/public/fonts/FiraCode-Regular.ttf`
 
-WebContainer mode note:
+Connection modes:
 
-- In-browser WebContainer mode seeds `/demo.js`, `/test.js`, and related demo scripts automatically.
+- `Just Bash` is the default. It starts the in-browser shell without requiring a local PTY server.
+- `WebContainer` keeps the in-browser runtime but lets you customize the command and working directory.
+- `OS PTY` connects to the local websocket PTY server at `ws://localhost:8787/pty`.
+
+WebContainer-backed modes seed `/demo.js`, `/test.js`, and related demo scripts automatically.
 
 Cloudflare Pages static deploy:
 

@@ -88,13 +88,11 @@ test("settings shell effects forward shell commands", () => {
     target: svelteTarget as Window & EventTarget,
     host: {
       hideContextMenu: () => svelteCalls.push("open"),
-      getFocusedPane: () => ({
-        canvas: {
-          focus: () => svelteCalls.push("close"),
-        },
+      focusedPane: () => ({
+        focus: () => svelteCalls.push("close"),
       }),
-      getActivePane: () => null,
-      getPanes: () => [],
+      activePane: () => null,
+      panes: () => [],
     },
   });
 

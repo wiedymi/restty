@@ -379,6 +379,8 @@ bun run build:themes
 bun run playground
 ```
 
-Open `http://localhost:5173`, then connect to `ws://localhost:8787/pty` from the UI.
+Open `http://localhost:5173`. The playground defaults to `Just Bash`, an in-browser shell.
+Use the connection selector when you want custom `WebContainer` commands or the local `OS PTY`
+websocket at `ws://localhost:8787/pty`.
 
-`bun run playground` starts both the PTY websocket server and the Svelte/Vite playground shell.
+`bun run playground` starts both the Svelte/Vite playground shell and the optional PTY websocket server.

@@ -61,7 +61,7 @@ test("playground session shell dispatches theme reset and connection state", () 
   expect(connectionState).toEqual({
     backend: "ws",
     ptyUrl: "ws://example.test/pty",
-    ptyButtonLabel: "Connect PTY",
+    ptyButtonLabel: "Connect OS PTY",
     webContainerCommand: "bash",
     webContainerCwd: "/tmp",
   });

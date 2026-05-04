@@ -48,11 +48,11 @@ test("shell bridge listeners can be removed", () => {
     seen.push(String(detail.ptyButtonLabel));
   });
 
-  dispatchConnectionState({ ptyButtonLabel: "Connect PTY" }, target);
+  dispatchConnectionState({ ptyButtonLabel: "Connect OS PTY" }, target);
   stop();
   dispatchConnectionState({ ptyButtonLabel: "Disconnect" }, target);
 
-  expect(seen).toEqual(["Connect PTY"]);
+  expect(seen).toEqual(["Connect OS PTY"]);
 });
 
 test("shell bridge dispatches shell command, input, and action details", () => {

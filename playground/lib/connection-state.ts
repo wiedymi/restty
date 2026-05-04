@@ -1,4 +1,4 @@
-export type ConnectionBackend = "ws" | "webcontainer";
+export type ConnectionBackend = "just-bash" | "webcontainer" | "ws";
 
 export type ConnectionUiState = {
   ptyUrlDisabled: boolean;
@@ -7,24 +7,43 @@ export type ConnectionUiState = {
 };
 
 export function getConnectionBackendForValue(value: string | null | undefined): ConnectionBackend {
-  return value === "webcontainer" ? "webcontainer" : "ws";
+  if (value === "webcontainer" || value === "ws" || value === "just-bash") return value;
+  return "just-bash";
+}
+
+export function isWebContainerConnectionBackend(backend: ConnectionBackend): boolean {
+  return backend === "just-bash" || backend === "webcontainer";
+}
+
+export function getConnectionButtonLabel(backend: ConnectionBackend): string {
+  switch (backend) {
+    case "just-bash":
+      return "Start Bash";
+    case "webcontainer":
+      return "Start WebContainer";
+    case "ws":
+      return "Connect OS PTY";
+  }
 }
 
 export function getConnectUrlForState(
   backend: ConnectionBackend,
   ptyUrl: string | null | undefined,
 ): string {
-  if (backend === "webcontainer") return "";
+  if (isWebContainerConnectionBackend(backend)) return "";
   return ptyUrl?.trim?.() ?? "";
 }
 
 export function getConnectionUiState(backend: ConnectionBackend): ConnectionUiState {
-  const webcontainerMode = backend === "webcontainer";
+  const webcontainerMode = isWebContainerConnectionBackend(backend);
   return {
     ptyUrlDisabled: webcontainerMode,
-    webContainerInputsDisabled: !webcontainerMode,
-    hintText: webcontainerMode
-      ? "Using in-browser WebContainer process"
-      : "Using WebSocket PTY URL",
+    webContainerInputsDisabled: backend !== "webcontainer",
+    hintText:
+      backend === "just-bash"
+        ? "Using in-browser bash"
+        : backend === "webcontainer"
+          ? "Using custom WebContainer command"
+          : "Using OS PTY websocket URL",
   };
 }

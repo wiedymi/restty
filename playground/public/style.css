@@ -287,6 +287,10 @@ button {
   cursor: pointer;
 }
 
+button.full-width {
+  flex: 1;
+}
+
 button:hover {
   background: #252525;
 }

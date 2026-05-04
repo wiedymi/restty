@@ -4,6 +4,8 @@
   import { connectionShellState } from "../stores/shell-state.ts";
 
   $: connectionUi = getConnectionUiState($connectionShellState.backend);
+  $: showPtyUrl = $connectionShellState.backend === "ws";
+  $: showWebContainerFields = $connectionShellState.backend === "webcontainer";
 
   function handleConnectionBackendChange(event: Event) {
     const select = event.currentTarget;
@@ -40,41 +42,51 @@
         value={$connectionShellState.backend}
         onchange={handleConnectionBackendChange}
       >
-        <option value="ws">WebSocket PTY</option>
+        <option value="just-bash">Just Bash</option>
         <option value="webcontainer">WebContainer</option>
+        <option value="ws">OS PTY</option>
       </select>
     </label>
   </div>
   <div class="field-row">
-    <input
-      id="ptyUrl"
-      type="text"
-      value={$connectionShellState.ptyUrl}
-      placeholder="PTY URL"
-      disabled={connectionUi.ptyUrlDisabled}
-      oninput={handlePtyUrlChange}
-    />
-    <button id="btnPty" type="button" onclick={() => dispatchShellCommand({ command: "pty-button" })}>
+    {#if showPtyUrl}
+      <input
+        id="ptyUrl"
+        type="text"
+        value={$connectionShellState.ptyUrl}
+        placeholder="PTY URL"
+        disabled={connectionUi.ptyUrlDisabled}
+        oninput={handlePtyUrlChange}
+      />
+    {/if}
+    <button
+      id="btnPty"
+      class:full-width={!showPtyUrl}
+      type="button"
+      onclick={() => dispatchShellCommand({ command: "pty-button" })}
+    >
       {$connectionShellState.ptyButtonLabel}
     </button>
   </div>
-  <div class="field-row">
-    <input
-      id="wcCommand"
-      type="text"
-      value={$connectionShellState.webContainerCommand}
-      placeholder="WebContainer command"
-      disabled={connectionUi.webContainerInputsDisabled}
-      oninput={handleWebContainerCommandChange}
-    />
-    <input
-      id="wcCwd"
-      type="text"
-      value={$connectionShellState.webContainerCwd}
-      placeholder="WebContainer cwd"
-      disabled={connectionUi.webContainerInputsDisabled}
-      oninput={handleWebContainerCwdChange}
-    />
-  </div>
+  {#if showWebContainerFields}
+    <div class="field-row">
+      <input
+        id="wcCommand"
+        type="text"
+        value={$connectionShellState.webContainerCommand}
+        placeholder="WebContainer command"
+        disabled={connectionUi.webContainerInputsDisabled}
+        oninput={handleWebContainerCommandChange}
+      />
+      <input
+        id="wcCwd"
+        type="text"
+        value={$connectionShellState.webContainerCwd}
+        placeholder="WebContainer cwd"
+        disabled={connectionUi.webContainerInputsDisabled}
+        oninput={handleWebContainerCwdChange}
+      />
+    </div>
+  {/if}
   <div id="connectionHint" class="hint">{connectionUi.hintText}</div>
 </section>

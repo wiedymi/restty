@@ -2,6 +2,7 @@ import type { ResttyPaneApi } from "../../src/index.ts";
 import {
   getConnectUrlForState,
   getConnectionBackendForValue,
+  isWebContainerConnectionBackend,
   type ConnectionBackend,
 } from "./connection-state.ts";
 
@@ -33,7 +34,7 @@ export function createConnectionController(options: CreateConnectionControllerOp
         pane.disconnectPty();
       }
     });
-    if (selectedConnectionBackend === "webcontainer") {
+    if (isWebContainerConnectionBackend(selectedConnectionBackend)) {
       options.forEachPane((paneId) => {
         options.connectPaneIfNeeded(paneId);
       });

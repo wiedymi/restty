@@ -8,6 +8,7 @@ import {
   DEFAULT_TERMINAL_FONT_SIZE,
   DEFAULT_TERMINAL_RENDERER,
 } from "../../../lib/shell-defaults.ts";
+import { getConnectionButtonLabel } from "../../../lib/connection-state.ts";
 
 type TerminalShellState = {
   pauseLabel: string;
@@ -55,9 +56,10 @@ const initialTerminalShellState: TerminalShellState = {
   fontSize: String(DEFAULT_TERMINAL_FONT_SIZE),
 };
 
+const initialConnectionShellValues = createInitialConnectionShellValues();
 const initialConnectionShellState: ConnectionShellState = {
-  ...createInitialConnectionShellValues(),
-  ptyButtonLabel: "Connect PTY",
+  ...initialConnectionShellValues,
+  ptyButtonLabel: getConnectionButtonLabel(initialConnectionShellValues.backend),
 };
 
 const initialAppearanceShellState: AppearanceShellState = {

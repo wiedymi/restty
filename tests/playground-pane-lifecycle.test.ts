@@ -100,6 +100,41 @@ test("pane lifecycle init restores size and auto-connects webcontainer panes", a
   expect(syncedPty).toEqual([7]);
 });
 
+test("pane lifecycle init auto-connects just-bash panes", async () => {
+  const { pane, handle, calls } = createPane(8);
+  const paneStates = new Map<number, PaneState>([[8, createState({ id: 8 })]]);
+  const resizeCalls: string[] = [];
+
+  const lifecycle = createPaneLifecycleController({
+    getPaneById: (id) => (id === pane.id ? pane : null),
+    getPaneHandleById: (id) => (id === pane.id ? handle : null),
+    getActivePane: () => pane,
+    getActivePaneHandle: () => handle,
+    getPaneState: (id) => paneStates.get(id),
+    setPaneState: (id, state) => {
+      paneStates.set(id, state);
+    },
+    getActivePaneId: () => pane.id,
+    getSelectedConnectionBackend: () => "just-bash",
+    getSelectedPtyUrl: () => "ws://localhost:8787/pty",
+    updatePaneSize: (id, force) => {
+      resizeCalls.push(`${id}:${force === true ? "forced" : "normal"}`);
+    },
+    syncPauseButton: () => {},
+    syncPtyButton: () => {},
+    waitForAnimationFrame: async () => {},
+    requestAnimationFrame: (callback) => {
+      callback(0);
+      return 1;
+    },
+  });
+
+  await lifecycle.initPane(pane, paneStates.get(8)!);
+
+  expect(calls).toEqual(["init", "connect:", "focus"]);
+  expect(resizeCalls).toEqual(["8:forced", "8:forced", "8:forced"]);
+});
+
 test("pane lifecycle toggles pause and pty state for the active pane", () => {
   const { pane, handle, calls } = createPane(3);
   const paneStates = new Map<number, PaneState>([

@@ -1,5 +1,5 @@
 import type { ResttyPaneApi } from "../../src/index.ts";
-import type { ConnectionBackend } from "./connection-state.ts";
+import { getConnectionButtonLabel, type ConnectionBackend } from "./connection-state.ts";
 import { dispatchConnectionState } from "./shell-bridge.ts";
 
 type PtyButtonPane = Pick<ResttyPaneApi, "isPtyConnected">;
@@ -14,9 +14,7 @@ export function createPaneConnectionShellEvents(options: CreatePaneConnectionShe
     const isConnected = pane.isPtyConnected();
     const label = isConnected
       ? "Disconnect"
-      : options.getSelectedConnectionBackend() === "webcontainer"
-        ? "Start WebContainer"
-        : "Connect PTY";
+      : getConnectionButtonLabel(options.getSelectedConnectionBackend());
     dispatchConnectionState({ ptyButtonLabel: label }, options.target);
   }
 

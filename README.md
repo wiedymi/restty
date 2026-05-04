@@ -380,7 +380,7 @@ bun run test          # full tests
 bun run test:ci       # CI-safe test target
 bun run lint          # lint
 bun run format:check  # formatting check
-bun run playground    # one-command local dev (PTY + Svelte/Vite playground shell)
+bun run playground    # one-command local dev (Svelte/Vite playground shell + optional OS PTY)
 bun run playground:pty
 bun run playground:build
 ```

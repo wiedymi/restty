@@ -4,7 +4,8 @@ import {
   type PtyResizeMeta,
   type PtyTransport,
 } from "../../src/index.ts";
-import type { ConnectionBackend } from "./connection-state.ts";
+import { isWebContainerConnectionBackend, type ConnectionBackend } from "./connection-state.ts";
+import { DEFAULT_JUST_BASH_COMMAND } from "./shell-defaults.ts";
 
 type CreateAdaptivePtyTransportOptions = {
   getConnectionBackend: () => ConnectionBackend;
@@ -85,11 +86,17 @@ export function createAdaptivePtyTransport(
   const webContainerTransport = createDeferredPtyTransport(
     () =>
       options.createWebContainerTransport?.({
-        getCommand: options.getWebContainerCommand,
+        getCommand: () =>
+          options.getConnectionBackend() === "just-bash"
+            ? DEFAULT_JUST_BASH_COMMAND
+            : options.getWebContainerCommand(),
         getCwd: options.getWebContainerCwd,
       }) ??
       loadWebContainerPtyTransport({
-        getCommand: options.getWebContainerCommand,
+        getCommand: () =>
+          options.getConnectionBackend() === "just-bash"
+            ? DEFAULT_JUST_BASH_COMMAND
+            : options.getWebContainerCommand(),
         getCwd: options.getWebContainerCwd,
       }),
   );
@@ -97,7 +104,9 @@ export function createAdaptivePtyTransport(
   let activeTransport: PtyTransport | null = null;
 
   const pickTransport = () =>
-    options.getConnectionBackend() === "webcontainer" ? webContainerTransport : wsTransport;
+    isWebContainerConnectionBackend(options.getConnectionBackend())
+      ? webContainerTransport
+      : wsTransport;
 
   const disconnectAll = () => {
     const transports = new Set<PtyTransport>([wsTransport, webContainerTransport]);
