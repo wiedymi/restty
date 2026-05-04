@@ -868,6 +868,7 @@ Target structure:
 
 ```txt
 playground/
+  app.ts
   src/
     lib/
       components/
@@ -880,7 +881,6 @@ playground/
   public/
   index.html
   vite.config.ts
-  tsconfig.json
 ```
 
 Suggested store boundaries:
@@ -970,12 +970,13 @@ Exit criteria:
 - create Svelte + Vite playground
 - move state into stores and services
 - route all playground integration through public `restty` exports
+- keep `playground/app.ts` as a tiny bootstrap entrypoint while controller logic lives under `playground/lib/`
 - remove committed generated playground bundles
 
 Exit criteria:
 
 - playground no longer imports from `src/internal.ts`
-- `playground/app.ts` is removed
+- `playground/app.ts` only delegates to the playground bootstrap
 - generated bundle files are not tracked
 
 ### Phase 5: enforce repo boundaries
