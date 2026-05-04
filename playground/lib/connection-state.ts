@@ -12,6 +12,10 @@ export function getConnectionBackendForValue(value: string | null | undefined): 
 }
 
 export function isWebContainerConnectionBackend(backend: ConnectionBackend): boolean {
+  return backend === "webcontainer";
+}
+
+export function isAutoConnectConnectionBackend(backend: ConnectionBackend): boolean {
   return backend === "just-bash" || backend === "webcontainer";
 }
 
@@ -30,14 +34,14 @@ export function getConnectUrlForState(
   backend: ConnectionBackend,
   ptyUrl: string | null | undefined,
 ): string {
-  if (isWebContainerConnectionBackend(backend)) return "";
+  if (isAutoConnectConnectionBackend(backend)) return "";
   return ptyUrl?.trim?.() ?? "";
 }
 
 export function getConnectionUiState(backend: ConnectionBackend): ConnectionUiState {
-  const webcontainerMode = isWebContainerConnectionBackend(backend);
+  const inBrowserMode = isAutoConnectConnectionBackend(backend);
   return {
-    ptyUrlDisabled: webcontainerMode,
+    ptyUrlDisabled: inBrowserMode,
     webContainerInputsDisabled: backend !== "webcontainer",
     hintText:
       backend === "just-bash"

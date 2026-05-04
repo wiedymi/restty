@@ -111,6 +111,7 @@
     "playground:preview": "bun run playground/server.ts"
   },
   "dependencies": {
+    "just-bash": "^2.14.4",
     "text-shaper": "0.1.22"
   },
   "devDependencies": {

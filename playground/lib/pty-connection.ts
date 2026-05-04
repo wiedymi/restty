@@ -5,7 +5,6 @@ import {
   type PtyTransport,
 } from "../../src/index.ts";
 import { isWebContainerConnectionBackend, type ConnectionBackend } from "./connection-state.ts";
-import { DEFAULT_JUST_BASH_COMMAND } from "./shell-defaults.ts";
 
 type CreateAdaptivePtyTransportOptions = {
   getConnectionBackend: () => ConnectionBackend;
@@ -17,6 +16,7 @@ type CreateAdaptivePtyTransportOptions = {
     getCommand: () => string;
     getCwd: () => string;
   }) => PtyTransport | Promise<PtyTransport>;
+  createJustBashTransport?: () => PtyTransport | Promise<PtyTransport>;
 };
 
 type DeferredPtyTransportLoader = () => PtyTransport | Promise<PtyTransport>;
@@ -27,6 +27,11 @@ async function loadWebContainerPtyTransport(options: {
 }): Promise<PtyTransport> {
   const { createWebContainerPtyTransport } = await import("./webcontainer-pty.ts");
   return createWebContainerPtyTransport(options);
+}
+
+async function loadJustBashPtyTransport(): Promise<PtyTransport> {
+  const { createJustBashPtyTransport } = await import("./just-bash-pty.ts");
+  return createJustBashPtyTransport();
 }
 
 function createDeferredPtyTransport(loadTransport: DeferredPtyTransportLoader): PtyTransport {
@@ -83,20 +88,17 @@ export function createAdaptivePtyTransport(
   options: CreateAdaptivePtyTransportOptions,
 ): PtyTransport {
   const wsTransport = options.createWebSocketTransport?.() ?? createWebSocketPtyTransport();
+  const justBashTransport = createDeferredPtyTransport(
+    () => options.createJustBashTransport?.() ?? loadJustBashPtyTransport(),
+  );
   const webContainerTransport = createDeferredPtyTransport(
     () =>
       options.createWebContainerTransport?.({
-        getCommand: () =>
-          options.getConnectionBackend() === "just-bash"
-            ? DEFAULT_JUST_BASH_COMMAND
-            : options.getWebContainerCommand(),
+        getCommand: options.getWebContainerCommand,
         getCwd: options.getWebContainerCwd,
       }) ??
       loadWebContainerPtyTransport({
-        getCommand: () =>
-          options.getConnectionBackend() === "just-bash"
-            ? DEFAULT_JUST_BASH_COMMAND
-            : options.getWebContainerCommand(),
+        getCommand: options.getWebContainerCommand,
         getCwd: options.getWebContainerCwd,
       }),
   );
@@ -104,12 +106,18 @@ export function createAdaptivePtyTransport(
   let activeTransport: PtyTransport | null = null;
 
   const pickTransport = () =>
-    isWebContainerConnectionBackend(options.getConnectionBackend())
-      ? webContainerTransport
-      : wsTransport;
+    options.getConnectionBackend() === "just-bash"
+      ? justBashTransport
+      : isWebContainerConnectionBackend(options.getConnectionBackend())
+        ? webContainerTransport
+        : wsTransport;
 
   const disconnectAll = () => {
-    const transports = new Set<PtyTransport>([wsTransport, webContainerTransport]);
+    const transports = new Set<PtyTransport>([
+      wsTransport,
+      justBashTransport,
+      webContainerTransport,
+    ]);
     if (activeTransport) transports.add(activeTransport);
     for (const transport of transports) {
       transport.disconnect();

@@ -4,7 +4,7 @@ import { applySavedThemeForPane } from "./pane-theme.ts";
 import { withPanePaused, type PaneState } from "./pane-state.ts";
 import {
   getConnectUrlForState,
-  isWebContainerConnectionBackend,
+  isAutoConnectConnectionBackend,
   type ConnectionBackend,
 } from "./connection-state.ts";
 
@@ -102,7 +102,7 @@ export function createPaneLifecycleController(options: CreatePaneLifecycleContro
   function connectPaneIfNeeded(paneId: number) {
     const paneHandle = options.getPaneHandleById(paneId);
     if (!paneHandle) return;
-    if (!isWebContainerConnectionBackend(options.getSelectedConnectionBackend())) return;
+    if (!isAutoConnectConnectionBackend(options.getSelectedConnectionBackend())) return;
     if (paneHandle.isPtyConnected()) return;
     options.updatePaneSize(paneId, true);
     paneHandle.connectPty(

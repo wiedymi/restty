@@ -36,6 +36,7 @@ function createMockTransport(name: string) {
 
 test("createAdaptivePtyTransport switches transports when backend changes", async () => {
   const ws = createMockTransport("ws");
+  const justBash = createMockTransport("just-bash");
   const webcontainer = createMockTransport("webcontainer");
   let backend: ConnectionBackend = "ws";
 
@@ -45,6 +46,7 @@ test("createAdaptivePtyTransport switches transports when backend changes", asyn
     getWebContainerCommand: () => "jsh",
     getWebContainerCwd: () => "/",
     createWebSocketTransport: () => ws.transport,
+    createJustBashTransport: () => justBash.transport,
     createWebContainerTransport: () => webcontainer.transport,
   });
 
@@ -55,11 +57,22 @@ test("createAdaptivePtyTransport switches transports when backend changes", asyn
   backend = "webcontainer";
   await transport.connect({ callbacks: {} });
   expect(ws.events).toEqual(["ws:connect", "ws:disconnect"]);
+  expect(justBash.events).toEqual([]);
   expect(webcontainer.events).toEqual(["webcontainer:connect"]);
+
+  backend = "just-bash";
+  await transport.connect({ callbacks: {} });
+  expect(webcontainer.events).toEqual(["webcontainer:connect", "webcontainer:disconnect"]);
+  expect(justBash.events).toEqual(["just-bash:connect"]);
 
   transport.disconnect();
   expect(ws.events).toEqual(["ws:connect", "ws:disconnect", "ws:disconnect"]);
-  expect(webcontainer.events).toEqual(["webcontainer:connect", "webcontainer:disconnect"]);
+  expect(justBash.events).toEqual(["just-bash:connect", "just-bash:disconnect"]);
+  expect(webcontainer.events).toEqual([
+    "webcontainer:connect",
+    "webcontainer:disconnect",
+    "webcontainer:disconnect",
+  ]);
 });
 
 test("createAdaptivePtyTransport lazy-loads webcontainer transport only when selected", async () => {
@@ -91,25 +104,28 @@ test("createAdaptivePtyTransport lazy-loads webcontainer transport only when sel
   expect(webcontainer.events).toEqual(["webcontainer:connect", "webcontainer:connect"]);
 });
 
-test("createAdaptivePtyTransport uses fixed shell command for just-bash", async () => {
+test("createAdaptivePtyTransport routes just-bash without loading webcontainer", async () => {
+  const justBash = createMockTransport("just-bash");
   const webcontainer = createMockTransport("webcontainer");
-  let capturedCommand = "";
+  let webcontainerLoads = 0;
 
   const transport = createAdaptivePtyTransport({
     getConnectionBackend: () => "just-bash",
     getPtyUrl: () => "ws://localhost:8787/pty",
     getWebContainerCommand: () => "node demo.js",
     getWebContainerCwd: () => "/",
-    createWebContainerTransport: ({ getCommand }) => {
-      capturedCommand = getCommand();
+    createJustBashTransport: () => justBash.transport,
+    createWebContainerTransport: () => {
+      webcontainerLoads += 1;
       return webcontainer.transport;
     },
   });
 
   await transport.connect({ callbacks: {} });
 
-  expect(capturedCommand).toBe("jsh");
-  expect(webcontainer.events).toEqual(["webcontainer:connect"]);
+  expect(justBash.events).toEqual(["just-bash:connect"]);
+  expect(webcontainerLoads).toBe(0);
+  expect(webcontainer.events).toEqual([]);
 });
 
 test("createAdaptivePtyTransport ignores stale webcontainer connects during deferred load", async () => {
