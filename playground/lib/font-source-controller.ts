@@ -4,7 +4,7 @@ import {
   detectLocalFontState,
   type LocalFontOption,
 } from "./font-local-picker.ts";
-import { getCurrentFontSources } from "./font-source-catalog.ts";
+import { getCurrentFontSources, getStartupFontSources } from "./font-source-catalog.ts";
 
 type FontSourceControllerShellSync = {
   syncFontFamilyValue: () => void;
@@ -76,6 +76,8 @@ export function createPaneFontSourceController(options: CreatePaneFontSourceCont
     getDetectedLocalFontOptions: () => detectedLocalFontOptions,
     getFontFamily: () => selectedFontFamily,
     getFontSources: () => getCurrentFontSources(selectedFontFamily, selectedLocalFontMatcher),
+    getStartupFontSources: () =>
+      getStartupFontSources(selectedFontFamily, selectedLocalFontMatcher),
     getLocalFontHintText: () => localFontHintText,
     getLocalFontMatcher: () => selectedLocalFontMatcher,
     loadLocalFonts,

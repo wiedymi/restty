@@ -121,6 +121,7 @@ export function createPaneAppearanceController(options: CreatePaneAppearanceCont
     getFontHinting: fontController.getFontHinting,
     getFontSizeDefault: fontController.getFontSizeDefault,
     getFontSources: fontController.getFontSources,
+    getStartupFontSources: fontController.getStartupFontSources,
     getLigatures: fontController.getLigatures,
     getLocalFontHintText: fontController.getLocalFontHintText,
     getLocalFontMatcher: fontController.getLocalFontMatcher,

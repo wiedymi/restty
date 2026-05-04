@@ -78,6 +78,7 @@ export function createPaneFontController(options: CreatePaneFontControllerOption
     getFontHinting: renderingController.getFontHinting,
     getFontSizeDefault: renderingController.getFontSizeDefault,
     getFontSources: sourceController.getFontSources,
+    getStartupFontSources: sourceController.getStartupFontSources,
     getLigatures: renderingController.getLigatures,
     getLocalFontHintText: sourceController.getLocalFontHintText,
     getLocalFontMatcher: sourceController.getLocalFontMatcher,

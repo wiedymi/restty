@@ -1,6 +1,7 @@
 import type { ResttyFontSource } from "../../src/index.ts";
 
 const FONT_URL_FIRA_CODE = "/fonts/FiraCode-Regular.ttf";
+const FONT_URL_JETBRAINS_MONO_BUNDLED = "/fonts/JetBrainsMono-Regular.ttf";
 const FONT_URL_JETBRAINS_MONO =
   "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/Regular/JetBrainsMonoNLNerdFontMono-Regular.ttf";
 const FONT_URL_JETBRAINS_MONO_BOLD =
@@ -89,6 +90,7 @@ const FONT_PRESETS: Record<FontPresetKey, FontPresetConfig> = {
         ],
       },
     ],
+    bundledFaces: [{ label: "JetBrains Mono Regular", url: FONT_URL_JETBRAINS_MONO_BUNDLED }],
   },
 };
 
@@ -211,9 +213,43 @@ export function buildFontSourcesForSelection(
   return sources;
 }
 
+export function buildStartupFontSourcesForSelection(
+  value: string,
+  localMatcher: string,
+): ResttyFontSource[] {
+  const sources: ResttyFontSource[] = [];
+
+  if (localMatcher) {
+    sources.push({
+      type: "local",
+      label: `local:${localMatcher}`,
+      matchers: [localMatcher],
+      required: true,
+    });
+  }
+
+  const preset = FONT_PRESETS[value as FontPresetKey] ?? FONT_PRESETS[DEFAULT_FONT_FAMILY];
+  for (const face of preset.bundledFaces ?? []) {
+    sources.push({
+      type: "url",
+      label: face.label,
+      url: face.url,
+    });
+  }
+
+  return sources;
+}
+
 export function getCurrentFontSources(
   selectedFontFamily: string,
   selectedLocalFontMatcher: string,
 ): ResttyFontSource[] {
   return buildFontSourcesForSelection(selectedFontFamily, selectedLocalFontMatcher);
+}
+
+export function getStartupFontSources(
+  selectedFontFamily: string,
+  selectedLocalFontMatcher: string,
+): ResttyFontSource[] {
+  return buildStartupFontSourcesForSelection(selectedFontFamily, selectedLocalFontMatcher);
 }
