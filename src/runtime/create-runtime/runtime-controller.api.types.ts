@@ -31,7 +31,7 @@ export type RuntimeControllerPublicCapabilities = {
     | "setLigatures"
     | "setFontHinting"
     | "setFontHintTarget"
-    | "setFontSources"
+    | "setFonts"
     | "resetTheme"
   >;
   search: ResttyRuntimeSearchApi;

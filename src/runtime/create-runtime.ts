@@ -49,12 +49,16 @@ import {
   pasteFromClipboard as readClipboardText,
 } from "../selection";
 import { buildFontAtlasIfNeeded } from "./fonts/atlas-builder";
-import { normalizeFontSources } from "./fonts/font-sources";
+import { resolveFontInputs } from "./fonts/font-sources";
 import * as bundledTextShaper from "text-shaper";
 import { createRuntimeEventHub } from "./core/runtime-events";
 import type { ResttyRuntime } from "./core/api";
 import type { ResttyRuntimeConfig } from "./core/config";
-import type { ResttyFontHintTarget, ResttyFontSource } from "./core/models";
+import type {
+  ResttyFontHintTarget,
+  ResttyFontInput,
+  ResttyResolvedFontSource,
+} from "./core/models";
 import type {
   ResttyRuntimeCallbacks,
   ResttyRuntimeSession,
@@ -127,13 +131,17 @@ export type { ResttyRuntime } from "./core/api";
 export type { ResttyRuntimeConfig } from "./core/config";
 export type {
   ResttyRuntimeCallbacks,
-  FontSource,
+  ResttyFontData,
+  ResttyFontInput,
+  ResttyFontUrlInput,
+  ResttyFontPathInput,
+  ResttyFontBufferInput,
+  ResttyFontFamilyInput,
+  ResttyFontFallbackInput,
+  ResttyFontStyle,
+  ResttyLocalFontMode,
   ResttyFontHintTarget,
-  ResttyFontSource,
   ResttyTouchSelectionMode,
-  ResttyUrlFontSource,
-  ResttyBufferFontSource,
-  ResttyLocalFontSource,
   ResttyWasmLogListener,
   ResttyRuntimeSession,
   ResttyRuntimeInputPayload,
@@ -145,9 +153,10 @@ export type {
   ResttyRuntimeLifecycleState,
 } from "./types";
 
-const FALLBACK_LOCAL_FONT_SOURCES: ResttyFontSource[] = [
+const FALLBACK_LOCAL_FONTS: ResttyResolvedFontSource[] = [
   {
-    type: "local",
+    kind: "local",
+    family: "Nerd Font",
     matchers: [
       "jetbrainsmono nerd font",
       "jetbrains mono nerd font",
@@ -159,11 +168,14 @@ const FALLBACK_LOCAL_FONT_SOURCES: ResttyFontSource[] = [
       "nerd font mono",
     ],
     label: "fallback-nerd-font",
+    required: false,
   },
   {
-    type: "local",
+    kind: "local",
+    family: "JetBrains Mono",
     matchers: ["jetbrains mono"],
     label: "fallback-jetbrains",
+    required: false,
   },
 ];
 
@@ -603,7 +615,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     atlasToRGBA,
   });
 
-  let configuredFontSources = normalizeFontSources(terminal.fontSources, terminal.fontPreset);
+  let configuredFonts = resolveFontInputs(terminal.fonts);
 
   const gridState = {
     cols: 0,
@@ -798,8 +810,8 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     }
   }
 
-  async function setFontSources(sources: ResttyFontSource[]) {
-    configuredFontSources = normalizeFontSources(sources, undefined);
+  async function setFonts(fonts: ResttyFontInput[]) {
+    configuredFonts = resolveFontInputs(fonts);
     fontPromise = null;
     releaseFontLease();
     clearFontRuntimeState();
@@ -852,10 +864,10 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     fontPromise = (async () => {
       let acquiredLease: ResttyFontResourceLease | null = null;
       try {
-        acquiredLease = await fontResourceStore.acquire(configuredFontSources);
+        acquiredLease = await fontResourceStore.acquire(configuredFonts);
         if (!acquiredLease.faces.length) {
           acquiredLease.release();
-          acquiredLease = await fontResourceStore.acquire(FALLBACK_LOCAL_FONT_SOURCES);
+          acquiredLease = await fontResourceStore.acquire(FALLBACK_LOCAL_FONTS);
         }
         if (!acquiredLease.faces.length) {
           throw new Error("Unable to load any configured font source.");
@@ -896,7 +908,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   cleanupFns.push(() => {
     releaseFontLease();
     clearFontRuntimeState();
-    configuredFontSources = [];
+    configuredFonts = [];
     fontPromise = null;
   });
 
@@ -1183,7 +1195,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
       setLigatures,
       setFontHinting,
       setFontHintTarget,
-      setFontSources,
+      setFonts,
       resetTheme,
     },
     search: {

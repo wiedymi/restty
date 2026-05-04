@@ -87,8 +87,8 @@ test("bootstrapPlaygroundSurface boots the first pane and wires surface events",
     getLigatures: () => true,
     getFontHinting: () => false,
     getFontHintTarget: () => "auto" as const,
-    getFontSources: () => [],
-    getStartupFontSources: () => [],
+    getFonts: () => [],
+    getStartupFonts: () => [],
     applyCurrentShaderPreset: () => {},
   };
 

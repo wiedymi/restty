@@ -1,4 +1,4 @@
-import type { ResttyFontSource } from "../../runtime/core/models";
+import type { ResttyFontInput } from "../../runtime/core/models";
 import { createResttyPaneManagerAssembly } from "./pane-manager-assembly";
 import {
   createResttyPluginSurfaceBridge,
@@ -13,7 +13,7 @@ type CreateResttySurfaceAssemblyOptions = {
   restty: ResttyPluginSurfaceBridgeSource;
   forEachPane: (visitor: (pane: Pick<ResttyPaneApi, "id" | "setShaderStages">) => void) => void;
   getPaneHandleById: (id: number) => Pick<ResttyPaneApi, "id" | "setShaderStages"> | null;
-  getFontSources: () => ResttyFontSource[] | undefined;
+  getFonts: () => ResttyFontInput[] | undefined;
   terminal: ResttyConfig["terminal"];
   services: ResttyConfig["services"];
   events: NonNullable<NonNullable<ResttyConfig["surface"]>["events"]> | undefined;
@@ -23,7 +23,7 @@ export function createResttySurfaceAssembly({
   restty,
   forEachPane,
   getPaneHandleById,
-  getFontSources,
+  getFonts,
   terminal,
   services,
   events,
@@ -40,7 +40,7 @@ export function createResttySurfaceAssembly({
   const paneManagerAssembly = createResttyPaneManagerAssembly({
     shaderOps,
     controller,
-    getFontSources,
+    getFonts,
     terminal,
     services,
     events,

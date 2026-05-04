@@ -1,20 +1,20 @@
 import { expect, test } from "bun:test";
 import {
   applyFontRenderingOptionsToAllPanes,
-  applyFontSourcesToAllPanes,
+  applyFontsToAllPanes,
   type FontApplicationHost,
 } from "../playground/lib/font-application.ts";
 
-test("applyFontSourcesToAllPanes sends computed sources once", async () => {
+test("applyFontsToAllPanes sends computed fonts once", async () => {
   const calls: unknown[] = [];
   const host: FontApplicationHost = {
-    setFontSources: async (sources) => {
-      calls.push(sources);
+    setFonts: async (fonts) => {
+      calls.push(fonts);
     },
     forEachPane: () => {},
   };
 
-  await applyFontSourcesToAllPanes({
+  await applyFontsToAllPanes({
     host,
     selectedFontFamily: "fira-code",
     selectedLocalFontMatcher: "my font",
@@ -24,28 +24,28 @@ test("applyFontSourcesToAllPanes sends computed sources once", async () => {
   expect(calls[0]).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        type: "local",
-        label: "local:my font",
+        family: "my font",
+        local: "require",
       }),
       expect.objectContaining({
-        type: "url",
-        label: "Fira Code Regular",
+        path: "/fonts/FiraCode-Regular.ttf",
+        name: "Fira Code Regular",
       }),
     ]),
   );
 });
 
-test("applyFontSourcesToAllPanes reports failures through onError", async () => {
+test("applyFontsToAllPanes reports failures through onError", async () => {
   const error = new Error("boom");
   const seen: unknown[] = [];
   const host: FontApplicationHost = {
-    setFontSources: async () => {
+    setFonts: async () => {
       throw error;
     },
     forEachPane: () => {},
   };
 
-  await applyFontSourcesToAllPanes({
+  await applyFontsToAllPanes({
     host,
     selectedFontFamily: "fira-code",
     selectedLocalFontMatcher: "",
@@ -73,7 +73,7 @@ test("applyFontRenderingOptionsToAllPanes applies ligatures and hinting to each 
   const panes = [createPane("a"), createPane("b")];
 
   const host: FontApplicationHost = {
-    setFontSources: async () => {},
+    setFonts: async () => {},
     forEachPane: (visitor) => {
       for (const pane of panes) visitor(pane);
     },

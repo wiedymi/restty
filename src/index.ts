@@ -57,12 +57,16 @@ export {
 export type { GhosttyTheme, ResttyBuiltinThemeName } from "./theme";
 
 export type {
+  ResttyFontData,
   ResttyFontHintTarget,
-  ResttyFontSource,
-  ResttyUrlFontSource,
-  ResttyBufferFontSource,
-  ResttyLocalFontSource,
-  ResttyFontPreset,
+  ResttyFontInput,
+  ResttyFontUrlInput,
+  ResttyFontPathInput,
+  ResttyFontBufferInput,
+  ResttyFontFamilyInput,
+  ResttyFontFallbackInput,
+  ResttyFontStyle,
+  ResttyLocalFontMode,
   ResttyShaderStage,
   ResttyShaderStageMode,
   ResttyShaderStageBackend,

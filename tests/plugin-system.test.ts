@@ -14,7 +14,7 @@ type FakePane = {
   setLigatures: (value: boolean) => void;
   setFontHinting: (value: boolean) => void;
   setFontHintTarget: (value: string) => void;
-  setFontSources: (sources: unknown[]) => Promise<void>;
+  setFonts: (fonts: unknown[]) => Promise<void>;
   applyTheme: (theme: unknown, sourceLabel?: string) => void;
   resetTheme: () => void;
   sendInput: (text: string, source?: string) => void;
@@ -161,7 +161,7 @@ function createFakeManager(options: any): FakeManager {
         setLigatures: (_value: boolean) => {},
         setFontHinting: (_value: boolean) => {},
         setFontHintTarget: (_value: string) => {},
-        setFontSources: async () => undefined,
+        setFonts: async () => undefined,
         applyTheme: () => {},
         resetTheme: () => {},
         clearScreen: () => {},
@@ -236,7 +236,7 @@ function createFakeManager(options: any): FakeManager {
       setLigatures: runtime.terminal.setLigatures,
       setFontHinting: runtime.terminal.setFontHinting,
       setFontHintTarget: runtime.terminal.setFontHintTarget,
-      setFontSources: runtime.terminal.setFontSources,
+      setFonts: runtime.terminal.setFonts,
       applyTheme: runtime.terminal.applyTheme,
       resetTheme: runtime.terminal.resetTheme,
       sendInput: runtime.io.sendInput,

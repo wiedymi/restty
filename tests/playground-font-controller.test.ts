@@ -56,19 +56,19 @@ function createShellSyncCalls() {
   };
 }
 
-test("font controller updates font size, font sources, and local font state", async () => {
+test("font controller updates font size, fonts, and local font state", async () => {
   const { pane, calls: paneCalls } = createPane(9);
   const paneStates = new Map<number, PaneState>([[9, createState({ id: 9 })]]);
   const { calls: syncCalls, shellSync } = createShellSyncCalls();
-  const fontSourceLabels: string[][] = [];
+  const appliedFonts: unknown[][] = [];
 
   const controller = createPaneFontController({
     host: {
       forEachPane: (visitor) => {
         visitor(pane);
       },
-      setFontSources: async (sources) => {
-        fontSourceLabels.push(sources.map((source) => source.label));
+      setFonts: async (fonts) => {
+        appliedFonts.push(fonts);
       },
     },
     getActivePane: () => pane,
@@ -102,7 +102,7 @@ test("font controller updates font size, font sources, and local font state", as
   expect(controller.getDetectedLocalFontOptions()).toEqual([
     { value: "local:fira%20code", label: "Local Font: Fira Code" },
   ]);
-  expect(fontSourceLabels.length).toBe(2);
+  expect(appliedFonts.length).toBe(2);
   expect(syncCalls).toEqual([
     "sync-font-family",
     "sync-local-fonts",
@@ -123,7 +123,7 @@ test("font controller updates rendering toggles", () => {
       forEachPane: (visitor) => {
         visitor(pane);
       },
-      setFontSources: async () => {},
+      setFonts: async () => {},
     },
     getActivePane: () => pane,
     getActivePaneState: () => paneStates.get(5) ?? null,

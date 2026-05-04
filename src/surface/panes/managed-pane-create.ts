@@ -31,7 +31,7 @@ export function createManagedPane(options: CreateManagedPaneOptions): ResttyMana
     setLigatures: (value) => runtime.terminal.setLigatures(value),
     setFontHinting: (value) => runtime.terminal.setFontHinting(value),
     setFontHintTarget: (value) => runtime.terminal.setFontHintTarget(value),
-    setFontSources: (sources) => runtime.terminal.setFontSources(sources),
+    setFonts: (fonts) => runtime.terminal.setFonts(fonts),
     applyTheme: (theme, sourceLabel) => runtime.terminal.applyTheme(theme, sourceLabel),
     resetTheme: () => runtime.terminal.resetTheme(),
     sendInput: (text, source) => runtime.io.sendInput(text, source),

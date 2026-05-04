@@ -5,7 +5,7 @@ import type {
   NavigatorWithLocalFontAccess,
 } from "../../fonts/local-font-access.types";
 import { sourceBufferFromView, sourceLabelFromUrl } from "../create-runtime/runtime-io-utils";
-import type { ResttyFontSource } from "../core/models";
+import type { ResttyResolvedFontSource } from "../core/models";
 import type {
   ResttyFontResourceFace,
   ResttyFontResourceLease,
@@ -50,7 +50,10 @@ export type CreateResttyFontResourceStoreOptions = {
   /** Toggle persistent URL-byte cache (IndexedDB). */
   usePersistentUrlCache?: boolean;
   /** Override source loading (used by tests/mocks). */
-  loadSourceBuffer?: (source: ResttyFontSource, sourceKey: string) => Promise<ArrayBuffer | null>;
+  loadSourceBuffer?: (
+    source: ResttyResolvedFontSource,
+    sourceKey: string,
+  ) => Promise<ArrayBuffer | null>;
   /** Override parse step (used by tests/mocks). */
   parseBuffer?: (buffer: ArrayBuffer, sourceKey: string) => Promise<ParsedFontFace[]>;
 };
@@ -111,15 +114,15 @@ function resolveFaceLabel(baseLabel: string, face: ParsedFontFace): string {
   return baseLabel;
 }
 
-function sourceBaseLabel(source: ResttyFontSource, index: number): string {
+function sourceBaseLabel(source: ResttyResolvedFontSource, index: number): string {
   if (source.label) return source.label;
-  if (source.type === "url") return sourceLabelFromUrl(source.url, index);
-  if (source.type === "local") return source.matchers[0] ?? `local-font-${index + 1}`;
+  if (source.kind === "url") return sourceLabelFromUrl(source.url, index);
+  if (source.kind === "local") return source.matchers[0] ?? `local-font-${index + 1}`;
   return `font-buffer-${index + 1}`;
 }
 
-function getSourceMatchers(source: ResttyFontSource): string[] {
-  if (source.type !== "local") return [];
+function getSourceMatchers(source: ResttyResolvedFontSource): string[] {
+  if (source.kind !== "local") return [];
   const normalized: string[] = [];
   for (let i = 0; i < source.matchers.length; i += 1) {
     const matcher = source.matchers[i];
@@ -131,8 +134,8 @@ function getSourceMatchers(source: ResttyFontSource): string[] {
   return normalized;
 }
 
-function toSourceBuffer(source: ResttyFontSource): ArrayBuffer | null {
-  if (source.type !== "buffer") return null;
+function toSourceBuffer(source: ResttyResolvedFontSource): ArrayBuffer | null {
+  if (source.kind !== "buffer") return null;
   const data = source.data;
   if (data instanceof ArrayBuffer) return data;
   if (ArrayBuffer.isView(data)) return sourceBufferFromView(data);
@@ -152,11 +155,11 @@ function createSourceKeyResolver() {
     return assigned;
   };
 
-  return (source: ResttyFontSource): string => {
-    if (source.type === "url") {
+  return (source: ResttyResolvedFontSource): string => {
+    if (source.kind === "url") {
       return `url:${normalizeUrlKey(source.url)}`;
     }
-    if (source.type === "local") {
+    if (source.kind === "local") {
       const matchers = getSourceMatchers(source);
       return `local:${matchers.join("|")}`;
     }
@@ -434,19 +437,16 @@ export function createResttyFontResourceStore(
   };
 
   const defaultLoadSourceBuffer = async (
-    source: ResttyFontSource,
+    source: ResttyResolvedFontSource,
     sourceKey: string,
   ): Promise<ArrayBuffer | null> => {
-    if (source.type === "buffer") {
+    if (source.kind === "buffer") {
       return toSourceBuffer(source);
     }
-    if (source.type === "local") {
+    if (source.kind === "local") {
       const matchers = getSourceMatchers(source);
       if (!matchers.length) return null;
-      return await tryLoadLocalFontBuffer(
-        matchers,
-        source.label ?? source.matchers[0] ?? "local-font",
-      );
+      return await tryLoadLocalFontBuffer(matchers, source.label);
     }
     return await loadUrlBuffer(sourceKey, normalizeUrlKey(source.url));
   };
@@ -456,7 +456,7 @@ export function createResttyFontResourceStore(
     options.parseBuffer ?? (async (buffer: ArrayBuffer) => parseFontFacesFromBuffer(buffer));
 
   const loadSourceBufferCached = async (
-    source: ResttyFontSource,
+    source: ResttyResolvedFontSource,
     sourceKey: string,
   ): Promise<ArrayBuffer | null> => {
     const cached = sourceCache.get(sourceKey);
@@ -551,7 +551,7 @@ export function createResttyFontResourceStore(
     pruneSourceCache();
   };
 
-  const acquire = async (sources: ResttyFontSource[]): Promise<ResttyFontResourceLease> => {
+  const acquire = async (sources: ResttyResolvedFontSource[]): Promise<ResttyFontResourceLease> => {
     const faces: ResttyFontResourceFace[] = [];
     const sourceRefs = new Map<string, number>();
 
@@ -567,7 +567,7 @@ export function createResttyFontResourceStore(
       }
 
       if (!buffer) {
-        if (source.type === "local") {
+        if (source.kind === "local") {
           const prefix = source.required
             ? "required local font missing"
             : "optional local font missing";

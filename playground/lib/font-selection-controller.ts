@@ -1,19 +1,19 @@
-import { applyFontSourcesToAllPanes, type FontApplicationHost } from "./font-application.ts";
+import { applyFontsToAllPanes, type FontApplicationHost } from "./font-application.ts";
 import {
   FONT_FAMILY_LOCAL_PREFIX,
   detectLocalFontState,
   type LocalFontOption,
 } from "./font-local-picker.ts";
-import { getCurrentFontSources, getStartupFontSources } from "./font-source-catalog.ts";
+import { getCurrentFonts, getStartupFonts } from "./font-catalog.ts";
 
-type FontSourceControllerShellSync = {
+type FontSelectionControllerShellSync = {
   syncFontFamilyValue: () => void;
   syncLocalFontControls: () => void;
 };
 
-type CreatePaneFontSourceControllerOptions = {
+type CreatePaneFontSelectionControllerOptions = {
   host: FontApplicationHost;
-  shellSync: FontSourceControllerShellSync;
+  shellSync: FontSelectionControllerShellSync;
   initialState: {
     detectedLocalFontOptions: LocalFontOption[];
     fontFamily: string;
@@ -23,7 +23,9 @@ type CreatePaneFontSourceControllerOptions = {
   detectLocalFontState?: typeof detectLocalFontState;
 };
 
-export function createPaneFontSourceController(options: CreatePaneFontSourceControllerOptions) {
+export function createPaneFontSelectionController(
+  options: CreatePaneFontSelectionControllerOptions,
+) {
   const detectLocalFontStateImpl = options.detectLocalFontState ?? detectLocalFontState;
   const defaultFontFamily = options.initialState.fontFamily;
 
@@ -32,13 +34,13 @@ export function createPaneFontSourceController(options: CreatePaneFontSourceCont
   let localFontHintText = options.initialState.localFontHintText;
   let selectedLocalFontMatcher = options.initialState.localFontMatcher;
 
-  async function applyFontSources() {
-    await applyFontSourcesToAllPanes({
+  async function applyFonts() {
+    await applyFontsToAllPanes({
       host: options.host,
       selectedFontFamily,
       selectedLocalFontMatcher,
       onError: (error) => {
-        console.error("font source apply failed", error);
+        console.error("font apply failed", error);
       },
     });
   }
@@ -47,7 +49,7 @@ export function createPaneFontSourceController(options: CreatePaneFontSourceCont
     selectedFontFamily = value || defaultFontFamily;
     options.shellSync.syncFontFamilyValue();
     options.shellSync.syncLocalFontControls();
-    await applyFontSources();
+    await applyFonts();
   }
 
   async function applyLocalFontSelection(value: string | null | undefined) {
@@ -60,7 +62,7 @@ export function createPaneFontSourceController(options: CreatePaneFontSourceCont
       selectedLocalFontMatcher = "";
     }
     options.shellSync.syncLocalFontControls();
-    await applyFontSources();
+    await applyFonts();
   }
 
   async function loadLocalFonts() {
@@ -75,9 +77,8 @@ export function createPaneFontSourceController(options: CreatePaneFontSourceCont
     applyLocalFontSelection,
     getDetectedLocalFontOptions: () => detectedLocalFontOptions,
     getFontFamily: () => selectedFontFamily,
-    getFontSources: () => getCurrentFontSources(selectedFontFamily, selectedLocalFontMatcher),
-    getStartupFontSources: () =>
-      getStartupFontSources(selectedFontFamily, selectedLocalFontMatcher),
+    getFonts: () => getCurrentFonts(selectedFontFamily, selectedLocalFontMatcher),
+    getStartupFonts: () => getStartupFonts(selectedFontFamily, selectedLocalFontMatcher),
     getLocalFontHintText: () => localFontHintText,
     getLocalFontMatcher: () => selectedLocalFontMatcher,
     loadLocalFonts,

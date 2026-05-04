@@ -712,7 +712,7 @@ test("surface pane handle derives pane api types from runtime contracts", () => 
     "setFontHintTarget: (value) => runtime.terminal.setFontHintTarget(value)",
   );
   expect(managedPaneCreate).toContain(
-    "setFontSources: (sources) => runtime.terminal.setFontSources(sources)",
+    "setFonts: (fonts) => runtime.terminal.setFonts(fonts)",
   );
   expect(managedPaneCreate).toContain(
     "applyTheme: (theme, sourceLabel) => runtime.terminal.applyTheme(theme, sourceLabel)",
@@ -750,7 +750,7 @@ test("surface pane handle derives pane api types from runtime contracts", () => 
   expect(paneHandle).toContain("this.resolvePane().setLigatures(value)");
   expect(paneHandle).toContain("this.resolvePane().setFontHinting(value)");
   expect(paneHandle).toContain("this.resolvePane().setFontHintTarget(value)");
-  expect(paneHandle).toContain("return this.resolvePane().setFontSources(sources)");
+  expect(paneHandle).toContain("return this.resolvePane().setFonts(fonts)");
   expect(paneHandle).toContain("this.resolvePane().applyTheme(theme, sourceLabel)");
   expect(paneHandle).toContain("this.resolvePane().resetTheme()");
   expect(paneHandle).toContain("this.resolvePane().sendInput(text, source)");
@@ -785,7 +785,7 @@ test("surface pane handle derives pane api types from runtime contracts", () => 
   expect(paneHandle).not.toContain("runtime.terminal.setLigatures(value)");
   expect(paneHandle).not.toContain("runtime.terminal.setFontHinting(value)");
   expect(paneHandle).not.toContain("runtime.terminal.setFontHintTarget(value)");
-  expect(paneHandle).not.toContain("runtime.terminal.setFontSources(sources)");
+  expect(paneHandle).not.toContain("runtime.terminal.setFonts(fonts)");
   expect(paneHandle).not.toContain("runtime.terminal.applyTheme(theme, sourceLabel)");
   expect(paneHandle).not.toContain("runtime.terminal.resetTheme()");
   expect(paneHandle).not.toContain("runtime.io.sendInput(text, source)");
@@ -814,12 +814,12 @@ test("surface pane handle derives pane api types from runtime contracts", () => 
   expect(paneHandle).not.toContain("runtime.render.getShaderStages()");
 });
 
-test("surface restty routes bulk font source updates through pane handles", () => {
+test("surface restty routes bulk font updates through pane handles", () => {
   const restty = readFileSync(resolve(surfaceRoot, "restty.ts"), "utf8");
 
   expect(restty).toContain("this.forEachPane((pane) => {");
-  expect(restty).toContain("updates.push(pane.setFontSources(this.fontSources ?? []))");
-  expect(restty).not.toContain("runtime.terminal.setFontSources(this.fontSources ?? [])");
+  expect(restty).toContain("updates.push(pane.setFonts(this.fonts ?? []))");
+  expect(restty).not.toContain("runtime.terminal.setFonts(this.fonts ?? [])");
 });
 
 test("surface shader ops route bulk shader updates through pane handles", () => {
@@ -1620,13 +1620,10 @@ test("appearance controller delegates font policy", () => {
   );
   const fontController = readFileSync(resolve(playgroundRoot, "lib/font-controller.ts"), "utf8");
   const fontControls = readFileSync(resolve(playgroundRoot, "lib/font-controls.ts"), "utf8");
-  const fontSourceCatalog = readFileSync(
-    resolve(playgroundRoot, "lib/font-source-catalog.ts"),
-    "utf8",
-  );
+  const fontCatalog = readFileSync(resolve(playgroundRoot, "lib/font-catalog.ts"), "utf8");
   const fontLocalPicker = readFileSync(resolve(playgroundRoot, "lib/font-local-picker.ts"), "utf8");
-  const fontSourceController = readFileSync(
-    resolve(playgroundRoot, "lib/font-source-controller.ts"),
+  const fontSelectionController = readFileSync(
+    resolve(playgroundRoot, "lib/font-selection-controller.ts"),
     "utf8",
   );
   const fontRenderingController = readFileSync(
@@ -1635,25 +1632,25 @@ test("appearance controller delegates font policy", () => {
   );
 
   expect(appearanceController).toContain('./font-controller.ts"');
-  expect(appearanceController).not.toContain("applyFontSourcesToAllPanes(");
+  expect(appearanceController).not.toContain("applyFontsToAllPanes(");
   expect(appearanceController).not.toContain("applyFontRenderingOptionsToAllPanes(");
-  expect(fontController).toContain('./font-source-controller.ts"');
+  expect(fontController).toContain('./font-selection-controller.ts"');
   expect(fontController).toContain('./font-rendering-controller.ts"');
-  expect(fontController).not.toContain("applyFontSourcesToAllPanes(");
+  expect(fontController).not.toContain("applyFontsToAllPanes(");
   expect(fontController).not.toContain("applyFontRenderingOptionsToAllPanes(");
   expect(fontController).not.toContain("const detectLocalFontStateImpl =");
   expect(fontController).toContain('./font-local-picker.ts"');
-  expect(fontControls).not.toContain("buildFontSourcesForSelection");
+  expect(fontControls).not.toContain("buildFontsForSelection");
   expect(fontControls).toContain("resolveFontHintTarget");
   expect(fontControls).not.toContain("detectLocalFontState");
   expect(fontControls).not.toContain("supportsLocalFontPicker");
-  expect(fontSourceCatalog).toContain("buildFontSourcesForSelection");
-  expect(fontSourceCatalog).toContain("DEFAULT_FONT_FAMILY");
+  expect(fontCatalog).toContain("buildFontsForSelection");
+  expect(fontCatalog).toContain("DEFAULT_FONT_FAMILY");
   expect(fontLocalPicker).toContain("detectLocalFontState");
   expect(fontLocalPicker).toContain("supportsLocalFontPicker");
-  expect(fontSourceController).toContain("applyFontSourcesToAllPanes(");
-  expect(fontSourceController).toContain('./font-source-catalog.ts"');
-  expect(fontSourceController).toContain("detectLocalFontState");
+  expect(fontSelectionController).toContain("applyFontsToAllPanes(");
+  expect(fontSelectionController).toContain('./font-catalog.ts"');
+  expect(fontSelectionController).toContain("detectLocalFontState");
   expect(fontRenderingController).toContain("applyFontRenderingOptionsToAllPanes(");
   expect(fontRenderingController).toContain("resolveFontHintTarget");
 });

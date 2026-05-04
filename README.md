@@ -111,23 +111,19 @@ restty.selectWordAtClientPoint(120, 48);
 
 ### Provide custom fonts
 
-By default, restty uses a local-first font preset with CDN fallback. To fully control fonts, disable the preset and pass `terminal.fontSources`.
+By default, restty uses a local-first fallback chain with CDN fallbacks. To fully control fonts, pass `terminal.fonts`.
 
 ```ts
 const restty = new Restty({
   root: document.getElementById("terminal") as HTMLElement,
   terminal: {
-    fontPreset: "none",
-    fontSources: [
+    fonts: [
+      "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
       {
-        type: "url",
-        url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-        label: "JetBrains Mono",
-      },
-      {
-        type: "local",
-        matchers: ["jetbrains mono nerd font", "fira code nerd font"],
-        label: "Local fallback",
+        family: "JetBrains Mono Nerd Font",
+        local: "prefer",
+        fallback:
+          "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
       },
     ],
   },
@@ -137,12 +133,9 @@ const restty = new Restty({
 Update fonts at runtime (all panes):
 
 ```ts
-await restty.setFontSources([
-  { type: "local", matchers: ["sf mono"], required: true },
-  {
-    type: "url",
-    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
-  },
+await restty.setFonts([
+  { family: "SF Mono", local: "require" },
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
 ]);
 ```
 
@@ -325,7 +318,7 @@ Active-pane convenience:
 
 - `connectPty(url)` / `disconnectPty()` / `isPtyConnected()`
 - `setRenderer("auto" | "webgpu" | "webgl2")`
-- `setFontSize(number)` / `setLigatures(boolean)` / `setFontSources([...])`
+- `setFontSize(number)` / `setLigatures(boolean)` / `setFonts([...])`
 - `applyTheme(theme)` / `resetTheme()`
 - `setMouseMode("auto" | "on" | "off")`
 - `sendInput(text)` / `sendKeyInput(text)`

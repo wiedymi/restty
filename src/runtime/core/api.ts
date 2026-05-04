@@ -4,7 +4,7 @@ import type { ResttyRuntimeLifecycleState } from "./lifecycle";
 import type { ResttyRuntimeEvent } from "./runtime-events";
 import type {
   ResttyFontHintTarget,
-  ResttyFontSource,
+  ResttyFontInput,
   ResttySearchState,
   ResttyShaderStage,
 } from "./models";
@@ -41,8 +41,8 @@ export type ResttyRuntimeTerminalApi = {
   setFontHinting: (value: boolean) => void;
   /** Update hinting target mode used when hinting is enabled. */
   setFontHintTarget: (value: ResttyFontHintTarget) => void;
-  /** Replace the active font sources and reload fonts. */
-  setFontSources: (sources: ResttyFontSource[]) => Promise<void>;
+  /** Replace the active font list and reload fonts. */
+  setFonts: (fonts: ResttyFontInput[]) => Promise<void>;
   /** Apply a Ghostty color theme. */
   applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
   /** Reset colors to the default theme. */

@@ -1,14 +1,17 @@
 export type { ResttyRuntimeLifecycleState } from "./core/lifecycle";
 export type { ResttyRuntimeEvent } from "./core/runtime-events";
 export type {
-  FontSource,
   ResttyRuntimeInputPayload,
-  ResttyBufferFontSource,
-  ResttyFontBufferData,
+  ResttyFontBufferInput,
+  ResttyFontData,
+  ResttyFontFallbackInput,
+  ResttyFontFamilyInput,
   ResttyFontHintTarget,
-  ResttyFontPreset,
-  ResttyFontSource,
-  ResttyLocalFontSource,
+  ResttyFontInput,
+  ResttyFontPathInput,
+  ResttyFontStyle,
+  ResttyFontUrlInput,
+  ResttyLocalFontMode,
   ResttySearchState,
   ResttySearchViewportMatch,
   ResttyShaderStage,
@@ -16,7 +19,6 @@ export type {
   ResttyShaderStageMode,
   ResttyShaderStageSource,
   ResttyTouchSelectionMode,
-  ResttyUrlFontSource,
 } from "./core/models";
 export type {
   ResttyRuntimeCallbacks,

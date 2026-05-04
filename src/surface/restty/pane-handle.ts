@@ -35,7 +35,7 @@ export type ResttyPaneApi = {
   setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
   setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
   setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
-  setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
+  setFonts: ResttyRuntimeTerminalApi["setFonts"];
   applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
   resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
   sendInput: ResttyRuntimeIoApi["sendInput"];
@@ -115,8 +115,8 @@ export class ResttyPaneHandle implements ResttyPaneApi {
     this.resolvePane().setFontHintTarget(value);
   }
 
-  setFontSources(sources: ResttyFontSource[]): Promise<void> {
-    return this.resolvePane().setFontSources(sources);
+  setFonts(fonts: Parameters<ResttyRuntimeTerminalApi["setFonts"]>[0]): Promise<void> {
+    return this.resolvePane().setFonts(fonts);
   }
 
   applyTheme(theme: GhosttyTheme, sourceLabel?: string): void {

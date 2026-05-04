@@ -1,6 +1,6 @@
 import type { FontHintTarget } from "./font-controls.ts";
 import { getDefaultLocalFontHintText, type LocalFontOption } from "./font-local-picker.ts";
-import { DEFAULT_FONT_FAMILY } from "./font-source-catalog.ts";
+import { DEFAULT_FONT_FAMILY } from "./font-catalog.ts";
 import {
   DEFAULT_FONT_HINT_TARGET,
   DEFAULT_FONT_HINTING,

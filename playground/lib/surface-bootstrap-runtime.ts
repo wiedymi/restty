@@ -44,7 +44,7 @@ export function createPlaygroundSurfaceRuntimeFactories({
         fontHintTarget: appearanceController.getFontHintTarget(),
         fontSizeMode: "em",
         alphaBlending: "native",
-        fontSources: appearanceController.getStartupFontSources(),
+        fonts: appearanceController.getStartupFonts(),
       };
     },
     services: () => ({

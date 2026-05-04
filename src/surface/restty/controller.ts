@@ -48,7 +48,7 @@ const resttyPluginSurfacePassthroughKeys = [
   "setLigatures",
   "setFontHinting",
   "setFontHintTarget",
-  "setFontSources",
+  "setFonts",
   "applyTheme",
   "resetTheme",
   "sendInput",

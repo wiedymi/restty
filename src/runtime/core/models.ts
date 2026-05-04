@@ -12,52 +12,93 @@ export type ResttySearchState = {
 export type ResttySearchViewportMatch = SearchViewportMatch;
 
 /** Raw font data as an ArrayBuffer or typed-array view. */
-export type ResttyFontBufferData = ArrayBuffer | ArrayBufferView;
+export type ResttyFontData = ArrayBuffer | ArrayBufferView;
 
-/** Font source loaded from a URL. */
-export type ResttyUrlFontSource = {
-  type: "url";
-  /** URL to fetch the font file from. */
-  url: string;
-  /** Human-readable label for UI/status output. */
-  label?: string;
+/** Font style metadata used for local matching and face labels. */
+export type ResttyFontStyle = "normal" | "italic" | "oblique";
+
+/** Local Font Access behavior for family-based inputs. */
+export type ResttyLocalFontMode = "prefer" | "require";
+
+/** Font loaded from a URL or app-relative path. */
+export type ResttyFontUrlInput = {
+  url: string | URL;
+  name?: string;
+  weight?: number;
+  style?: ResttyFontStyle;
 };
 
-/** Font source loaded from an in-memory buffer. */
-export type ResttyBufferFontSource = {
-  type: "buffer";
-  /** Raw font file bytes. */
-  data: ResttyFontBufferData;
-  /** Human-readable label for UI/status output. */
-  label?: string;
+/** Font loaded from an app-relative path. */
+export type ResttyFontPathInput = {
+  path: string;
+  name?: string;
+  weight?: number;
+  style?: ResttyFontStyle;
 };
 
-/** Font source resolved from locally installed fonts via the Local Font Access API. */
-export type ResttyLocalFontSource = {
-  type: "local";
-  /** Font family name patterns to match against installed fonts. */
-  matchers: string[];
-  /** Human-readable label for UI/status output. */
-  label?: string;
-  /** If true, font loading fails when no local match is found. */
-  required?: boolean;
+/** Font loaded from an in-memory buffer. */
+export type ResttyFontBufferInput = {
+  data: ResttyFontData;
+  name?: string;
+  weight?: number;
+  style?: ResttyFontStyle;
+};
+
+/** Non-family font inputs that can be used as fallbacks. */
+export type ResttyFontFallbackInput =
+  | string
+  | URL
+  | ResttyFontData
+  | ResttyFontUrlInput
+  | ResttyFontPathInput
+  | ResttyFontBufferInput;
+
+/**
+ * Font resolved by family name through Local Font Access, optionally falling
+ * back to a URL/path/buffer when the local face is unavailable.
+ */
+export type ResttyFontFamilyInput = {
+  family: string;
+  local?: ResttyLocalFontMode;
+  fallback?: ResttyFontFallbackInput;
+  name?: string;
+  weight?: number;
+  style?: ResttyFontStyle;
 };
 
 /**
- * A font source specification.
- * - url: fetched from a URL
- * - buffer: provided as in-memory bytes
- * - local: resolved from locally installed fonts
+ * Public font input accepted by runtime and surface APIs.
+ * - string/URL/path: fetched directly when URL-like, otherwise treated as a local family
+ * - buffer/data: parsed from memory
+ * - family: tries Local Font Access, with optional fallback
  */
-export type ResttyFontSource = ResttyUrlFontSource | ResttyBufferFontSource | ResttyLocalFontSource;
-/** Alias for ResttyFontSource. */
-export type FontSource = ResttyFontSource;
-/**
- * Built-in font preset.
- * - default-cdn: load the default font from CDN
- * - none: do not load any preset fonts
- */
-export type ResttyFontPreset = "default-cdn" | "none";
+export type ResttyFontInput = ResttyFontFallbackInput | ResttyFontFamilyInput;
+
+/** Internal resolved source consumed by the runtime font resource store. */
+export type ResttyResolvedFontSource =
+  | {
+      kind: "url";
+      url: string;
+      label: string;
+      weight?: number;
+      style?: ResttyFontStyle;
+    }
+  | {
+      kind: "buffer";
+      data: ResttyFontData;
+      label: string;
+      weight?: number;
+      style?: ResttyFontStyle;
+    }
+  | {
+      kind: "local";
+      family: string;
+      matchers: string[];
+      label: string;
+      required: boolean;
+      weight?: number;
+      style?: ResttyFontStyle;
+    };
 /**
  * Touch-based text selection behavior.
  * - drag: immediate drag-selection on touch

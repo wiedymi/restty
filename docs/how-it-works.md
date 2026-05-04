@@ -47,7 +47,7 @@ restty drains that output (`wasm.drainOutput(...)`) and forwards it to the PTY t
 ## Theme/font flow
 
 - Themes come from built-ins or Ghostty theme parsing (`src/theme/`).
-- Font loading is managed by `src/fonts/` and configured via `terminal.fontPreset` + `terminal.fontSources`.
+- Font loading is managed by `src/fonts/` and configured via `terminal.fonts`.
 - App layer applies colors and font changes, then triggers redraw.
 
 ## Plugin/shader flow

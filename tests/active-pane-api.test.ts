@@ -16,13 +16,13 @@ class TestActivePaneApi extends ResttyActivePaneApi {
 describe("ResttyPaneHandle", () => {
   test("delegates font tuning methods through the pane contract", async () => {
     const calls: Array<[string, unknown]> = [];
-    const fontSources = [{ type: "url" as const, url: "https://example.com/font.woff2" }];
+    const fonts = [{ url: "https://example.com/font.woff2" }];
     const pane = {
       id: 1,
       setLigatures: (value: boolean) => void calls.push(["setLigatures", value]),
       setFontHinting: (value: boolean) => void calls.push(["setFontHinting", value]),
       setFontHintTarget: (value: string) => void calls.push(["setFontHintTarget", value]),
-      setFontSources: async (sources: unknown[]) => void calls.push(["setFontSources", sources]),
+      setFonts: async (value: unknown[]) => void calls.push(["setFonts", value]),
     } as any;
 
     const handle = new ResttyPaneHandle(() => pane, {
@@ -37,13 +37,13 @@ describe("ResttyPaneHandle", () => {
     handle.setLigatures(true);
     handle.setFontHinting(false);
     handle.setFontHintTarget("light");
-    await handle.setFontSources(fontSources);
+    await handle.setFonts(fonts);
 
     expect(calls).toEqual([
       ["setLigatures", true],
       ["setFontHinting", false],
       ["setFontHintTarget", "light"],
-      ["setFontSources", fontSources],
+      ["setFonts", fonts],
     ]);
   });
 
@@ -214,7 +214,7 @@ describe("ResttyPaneHandle", () => {
 describe("ResttyActivePaneApi", () => {
   test("delegates the pane-scoped terminal convenience methods", async () => {
     const calls: Array<[string, unknown[]]> = [];
-    const fontSources = [{ type: "buffer" as const, data: new Uint8Array([1, 2, 3]) }];
+    const fonts = [{ data: new Uint8Array([1, 2, 3]) }];
     const shaderStages = [{ id: "fx/test", shader: { wgsl: "fn resttyStage() {}" } }];
     const searchState: ResttySearchState = {
       query: "foo",
@@ -228,7 +228,7 @@ describe("ResttyActivePaneApi", () => {
       setLigatures: (value: boolean) => void calls.push(["setLigatures", [value]]),
       setFontHinting: (value: boolean) => void calls.push(["setFontHinting", [value]]),
       setFontHintTarget: (value: string) => void calls.push(["setFontHintTarget", [value]]),
-      setFontSources: async (sources: unknown[]) => void calls.push(["setFontSources", [sources]]),
+      setFonts: async (value: unknown[]) => void calls.push(["setFonts", [value]]),
       connectPty: (url = "") => void calls.push(["connectPty", [url]]),
       disconnectPty: () => void calls.push(["disconnectPty", []]),
       selectWordAtClientPoint: (x: number, y: number) => {
@@ -249,7 +249,7 @@ describe("ResttyActivePaneApi", () => {
     api.setLigatures(true);
     api.setFontHinting(false);
     api.setFontHintTarget("normal");
-    await api.setFontSources(fontSources);
+    await api.setFonts(fonts);
     api.connectPty("ws://localhost:8787/pty");
     api.disconnectPty();
     expect(api.selectWordAtClientPoint(10, 12)).toBe(true);
@@ -265,7 +265,7 @@ describe("ResttyActivePaneApi", () => {
       ["setLigatures", [true]],
       ["setFontHinting", [false]],
       ["setFontHintTarget", ["normal"]],
-      ["setFontSources", [fontSources]],
+      ["setFonts", [fonts]],
       ["connectPty", ["ws://localhost:8787/pty"]],
       ["disconnectPty", []],
       ["selectWordAtClientPoint", [10, 12]],

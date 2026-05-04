@@ -111,7 +111,7 @@ export function createPlaygroundSessionControllers({
       forEachPane: (visitor) => {
         getRestty().forEachPane(visitor);
       },
-      setFontSources: (sources) => getRestty().setFontSources(sources),
+      setFonts: (fonts) => getRestty().setFonts(fonts),
       setShaderStages: (stages) => getRestty().setShaderStages(stages),
     },
     getActivePane: () => getRestty().activePane(),

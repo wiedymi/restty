@@ -1,4 +1,4 @@
-import type { ResttyFontSource } from "../../runtime/core/models";
+import type { ResttyFontInput } from "../../runtime/core/models";
 import { createResttyManagedPaneManager } from "../panes/managed-pane-manager";
 import type { ResttyManagedPaneManager } from "../panes/managed-pane-types";
 import type { ResttyConfig } from "./config";
@@ -12,7 +12,7 @@ type BootstrapResttySurfaceOptions = {
   restty: ResttyPluginSurfaceBridgeSource;
   forEachPane: (visitor: (pane: Pick<ResttyPaneApi, "id" | "setShaderStages">) => void) => void;
   getPaneHandleById: (id: number) => Pick<ResttyPaneApi, "id" | "setShaderStages"> | null;
-  getFontSources: () => ResttyFontSource[] | undefined;
+  getFonts: () => ResttyFontInput[] | undefined;
   options: ResttyConfig;
 };
 
@@ -20,7 +20,7 @@ export function bootstrapResttySurface({
   restty,
   forEachPane,
   getPaneHandleById,
-  getFontSources,
+  getFonts,
   options,
 }: BootstrapResttySurfaceOptions): {
   shaderOps: ResttyShaderOps;
@@ -51,7 +51,7 @@ export function bootstrapResttySurface({
     restty,
     forEachPane,
     getPaneHandleById,
-    getFontSources,
+    getFonts,
     terminal,
     services,
     events,

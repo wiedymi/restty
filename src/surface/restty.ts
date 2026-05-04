@@ -1,4 +1,4 @@
-import type { ResttyFontSource, ResttyShaderStage } from "../runtime/core/models";
+import type { ResttyFontInput, ResttyShaderStage } from "../runtime/core/models";
 import type {
   ResttyManagedPaneManager,
   ResttyManagedPaneSearchUiStyleOptions,
@@ -83,21 +83,21 @@ export type { ResttySurfaceEvents, ResttySurfacePane } from "./restty/events";
  */
 export class Restty extends ResttyActivePaneApi {
   readonly paneManager: ResttyManagedPaneManager;
-  private fontSources: ResttyFontSource[] | undefined;
+  private fonts: ResttyFontInput[] | undefined;
   private readonly shaderOps: ResttyShaderOps;
   private readonly controller: ResttyController;
   private readonly paneLookupOps: ResttyPaneLookup;
 
   constructor(options: ResttyConfig) {
     super();
-    this.fontSources = undefined;
+    this.fonts = undefined;
     const { shaderOps, controller, paneManager, createInitialPane } = bootstrapResttySurface({
       restty: this,
       forEachPane: (visitor) => {
         this.forEachPane(visitor);
       },
       getPaneHandleById: (id) => this.pane(id),
-      getFontSources: () => this.fontSources,
+      getFonts: () => this.fonts,
       options,
     });
     this.shaderOps = shaderOps;
@@ -154,11 +154,11 @@ export class Restty extends ResttyActivePaneApi {
     paneOps.forEachPane(this.paneLookupOps, visitor);
   }
 
-  async setFontSources(sources: ResttyFontSource[]): Promise<void> {
-    this.fontSources = sources.length ? [...sources] : undefined;
+  async setFonts(fonts: ResttyFontInput[]): Promise<void> {
+    this.fonts = [...fonts];
     const updates: Array<Promise<void>> = [];
     this.forEachPane((pane) => {
-      updates.push(pane.setFontSources(this.fontSources ?? []));
+      updates.push(pane.setFonts(this.fonts ?? []));
     });
     await Promise.all(updates);
   }

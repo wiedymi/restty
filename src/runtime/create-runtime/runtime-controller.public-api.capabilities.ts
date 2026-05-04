@@ -119,7 +119,7 @@ export function createRuntimeTerminalView({
     setLigatures: terminalCapabilities.setLigatures,
     setFontHinting: terminalCapabilities.setFontHinting,
     setFontHintTarget: terminalCapabilities.setFontHintTarget,
-    setFontSources: terminalCapabilities.setFontSources,
+    setFonts: terminalCapabilities.setFonts,
     applyTheme,
     resetTheme: terminalCapabilities.resetTheme,
     clearScreen,

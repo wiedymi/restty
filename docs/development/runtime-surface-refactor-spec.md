@@ -148,8 +148,7 @@ export type ResttyTerminalConfig = {
   ligatures?: boolean;
   fontHinting?: boolean;
   fontHintTarget?: ResttyFontHintTarget;
-  fontPreset?: ResttyFontPreset;
-  fontSources?: ResttyFontSource[];
+  fonts?: ResttyFontInput[];
   shaderStages?: ResttyShaderStage[];
   alphaBlending?: "native" | "linear" | "linear-corrected";
   maxScrollbackBytes?: number;
@@ -320,7 +319,7 @@ export type ResttyRuntime = {
     setLigatures: (value: boolean) => void;
     setFontHinting: (value: boolean) => void;
     setFontHintTarget: (value: ResttyFontHintTarget) => void;
-    setFontSources: (sources: ResttyFontSource[]) => Promise<void>;
+    setFonts: (fonts: ResttyFontInput[]) => Promise<void>;
     applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
     resetTheme: () => void;
     clearScreen: () => void;
@@ -406,7 +405,7 @@ export type ResttyPaneTerminalApi = {
   setLigatures: (value: boolean) => void;
   setFontHinting: (value: boolean) => void;
   setFontHintTarget: (value: ResttyFontHintTarget) => void;
-  setFontSources: (sources: ResttyFontSource[]) => Promise<void>;
+  setFonts: (fonts: ResttyFontInput[]) => Promise<void>;
   applyTheme: (theme: GhosttyTheme, sourceLabel?: string) => void;
   resetTheme: () => void;
   sendInput: (text: string, source?: string) => void;
@@ -677,7 +676,7 @@ The following files are the clearest candidates for relocation or splitting base
 
 - `src/runtime/types.ts`
   Split over time.
-  It currently holds session, callbacks, font-source types, shader-stage types, runtime config, and runtime API.
+  It currently holds session, callbacks, font input/resolved-source types, shader-stage types, runtime config, and runtime API.
   Target:
   - `runtime/core/types.ts`
   - `runtime/core/config.ts`

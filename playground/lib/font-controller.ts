@@ -5,7 +5,7 @@ import {
   createPaneFontRenderingController,
   type FontRenderingControllerPane,
 } from "./font-rendering-controller.ts";
-import { createPaneFontSourceController } from "./font-source-controller.ts";
+import { createPaneFontSelectionController } from "./font-selection-controller.ts";
 import type { PaneState } from "./pane-state.ts";
 
 export type FontControllerPane = FontRenderingControllerPane;
@@ -35,7 +35,7 @@ type CreatePaneFontControllerOptions = {
 };
 
 export function createPaneFontController(options: CreatePaneFontControllerOptions) {
-  const sourceController = createPaneFontSourceController({
+  const selectionController = createPaneFontSelectionController({
     host: options.host,
     shellSync: {
       syncFontFamilyValue: options.shellSync.syncFontFamilyValue,
@@ -65,24 +65,24 @@ export function createPaneFontController(options: CreatePaneFontControllerOption
   });
 
   return {
-    applyFontFamilySelection: sourceController.applyFontFamilySelection,
+    applyFontFamilySelection: selectionController.applyFontFamilySelection,
     applyFontHintTargetChange: renderingController.applyFontHintTargetChange,
     applyFontHintingChange: renderingController.applyFontHintingChange,
     applyFontRenderingSelections: renderingController.applyFontRenderingSelections,
     applyFontSizeValue: renderingController.applyFontSizeValue,
     applyLigaturesChange: renderingController.applyLigaturesChange,
-    applyLocalFontSelection: sourceController.applyLocalFontSelection,
-    getDetectedLocalFontOptions: sourceController.getDetectedLocalFontOptions,
-    getFontFamily: sourceController.getFontFamily,
+    applyLocalFontSelection: selectionController.applyLocalFontSelection,
+    getDetectedLocalFontOptions: selectionController.getDetectedLocalFontOptions,
+    getFontFamily: selectionController.getFontFamily,
     getFontHintTarget: renderingController.getFontHintTarget,
     getFontHinting: renderingController.getFontHinting,
     getFontSizeDefault: renderingController.getFontSizeDefault,
-    getFontSources: sourceController.getFontSources,
-    getStartupFontSources: sourceController.getStartupFontSources,
+    getFonts: selectionController.getFonts,
+    getStartupFonts: selectionController.getStartupFonts,
     getLigatures: renderingController.getLigatures,
-    getLocalFontHintText: sourceController.getLocalFontHintText,
-    getLocalFontMatcher: sourceController.getLocalFontMatcher,
-    loadLocalFonts: sourceController.loadLocalFonts,
+    getLocalFontHintText: selectionController.getLocalFontHintText,
+    getLocalFontMatcher: selectionController.getLocalFontMatcher,
+    loadLocalFonts: selectionController.loadLocalFonts,
     syncFontSizeDefaultFromState: renderingController.syncFontSizeDefaultFromState,
   };
 }

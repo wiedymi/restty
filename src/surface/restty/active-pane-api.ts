@@ -37,10 +37,8 @@ export abstract class ResttyActivePaneApi implements ResttyActivePaneSurfaceApi 
     this.requireActivePaneHandle().setFontHintTarget(value);
   }
 
-  setFontSources(
-    sources: Parameters<ResttyPaneApi["setFontSources"]>[0],
-  ): ReturnType<ResttyPaneApi["setFontSources"]> {
-    return this.requireActivePaneHandle().setFontSources(sources);
+  setFonts(fonts: Parameters<ResttyPaneApi["setFonts"]>[0]): ReturnType<ResttyPaneApi["setFonts"]> {
+    return this.requireActivePaneHandle().setFonts(fonts);
   }
 
   applyTheme(

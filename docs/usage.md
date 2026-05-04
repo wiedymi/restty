@@ -141,7 +141,7 @@ restty.applyTheme(theme, "inline");
 
 ## 6) Fonts
 
-By default, restty loads a local-first font preset with CDN fallback.
+By default, restty loads a local-first fallback chain with CDN fallbacks.
 
 To fully control font loading:
 
@@ -149,17 +149,13 @@ To fully control font loading:
 const restty = new Restty({
   root: document.getElementById("paneRoot") as HTMLElement,
   terminal: {
-    fontPreset: "none",
-    fontSources: [
+    fonts: [
+      "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
       {
-        type: "url",
-        url: "https://cdn.jsdelivr.net/gh/JetBrains/JetBrainsMono@v2.304/fonts/ttf/JetBrainsMono-Regular.ttf",
-        label: "JetBrains Mono",
-      },
-      {
-        type: "local",
-        matchers: ["sf mono", "jetbrains mono nerd font"],
-        required: false,
+        family: "JetBrains Mono Nerd Font",
+        local: "prefer",
+        fallback:
+          "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
       },
     ],
   },
@@ -169,12 +165,9 @@ const restty = new Restty({
 Update all panes at runtime:
 
 ```ts
-await restty.setFontSources([
-  { type: "local", matchers: ["sf mono"], required: true },
-  {
-    type: "url",
-    url: "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
-  },
+await restty.setFonts([
+  { family: "SF Mono", local: "require" },
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
 ]);
 ```
 

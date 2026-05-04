@@ -5,7 +5,9 @@ import {
   isSymbolFont,
   pickFontIndexForText,
 } from "../src/fonts";
-import { DEFAULT_FONT_SOURCES } from "../src/runtime/fonts/font-sources";
+import { DEFAULT_FONT_INPUTS, resolveFontInputs } from "../src/runtime/fonts/font-sources";
+
+const DEFAULT_RESOLVED_FONTS = resolveFontInputs(DEFAULT_FONT_INPUTS);
 
 function makeFont(codepoints: number[]) {
   const glyphSet = new Set(codepoints);
@@ -94,8 +96,8 @@ test("non-nerd symbols prefer first matching fallback in order", () => {
   expect(picked).toBe(0);
 });
 
-test("default font sources prioritize Noto symbols before Symbola fallback", () => {
-  const urls = DEFAULT_FONT_SOURCES.filter((source) => source.type === "url").map(
+test("default fonts prioritize Noto symbols before Symbola fallback", () => {
+  const urls = DEFAULT_RESOLVED_FONTS.filter((source) => source.kind === "url").map(
     (source) => source.url,
   );
   const primaryIndex = urls.findIndex((url) =>
@@ -119,24 +121,24 @@ test("default font sources prioritize Noto symbols before Symbola fallback", () 
   expect(notoSymbolsIndex).toBeLessThan(symbolaIndex);
 });
 
-test("default font sources prefer local JetBrains and Nerd symbols before CDN fallbacks", () => {
-  const jetbrainsLocalIndex = DEFAULT_FONT_SOURCES.findIndex(
+test("default fonts prefer local JetBrains and Nerd symbols before CDN fallbacks", () => {
+  const jetbrainsLocalIndex = DEFAULT_RESOLVED_FONTS.findIndex(
     (source) =>
-      source.type === "local" &&
+      source.kind === "local" &&
       source.matchers.some((matcher) => matcher.includes("jetbrains mono")),
   );
-  const jetbrainsUrlIndex = DEFAULT_FONT_SOURCES.findIndex(
+  const jetbrainsUrlIndex = DEFAULT_RESOLVED_FONTS.findIndex(
     (source) =>
-      source.type === "url" && source.url.includes("JetBrainsMonoNLNerdFontMono-Regular.ttf"),
+      source.kind === "url" && source.url.includes("JetBrainsMonoNLNerdFontMono-Regular.ttf"),
   );
 
-  const nerdSymbolsLocalIndex = DEFAULT_FONT_SOURCES.findIndex(
+  const nerdSymbolsLocalIndex = DEFAULT_RESOLVED_FONTS.findIndex(
     (source) =>
-      source.type === "local" &&
+      source.kind === "local" &&
       source.matchers.some((matcher) => matcher.includes("symbols nerd font")),
   );
-  const nerdSymbolsUrlIndex = DEFAULT_FONT_SOURCES.findIndex(
-    (source) => source.type === "url" && source.url.includes("SymbolsNerdFontMono-Regular.ttf"),
+  const nerdSymbolsUrlIndex = DEFAULT_RESOLVED_FONTS.findIndex(
+    (source) => source.kind === "url" && source.url.includes("SymbolsNerdFontMono-Regular.ttf"),
   );
 
   expect(jetbrainsLocalIndex).toBeGreaterThanOrEqual(0);
@@ -155,7 +157,7 @@ test("symbol font classification includes Symbola and Apple Symbols", () => {
 });
 
 test("default local fallback includes robust Apple matcher aliases", () => {
-  const localSources = DEFAULT_FONT_SOURCES.filter((source) => source.type === "local");
+  const localSources = DEFAULT_RESOLVED_FONTS.filter((source) => source.kind === "local");
   const appleSymbols = localSources.find((source) => source.label === "Apple Symbols");
   const appleEmoji = localSources.find((source) => source.label === "Apple Color Emoji");
   expect(appleSymbols?.matchers.includes("apple symbols")).toBe(true);
@@ -164,19 +166,45 @@ test("default local fallback includes robust Apple matcher aliases", () => {
   expect(appleEmoji?.matchers.includes("applecoloremoji")).toBe(true);
 });
 
-test("default font sources include canadian aboriginal fallback for syllabics", () => {
-  const canadianUrlIndex = DEFAULT_FONT_SOURCES.findIndex(
+test("default fonts include canadian aboriginal fallback for syllabics", () => {
+  const canadianUrlIndex = DEFAULT_RESOLVED_FONTS.findIndex(
     (source) =>
-      source.type === "url" && source.url.includes("NotoSansCanadianAboriginal-Regular.ttf"),
+      source.kind === "url" && source.url.includes("NotoSansCanadianAboriginal-Regular.ttf"),
   );
-  const canadianLocalSource = DEFAULT_FONT_SOURCES.find(
+  const canadianLocalSource = DEFAULT_RESOLVED_FONTS.find(
     (source) =>
-      source.type === "local" &&
+      source.kind === "local" &&
       source.matchers.some((matcher) => matcher.includes("canadian aboriginal")),
   );
   expect(canadianUrlIndex).toBeGreaterThanOrEqual(0);
   expect(canadianLocalSource).toBeTruthy();
-  if (canadianLocalSource?.type === "local") {
+  if (canadianLocalSource?.kind === "local") {
     expect(canadianLocalSource.matchers.includes("euphemia ucas")).toBe(true);
   }
+});
+
+test("font input resolver uses the new public shape and rejects legacy source objects", () => {
+  const resolved = resolveFontInputs([
+    { family: "Fira Code", local: "require" },
+    "fonts/FiraCode-Regular.ttf",
+    { data: new Uint8Array([1, 2, 3]), name: "Buffer Font" },
+  ]);
+
+  expect(resolved[0]).toMatchObject({
+    kind: "local",
+    family: "Fira Code",
+    required: true,
+  });
+  expect(resolved[1]).toMatchObject({
+    kind: "url",
+    url: "fonts/FiraCode-Regular.ttf",
+  });
+  expect(resolved[2]).toMatchObject({
+    kind: "buffer",
+    label: "Buffer Font",
+  });
+
+  expect(() =>
+    resolveFontInputs([{ type: "url", url: "https://example.test/font.ttf" } as any]),
+  ).toThrow("removed legacy font source shape");
 });

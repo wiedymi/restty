@@ -2,8 +2,7 @@ import type { PtyTransport } from "../../pty";
 import type {
   ResttyRuntimeInputPayload,
   ResttyFontHintTarget,
-  ResttyFontPreset,
-  ResttyFontSource,
+  ResttyFontInput,
   ResttyShaderStage,
   ResttyTouchSelectionMode,
 } from "./models";
@@ -73,10 +72,8 @@ export type ResttyTerminalConfig = {
    * - linear-corrected: linear-space with gamma correction
    */
   alphaBlending?: "native" | "linear" | "linear-corrected";
-  /** Built-in font preset to load. */
-  fontPreset?: ResttyFontPreset;
-  /** Custom font sources to load. */
-  fontSources?: ResttyFontSource[];
+  /** Ordered terminal fonts. Omit to use the built-in local-first fallback chain. */
+  fonts?: ResttyFontInput[];
   /** Maximum scale factor for the symbol atlas texture. */
   maxSymbolAtlasScale?: number;
   /** Per-glyph scale overrides matched by regex. */

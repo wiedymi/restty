@@ -1,4 +1,4 @@
-import type { ResttyFontSource } from "../../runtime/core/models";
+import type { ResttyFontInput } from "../../runtime/core/models";
 import {
   createMergedPaneServicesConfig,
   createMergedPaneTerminalConfig,
@@ -11,7 +11,7 @@ import { ResttyShaderOps } from "./shader-ops";
 type CreateResttyPaneManagerAssemblyOptions = {
   shaderOps: ResttyShaderOps;
   controller: ResttyController;
-  getFontSources: () => ResttyFontSource[] | undefined;
+  getFonts: () => ResttyFontInput[] | undefined;
   terminal: ResttyConfig["terminal"];
   services: ResttyConfig["services"];
   events: NonNullable<NonNullable<ResttyConfig["surface"]>["events"]> | undefined;
@@ -20,7 +20,7 @@ type CreateResttyPaneManagerAssemblyOptions = {
 export function createResttyPaneManagerAssembly({
   shaderOps,
   controller,
-  getFontSources,
+  getFonts,
   terminal,
   services,
   events,
@@ -37,7 +37,7 @@ export function createResttyPaneManagerAssembly({
 
   const mergedTerminalConfig = createMergedPaneTerminalConfig({
     terminal,
-    getFontSources,
+    getFonts,
     shaderOps,
   });
   const mergedServicesConfig = createMergedPaneServicesConfig({

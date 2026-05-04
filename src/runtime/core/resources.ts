@@ -2,7 +2,7 @@ import type { DesktopNotification } from "../../input";
 import type { WebGPUCoreState } from "../../renderer";
 import type { ResttyWasm } from "../../wasm";
 import type { Font as TextShaperFont } from "text-shaper";
-import type { ResttyFontSource, ResttySearchState } from "./models";
+import type { ResttyResolvedFontSource, ResttySearchState } from "./models";
 
 /** Callback for WASM log messages. */
 export type ResttyWasmLogListener = (message: string) => void;
@@ -26,7 +26,7 @@ export type ResttyFontResourceLease = {
 /** Session-level font resource store for deduped loading/parsing and caching. */
 export type ResttyFontResourceStore = {
   /** Acquire parsed faces for a source list. */
-  acquire: (sources: ResttyFontSource[]) => Promise<ResttyFontResourceLease>;
+  acquire: (sources: ResttyResolvedFontSource[]) => Promise<ResttyFontResourceLease>;
 };
 
 /**

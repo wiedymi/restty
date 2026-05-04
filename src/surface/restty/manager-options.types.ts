@@ -1,5 +1,5 @@
 import type { DesktopNotification } from "../../input";
-import type { ResttyFontSource } from "../../runtime/core/models";
+import type { ResttyFontInput } from "../../runtime/core/models";
 import type { ResttyPluginHost } from "../plugins/host";
 import type { ResttyRenderHookPayload } from "../plugins/context.types";
 import type { ResttyPluginEvents } from "../plugins/types";
@@ -25,7 +25,7 @@ export type PaneManagerEventHandlers = {
 
 export type MergedPaneTerminalConfigDeps = {
   terminal: ResttyTerminalConfigInput | undefined;
-  getFontSources: () => ResttyFontSource[] | undefined;
+  getFonts: () => ResttyFontInput[] | undefined;
   shaderOps: Pick<
     ResttyShaderOps,
     "normalizePaneShaderStages" | "setPaneBaseShaderStages" | "buildMergedShaderStages"

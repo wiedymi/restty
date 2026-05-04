@@ -20,10 +20,10 @@ export function createMergedPaneTerminalConfig(
     const paneBaseStages = deps.shaderOps.normalizePaneShaderStages(resolved.shaderStages, paneId);
     deps.shaderOps.setPaneBaseShaderStages(paneId, paneBaseStages);
 
-    const fontSources = deps.getFontSources();
+    const fonts = deps.getFonts();
     return {
       ...resolved,
-      ...(fontSources ? { fontSources } : {}),
+      ...(fonts ? { fonts } : {}),
       shaderStages: deps.shaderOps.buildMergedShaderStages(paneBaseStages),
     };
   };

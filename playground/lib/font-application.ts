@@ -1,6 +1,6 @@
 import type { ResttyPaneApi } from "../../src/index.ts";
 import type { FontHintTarget } from "./font-controls.ts";
-import { getCurrentFontSources } from "./font-source-catalog.ts";
+import { getCurrentFonts } from "./font-catalog.ts";
 
 export type FontApplicationPane = Pick<
   ResttyPaneApi,
@@ -8,11 +8,11 @@ export type FontApplicationPane = Pick<
 >;
 
 export type FontApplicationHost = {
-  setFontSources: (sources: ReturnType<typeof getCurrentFontSources>) => Promise<void>;
+  setFonts: (fonts: ReturnType<typeof getCurrentFonts>) => Promise<void>;
   forEachPane: (visitor: (pane: FontApplicationPane) => void) => void;
 };
 
-type FontSourcesOptions = {
+type FontsOptions = {
   host: FontApplicationHost;
   selectedFontFamily: string;
   selectedLocalFontMatcher: string;
@@ -26,10 +26,10 @@ type FontRenderingOptions = {
   selectedFontHintTarget: FontHintTarget;
 };
 
-export async function applyFontSourcesToAllPanes(options: FontSourcesOptions) {
+export async function applyFontsToAllPanes(options: FontsOptions) {
   try {
-    await options.host.setFontSources(
-      getCurrentFontSources(options.selectedFontFamily, options.selectedLocalFontMatcher),
+    await options.host.setFonts(
+      getCurrentFonts(options.selectedFontFamily, options.selectedLocalFontMatcher),
     );
   } catch (error) {
     options.onError?.(error);

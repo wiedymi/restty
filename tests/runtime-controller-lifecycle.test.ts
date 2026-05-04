@@ -173,7 +173,7 @@ function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
         setLigatures: () => undefined,
         setFontHinting: () => undefined,
         setFontHintTarget: () => undefined,
-        setFontSources: async () => undefined,
+        setFonts: async () => undefined,
         resetTheme: () => undefined,
       },
       search: {

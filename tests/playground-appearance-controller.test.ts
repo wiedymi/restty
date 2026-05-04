@@ -89,7 +89,7 @@ test("appearance controller composes theme, font, and terminal controllers", asy
       forEachPane: (visitor) => {
         visitor(pane);
       },
-      setFontSources: async () => {},
+      setFonts: async () => {},
       setShaderStages: () => {
         shaderStages.push("set");
       },

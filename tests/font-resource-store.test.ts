@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { createResttyFontResourceStore } from "../src/runtime/fonts/font-resource-store";
-import type { ResttyFontSource } from "../src/runtime/types";
+import type { ResttyResolvedFontSource } from "../src/runtime/core/models";
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
@@ -20,8 +20,8 @@ test("font resource store dedupes parse work for concurrent buffer acquires", as
     },
   });
 
-  const source: ResttyFontSource = {
-    type: "buffer",
+  const source: ResttyResolvedFontSource = {
+    kind: "buffer",
     data: new ArrayBuffer(8),
     label: "Test Mono",
   };
@@ -59,8 +59,8 @@ test("font resource store dedupes url fetches and reuses in-memory bytes", async
       parseBuffer: async () => [{ font: sharedFont }],
     });
 
-    const source: ResttyFontSource = {
-      type: "url",
+    const source: ResttyResolvedFontSource = {
+      kind: "url",
       url: "https://example.test/font.ttf",
       label: "URL Font",
     };

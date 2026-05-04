@@ -124,7 +124,7 @@ test("runtime controller exposes search controls on the public Restty runtime", 
       setLigatures: () => undefined,
       setFontHinting: () => undefined,
       setFontHintTarget: () => undefined,
-      setFontSources: async () => undefined,
+      setFonts: async () => undefined,
       resetTheme: () => undefined,
     },
     search: {

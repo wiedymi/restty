@@ -186,7 +186,7 @@ export type ResttyPaneWithRuntimeActions = ResttyPaneWithRuntime & {
   setLigatures: ResttyRuntimeTerminalApi["setLigatures"];
   setFontHinting: ResttyRuntimeTerminalApi["setFontHinting"];
   setFontHintTarget: ResttyRuntimeTerminalApi["setFontHintTarget"];
-  setFontSources: ResttyRuntimeTerminalApi["setFontSources"];
+  setFonts: ResttyRuntimeTerminalApi["setFonts"];
   applyTheme: ResttyRuntimeTerminalApi["applyTheme"];
   resetTheme: ResttyRuntimeTerminalApi["resetTheme"];
   sendInput: ResttyRuntimeIoApi["sendInput"];
