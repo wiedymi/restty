@@ -54,9 +54,9 @@ Names such as `ResttyOptions` and `ResttyAppOptions` are not descriptive enough.
 
 `restty/internal` currently acts as a second product API. It exposes too much of the implementation graph and makes it easy for internal consumers to bypass stable boundaries.
 
-### 5. Playground depends on internals
+### 5. Playground depended on internals
 
-The current playground imports directly from `../src/internal.ts` and manipulates raw managed panes. That means the playground is not validating the stable public API surface.
+The pre-rewrite playground imported directly from `../src/internal.ts` and manipulated raw managed panes. That meant the playground was not validating the stable public API surface. The current React Router playground consumes public `restty` exports only, and architecture tests enforce that boundary.
 
 ### 6. Docs and surface drift
 
