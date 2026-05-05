@@ -357,7 +357,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     return lastCursorForCpr;
   }
   let inputHandler: InputHandler | null = null;
-  let activeTheme: GhosttyTheme | null = null;
+  let activeTheme: GhosttyTheme | null = terminal.theme ?? null;
   const webgpuUniforms = new Float32Array(8);
   const shaderStageRuntime = createShaderStageRuntime({
     getCanvasSize: () => ({ width: canvas.width, height: canvas.height }),
@@ -742,6 +742,9 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     blur,
     bindFocusEvents,
   } = lifecycleThemeSizeRuntime;
+  if (terminal.theme) {
+    applyTheme(terminal.theme, terminal.theme.name ?? "initial theme");
+  }
   bindFocusEvents();
   lifecycleThemeSizeRuntime.bindAutoResizeEvents();
 

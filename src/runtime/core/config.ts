@@ -7,6 +7,7 @@ import type {
   ResttyTouchSelectionMode,
 } from "./models";
 import type { ResttyRuntimeCallbacks, ResttyRuntimeSession } from "./resources";
+import type { GhosttyTheme } from "../../theme";
 
 /**
  * DOM/session fields required to mount a runtime instance.
@@ -74,6 +75,8 @@ export type ResttyTerminalConfig = {
   alphaBlending?: "native" | "linear" | "linear-corrected";
   /** Ordered terminal fonts. Omit to use the built-in local-first fallback chain. */
   fonts?: ResttyFontInput[];
+  /** Initial Ghostty-compatible color theme applied before the runtime becomes ready. */
+  theme?: GhosttyTheme;
   /** Maximum scale factor for the symbol atlas texture. */
   maxSymbolAtlasScale?: number;
   /** Per-glyph scale overrides matched by regex. */

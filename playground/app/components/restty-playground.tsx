@@ -5,6 +5,7 @@ import {
   listBuiltinThemeNames,
   Restty,
   type ResttyFontHintTarget,
+  type GhosttyTheme,
   type ResttyPaneApi,
 } from "../../../src/index.ts";
 import {
@@ -83,9 +84,61 @@ function updateOptionsRef(
   };
 }
 
-function applyTheme(restty: Restty, themeName: string) {
-  const theme = getBuiltinTheme(themeName);
+function resolveTheme(themeName: string) {
+  return getBuiltinTheme(themeName);
+}
+
+function clampColorChannel(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(255, Math.max(0, Math.round(value)));
+}
+
+function themeColorToCss(
+  color: NonNullable<GhosttyTheme["colors"]["background"]>,
+): string {
+  const r = clampColorChannel(color.r);
+  const g = clampColorChannel(color.g);
+  const b = clampColorChannel(color.b);
+  const alpha = color.a === undefined ? 1 : clampColorChannel(color.a) / 255;
+
+  if (alpha >= 1) {
+    return `rgb(${r} ${g} ${b})`;
+  }
+
+  return `rgba(${r}, ${g}, ${b}, ${Number(alpha.toFixed(3))})`;
+}
+
+function themeBackgroundCss(theme: GhosttyTheme): string | null {
+  const background = theme.colors.background;
+  return background ? themeColorToCss(background) : null;
+}
+
+function setPlaygroundBackground(root: HTMLElement | null, background: string) {
+  root?.style.setProperty("--playground-terminal-background", background);
+  root?.ownerDocument.documentElement.style.setProperty(
+    "--playground-terminal-background",
+    background,
+  );
+}
+
+function clearPlaygroundBackground(root: HTMLElement | null) {
+  root?.style.removeProperty("--playground-terminal-background");
+  root?.ownerDocument.documentElement.style.removeProperty("--playground-terminal-background");
+}
+
+function applyTheme(restty: Restty, themeName: string, root: HTMLElement | null = null) {
+  const theme = resolveTheme(themeName);
   if (!theme) return;
+
+  const background = themeBackgroundCss(theme);
+  if (background) {
+    setPlaygroundBackground(root, background);
+    restty.setPaneStyleOptions({
+      splitBackground: background,
+      paneBackground: background,
+    });
+  }
+
   restty.forEachPane((pane) => pane.applyTheme(theme, themeName));
 }
 
@@ -136,7 +189,7 @@ export function ResttyPlayground() {
     if (!restty || !pane) return;
     demoControllersRef.current.set(id, createDemoController(pane));
     applyTerminalOptions(restty, optionsRef.current);
-    applyTheme(restty, optionsRef.current.themeName);
+    applyTheme(restty, optionsRef.current.themeName, rootRef.current);
   };
 
   useEffect(() => {
@@ -177,6 +230,7 @@ export function ResttyPlayground() {
         ligatures: optionsRef.current.ligatures,
         fontHinting: optionsRef.current.fontHinting,
         fontHintTarget: optionsRef.current.fontHintTarget,
+        theme: resolveTheme(optionsRef.current.themeName) ?? undefined,
         fonts: buildFontsForPreset(
           optionsRef.current.fontPreset,
           optionsRef.current.localFontFamily,
@@ -197,6 +251,7 @@ export function ResttyPlayground() {
     });
 
     resttyRef.current = restty;
+    applyTheme(restty, optionsRef.current.themeName, root);
     const initialPane = restty.createInitialPane({ focus: true });
     setupPane(initialPane.id);
     syncPanes();
@@ -213,6 +268,7 @@ export function ResttyPlayground() {
         controller.stop();
       }
       demoControllersRef.current.clear();
+      clearPlaygroundBackground(root);
       restty.destroy();
       resttyRef.current = null;
     };
@@ -260,7 +316,7 @@ export function ResttyPlayground() {
   const applyThemeName = (themeName: string) => {
     updateOptions({ themeName });
     const restty = resttyRef.current;
-    if (restty) applyTheme(restty, themeName);
+    if (restty) applyTheme(restty, themeName, rootRef.current);
   };
 
   const applyShaderPreset = (shaderPreset: ShaderPreset) => {

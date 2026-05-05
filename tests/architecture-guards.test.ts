@@ -309,6 +309,18 @@ test("runtime controller options are grouped by capability", () => {
   expect(runtimeController).toContain("lifecycle: lifecycleDeps");
 });
 
+test("terminal config supports an initial theme before runtime ready", () => {
+  const runtimeCoreConfig = readFileSync(resolve(runtimeRoot, "core/config.ts"), "utf8");
+  const createRuntime = readFileSync(resolve(runtimeRoot, "create-runtime.ts"), "utf8");
+
+  expect(runtimeCoreConfig).toContain('import type { GhosttyTheme } from "../../theme"');
+  expect(runtimeCoreConfig).toContain("theme?: GhosttyTheme");
+  expect(createRuntime).toContain("let activeTheme: GhosttyTheme | null = terminal.theme ?? null");
+  expect(createRuntime).toContain(
+    'applyTheme(terminal.theme, terminal.theme.name ?? "initial theme")',
+  );
+});
+
 test("legacy combined runtime controller types file is removed", () => {
   expect(existsSync(resolve(runtimeCreateRuntimeRoot, "runtime-controller.types.ts"))).toBe(false);
 });

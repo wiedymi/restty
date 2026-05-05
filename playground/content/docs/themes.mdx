@@ -9,8 +9,16 @@ Themes use the public theme catalog:
 import { getBuiltinTheme } from "restty";
 
 const theme = getBuiltinTheme("Aizen Dark");
-if (theme) restty.activePane()?.applyTheme(theme, "Aizen Dark");
+
+const restty = new Restty({
+  root,
+  terminal: {
+    theme: theme ?? undefined,
+  },
+});
 ```
+
+Use `pane.applyTheme(theme, "Aizen Dark")` later when the user changes theme at runtime.
 
 Shader stages can be applied to one pane or to the whole surface:
 

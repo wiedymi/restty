@@ -5,6 +5,7 @@
 :root {
   color-scheme: dark;
   --restty-bg: #090909;
+  --playground-terminal-background: var(--restty-bg);
   --restty-panel: #161616;
   --restty-panel-header: #1a1a1a;
   --restty-border: #262626;
@@ -54,7 +55,7 @@ body {
 
 body:has(.playground-screen) {
   overflow: hidden;
-  background: var(--restty-bg);
+  background: var(--playground-terminal-background);
 }
 
 button,
@@ -82,13 +83,14 @@ input:disabled {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: var(--restty-bg);
+  background: var(--playground-terminal-background);
 }
 
 .restty-root {
   position: absolute;
   z-index: 1;
   inset: 0;
+  background: var(--playground-terminal-background);
 }
 
 .settings-fab-stack {
