@@ -813,7 +813,8 @@ The playground should use a standard source/static/build separation.
 
 Spec direction:
 
-- source lives in `playground/src/`
+- source lives in `playground/app/`
+- docs content lives in `playground/content/docs/`
 - static assets live in `playground/public/`
 - generated build output lives in `playground/dist/`
 
@@ -843,22 +844,25 @@ Spec direction:
 
 ### Decision
 
-Rewrite the playground as a Svelte application built with Vite.
+Rewrite the playground as a React Router application with Fumadocs-backed MDX docs.
 
 Rationale:
 
 - the current playground is a large DOM script with mixed UI, pane state, transport management, theme handling, and demos
-- a component/store model is a better fit than continuing to scale a single file
-- Vite remains a strong fit for local iteration and static output
-- the playground currently behaves like a single application, not a library-internal script
+- a component model is a better fit than continuing to scale shell/controller bridges
+- React Router gives the playground a `/` product entrypoint and `/docs` routes without a separate docs app
+- Fumadocs keeps MDX docs close to the interactive demo while still providing docs layout primitives
+- Vite remains a strong fit for local iteration and static output through the React Router build
 
-SvelteKit is intentionally deferred. If the playground later grows into a multi-route docs/examples application, it can move to SvelteKit with static generation. For now, plain Svelte plus Vite is the smaller and safer move.
+The old Svelte shell is removed rather than compatibility-wrapped. The playground is part of the
+0.2.0 re-architecture and should use the new app layout directly.
 
 ### Playground rules
 
 - the playground must consume public exports from `restty`, not `../src/internal.ts`
 - built playground artifacts must not be committed to source control
-- source code moves to `playground/src/`
+- source code moves to `playground/app/`
+- docs content moves to `playground/content/docs/`
 - static assets remain under `playground/public/`
 - build output goes to `playground/dist/`
 - Bun continues to orchestrate the PTY dev server
@@ -867,27 +871,28 @@ Target structure:
 
 ```txt
 playground/
-  src/
+  app/
+    components/
     lib/
-      components/
-      stores/
-      transports/
-      demos/
-      services/
-    App.svelte
-    bootstrap-restty.ts
-    main.ts
+      pty/
+      restty/
+    routes/
+    main.tsx
+    styles.css
+  content/
+    docs/
   public/
   index.html
+  source.config.ts
   vite.config.ts
 ```
 
-Suggested store boundaries:
+Suggested boundaries:
 
-- `surface-store`
-- `settings-store`
-- `connection-store`
-- `theme-store`
+- `components/restty-playground`: UI shell and public API wiring
+- `lib/pty`: Just Bash, WebContainer, and OS PTY transport adapters
+- `lib/restty`: playground-only font, demo, and shader presets
+- `content/docs`: MDX docs consumed by Fumadocs
 - `font-store`
 - `demo-store`
 
@@ -966,10 +971,10 @@ Exit criteria:
 
 ### Phase 4: rewrite the playground
 
-- create Svelte + Vite playground
-- move state into stores and services
+- create React Router + Fumadocs playground/docs app
+- keep state local to React components until a real cross-route need appears
 - route all playground integration through public `restty` exports
-- keep Restty initialization in a tiny Svelte-side bootstrap module under `playground/src/`
+- keep Restty initialization in the React playground component and route helpers
 - remove committed generated playground bundles
 
 Exit criteria:

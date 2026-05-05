@@ -13,7 +13,11 @@
 - `selection/`, `ime/`, `grid/`, `unicode/`, `utils/`, and `xterm/`: supporting subsystems and compatibility layers.
 - `tests/` contains Bun tests (`*.test.ts`).
 - `scripts/` contains build/dev helpers (`build-lib`, `build-wasm`, `generate-builtin-themes`, `playground-dev`, `setup-wgpu-polyfill`).
-- `playground/` hosts the Svelte/Vite playground app, static assets (`playground/public/`), and build output (`playground/dist/`, ignored).
+- `playground/` hosts the React Router playground and Fumadocs MDX docs:
+  - `playground/app/`: React Router source.
+  - `playground/content/docs/`: Fumadocs MDX pages.
+  - `playground/public/`: authored static demo/font assets.
+  - `playground/dist/`: generated build output (ignored).
 - `assets/themes/` (with `assets/themes/manifest.json`) is the source for generated builtin themes.
 - `wasm/` contains Zig sources/build config for the terminal core.
 - `docs/` holds usage and internals documentation.
@@ -38,7 +42,7 @@ Use Bun `>=1.2.0`.
 - `bun run format`: apply formatting fixes.
 - `bun run test`: run full test suite.
 - `bun run test:ci`: CI-safe suite (excludes `webgpu-glyph.test.ts`).
-- `bun run playground`: start local playground workflow (PTY + Vite dev server).
+- `bun run playground`: start local playground workflow (PTY + Vite dev server at `/`).
 - `bun run playground:pty`: start PTY websocket server only.
 - `bun run playground:preview`: serve the built playground from `playground/dist/`.
 

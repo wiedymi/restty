@@ -18,18 +18,8 @@ Build/preview the standalone playground:
 - `bun run playground:build`
 - `bun run playground:preview`
 
-Hinting experiments (playground URL params):
-
-- `?hinting=1&hintTarget=auto`
-- `?hinting=1&hintTarget=light`
-- `?hinting=1&hintTarget=normal`
-- `?ligatures=off`
-
-`hinting=0` (or omitted) keeps atlas hinting disabled.
-Ligatures are on by default.
-
-You can also toggle both settings live in the playground Settings panel
-(`Appearance` section) without reloading.
+Font rendering experiments are controlled from the playground panel without URL params.
+Hinting is disabled by default, and ligatures are on by default.
 
 Playground font defaults:
 
@@ -49,7 +39,7 @@ Cloudflare Pages static deploy:
 
 1. Run `bun run playground:build`
 2. Deploy `playground/dist/` as the output directory.
-3. Copy `playground/public/_headers` into the deployed output so COOP/COEP headers are applied (required for WebContainer mode).
+3. `playground/public/_headers` and `_redirects` are copied into the build output so COOP/COEP headers and SPA fallback are applied.
 
 ## Build the WASM module
 
@@ -67,7 +57,7 @@ There is no separate embed step script anymore; rerun `bun run build:wasm` when 
 
 From repo root:
 
-- `bun run playground/fetch-fonts.ts`
+- `bun run playground/scripts/fetch-fonts.ts`
 
 This downloads:
 
