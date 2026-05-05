@@ -1,0 +1,38 @@
+---
+title: Configuration
+description: Keep terminal behavior, services, and surface concerns separated.
+---
+
+The current public config keeps three groups explicit:
+
+```ts
+new Restty({
+  root,
+  surface: {
+    shortcuts: true,
+    searchUi: true,
+  },
+  terminal: {
+    renderer: "auto",
+    fontSize: 18,
+    ligatures: true,
+  },
+  services: {
+    ptyTransport,
+  },
+});
+```
+
+## Surface
+
+Surface options own pane orchestration, shortcuts, search UI, context menus, and lifecycle events.
+
+## Terminal
+
+Terminal options are plain behavior and rendering config: renderer, font size, ligatures, themes,
+font sources, shader stages, resize behavior, and scrollback.
+
+## Services
+
+Services are runtime adapters and hooks. PTY transport, input/output interception, and callback
+bridges belong here rather than in terminal behavior config.

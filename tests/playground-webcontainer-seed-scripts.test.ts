@@ -2,11 +2,11 @@ import { afterEach, expect, test } from "bun:test";
 import {
   ensureWebContainerSeedScripts,
   type WebContainerSeedScriptContainer,
-} from "../playground/lib/webcontainer-seed-scripts.ts";
+} from "../playground/app/lib/pty/webcontainer-seed-scripts.ts";
 import {
   fetchFirstScript,
   normalizeFetchedScript,
-} from "../playground/lib/webcontainer-seed-fetch.ts";
+} from "../playground/app/lib/pty/webcontainer-seed-fetch.ts";
 
 type SpawnCall = {
   command: string;
@@ -36,7 +36,7 @@ function createFakeWebContainer(options: {
       spawnCalls.push({ command, args });
       return {
         exit: Promise.resolve(options.spawnExitCodes?.[command] ?? 0),
-      };
+      } as never;
     },
   };
 
@@ -66,11 +66,13 @@ test("fetchFirstScript skips html responses and keeps the first valid script", a
     });
   }) as typeof fetch;
 
-  await expect(fetchFirstScript(["/bad.js", "/good.js"])).resolves.toBe("export const demo = 1;\n");
+  await expect(fetchFirstScript(["/bad.js", "/good.js"])).resolves.toBe(
+    "export const demo = 1;\n",
+  );
   expect(seenUrls).toEqual(["/bad.js", "/good.js"]);
 });
 
-test("ensureWebContainerSeedScripts writes fallbacks, removes stale shell scripts, and chmods demos", async () => {
+test("ensureWebContainerSeedScripts writes fallbacks, removes stale scripts, and chmods demos", async () => {
   globalThis.fetch = (async () => new Response("missing", { status: 404 })) as typeof fetch;
 
   const { spawnCalls, webcontainer, writes } = createFakeWebContainer({});

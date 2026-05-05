@@ -5,6 +5,9 @@ node_modules/
 .tmp/
 dist/
 playground/dist/
+playground/build/
+playground/.react-router/
+playground/.source/
 coverage/
 *.log
 

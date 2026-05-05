@@ -4,7 +4,7 @@ const children = [
     stderr: "inherit",
     stdin: "inherit",
   }),
-  Bun.spawn(["bunx", "vite", "--config", "playground/vite.config.ts"], {
+  Bun.spawn(["bunx", "vite", "--config", "playground/vite.config.ts", "--port", "5173"], {
     stdout: "inherit",
     stderr: "inherit",
     stdin: "inherit",

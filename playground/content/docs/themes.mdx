@@ -1,0 +1,30 @@
+---
+title: Themes and shaders
+description: Apply Ghostty-compatible themes and runtime shader stages.
+---
+
+Themes use the public theme catalog:
+
+```ts
+import { getBuiltinTheme } from "restty";
+
+const theme = getBuiltinTheme("Aizen Dark");
+if (theme) restty.activePane()?.applyTheme(theme, "Aizen Dark");
+```
+
+Shader stages can be applied to one pane or to the whole surface:
+
+```ts
+restty.setShaderStages([
+  {
+    id: "example/mono-green",
+    mode: "after-main",
+    shader: {
+      wgsl: "fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f { return color; }",
+      glsl: "vec4 resttyStage(vec4 color, vec2 uv, float time, vec4 params0, vec4 params1) { return color; }",
+    },
+  },
+]);
+```
+
+The playground presets are intentionally small examples, not a debug subsystem.

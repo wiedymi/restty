@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { extname, join, resolve } from "node:path";
 
 const root = resolve("playground/dist");
+const indexPath = join(root, "index.html");
 const port = Number(process.env.PORT ?? 5173);
 const isolationHeaders = {
   "cross-origin-opener-policy": "same-origin",
@@ -45,6 +46,15 @@ Bun.serve({
         },
       });
     } catch {
+      if (req.method === "GET" && !extname(filePath)) {
+        const data = await readFile(indexPath);
+        return new Response(data, {
+          headers: {
+            "content-type": mime[".html"],
+            ...isolationHeaders,
+          },
+        });
+      }
       return new Response("Not found", { status: 404, headers: isolationHeaders });
     }
   },

@@ -1,0 +1,19 @@
+---
+title: restty docs
+description: Browser terminal rendering with WASM, WebGPU/WebGL2, and a public playground consumer.
+---
+
+restty is a terminal rendering library for browser applications. The playground at `/` is now a
+product consumer of the public package API, not an internal debug shell.
+
+## What to try first
+
+- Use the default Just Bash backend for immediate startup without WebContainer boot cost.
+- Switch to WebContainer when you want Node-based demo scripts in the browser.
+- Use OS PTY when `bun run playground:pty` is running locally.
+- Toggle renderer, fonts, themes, split panes, search, and shader presets from the control panel.
+
+## Architecture direction
+
+The demo and docs are one React Router app. Docs live as MDX under `playground/content/docs`, and
+the interactive playground lives under `playground/app`.

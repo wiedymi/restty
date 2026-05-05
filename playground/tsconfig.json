@@ -1,0 +1,27 @@
+{
+  "include": [
+    ".source/**/*",
+    "app/**/*",
+    "content/**/*",
+    "source.config.ts",
+    "vite.config.ts"
+  ],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "types": ["vite/client", "@types/mdx", "@webgpu/types"],
+    "jsx": "react-jsx",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./app/*"],
+      "collections/*": ["./.source/*"]
+    }
+  }
+}

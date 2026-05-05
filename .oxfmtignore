@@ -6,5 +6,9 @@ src/input
 src/fonts
 assets/themes
 dist
+playground/build
+playground/dist
+playground/.react-router
+playground/.source
 playground/public
 reference

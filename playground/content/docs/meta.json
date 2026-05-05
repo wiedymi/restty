@@ -1,0 +1,4 @@
+{
+  "title": "restty",
+  "pages": ["index", "getting-started", "configuration", "pty-backends", "fonts", "themes"]
+}

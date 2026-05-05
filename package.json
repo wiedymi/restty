@@ -111,18 +111,28 @@
     "playground:preview": "bun run playground/server.ts"
   },
   "dependencies": {
+    "fumadocs-core": "^16.8.7",
+    "fumadocs-ui": "^16.8.7",
     "just-bash": "^2.14.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router": "^7.14.2",
     "text-shaper": "0.1.22"
   },
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "^7.0.0",
-    "@webcontainer/api": "^1.6.1",
+    "@tailwindcss/vite": "^4.2.4",
+    "@types/mdx": "^2.0.13",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "@webcontainer/api": "^1.6.4",
     "@webgpu/types": "^0.1.69",
-    "oxfmt": "^0.28.0",
-    "oxlint": "^1.19.0",
-    "svelte": "^5.55.3",
+    "fumadocs-mdx": "^14.3.2",
+    "oxfmt": "^0.47.0",
+    "oxlint": "^1.62.0",
+    "tailwindcss": "^4.2.4",
     "typescript": "^5.9.3",
-    "vite": "^8.0.8",
+    "vite": "^8.0.10",
     "wgpu-polyfill": "^0.1.0"
   },
   "engines": {

@@ -1,0 +1,38 @@
+---
+title: Getting started
+description: Create a restty surface, spawn a pane, and connect a PTY transport.
+---
+
+Install the package with Bun:
+
+```sh
+bun add restty
+```
+
+Create a surface:
+
+```ts
+import { Restty } from "restty";
+
+const root = document.getElementById("terminal");
+if (!root) throw new Error("Missing terminal root");
+
+const restty = new Restty({
+  root,
+  surface: {
+    createInitialPane: { focus: true },
+    shortcuts: true,
+    searchUi: true,
+  },
+  terminal: {
+    renderer: "auto",
+    fontSize: 18,
+  },
+});
+```
+
+Connect the active pane when a PTY transport is configured:
+
+```ts
+restty.activePane()?.connectPty("ws://localhost:8787/pty");
+```

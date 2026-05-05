@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { createJustBashPtyTransport } from "../playground/lib/just-bash-pty.ts";
+import { createJustBashPtyTransport } from "../playground/app/lib/pty/just-bash-transport.ts";
 
 type FakeExecOptions = {
   cwd?: string;

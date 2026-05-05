@@ -3,7 +3,7 @@ import {
   launchWebContainerCommand,
   normalizeWebContainerCwd,
   parseWebContainerCommand,
-} from "../playground/lib/webcontainer-launch.ts";
+} from "../playground/app/lib/pty/webcontainer-launch.ts";
 
 test("parseWebContainerCommand preserves quoted args and escaped tokens", () => {
   expect(parseWebContainerCommand(`node "demo file.js" --flag=one\\ two`)).toEqual({

@@ -1,0 +1,27 @@
+---
+title: PTY backends
+description: Playground backend options and when to use each one.
+---
+
+The playground ships three backend modes:
+
+| Backend | Use when | Startup cost |
+| --- | --- | --- |
+| Just Bash | You want instant browser-only commands | Low |
+| WebContainer | You want Node demos inside the browser | Higher |
+| OS PTY websocket | You want a real local shell through `playground:pty` | Depends on local server |
+
+Just Bash is the default so first paint is not blocked by WebContainer boot or large dependency
+loading. WebContainer is lazy-loaded only when selected and connected.
+
+For local OS PTY:
+
+```sh
+bun run playground:pty
+```
+
+Then select `OS PTY websocket` and connect to:
+
+```txt
+ws://localhost:8787/pty
+```

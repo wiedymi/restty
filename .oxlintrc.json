@@ -11,13 +11,19 @@
   "rules": {
     "unicorn/no-new-array": "off",
     "unicorn/consistent-function-scoping": "off",
-    "unicorn/no-array-sort": "off"
+    "unicorn/no-array-sort": "off",
+    "no-shadow": "off",
+    "no-underscore-dangle": "off"
   },
   "env": {
     "builtin": true
   },
   "ignorePatterns": [
     "dist/**",
+    "playground/build/**",
+    "playground/dist/**",
+    "playground/.react-router/**",
+    "playground/.source/**",
     "playground/public/**",
     "reference/**",
     "src/theme/builtin-themes.ts"
