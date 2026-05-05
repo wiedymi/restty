@@ -1,10 +1,5 @@
-import { afterEach, beforeEach, expect, mock, test } from "bun:test";
+import { afterEach, beforeEach, expect, test } from "bun:test";
 import { createRuntimeEventHub } from "../src/runtime/core/runtime-events";
-
-mock.module("../src/renderer", () => ({
-  initWebGPU: async () => null,
-  initWebGL: () => null,
-}));
 
 const { createRuntimeController } =
   await import("../src/runtime/create-runtime/runtime-controller");
@@ -139,7 +134,7 @@ function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
       handleSearchWasmReset: () => undefined,
     },
     render: {
-      initialPreferredRenderer: "auto",
+      initialPreferredRenderer: "webgpu",
       CURSOR_BLINK_MS: 600,
       RESIZE_ACTIVE_MS: 180,
       TARGET_RENDER_FPS: 60,
