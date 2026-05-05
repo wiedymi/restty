@@ -6,6 +6,7 @@ description: Simple font inputs without a compatibility catalog.
 The playground keeps font configuration intentionally small:
 
 - A bundled preset path for reliable startup.
+- Bundled local symbol fallback paths for Nerd Font and general symbol coverage.
 - An optional local family name when the browser supports Local Font Access.
 - No label/matcher compatibility catalog in the playground UI.
 
@@ -20,9 +21,17 @@ terminal: {
         name: "Fira Code Regular",
       },
     },
+    {
+      path: "/fonts/SymbolsNerdFontMono-Regular.ttf",
+      name: "Symbols Nerd Font Mono",
+    },
+    {
+      path: "/fonts/NotoSansSymbols2-Regular.ttf",
+      name: "Noto Sans Symbols 2",
+    },
   ],
 }
 ```
 
 If a user enters a local family, the playground tries it first with `local: "require"`, then falls
-back to the selected bundled preset.
+back to the selected bundled preset and the symbol fallback paths.

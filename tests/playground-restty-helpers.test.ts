@@ -3,6 +3,7 @@ import {
   buildFontsForPreset,
   DEFAULT_FONT_PRESET,
   FONT_PRESETS,
+  SYMBOL_FALLBACK_FONTS,
 } from "../playground/app/lib/restty/fonts.ts";
 import {
   createBasicDemoPayload,
@@ -19,6 +20,7 @@ test("playground fonts use simple bundled paths with optional local family first
       local: "prefer",
       fallback: { path: "/fonts/FiraCode-Regular.ttf", name: "Fira Code Regular" },
     },
+    ...SYMBOL_FALLBACK_FONTS,
   ]);
   expect(buildFontsForPreset("jetbrains-mono", "Berkeley Mono")).toEqual([
     { family: "Berkeley Mono", local: "require" },
@@ -30,7 +32,13 @@ test("playground fonts use simple bundled paths with optional local family first
         name: "JetBrains Mono Regular",
       },
     },
+    ...SYMBOL_FALLBACK_FONTS,
   ]);
+  expect(
+    SYMBOL_FALLBACK_FONTS.map((font) =>
+      typeof font === "object" && font !== null && "path" in font ? font.path : "",
+    ),
+  ).toEqual(["/fonts/SymbolsNerdFontMono-Regular.ttf", "/fonts/NotoSansSymbols2-Regular.ttf"]);
 });
 
 test("playground shader presets expose named restty stages", () => {

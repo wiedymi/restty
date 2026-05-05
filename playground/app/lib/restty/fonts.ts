@@ -36,6 +36,17 @@ export const FONT_PRESETS: FontPreset[] = [
   },
 ];
 
+export const SYMBOL_FALLBACK_FONTS: ResttyFontInput[] = [
+  {
+    path: "/fonts/SymbolsNerdFontMono-Regular.ttf",
+    name: "Symbols Nerd Font Mono",
+  },
+  {
+    path: "/fonts/NotoSansSymbols2-Regular.ttf",
+    name: "Noto Sans Symbols 2",
+  },
+];
+
 export const DEFAULT_FONT_PRESET: FontPresetId = "fira-code";
 export const DEFAULT_FONT_SIZE = 18;
 export const DEFAULT_LIGATURES = true;
@@ -52,6 +63,6 @@ export function buildFontsForPreset(
 ): ResttyFontInput[] {
   const local = localFamily?.trim();
   const presetFonts = getFontPreset(id).fonts;
-  if (!local) return presetFonts;
-  return [{ family: local, local: "require" }, ...presetFonts];
+  if (!local) return [...presetFonts, ...SYMBOL_FALLBACK_FONTS];
+  return [{ family: local, local: "require" }, ...presetFonts, ...SYMBOL_FALLBACK_FONTS];
 }
