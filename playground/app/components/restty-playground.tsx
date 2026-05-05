@@ -119,6 +119,7 @@ export function ResttyPlayground() {
   const [status, setStatus] = useState("idle");
   const [paneIds, setPaneIds] = useState<number[]>([]);
   const [activePaneId, setActivePaneId] = useState<number | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const syncPanes = () => {
     const restty = resttyRef.current;
@@ -286,22 +287,88 @@ export function ResttyPlayground() {
     if (!created) return;
     setupPane(created.id);
     syncPanes();
-    requestAnimationFrame(() => connectPane(resttyRef.current?.pane(created.id) ?? null, optionsRef.current));
+    requestAnimationFrame(() =>
+      connectPane(resttyRef.current?.pane(created.id) ?? null, optionsRef.current),
+    );
   };
 
   return (
-    <section className="playground-layout" aria-label="restty playground">
-      <div className="terminal-stage">
-        <div ref={rootRef} className="restty-root" />
+    <section className="playground-screen" aria-label="restty playground">
+      <div ref={rootRef} className="restty-root" />
+
+      <div className="settings-fab-stack" aria-label="Playground links and settings">
+        <a
+          className="settings-fab settings-fab-social settings-fab-text"
+          href="/docs"
+          title="Docs"
+        >
+          docs
+        </a>
+        <a
+          className="settings-fab settings-fab-social"
+          href="https://github.com/wiedymi/restty"
+          title="GitHub"
+        >
+          <svg className="settings-fab-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.69c-2.78.6-3.37-1.18-3.37-1.18-.46-1.15-1.11-1.46-1.11-1.46-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.64.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.58 9.58 0 0 1 12 6.02c.85 0 1.7.11 2.5.34 1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.86v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"
+            />
+          </svg>
+        </a>
+        <a
+          className="settings-fab settings-fab-social settings-fab-text"
+          href="https://www.npmjs.com/package/restty"
+          title="npm"
+        >
+          npm
+        </a>
+        <button
+          className="settings-fab"
+          type="button"
+          aria-expanded={settingsOpen}
+          aria-controls="playground-settings"
+          title="Settings"
+          onClick={() => setSettingsOpen((open) => !open)}
+        >
+          <svg className="settings-fab-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M19.43 12.98c.04-.32.07-.65.07-.98s-.02-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.27 7.27 0 0 0-1.69-.98L14.5 2.42A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.5.42L9.12 5.07c-.61.24-1.18.56-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65a7.93 7.93 0 0 0 0 1.96l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46c.13.22.39.31.61.22l2.49-1c.51.4 1.08.73 1.69.98l.38 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.38-2.65c.61-.24 1.18-.56 1.69-.98l2.49 1c.23.08.48 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.12-1.65ZM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"
+            />
+          </svg>
+        </button>
       </div>
 
-      <aside className="playground-panel" aria-label="Playground controls">
-        <div className="panel-header">
-          <p className="panel-title">restty playground</p>
-          <p className="panel-subtitle">
-            Public API consumer with Just Bash by default, plus WebContainer and OS PTY options.
-          </p>
-        </div>
+      {settingsOpen ? (
+        <button
+          className="settings-scrim"
+          type="button"
+          aria-label="Close settings"
+          onClick={() => setSettingsOpen(false)}
+        />
+      ) : null}
+
+      <aside
+        id="playground-settings"
+        className={`settings-dialog${settingsOpen ? " open" : ""}`}
+        aria-label="Playground settings"
+        aria-hidden={!settingsOpen}
+      >
+        <header className="settings-header">
+          <div>
+            <p className="panel-eyebrow">restty</p>
+            <p className="panel-title">Settings</p>
+          </div>
+          <button
+            className="float-button icon"
+            type="button"
+            aria-label="Close settings"
+            onClick={() => setSettingsOpen(false)}
+          >
+            X
+          </button>
+        </header>
 
         <div className="panel-scroll">
           <section className="control-card">
@@ -357,10 +424,18 @@ export function ResttyPlayground() {
               <button className="action-button primary" type="button" onClick={reconnect}>
                 Connect
               </button>
-              <button className="action-button" type="button" onClick={() => disconnectPane(activePane())}>
+              <button
+                className="action-button"
+                type="button"
+                onClick={() => disconnectPane(activePane())}
+              >
                 Disconnect
               </button>
-              <button className="action-button" type="button" onClick={() => activePane()?.clearScreen()}>
+              <button
+                className="action-button"
+                type="button"
+                onClick={() => activePane()?.clearScreen()}
+              >
                 Clear
               </button>
             </div>
@@ -397,16 +472,32 @@ export function ResttyPlayground() {
               </div>
             </div>
             <div className="button-row">
-              <button className="action-button" type="button" onClick={() => activePane()?.togglePause()}>
+              <button
+                className="action-button"
+                type="button"
+                onClick={() => activePane()?.togglePause()}
+              >
                 Pause
               </button>
-              <button className="action-button" type="button" onClick={() => activePane()?.toggleSearch()}>
+              <button
+                className="action-button"
+                type="button"
+                onClick={() => activePane()?.toggleSearch()}
+              >
                 Search
               </button>
-              <button className="action-button" type="button" onClick={() => splitPane("vertical")}>
+              <button
+                className="action-button"
+                type="button"
+                onClick={() => splitPane("vertical")}
+              >
                 Split Right
               </button>
-              <button className="action-button" type="button" onClick={() => splitPane("horizontal")}>
+              <button
+                className="action-button"
+                type="button"
+                onClick={() => splitPane("horizontal")}
+              >
                 Split Down
               </button>
               <button
@@ -434,7 +525,11 @@ export function ResttyPlayground() {
               <select
                 id="fontPreset"
                 value={options.fontPreset}
-                onChange={(event) => void applyFonts({ fontPreset: event.currentTarget.value as FontPresetId })}
+                onChange={(event) =>
+                  void applyFonts({
+                    fontPreset: event.currentTarget.value as FontPresetId,
+                  })
+                }
               >
                 {FONT_PRESETS.map((preset) => (
                   <option key={preset.id} value={preset.id}>
@@ -449,7 +544,9 @@ export function ResttyPlayground() {
                 id="localFontFamily"
                 placeholder="e.g. Berkeley Mono"
                 value={options.localFontFamily}
-                onChange={(event) => void applyFonts({ localFontFamily: event.currentTarget.value })}
+                onChange={(event) =>
+                  void applyFonts({ localFontFamily: event.currentTarget.value })
+                }
               />
             </div>
             <div className="inline-grid">

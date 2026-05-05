@@ -1018,18 +1018,27 @@ test("playground is a React Router app with Fumadocs docs", () => {
   const appEntry = readFileSync(resolve(playgroundRoot, "app/main.tsx"), "utf8");
   const docsRoute = readFileSync(resolve(playgroundRoot, "app/routes/docs.tsx"), "utf8");
   const sourceConfig = readFileSync(resolve(playgroundRoot, "source.config.ts"), "utf8");
-  const sourceLoader = readFileSync(resolve(playgroundRoot, "app/lib/docs-source.ts"), "utf8");
+  const sourceLoader = readFileSync(resolve(playgroundRoot, "app/lib/source.ts"), "utf8");
+  const mdxComponents = readFileSync(resolve(playgroundRoot, "app/components/mdx.tsx"), "utf8");
+  const layoutOptions = readFileSync(resolve(playgroundRoot, "app/lib/layout.shared.tsx"), "utf8");
 
   expect(appEntry).toContain("createBrowserRouter");
   expect(appEntry).toContain('path: "/docs/*"');
   expect(appEntry).toContain('from "fumadocs-ui/provider/react-router"');
   expect(appEntry).toContain('search={{ enabled: false }}');
+  expect(appEntry).toContain('forcedTheme: "dark"');
   expect(docsRoute).toContain('from "fumadocs-ui/layouts/docs"');
-  expect(docsRoute).toContain('from "fumadocs-ui/page"');
-  expect(docsRoute).toContain("getDocPage");
+  expect(docsRoute).toContain('from "fumadocs-ui/layouts/docs/page"');
+  expect(docsRoute).toContain('from "fumadocs-mdx/runtime/browser"');
+  expect(docsRoute).toContain("createClientLoader");
+  expect(docsRoute).toContain("clientLoader.useContent");
   expect(sourceConfig).toContain('dir: "content/docs"');
-  expect(sourceLoader).toContain("docsPageTree");
-  expect(sourceLoader).toContain("DOC_PAGES");
+  expect(sourceLoader).toContain("../../content/docs/index.mdx");
+  expect(sourceLoader).toContain("getPage(slugs");
+  expect(sourceLoader).toContain("getPageTree()");
+  expect(mdxComponents).toContain("defaultMdxComponents");
+  expect(layoutOptions).toContain("BaseLayoutProps");
+  expect(layoutOptions).toContain("themeSwitch: { enabled: false }");
 });
 
 test("playground removes old Svelte shell and root legacy entrypoints", () => {

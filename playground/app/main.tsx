@@ -61,7 +61,10 @@ if (!root) throw new Error("Missing #root");
 
 createRoot(root).render(
   <StrictMode>
-    <RootProvider search={{ enabled: false }} theme={{ enabled: false }}>
+    <RootProvider
+      search={{ enabled: false }}
+      theme={{ defaultTheme: "dark", forcedTheme: "dark", enableSystem: false }}
+    >
       <RouterProvider router={router} />
     </RootProvider>
   </StrictMode>,
