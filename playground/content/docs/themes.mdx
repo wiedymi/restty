@@ -3,7 +3,12 @@ title: Themes and shaders
 description: Apply Ghostty-compatible themes and runtime shader stages.
 ---
 
-Themes use the public theme catalog:
+Themes control terminal colors. Shader stages extend the final frame pipeline. They are separate
+tools: use themes for semantic terminal colors, and shader stages for visual effects.
+
+## Built-in themes
+
+Themes use the public catalog:
 
 ```ts
 import { getBuiltinTheme } from "restty";
@@ -18,7 +23,59 @@ const restty = new Restty({
 });
 ```
 
-Use `pane.applyTheme(theme, "Aizen Dark")` later when the user changes theme at runtime.
+List available names when building a theme picker:
+
+```ts
+import { listBuiltinThemeNames } from "restty";
+
+const names = listBuiltinThemeNames();
+```
+
+Apply a theme later with the surface convenience method or a pane handle:
+
+```ts
+if (theme) {
+  restty.applyTheme(theme, "Aizen Dark");
+  restty.activePane()?.applyTheme(theme, "Aizen Dark");
+}
+```
+
+## Parse Ghostty theme text
+
+Use `parseGhosttyTheme(...)` when users paste a Ghostty theme file or your app stores theme text.
+
+```ts
+import { parseGhosttyTheme } from "restty";
+
+const theme = parseGhosttyTheme(`
+foreground = #c0caf5
+background = #1a1b26
+cursor-color = #c0caf5
+selection-background = #283457
+palette = 0=#15161e
+palette = 1=#f7768e
+`);
+
+restty.applyTheme(theme, "inline ghostty theme");
+```
+
+## Surface backgrounds
+
+Terminal theme backgrounds and pane shell backgrounds are related but not the same. When the app
+shell should match the active theme, update pane style options too:
+
+```ts
+const background = theme?.background ?? "#000000";
+
+restty.setPaneStyleOptions({
+  splitBackground: background,
+  paneBackground: background,
+});
+```
+
+This keeps the split container, inactive pane space, and canvas background visually aligned.
+
+## Shader stages
 
 Shader stages can be applied to one pane or to the whole surface:
 
@@ -35,4 +92,78 @@ restty.setShaderStages([
 ]);
 ```
 
-The playground presets are intentionally small examples, not a debug subsystem.
+`setShaderStages(...)` replaces the global stage list. `addShaderStage(...)` returns a handle for
+incremental updates.
+
+```ts
+const stage = restty.addShaderStage({
+  id: "app/mono",
+  mode: "after-main",
+  backend: "both",
+  uniforms: [0.8],
+  shader: {
+    wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  let l = dot(color.rgb, vec3f(0.2126, 0.7152, 0.0722));
+  return vec4f(l * 0.12, l * 0.95, l * 0.35, color.a);
+}
+`,
+    glsl: `
+vec4 resttyStage(vec4 color, vec2 uv, float time, vec4 params0, vec4 params1) {
+  float l = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
+  return vec4(l * 0.12, l * 0.95, l * 0.35, color.a);
+}
+`,
+  },
+});
+
+stage.setUniforms([0.4]);
+stage.setEnabled(false);
+stage.dispose();
+```
+
+## Stage options
+
+| Option | Purpose |
+| --- | --- |
+| `id` | Stable stage identifier. |
+| `mode` | `"before-main"`, `"after-main"`, or `"replace-main"`. |
+| `backend` | `"webgpu"`, `"webgl2"`, or `"both"`. |
+| `priority` | Ordering among stages with the same mode. |
+| `enabled` | Initial enabled state. |
+| `uniforms` | Up to 8 numbers packed into `params0` and `params1`. |
+| `shader.wgsl` | WGSL function for WebGPU. |
+| `shader.glsl` | GLSL function for WebGL2. |
+| `onError` | Compile/runtime error callback. |
+
+For portable stages, provide both WGSL and GLSL and set `backend: "both"`.
+
+## Pane-local stages
+
+Pane handles can have their own shader stage list:
+
+```ts
+const pane = restty.activePane();
+
+pane?.setShaderStages([
+  {
+    id: "pane/debug-tint",
+    mode: "after-main",
+    uniforms: [0.08],
+    shader: {
+      wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  return vec4f(min(vec3f(1.0), color.rgb + vec3f(params0.x, 0.0, 0.0)), color.a);
+}
+`,
+    },
+  },
+]);
+```
+
+Global stages and pane-local stages are merged by the surface shader pipeline.
+
+## Playground presets
+
+The playground shader presets are intentionally small examples. Treat them as starting points for
+app-owned visual effects, not as a private debug subsystem.

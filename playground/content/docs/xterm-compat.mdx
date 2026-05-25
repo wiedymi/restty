@@ -1,0 +1,137 @@
+---
+title: xterm compatibility
+description: Use the focused restty/xterm wrapper for common xterm.js-style migration flows.
+---
+
+`restty/xterm` provides a small xterm.js-style wrapper backed by `Restty`. It is useful when an app
+already has xterm-like integration code and you want to migrate incrementally.
+
+For new integrations, prefer the native `Restty` API.
+
+## Import
+
+```ts
+import { Terminal } from "restty/xterm";
+```
+
+The standalone ESM bundle is also available:
+
+```ts
+import { Terminal } from "restty/esm/xterm";
+```
+
+## Basic usage
+
+```ts
+const term = new Terminal({
+  cols: 100,
+  rows: 30,
+  terminal: {
+    renderer: "auto",
+    fontSize: 16,
+  },
+});
+
+term.open(document.getElementById("terminal") as HTMLElement);
+
+term.onData((data) => {
+  console.log("input", data);
+});
+
+term.onResize(({ cols, rows }) => {
+  console.log(cols, rows);
+});
+
+term.write("hello");
+term.writeln(" world");
+term.resize(120, 40);
+term.focus();
+term.blur();
+term.dispose();
+```
+
+## Supported API
+
+| API | Notes |
+| --- | --- |
+| `new Terminal(options?)` | Accepts `cols`, `rows`, and most `ResttyConfig` except `root`. |
+| `open(element)` | Mounts the underlying `Restty` instance. Can be called once. |
+| `write(data, callback?)` | Writes terminal output. Calls before `open` are buffered. |
+| `writeln(data?, callback?)` | Writes data plus CRLF. |
+| `resize(cols, rows)` | Updates `cols`/`rows`, resizes restty if open, and emits `onResize`. |
+| `focus()` / `blur()` | Focus or blur the underlying terminal. |
+| `clear()` | Clear screen, or clear pending buffered output before open. |
+| `reset()` | Clear and send terminal reset sequence after open. |
+| `onData(listener)` | Listen to non-PTY input observed by the restty input pipeline. |
+| `onResize(listener)` | Listen to explicit `resize(...)` calls. |
+| `options` | xterm-style option bag. Unknown keys are preserved. |
+| `setOption(key, value)` / `getOption(key)` | Mutate or read the option bag. |
+| `loadAddon(addon)` | Activate an xterm-style addon once. |
+| `dispose()` | Dispose addons and the underlying restty instance. |
+
+## Addons
+
+```ts
+term.loadAddon({
+  activate(terminal) {
+    terminal.writeln("addon active");
+  },
+  dispose() {
+    console.log("addon disposed");
+  },
+});
+```
+
+Addon contract:
+
+```ts
+type TerminalAddon = {
+  activate: (terminal: Terminal) => void;
+  dispose: () => void;
+};
+```
+
+Addons are disposed when the terminal is disposed.
+
+## Options
+
+`TerminalOptions` are based on `ResttyConfig`, but `root` is omitted because xterm-style code mounts
+with `open(element)`.
+
+```ts
+const term = new Terminal({
+  cols: 120,
+  rows: 32,
+  surface: {
+    searchUi: true,
+    shortcuts: true,
+  },
+  terminal: {
+    renderer: "webgl2",
+    fontSize: 15,
+  },
+  services: {
+    beforeInput: ({ text }) => text,
+  },
+});
+```
+
+Additional unknown option keys are accepted and kept in `term.options` for migration ergonomics, but
+they are not forwarded to restty internals.
+
+## Native escape hatch
+
+After `open(...)`, the underlying native instance is available:
+
+```ts
+term.restty?.splitActivePane("vertical");
+term.restty?.setLigatures(false);
+```
+
+Use this to move gradually from compatibility code to the native API.
+
+## Compatibility scope
+
+This is a focused migration subset. It does not try to reproduce the full xterm.js internals,
+parser, buffer, marker, or addon ecosystem APIs. Prefer native `Restty` APIs when building new
+features.

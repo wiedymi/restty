@@ -1,0 +1,122 @@
+---
+title: Architecture
+description: How Restty connects the surface API, pane runtimes, WASM terminal core, PTY input, fonts, themes, and renderers.
+---
+
+`Restty` is a thin public surface over a set of per-pane runtimes. Each pane owns a terminal core,
+renderer state, input handling, search state, and PTY connection. The surface owns layout, active
+pane tracking, plugin dispatch, shared style operations, and global shader-stage merging.
+
+## Layers
+
+| Layer | Path | Responsibility |
+| --- | --- | --- |
+| Surface | `src/surface/` | Public `Restty` API, pane manager, pane handles, plugin host, context menu, search UI. |
+| Runtime | `src/runtime/` | Per-pane terminal lifecycle, render ticks, input/clipboard/IME handling, search, font resources. |
+| Terminal core | `src/wasm/` | Embedded WASM bridge and terminal ABI helpers. |
+| Renderer | `src/renderer/` | WebGPU/WebGL2 setup, glyph drawing, shapes, and shader utilities. |
+| Input/PTY | `src/input/`, `src/pty/` | Key/mouse mapping, PTY transports, Kitty/media helpers. |
+| Fonts/themes | `src/fonts/`, `src/theme/` | Font source resolution, local font picking, atlas resources, Ghostty theme parsing/catalog. |
+
+## Startup flow
+
+1. App creates `new Restty({ root, surface, terminal, services })`.
+2. Surface bootstraps the pane manager, plugin controller, shader operations, and lifecycle hooks.
+3. The initial pane is created unless `surface.createInitialPane` disables it.
+4. Pane DOM is inserted: pane container, canvas, and hidden IME textarea.
+5. The pane runtime loads or reuses the session WASM module.
+6. The runtime creates the terminal handle, resolves fonts, initializes renderer resources, and
+   starts render ticks.
+7. The pane waits for direct input, PTY output, search changes, theme/font updates, or layout
+   changes.
+
+## Output flow
+
+```txt
+PTY transport
+  -> beforeRenderOutput services hook
+  -> plugin output interceptors
+  -> terminal output buffer
+  -> WASM write/render update
+  -> render state readback
+  -> WebGPU/WebGL2 draw pass
+```
+
+Output may come from the built-in WebSocket PTY transport, a custom `PtyTransport`, WebContainer,
+Just Bash, or app-owned code that calls `sendInput(...)`.
+
+## Input flow
+
+```txt
+keyboard / mouse / paste / IME
+  -> runtime input handlers
+  -> beforeInput services hook
+  -> plugin input interceptors
+  -> PTY transport when connected
+  -> local terminal write when no PTY is connected
+```
+
+`sendKeyInput(...)` follows the PTY-aware input path. `sendInput(...)` writes text into the terminal
+path and is useful for programmatic output, demos, and compatibility layers.
+
+## Terminal responses
+
+Some control sequences cause the terminal core to produce replies, such as device status reports.
+The runtime drains WASM output and forwards those replies to the active PTY transport.
+
+## Rendering model
+
+`renderer: "auto"` prefers WebGPU and falls back to WebGL2 when needed. The renderer paints terminal
+backgrounds, glyphs, decorations, selection, cursor, and optional shader stages.
+
+Shader stages can be global, pane-local, or plugin-owned. Surface shader operations merge the
+appropriate stage lists before pushing them into pane runtimes.
+
+## Font lifecycle
+
+Font inputs are normalized into URL, buffer, or local-family sources. A shared session font resource
+store can dedupe loading/parsing across panes. Pane runtimes lease parsed faces and release them
+when fonts change or the pane is destroyed.
+
+The text path uses `text-shaper` for shaping and rasterization. Ligatures, hinting, size mode,
+Nerd Font icon scale, and symbol atlas scale are terminal config choices.
+
+## Theme lifecycle
+
+Themes enter through built-in theme helpers, Ghostty theme parsing, or app-provided `GhosttyTheme`
+objects. Themes can be applied at construction or runtime. Pane shell backgrounds are controlled
+separately through pane style options so apps can match the terminal background to the surrounding
+layout.
+
+## Plugins
+
+The plugin host runs through the surface controller. Plugins receive a narrowed host API and can
+subscribe to events, intercept input/output, observe lifecycle/render hooks, and register owned
+shader stages. Plugin failures are isolated and reported through `pluginInfo(...)`.
+
+## Playground and docs app
+
+The demo and docs are one React Router app:
+
+| Path | Purpose |
+| --- | --- |
+| `playground/app/` | Interactive playground shell and docs route. |
+| `playground/content/docs/` | MDX docs pages. |
+| `playground/public/` | Static demo/font assets. |
+| `playground/dist/` | Generated build output. |
+
+The playground is a public API consumer. It should be treated as an example integration rather than
+an internal debug shell.
+
+## Build and validation commands
+
+```sh
+bun run build:themes
+bun run build:types
+bun run lint
+bun run format:check
+bun run test:ci
+bun run playground:build
+```
+
+For docs-only changes, `bun run playground:build` is the most direct rendering/build check.

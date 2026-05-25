@@ -3,25 +3,154 @@ title: PTY backends
 description: Playground backend options and when to use each one.
 ---
 
-The playground ships three backend modes:
+`restty` separates terminal rendering from the process that produces terminal output. The runtime
+only needs a `PtyTransport`: connect, disconnect, send input, resize, and report connection state.
+
+The playground uses that same transport boundary for three backend modes.
 
 | Backend | Use when | Startup cost |
 | --- | --- | --- |
-| Just Bash | You want instant browser-only commands | Low |
-| WebContainer | You want Node demos inside the browser | Higher |
-| OS PTY websocket | You want a real local shell through `playground:pty` | Depends on local server |
+| Just Bash | You want instant browser-only commands and demos. | Low |
+| WebContainer | You want Node-based scripts and package workflows inside the browser. | Higher |
+| OS PTY websocket | You want a real local shell through `bun run playground:pty`. | Depends on local server |
 
-Just Bash is the default so first paint is not blocked by WebContainer boot or large dependency
-loading. WebContainer is lazy-loaded only when selected and connected.
+## Choosing a backend
 
-For local OS PTY:
+Use `Just Bash` first. It starts quickly because it does not boot WebContainer or fetch a large
+dependency graph. This keeps the playground useful on a cold page load.
+
+Use `WebContainer` when the demo needs a browser-hosted Node environment. The playground lazy-loads
+WebContainer only when selected and connected.
+
+Use `OS PTY websocket` when you are developing locally and want the terminal connected to your real
+shell.
+
+## Local OS PTY
+
+Start the local PTY websocket server:
 
 ```sh
 bun run playground:pty
 ```
 
-Then select `OS PTY websocket` and connect to:
+Then select `OS PTY websocket` in the playground and connect to:
 
 ```txt
 ws://localhost:8787/pty
+```
+
+The one-command playground workflow also starts the optional PTY server:
+
+```sh
+bun run playground
+```
+
+Open `http://localhost:5173` and use the backend selector.
+
+## WebSocket protocol
+
+The default `createWebSocketPtyTransport()` sends input and resize messages as JSON:
+
+```ts
+{ type: "input", data: "npm test\n" }
+{ type: "resize", cols: 100, rows: 30, widthPx: 900, heightPx: 540 }
+```
+
+The server may send terminal data as plain text or binary UTF-8. It may also send status JSON:
+
+```ts
+{ type: "status", shell: "zsh" }
+{ type: "error", message: "spawn failed", errors: ["ENOENT"] }
+{ type: "exit", code: 0 }
+```
+
+Plain text that is not one of those JSON messages is treated as terminal output.
+
+## Custom transport
+
+Use a custom transport when your backend is not a WebSocket PTY, or when an application already owns
+the process/session lifecycle.
+
+```ts
+import type { PtyTransport } from "restty";
+import { Restty } from "restty";
+
+const transport: PtyTransport = {
+  connect({ callbacks, cols, rows }) {
+    backend.start({
+      cols,
+      rows,
+      onData: callbacks.onData,
+      onExit: callbacks.onExit,
+    });
+    callbacks.onConnect?.();
+  },
+  disconnect() {
+    backend.stop();
+  },
+  sendInput(data) {
+    return backend.write(data);
+  },
+  resize(cols, rows, meta) {
+    return backend.resize({ cols, rows, ...meta });
+  },
+  isConnected() {
+    return backend.connected;
+  },
+  destroy() {
+    backend.dispose();
+  },
+};
+
+const restty = new Restty({
+  root,
+  services: {
+    ptyTransport: transport,
+  },
+});
+```
+
+## Input and output hooks
+
+Transport data can be intercepted without changing the transport itself:
+
+```ts
+const restty = new Restty({
+  root,
+  services: {
+    beforeInput: ({ text, source }) => {
+      if (source === "program") return text;
+      return text.replaceAll("\t", "  ");
+    },
+    beforeRenderOutput: ({ text }) => {
+      return text.replaceAll("\u0007", "");
+    },
+  },
+});
+```
+
+Return `null` from either hook to drop a payload.
+
+## Multi-pane behavior
+
+Each pane owns a runtime and a PTY transport instance. If you provide a static `services` object, the
+same transport object is reused. For independent PTY sessions per pane, provide a factory:
+
+```ts
+import { createWebSocketPtyTransport } from "restty";
+
+const restty = new Restty({
+  root,
+  services: () => ({
+    ptyTransport: createWebSocketPtyTransport(),
+  }),
+});
+```
+
+Then connect panes individually:
+
+```ts
+for (const pane of restty.panes()) {
+  pane.connectPty("ws://localhost:8787/pty");
+}
 ```

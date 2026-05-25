@@ -3,13 +3,51 @@ title: Getting started
 description: Create a restty surface, spawn a pane, and connect a PTY transport.
 ---
 
-Install the package with Bun:
+This page shows the shortest production-style integration: create a root element, construct
+`Restty`, connect a PTY, and clean up when the view unmounts.
+
+## Install
+
+Use any package manager that can install ESM packages:
+
+```sh
+npm i restty
+```
+
+```sh
+pnpm add restty
+```
+
+```sh
+yarn add restty
+```
 
 ```sh
 bun add restty
 ```
 
-Create a surface:
+`restty` expects a browser environment. For local development in this repository, use Bun
+`>=1.2.0`.
+
+## Add a root element
+
+The root element should have a stable size. The terminal canvas resizes to the container.
+
+```html
+<div id="terminal"></div>
+```
+
+```css
+#terminal {
+  width: 100%;
+  height: 100vh;
+}
+```
+
+## Create the terminal surface
+
+`new Restty(...)` is the primary API. It mounts the pane manager into `root`, creates the first pane
+by default, and starts the per-pane runtime.
 
 ```ts
 import { Restty } from "restty";
@@ -20,19 +58,126 @@ if (!root) throw new Error("Missing terminal root");
 const restty = new Restty({
   root,
   surface: {
-    createInitialPane: { focus: true },
     shortcuts: true,
     searchUi: true,
+    defaultContextMenu: true,
+    createInitialPane: { focus: true },
   },
   terminal: {
     renderer: "auto",
-    fontSize: 18,
+    fontSize: 16,
+    ligatures: true,
   },
 });
 ```
 
-Connect the active pane when a PTY transport is configured:
+## Connect a PTY
+
+`connectPty(url)` targets the active pane. Without a custom transport, restty uses its built-in
+WebSocket PTY transport.
 
 ```ts
-restty.activePane()?.connectPty("ws://localhost:8787/pty");
+restty.connectPty("ws://localhost:8787/pty");
 ```
+
+The WebSocket transport sends JSON messages for input and resize:
+
+```ts
+{ type: "input", data: "ls\n" }
+{ type: "resize", cols: 120, rows: 32, widthPx: 960, heightPx: 512 }
+```
+
+Server output can be raw terminal text, binary UTF-8 data, or these JSON status messages:
+
+```ts
+{ type: "status", shell: "zsh" }
+{ type: "error", message: "failed to spawn shell" }
+{ type: "exit", code: 0 }
+```
+
+## Write without a PTY
+
+You can also write directly into the active pane. This is useful for demos, tests, and compatibility
+layers that already have terminal output text.
+
+```ts
+restty.sendInput("hello from restty\r\n", "program");
+restty.sendKeyInput("\u001b[A");
+```
+
+When a PTY is connected, `sendKeyInput(...)` maps key payloads through the PTY input path.
+
+## Split panes
+
+Each pane has its own terminal runtime. Surface methods operate on the active pane by default, while
+pane handles let you target a specific pane.
+
+```ts
+const second = restty.splitActivePane("vertical");
+
+if (second) {
+  restty.setActivePane(second.id, { focus: true });
+  restty.activePane()?.connectPty("ws://localhost:8787/pty");
+}
+
+for (const pane of restty.panes()) {
+  pane.setFontSize(14);
+}
+```
+
+Directions are layout-oriented:
+
+| Direction | Result |
+| --- | --- |
+| `vertical` | Split left/right. |
+| `horizontal` | Split top/bottom. |
+
+## Clean up
+
+Call `destroy()` when the surrounding route/component unmounts. This releases pane DOM, GPU/WASM
+resources, PTY transports, event listeners, plugins, and shader stages.
+
+```ts
+restty.destroy();
+```
+
+## React example
+
+```tsx
+import { useEffect, useRef } from "react";
+import { Restty } from "restty";
+
+export function TerminalView() {
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!rootRef.current) return;
+
+    const restty = new Restty({
+      root: rootRef.current,
+      surface: {
+        shortcuts: true,
+        searchUi: true,
+      },
+      terminal: {
+        renderer: "auto",
+        fontSize: 16,
+      },
+    });
+
+    restty.connectPty("ws://localhost:8787/pty");
+
+    return () => {
+      restty.destroy();
+    };
+  }, []);
+
+  return <div ref={rootRef} style={{ height: "100vh" }} />;
+}
+```
+
+## Next steps
+
+- Use [Configuration](/docs/configuration) to tune surface, terminal, and service options.
+- Use [PTY backends](/docs/pty-backends) to choose a playground backend or build a custom transport.
+- Use [API surface](/docs/api-surface) when you need the full method map.

@@ -51,6 +51,35 @@ const pages: PlaygroundDocEntry[] = [
     name: "Themes and shaders",
     description: "Builtin Ghostty themes and shader-stage examples.",
   },
+  {
+    slugs: ["api-surface"],
+    path: "../../content/docs/api-surface.mdx",
+    url: "/docs/api-surface",
+    name: "API surface",
+    description:
+      "Public entrypoints, Restty methods, pane handles, config types, and package exports.",
+  },
+  {
+    slugs: ["plugins"],
+    path: "../../content/docs/plugins.mdx",
+    url: "/docs/plugins",
+    name: "Plugins",
+    description: "Extend restty with events, interceptors, lifecycle hooks, and shader stages.",
+  },
+  {
+    slugs: ["xterm-compat"],
+    path: "../../content/docs/xterm-compat.mdx",
+    url: "/docs/xterm-compat",
+    name: "xterm compatibility",
+    description: "Use the focused restty/xterm wrapper for xterm.js-style migration flows.",
+  },
+  {
+    slugs: ["architecture"],
+    path: "../../content/docs/architecture.mdx",
+    url: "/docs/architecture",
+    name: "Architecture",
+    description: "How Restty connects surface, runtime, WASM, PTY, fonts, themes, and renderers.",
+  },
 ];
 
 const pageTree: Root = {

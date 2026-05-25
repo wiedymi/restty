@@ -1,4 +1,15 @@
 {
   "title": "restty",
-  "pages": ["index", "getting-started", "configuration", "pty-backends", "fonts", "themes"]
+  "pages": [
+    "index",
+    "getting-started",
+    "configuration",
+    "pty-backends",
+    "fonts",
+    "themes",
+    "api-surface",
+    "plugins",
+    "xterm-compat",
+    "architecture"
+  ]
 }

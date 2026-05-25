@@ -1,14 +1,87 @@
 ---
 title: Fonts
-description: Simple font inputs without a compatibility catalog.
+description: Configure font sources, Local Font Access, fallbacks, ligatures, hinting, and runtime updates.
 ---
 
-The playground keeps font configuration intentionally small:
+Fonts are configured through `terminal.fonts` and can be updated later with `setFonts(...)`.
+The input model is intentionally small: pass URL/path fonts, in-memory buffers, or local family
+requests with optional fallbacks.
 
-- A bundled preset path for reliable startup.
-- Bundled local symbol fallback paths for Nerd Font and general symbol coverage.
-- An optional local family name when the browser supports Local Font Access.
-- No label/matcher compatibility catalog in the playground UI.
+## Default behavior
+
+If `terminal.fonts` is omitted, restty uses its built-in local-first fallback chain with CDN
+fallbacks. This is the right default for quick embeds and playground use.
+
+Provide `terminal.fonts` when you need deterministic app assets, custom symbol coverage, or a
+specific local-family policy.
+
+## Font inputs
+
+```ts
+import { Restty } from "restty";
+
+const restty = new Restty({
+  root,
+  terminal: {
+    fonts: [
+      "/fonts/JetBrainsMono-Regular.ttf",
+      new URL("/fonts/JetBrainsMono-Bold.ttf", window.location.href),
+      {
+        family: "SF Mono",
+        local: "prefer",
+        fallback: "/fonts/JetBrainsMono-Regular.ttf",
+      },
+      {
+        path: "/fonts/SymbolsNerdFontMono-Regular.ttf",
+        name: "Symbols Nerd Font Mono",
+      },
+    ],
+  },
+});
+```
+
+| Input | Meaning |
+| --- | --- |
+| `string` or `URL` | URL-like values are fetched. Non-URL strings are treated as local family names. |
+| `{ url }` | Fetch a font from an absolute or relative URL. |
+| `{ path }` | Fetch an app-relative path. |
+| `{ data }` | Use an `ArrayBuffer` or typed-array font payload. |
+| `{ family, local }` | Resolve a local family through Local Font Access. |
+| `{ family, fallback }` | Try local first, then fetch/use the fallback if allowed. |
+
+Each object may include `name`, `weight`, and `style` metadata.
+
+## Local Font Access
+
+Local family inputs use the browser's Local Font Access capability when available.
+
+```ts
+terminal: {
+  fonts: [
+    {
+      family: "JetBrains Mono Nerd Font",
+      local: "prefer",
+      fallback: {
+        path: "/fonts/JetBrainsMono-Regular.ttf",
+        name: "JetBrains Mono Regular",
+      },
+    },
+  ],
+}
+```
+
+| Mode | Behavior |
+| --- | --- |
+| `prefer` | Try the local family, then continue to the fallback if the local face is unavailable. |
+| `require` | Require the local family. If it cannot be resolved, that input does not fall back. |
+
+Local Font Access is permissioned and browser-dependent. Keep a URL/path fallback when predictable
+startup matters.
+
+## Symbol and Nerd Font fallback
+
+Terminal UIs often need more than ASCII and programming glyphs. Add symbol fonts after the primary
+monospace font:
 
 ```ts
 terminal: {
@@ -16,10 +89,7 @@ terminal: {
     {
       family: "Fira Code",
       local: "prefer",
-      fallback: {
-        path: "/fonts/FiraCode-Regular.ttf",
-        name: "Fira Code Regular",
-      },
+      fallback: "/fonts/FiraCode-Regular.ttf",
     },
     {
       path: "/fonts/SymbolsNerdFontMono-Regular.ttf",
@@ -33,5 +103,69 @@ terminal: {
 }
 ```
 
-If a user enters a local family, the playground tries it first with `local: "require"`, then falls
-back to the selected bundled preset and the symbol fallback paths.
+The playground follows this pattern: user-selected or local primary font first, then bundled symbol
+fallbacks for Nerd Font and general symbol coverage.
+
+## Runtime updates
+
+`restty.setFonts(...)` updates every pane. `pane.setFonts(...)` targets one pane.
+
+```ts
+await restty.setFonts([
+  { family: "SF Mono", local: "require" },
+  "/fonts/SymbolsNerdFontMono-Regular.ttf",
+]);
+
+const active = restty.activePane();
+await active?.setFonts(["/fonts/JetBrainsMono-Regular.ttf"]);
+```
+
+Runtime font updates reparse or reuse font resources through the shared session font store.
+
+## Ligatures
+
+Programming ligatures are enabled by default.
+
+```ts
+const restty = new Restty({
+  root,
+  terminal: {
+    ligatures: true,
+  },
+});
+
+restty.setLigatures(false);
+restty.activePane()?.setLigatures(true);
+```
+
+Turn ligatures off when exact per-cell operator rendering matters more than shaped operator glyphs.
+
+## Hinting and sizing
+
+Hinting is off by default for parity and stroke-weight consistency. Enable it when a font looks
+soft at small sizes in your target renderer/browser.
+
+```ts
+terminal: {
+  fontSize: 15,
+  fontSizeMode: "em",
+  fontHinting: true,
+  fontHintTarget: "light",
+}
+```
+
+| Option | Values |
+| --- | --- |
+| `fontSizeMode` | `"em"` or `"height"`. |
+| `fontHinting` | `true` or `false`. |
+| `fontHintTarget` | `"auto"`, `"light"`, or `"normal"`. |
+| `nerdIconScale` | Scale factor for Nerd Font icon glyphs. |
+| `fontScaleOverrides` | Regex-matched per-glyph scale overrides. |
+
+## Practical guidance
+
+- Ship at least one app-owned monospace font path for deterministic startup.
+- Add symbol fallbacks when your shell prompt, file icons, or app output uses Nerd Font glyphs.
+- Use `local: "prefer"` for user-facing font settings.
+- Use `local: "require"` only when missing local fonts should be visible as a configuration problem.
+- Keep the same font chain across panes unless you specifically want per-pane typography.

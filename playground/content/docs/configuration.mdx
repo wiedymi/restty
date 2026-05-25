@@ -3,39 +3,247 @@ title: Configuration
 description: Keep terminal behavior, services, and surface concerns separated.
 ---
 
-The current public config keeps three groups explicit:
+`ResttyConfig` keeps the integration boundary explicit. Surface options control the pane shell,
+terminal options control per-pane terminal behavior, and services provide runtime adapters/hooks.
 
 ```ts
-import { getBuiltinTheme } from "restty";
+import { Restty, getBuiltinTheme } from "restty";
 
-new Restty({
+const theme = getBuiltinTheme("Aizen Dark");
+
+const restty = new Restty({
   root,
+  session,
   surface: {
     shortcuts: true,
     searchUi: true,
+    defaultContextMenu: true,
+    paneStyles: {
+      inactivePaneOpacity: 0.82,
+      dividerThicknessPx: 1,
+    },
   },
   terminal: {
     renderer: "auto",
-    fontSize: 18,
+    fontSize: 16,
     ligatures: true,
-    theme: getBuiltinTheme("Aizen Dark") ?? undefined,
+    theme: theme ?? undefined,
+    touchSelectionMode: "long-press",
   },
   services: {
     ptyTransport,
+    beforeInput: ({ text }) => text,
+    beforeRenderOutput: ({ text }) => text,
   },
 });
 ```
 
+## Top-level options
+
+| Option | Type | Purpose |
+| --- | --- | --- |
+| `root` | `HTMLElement` | Required container for all pane DOM. |
+| `session` | `ResttyRuntimeSession` | Optional shared WASM/WebGPU/font resource provider. |
+| `surface` | `ResttySurfaceConfig` | Pane layout, shortcuts, context menus, search UI, events, and style defaults. |
+| `terminal` | `ResttyTerminalConfig` or factory | Renderer, fonts, theme, input, resize, scrollback, and shader behavior for each pane. |
+| `services` | `ResttyServicesConfig` or factory | PTY transport, callbacks, and input/output hooks for each pane. |
+
+`terminal` and `services` may be static objects or per-pane factories:
+
+```ts
+const restty = new Restty({
+  root,
+  terminal: ({ id, sourcePane }) => ({
+    fontSize: sourcePane ? 14 : 16,
+    renderer: id === 1 ? "webgpu" : "auto",
+  }),
+  services: ({ id }) => ({
+    beforeInput: ({ text }) => {
+      console.debug("input for pane", id, text);
+      return text;
+    },
+  }),
+});
+```
+
+Factory context includes `id`, `sourcePane`, `canvas`, and `imeInput`.
+
 ## Surface
 
-Surface options own pane orchestration, shortcuts, search UI, context menus, and lifecycle events.
+Surface options own pane orchestration and shell UI. Use them for layout behavior, built-in search,
+context menus, shortcuts, and lifecycle events.
+
+```ts
+const restty = new Restty({
+  root,
+  surface: {
+    createInitialPane: { focus: true },
+    autoInit: true,
+    minPaneSize: 120,
+    shortcuts: true,
+    searchUi: {
+      enabled: true,
+      placeholder: "Search output",
+      shortcut: true,
+    },
+    defaultContextMenu: {
+      enabled: true,
+      getPtyUrl: () => "ws://localhost:8787/pty",
+    },
+    paneStyles: {
+      splitBackground: "#0b0b0b",
+      paneBackground: "#101010",
+      activePaneOpacity: 1,
+      inactivePaneOpacity: 0.78,
+      dividerThicknessPx: 1,
+    },
+    events: {
+      onPaneCreated: (pane) => console.log("created", pane.id),
+      onPaneClosed: (pane) => console.log("closed", pane.id),
+      onPaneSplit: (_source, created, direction) => {
+        console.log("split", direction, created.id);
+      },
+      onActivePaneChange: (pane) => console.log("active", pane?.id ?? null),
+      onLayoutChanged: () => console.log("layout changed"),
+      onDesktopNotification: (notification) => console.log(notification),
+    },
+  },
+});
+```
+
+| Surface option | Use when |
+| --- | --- |
+| `createInitialPane` | You want restty to create the first pane during construction. |
+| `autoInit` | You want pane runtimes initialized automatically after pane creation. |
+| `minPaneSize` | You need to prevent very small split panes. |
+| `paneDom` | You need custom class names for pane, canvas, or IME input elements. |
+| `paneStyles` | You want restty to apply built-in pane backgrounds, opacity, and divider styles. |
+| `searchUi` | You want the built-in per-pane search overlay. |
+| `shortcuts` | You want default or guarded keyboard shortcuts for pane actions. |
+| `contextMenu` | You want a fully custom right-click menu. |
+| `defaultContextMenu` | You want restty's built-in menu with optional guards and PTY URL provider. |
+| `events` | You need app-level notifications for pane and layout lifecycle. |
 
 ## Terminal
 
-Terminal options are plain behavior and rendering config: renderer, font size, ligatures, theme,
-font sources, shader stages, resize behavior, and scrollback.
+Terminal options are per-pane behavior and rendering config. They are intentionally plain data so
+they can be copied into factories, saved as presets, or applied from app settings.
+
+```ts
+const restty = new Restty({
+  root,
+  terminal: {
+    renderer: "auto",
+    fontSize: 16,
+    fontSizeMode: "em",
+    ligatures: true,
+    fontHinting: false,
+    fontHintTarget: "auto",
+    alphaBlending: "native",
+    autoResize: true,
+    attachWindowEvents: true,
+    attachCanvasEvents: true,
+    touchSelectionMode: "long-press",
+    touchSelectionLongPressMs: 450,
+    touchSelectionMoveThresholdPx: 10,
+    maxScrollbackBytes: 10_000_000,
+    shaderStages: [],
+  },
+});
+```
+
+| Terminal option | Values |
+| --- | --- |
+| `renderer` | `"auto"`, `"webgpu"`, or `"webgl2"`. |
+| `fontSize` | CSS pixel size for the selected terminal font. |
+| `fontSizeMode` | `"em"` or `"height"` for text-shaper scale resolution. |
+| `ligatures` | Enables cross-cell programming ligature shaping. |
+| `fontHinting` | Enables TrueType hinting during atlas rasterization. |
+| `fontHintTarget` | `"auto"`, `"light"`, or `"normal"`. |
+| `alphaBlending` | `"native"`, `"linear"`, or `"linear-corrected"`. |
+| `fonts` | Ordered font inputs. See [Fonts](/docs/fonts). |
+| `theme` | Initial Ghostty-compatible theme. See [Themes and shaders](/docs/themes). |
+| `autoResize` | Watches container/window changes and resizes the terminal. |
+| `attachWindowEvents` | Attaches runtime focus/resize listeners to `window`. |
+| `attachCanvasEvents` | Attaches pointer/keyboard listeners to the canvas. |
+| `touchSelectionMode` | `"long-press"`, `"drag"`, or `"off"`. |
+| `shaderStages` | Initial frame shader stages. |
+| `maxScrollbackBytes` | Scrollback byte limit passed to the WASM terminal. |
+
+## Touch selection
+
+Touch devices default to pan-first scrolling. Selection starts after a long press unless you change
+the mode.
+
+```ts
+terminal: {
+  touchSelectionMode: "long-press",
+  touchSelectionLongPressMs: 450,
+  touchSelectionMoveThresholdPx: 10,
+}
+```
+
+| Mode | Behavior |
+| --- | --- |
+| `long-press` | One-finger pan scrolls; selection starts after the timeout. |
+| `drag` | Touch drag starts selection immediately. |
+| `off` | Touch selection is disabled; touch is reserved for scrolling. |
 
 ## Services
 
-Services are runtime adapters and hooks. PTY transport, input/output interception, and callback
-bridges belong here rather than in terminal behavior config.
+Services are runtime adapters and hooks. Use this bucket for PTY transport, callback bridges, and
+input/output interception.
+
+```ts
+import { createWebSocketPtyTransport } from "restty";
+
+const restty = new Restty({
+  root,
+  services: {
+    ptyTransport: createWebSocketPtyTransport(),
+    callbacks: {
+      onSearchState: (state) => console.log(state),
+      onDesktopNotification: (notification) => console.log(notification),
+    },
+    beforeInput: ({ text, source }) => {
+      if (source === "blocked-shortcut") return null;
+      return text;
+    },
+    beforeRenderOutput: ({ text }) => {
+      return text.replaceAll("\u0007", "");
+    },
+  },
+});
+```
+
+Hook return behavior:
+
+| Return value | Effect |
+| --- | --- |
+| `string` | Replace the payload text. |
+| `null` | Drop the payload. |
+| `void` | Pass the original text through. |
+
+## Runtime updates
+
+Most user-facing settings can be updated after construction:
+
+```ts
+restty.setRenderer("webgl2");
+restty.setFontSize(15);
+restty.setLigatures(false);
+restty.setPaneStyleOptions({ inactivePaneOpacity: 0.7 });
+restty.setSearchUiStyleOptions({ panelBackground: "#111" });
+restty.requestLayoutSync();
+```
+
+For pane-local changes, use a pane handle:
+
+```ts
+const pane = restty.activePane();
+
+pane?.setRenderer("webgpu");
+pane?.setSearchQuery("error");
+pane?.openSearch({ selectAll: true });
+pane?.setShaderStages([]);
+```

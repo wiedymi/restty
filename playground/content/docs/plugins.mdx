@@ -1,0 +1,241 @@
+---
+title: Plugins
+description: Extend restty with events, interceptors, lifecycle hooks, render hooks, and shader stages.
+---
+
+Plugins are native TypeScript objects activated by a `Restty` instance. Use them when you need to
+observe or extend terminal behavior without patching core or wrapping every pane operation in app
+code.
+
+## Plugin contract
+
+```ts
+import { RESTTY_PLUGIN_API_VERSION, type ResttyPlugin } from "restty";
+
+export const metricsPlugin: ResttyPlugin = {
+  id: "acme/metrics",
+  version: "1.0.0",
+  apiVersion: RESTTY_PLUGIN_API_VERSION,
+  requires: {
+    pluginApi: {
+      min: RESTTY_PLUGIN_API_VERSION,
+      max: RESTTY_PLUGIN_API_VERSION,
+    },
+  },
+  activate(ctx) {
+    const paneCreated = ctx.on("pane:created", ({ paneId }) => {
+      console.log("pane created", paneId);
+    });
+
+    const input = ctx.addInputInterceptor(({ text }) => text.replaceAll("\t", "  "));
+
+    const output = ctx.addOutputInterceptor(({ text }) => {
+      return text.replaceAll("\u0007", "");
+    });
+
+    const lifecycle = ctx.addLifecycleHook(({ phase, action, paneId }) => {
+      console.log(phase, action, paneId);
+    });
+
+    const render = ctx.addRenderHook(({ phase, paneId, dropped }) => {
+      console.log(phase, paneId, dropped);
+    });
+
+    const tint = ctx.addRenderStage({
+      id: "acme/metrics/tint",
+      mode: "after-main",
+      uniforms: [0.06],
+      shader: {
+        wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  return vec4f(min(vec3f(1.0), color.rgb + vec3f(params0.x, 0.0, 0.0)), color.a);
+}
+`,
+      },
+    });
+
+    return () => {
+      paneCreated.dispose();
+      input.dispose();
+      output.dispose();
+      lifecycle.dispose();
+      render.dispose();
+      tint.dispose();
+    };
+  },
+};
+```
+
+`activate(...)` may return nothing, a cleanup function, or a disposable object. Cleanup should be
+idempotent because it runs during `unuse(...)` and surface destruction.
+
+## Activation
+
+```ts
+await restty.use(metricsPlugin, { sampleRate: 1 });
+
+console.log(restty.plugins());
+console.log(restty.pluginInfo("acme/metrics"));
+
+restty.unuse("acme/metrics");
+```
+
+`use(...)` activates a plugin once. A second activation with the same `id` is rejected by the plugin
+host.
+
+## Manifest loading
+
+Use manifest loading when app configuration decides which plugins are enabled.
+
+```ts
+const manifest = [
+  { id: "acme/metrics", options: { sampleRate: 1 } },
+  { id: "acme/disabled", enabled: false },
+];
+
+const registry = {
+  "acme/metrics": () => import("./metrics-plugin").then((mod) => mod.metricsPlugin),
+};
+
+const results = await restty.loadPlugins(manifest, registry);
+```
+
+Result statuses are `loaded`, `skipped`, `missing`, and `failed`.
+
+## Context surface
+
+`ctx.restty` exposes a narrowed host API. It is intentionally smaller than the full `Restty` class
+but includes pane, layout, style, search, shader, and active-pane operations.
+
+```ts
+activate(ctx) {
+  const pane = ctx.restty.activePane();
+  pane?.setFontSize(14);
+
+  const created = ctx.restty.splitActivePane("vertical");
+  if (created) {
+    ctx.restty.setActivePane(created.id, { focus: true });
+  }
+
+  ctx.restty.setPaneStyleOptions({ inactivePaneOpacity: 0.8 });
+}
+```
+
+Prefer `ctx.restty.activePane()`, `ctx.restty.pane(id)`, and `ctx.restty.panes()` for pane-local
+terminal actions.
+
+## Events
+
+```ts
+const disposable = ctx.on("pane:split", ({ sourcePaneId, createdPaneId, direction }) => {
+  console.log(sourcePaneId, createdPaneId, direction);
+});
+```
+
+Supported events:
+
+| Event | Payload |
+| --- | --- |
+| `plugin:activated` | `{ pluginId }` |
+| `plugin:deactivated` | `{ pluginId }` |
+| `pane:created` | `{ paneId }` |
+| `pane:closed` | `{ paneId }` |
+| `pane:split` | `{ sourcePaneId, createdPaneId, direction }` |
+| `pane:active-changed` | `{ paneId }` |
+| `layout:changed` | `{}` |
+| `pane:resized` | `{ paneId, cols, rows }` |
+| `pane:focused` | `{ paneId }` |
+| `pane:blurred` | `{ paneId }` |
+
+## Interceptors
+
+Input interceptors run before terminal/program input is written. Output interceptors run before PTY
+output is queued for rendering.
+
+```ts
+ctx.addInputInterceptor(
+  ({ text, source }) => {
+    if (source === "blocked") return null;
+    return text;
+  },
+  { priority: -10 },
+);
+
+ctx.addOutputInterceptor(({ text }) => text);
+```
+
+Return behavior:
+
+| Return value | Effect |
+| --- | --- |
+| `string` | Replace payload text. |
+| `null` | Drop payload. |
+| `void` | Pass the original text through. |
+
+Lower `priority` runs first. Interceptors with the same priority run in registration order.
+
+## Lifecycle and render hooks
+
+Lifecycle hooks observe high-level pane/API operations:
+
+```ts
+ctx.addLifecycleHook(({ phase, action, ok, error }) => {
+  console.log(phase, action, ok, error);
+});
+```
+
+Actions include pane creation, splitting, closing, active/focused changes, PTY connect/disconnect,
+resize, focus, and blur.
+
+Render hooks observe PTY text as it moves through the render path:
+
+```ts
+ctx.addRenderHook(({ phase, paneId, text, dropped }) => {
+  console.log(phase, paneId, text.length, dropped);
+});
+```
+
+Hooks are observation points. Use interceptors when you need to mutate or drop text.
+
+## Plugin-owned shader stages
+
+Plugins can add shader stages without owning the whole global stage list:
+
+```ts
+const stage = ctx.addRenderStage({
+  id: "acme/highlight",
+  mode: "after-main",
+  backend: "both",
+  uniforms: [0.2],
+  shader: {
+    wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  return vec4f(color.rgb * (1.0 + params0.x), color.a);
+}
+`,
+  },
+});
+
+stage.setUniforms([0.1]);
+stage.setEnabled(true);
+```
+
+Disposing the stage removes it from the render pipeline.
+
+## Diagnostics
+
+```ts
+const info = restty.pluginInfo("acme/metrics");
+```
+
+Diagnostics include active state, activation error, listener counts, interceptor counts, hook counts,
+and plugin-owned render stage count. Use this in plugin settings UIs and tests.
+
+## Practices
+
+- Use stable `namespace/name` plugin IDs.
+- Declare `apiVersion` and `requires.pluginApi`.
+- Keep hook and interceptor work fast.
+- Hold every disposable returned by the context.
+- Release all disposables in cleanup.
+- Avoid direct DOM mutation unless the plugin specifically owns that UI.

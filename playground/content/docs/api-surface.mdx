@@ -1,0 +1,235 @@
+---
+title: API surface
+description: Public entrypoints, Restty methods, pane handles, config types, and package exports.
+---
+
+Use the root `restty` package for application code unless you are deliberately using the xterm
+compatibility layer or an unstable internal module.
+
+```ts
+import { Restty, createRestty } from "restty";
+```
+
+## Package exports
+
+| Import | Use for | Stability |
+| --- | --- | --- |
+| `restty` | Main public API, theme helpers, font/config types, PTY transport helpers, plugin types. | Preferred |
+| `restty/xterm` | Focused xterm.js-style migration wrapper. | Compatibility |
+| `restty/internal` | Low-level implementation modules for advanced integrations. | Unstable |
+| `restty/internal/runtime` | Runtime-focused internal modules. | Unstable |
+| `restty/internal/surface` | Surface-focused internal modules. | Unstable |
+| `restty/esm` | Self-contained browser ESM bundle for the root API. | Preferred when bundle subpath is needed |
+| `restty/esm/xterm` | Self-contained browser ESM bundle for xterm compatibility. | Compatibility |
+| `restty/esm/internal` | Self-contained browser ESM bundle for the internal barrel. | Unstable |
+
+## Constructor
+
+```ts
+const restty = new Restty({
+  root,
+  surface,
+  terminal,
+  services,
+});
+
+const same = createRestty({ root });
+```
+
+`new Restty(...)` and `createRestty(...)` return the same public class. The constructor creates the
+pane manager and, by default, creates the first pane.
+
+## Pane lookup
+
+Use pane handles for stable, pane-local operations:
+
+```ts
+const panes = restty.panes();
+const active = restty.activePane();
+const focused = restty.focusedPane();
+const pane = restty.pane(1);
+
+restty.forEachPane((item) => {
+  item.setFontSize(14);
+});
+```
+
+Raw pane-manager objects are still exposed for lower-level integrations:
+
+```ts
+restty.getPanes();
+restty.getPaneById(1);
+restty.getActivePane();
+restty.getFocusedPane();
+```
+
+Prefer handle methods for app code.
+
+## Active-pane convenience methods
+
+These methods target the current active pane:
+
+| Method | Purpose |
+| --- | --- |
+| `connectPty(url)` | Connect the active pane to a PTY URL. |
+| `disconnectPty()` | Disconnect the active pane. |
+| `isPtyConnected()` | Read active pane PTY connection state. |
+| `setRenderer(value)` | Set `"auto"`, `"webgpu"`, or `"webgl2"`. |
+| `setPaused(value)` / `togglePause()` | Pause or resume rendering. |
+| `setFontSize(value)` | Update font size. |
+| `setLigatures(value)` | Toggle programming ligatures. |
+| `setFontHinting(value)` / `setFontHintTarget(value)` | Tune rasterization hinting. |
+| `setFonts(fonts)` | Update fonts. |
+| `applyTheme(theme, label?)` / `resetTheme()` | Apply or reset theme. |
+| `sendInput(text, source?)` | Write text into the terminal path. |
+| `sendKeyInput(text, source?)` | Send key/program input through the PTY-aware path. |
+| `clearScreen()` | Clear terminal output. |
+| `setMouseMode(value)` / `getMouseStatus()` | Control mouse protocol behavior. |
+| `copySelectionToClipboard()` / `pasteFromClipboard()` | Clipboard helpers. |
+| `selectWordAtClientPoint(x, y)` | Pointer-based word selection. |
+| `setSearchQuery(query)` / `clearSearch()` | Manage search query. |
+| `searchNext()` / `searchPrevious()` | Navigate search results. |
+| `getSearchState()` | Read search state. |
+| `openSearch(options?)` / `closeSearch(options?)` / `toggleSearch(options?)` | Control built-in search UI. |
+| `resize(cols, rows)` | Resize terminal grid. |
+| `focus()` / `blur()` | Focus or blur the active pane. |
+| `updateSize(force?)` | Recalculate pane/canvas size. |
+| `getBackend()` | Read active renderer backend. |
+
+```ts
+restty.setRenderer("auto");
+restty.setFontSize(15);
+restty.sendInput("pwd\n");
+await restty.copySelectionToClipboard();
+restty.openSearch({ selectAll: true });
+```
+
+## Pane layout
+
+```ts
+const created = restty.createInitialPane({ focus: true });
+const right = restty.splitActivePane("vertical");
+const bottom = restty.splitPane(created.id, "horizontal");
+
+if (right) {
+  restty.setActivePane(right.id, { focus: true });
+}
+
+restty.closePane(bottom?.id ?? -1);
+```
+
+| Method | Purpose |
+| --- | --- |
+| `createInitialPane(options?)` | Create the first pane in an empty layout. |
+| `splitActivePane(direction)` | Split the active pane. |
+| `splitPane(id, direction)` | Split a specific pane. |
+| `closePane(id)` | Close a pane. |
+| `setActivePane(id, options?)` | Mark a pane active. |
+| `markPaneFocused(id, options?)` | Mark a pane focused. |
+| `requestLayoutSync()` | Schedule layout recalculation. |
+| `hideContextMenu()` | Dismiss the built-in/custom context menu. |
+
+## Pane styles and search UI styles
+
+```ts
+restty.setPaneStyleOptions({
+  splitBackground: "#0b0b0b",
+  paneBackground: "#111111",
+  inactivePaneOpacity: 0.8,
+  dividerThicknessPx: 1,
+});
+
+restty.setSearchUiStyleOptions({
+  panelBackground: "#151515",
+  panelTextColor: "#f5f5f5",
+});
+```
+
+Read resolved defaults with `getPaneStyleOptions()` and `getSearchUiStyleOptions()`.
+
+## Shader stages
+
+```ts
+restty.setShaderStages([]);
+const stages = restty.getShaderStages();
+
+const handle = restty.addShaderStage({
+  id: "app/tint",
+  mode: "after-main",
+  uniforms: [0.05],
+  shader: {
+    wgsl: `
+fn resttyStage(color: vec4f, uv: vec2f, time: f32, params0: vec4f, params1: vec4f) -> vec4f {
+  return vec4f(min(vec3f(1.0), color.rgb + vec3f(params0.x, 0.0, 0.0)), color.a);
+}
+`,
+  },
+});
+
+handle.setEnabled(true);
+handle.dispose();
+```
+
+Use pane handles for pane-local stage lists:
+
+```ts
+restty.activePane()?.setShaderStages(stages);
+```
+
+## Plugins
+
+```ts
+await restty.use(plugin, options);
+await restty.loadPlugins(manifest, registry);
+restty.unuse("acme/plugin");
+restty.plugins();
+restty.pluginInfo();
+restty.pluginInfo("acme/plugin");
+```
+
+See [Plugins](/docs/plugins) for the plugin context and authoring contract.
+
+## Theme helpers
+
+```ts
+import {
+  getBuiltinTheme,
+  getBuiltinThemeSource,
+  isBuiltinThemeName,
+  listBuiltinThemeNames,
+  parseGhosttyTheme,
+} from "restty";
+```
+
+Use these helpers for theme pickers, raw Ghostty theme import, and runtime theme application.
+
+## PTY helpers
+
+```ts
+import { createWebSocketPtyTransport } from "restty";
+import type { PtyTransport } from "restty";
+```
+
+The default runtime uses a WebSocket PTY transport when no custom transport is provided. Exported
+types let you build app-specific transports for WebContainer, local daemons, remote sessions, or
+test harnesses.
+
+## Public types
+
+The root entrypoint exports the public config, font, shader, runtime, PTY, pane, search UI, and
+plugin types used by these docs. Prefer importing types from `restty` instead of reaching into
+internal file paths.
+
+```ts
+import type {
+  ResttyConfig,
+  ResttyTerminalConfig,
+  ResttySurfaceConfig,
+  ResttyServicesConfig,
+  ResttyFontInput,
+  ResttyShaderStage,
+  ResttyPaneApi,
+  ResttyPlugin,
+  PtyTransport,
+} from "restty";
+```

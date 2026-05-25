@@ -1,19 +1,95 @@
 ---
 title: restty docs
-description: Browser terminal rendering with WASM, WebGPU/WebGL2, and a public playground consumer.
+description: Browser terminal rendering with WASM, WebGPU/WebGL2, split panes, fonts, themes, PTY transports, and a public TypeScript API.
 ---
 
-restty is a terminal rendering library for browser applications. The playground at `/` is now a
-product consumer of the public package API, not an internal debug shell.
+`restty` is a browser terminal rendering library for applications that need an embeddable terminal
+surface, not just a screenshot of a shell. It combines a WASM terminal core, a WebGPU renderer with
+WebGL2 fallback, TypeScript text shaping, pane orchestration, PTY transport hooks, search, themes,
+fonts, shader stages, and a small plugin host.
 
-## What to try first
+The public integration path is intentionally short:
 
-- Use the default Just Bash backend for immediate startup without WebContainer boot cost.
-- Switch to WebContainer when you want Node-based demo scripts in the browser.
-- Use OS PTY when `bun run playground:pty` is running locally.
-- Toggle renderer, fonts, themes, split panes, search, and shader presets from the control panel.
+```ts
+import { Restty } from "restty";
 
-## Architecture direction
+const restty = new Restty({
+  root: document.getElementById("terminal") as HTMLElement,
+});
 
-The demo and docs are one React Router app. Docs live as MDX under `playground/content/docs`, and
-the interactive playground lives under `playground/app`.
+restty.connectPty("ws://localhost:8787/pty");
+```
+
+`Restty` creates the pane DOM, canvas, hidden IME input, renderer, WASM terminal handle, and default
+WebSocket PTY transport for you.
+
+## Choose a path
+
+| Goal | Start here |
+| --- | --- |
+| Embed a terminal quickly | [Getting started](/docs/getting-started) |
+| Tune pane behavior, render settings, callbacks, or services | [Configuration](/docs/configuration) |
+| Pick a playground backend or connect a local shell | [PTY backends](/docs/pty-backends) |
+| Configure font loading, local fonts, ligatures, or hinting | [Fonts](/docs/fonts) |
+| Apply Ghostty themes or frame shader stages | [Themes and shaders](/docs/themes) |
+| Inspect the public class, pane, plugin, and export surface | [API surface](/docs/api-surface) |
+| Extend restty without patching core | [Plugins](/docs/plugins) |
+| Migrate xterm.js-style integrations | [xterm compatibility](/docs/xterm-compat) |
+| Understand the runtime pipeline | [Architecture](/docs/architecture) |
+
+## Capability snapshot
+
+| Area | What is included |
+| --- | --- |
+| Terminal core | WASM-backed terminal state using the embedded terminal core bridge. |
+| Rendering | `auto`, `webgpu`, and `webgl2` backend selection with shader-stage extension points. |
+| Panes | Initial pane creation, vertical or horizontal splits, active/focused pane tracking, context menu hooks, and shortcuts. |
+| Input | Keyboard, mouse, clipboard, IME, touch selection, mouse protocol mapping, and PTY input forwarding. |
+| Search | Per-pane search state plus optional built-in search UI. |
+| Fonts | URL/path/buffer font sources, Local Font Access family lookup, fallbacks, ligatures, hinting controls, and runtime font updates. |
+| Themes | Built-in Ghostty-compatible themes, raw Ghostty theme parsing, and runtime theme application. |
+| PTY | Default WebSocket transport plus a transport interface for WebContainer, in-browser demos, or app-specific backends. |
+| Plugins | Events, input/output interceptors, lifecycle hooks, render hooks, and plugin-owned shader stages. |
+| Compatibility | Focused `restty/xterm` shim for common xterm.js migration flows. |
+
+## Playground first
+
+The playground at `/` is a real consumer of the public package API. Use it to verify rendering,
+themes, fonts, split panes, search, and shader stages before wiring restty into another app.
+
+The backend selector is the fastest way to compare runtime modes:
+
+- `Just Bash`: instant in-browser demo shell with no WebContainer boot cost.
+- `WebContainer`: browser-hosted Node scripts and package workflows.
+- `OS PTY websocket`: local shell access through `bun run playground:pty`.
+
+## Stability note
+
+`restty` is still in an early release stage. The high-level `Restty` API is the preferred surface
+and should change the slowest. `restty/internal` is intentionally less stable and exists for
+advanced integrations that need low-level access.
+
+## Repository layout
+
+| Path | Purpose |
+| --- | --- |
+| `src/surface/` | Public `Restty` API, pane orchestration, plugin runtime, and dispatch. |
+| `src/runtime/` | Per-pane runtime, render loop, interaction lifecycle, and atlas helpers. |
+| `src/renderer/` | WebGPU/WebGL setup, shaders, glyph drawing, and shape drawing. |
+| `src/input/` and `src/pty/` | ANSI/input mapping, PTY transports, and Kitty protocol helpers. |
+| `src/fonts/` and `src/theme/` | Font sources, local font picking, theme catalog, and Ghostty theme parsing. |
+| `src/wasm/` | Embedded WASM bridge and ABI helpers. |
+| `playground/app/` | React Router playground and docs app. |
+| `playground/content/docs/` | These public docs pages. |
+| `docs/` | Longer internal notes and development references. |
+
+## Local workflow
+
+```sh
+bun install
+bun run build:themes
+bun run playground
+```
+
+Open `http://localhost:5173`. The single `playground` command starts the React Router
+playground/docs app and the optional PTY websocket server used by the `OS PTY websocket` backend.
