@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import {
   createFontEntry,
   createFontManagerState,
+  isColorEmojiFont,
   isSymbolFont,
   pickFontIndexForText,
 } from "../src/fonts";
@@ -51,6 +52,17 @@ test("emoji presentation prefers color emoji fonts", () => {
   ];
   const picked = pickFontIndexForText(state, String.fromCodePoint(0x1f600), 1);
   expect(picked).toBe(1);
+});
+
+test("emoji presentation treats OpenMoji as an emoji fallback", () => {
+  const state = createFontManagerState();
+  state.fonts = [
+    createFontEntry(makeFont([0x1f95f]), "Primary Mono"),
+    createFontEntry(makeFont([0x1f95f]), "OpenMoji"),
+  ];
+  const picked = pickFontIndexForText(state, String.fromCodePoint(0x1f95f), 2);
+  expect(picked).toBe(1);
+  expect(isColorEmojiFont(state.fonts[1])).toBe(true);
 });
 
 test("text presentation selector prefers non-emoji fonts", () => {

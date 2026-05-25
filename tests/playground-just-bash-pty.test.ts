@@ -69,8 +69,31 @@ test("createJustBashPtyTransport connects and executes line input", async () => 
   transport.sendInput("\r");
   await flushAsyncWork();
 
-  expect(output.join("")).toContain("restty Just Bash");
+  expect(output.join("")).toContain("Welcome to the restty browser shell");
   expect(output.join("")).toContain("pwd\r\n/home/user\r\n");
+});
+
+test("createJustBashPtyTransport completes shell demo paths on tab", async () => {
+  const output: string[] = [];
+  const transport = createJustBashPtyTransport({
+    loadBash: async () => ({ Bash: FakeBash }),
+  });
+
+  await transport.connect({
+    url: "",
+    callbacks: {
+      onData: (data) => output.push(data),
+    },
+  });
+
+  transport.sendInput("./demo");
+  transport.sendInput("\t");
+  transport.sendInput("\r");
+  await flushAsyncWork();
+
+  const text = output.join("");
+  expect(text).toContain("./demo.sh");
+  expect(text).toContain("ran:./demo.sh\r\n");
 });
 
 test("createJustBashPtyTransport persists cwd from exec result and supports ll alias", async () => {

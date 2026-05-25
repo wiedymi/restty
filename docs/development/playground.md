@@ -33,7 +33,7 @@ Connection modes:
 - `WebContainer` keeps the in-browser runtime but lets you customize the command and working directory.
 - `OS PTY` connects to the local websocket PTY server at `ws://localhost:8787/pty`.
 
-WebContainer-backed modes seed `/demo.js`, `/test.js`, and related demo scripts automatically.
+WebContainer-backed modes seed `/demo.sh`, `/test.sh`, and related shell demo scripts automatically.
 
 Cloudflare Pages static deploy:
 

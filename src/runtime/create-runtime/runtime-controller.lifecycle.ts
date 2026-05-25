@@ -107,6 +107,13 @@ export function createRuntimeControllerLifecycle(
     }
   }
 
+  function discardCreatedWasmHandle(instance: ResttyWasm, handle: number) {
+    destroyWasmHandle(instance, handle);
+    if (readState().wasmHandle === handle) {
+      writeState({ wasmHandle: 0 });
+    }
+  }
+
   async function initWasm(initEpoch: number) {
     const shared = readState();
     if (shared.wasmReady && shared.wasm) return shared.wasm;
@@ -148,21 +155,19 @@ export function createRuntimeControllerLifecycle(
         destroyWasmHandle(instance, wasmHandle);
         return;
       }
+      writeState({ wasmHandle });
       const activeTheme = lifecycleThemeSizeRuntime.getActiveTheme();
       if (activeTheme && isCurrentLifecycleEpoch(initEpoch)) {
         applyTheme(activeTheme, activeTheme.name ?? "cached theme");
       }
       if (!isCurrentLifecycleEpoch(initEpoch)) {
-        destroyWasmHandle(instance, wasmHandle);
+        discardCreatedWasmHandle(instance, wasmHandle);
         return;
       }
       instance.renderUpdate(wasmHandle);
-      writeState({ wasmHandle, needsRender: true });
+      writeState({ needsRender: true });
       if (!isCurrentLifecycleEpoch(initEpoch)) {
-        destroyWasmHandle(instance, wasmHandle);
-        if (readState().wasmHandle === wasmHandle) {
-          writeState({ wasmHandle: 0 });
-        }
+        discardCreatedWasmHandle(instance, wasmHandle);
         return;
       }
       handleSearchWasmReset();

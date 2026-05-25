@@ -80,8 +80,8 @@ startup matters.
 
 ## Symbol and Nerd Font fallback
 
-Terminal UIs often need more than ASCII and programming glyphs. Add symbol fonts after the primary
-monospace font:
+Terminal UIs often need more than ASCII and programming glyphs. Add prompt-oriented fallback fonts
+after the primary monospace font:
 
 ```ts
 terminal: {
@@ -99,12 +99,17 @@ terminal: {
       path: "/fonts/NotoSansSymbols2-Regular.ttf",
       name: "Noto Sans Symbols 2",
     },
+    {
+      path: "/fonts/OpenMoji-black-glyf.ttf",
+      name: "OpenMoji",
+    },
   ],
 }
 ```
 
-The playground follows this pattern: user-selected or local primary font first, then bundled symbol
-fallbacks for Nerd Font and general symbol coverage.
+The playground follows this pattern: user-selected or local primary font first, then the same
+prompt-oriented fallback chain it used before the playground refactor: Nerd Font symbols,
+Apple/Noto/Symbola symbols, emoji fonts, and CJK coverage.
 
 ## Runtime updates
 

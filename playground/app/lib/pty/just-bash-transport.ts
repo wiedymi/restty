@@ -1,4 +1,10 @@
 import type { PtyConnectOptions, PtyResizeMeta, PtyTransport } from "../../../../src/index.ts";
+import {
+  PLAYGROUND_SHELL_FILE_MODE,
+  PLAYGROUND_SHELL_COMMANDS,
+  PLAYGROUND_SHELL_SCRIPTS,
+  PLAYGROUND_SHELL_WELCOME,
+} from "./playground-shell-scripts.ts";
 
 type JustBashExecResult = {
   stdout: string;
@@ -20,10 +26,12 @@ type JustBashInstance = {
   getEnv: () => Record<string, string>;
 };
 
+type JustBashInitialFile = string | { content: string; mode?: number };
+
 type JustBashConstructor = new (options?: {
   cwd?: string;
   env?: Record<string, string>;
-  files?: Record<string, string>;
+  files?: Record<string, JustBashInitialFile>;
 }) => JustBashInstance;
 
 type JustBashModule = {
@@ -34,22 +42,40 @@ type JustBashPtyOptions = {
   loadBash?: () => Promise<JustBashModule>;
 };
 
-const JUST_BASH_WELCOME = [
-  "\x1b[1;38;5;81mrestty Just Bash\x1b[0m",
-  "In-browser bash powered by just-bash.",
-  "Try: help, ls, ll, cat README.md, echo hello | tr a-z A-Z",
-  "",
-].join("\r\n");
-
 const DEFAULT_FILES = {
   "/home/user/README.md": [
-    "# restty Just Bash",
+    "# restty browser shell",
     "",
-    "This is a browser-only shell backed by just-bash.",
-    "Use WebContainer mode for Node demos, or OS PTY for your local machine shell.",
+    "Just Bash and WebContainer expose the same shell demo scripts.",
+    "",
+    "Run ./demo.sh to start.",
     "",
   ].join("\n"),
+  ...Object.fromEntries(
+    PLAYGROUND_SHELL_SCRIPTS.map((script) => [
+      `/home/user/${script.target}`,
+      { content: script.fallback, mode: PLAYGROUND_SHELL_FILE_MODE },
+    ]),
+  ),
 };
+
+const COMPLETABLE_COMMANDS = [
+  "cat",
+  "cd",
+  "clear",
+  "echo",
+  "help",
+  "la",
+  "ll",
+  "ls",
+  "pwd",
+  ...PLAYGROUND_SHELL_COMMANDS,
+];
+
+const COMPLETABLE_FILES = [
+  "README.md",
+  ...PLAYGROUND_SHELL_SCRIPTS.map((script) => script.target),
+];
 
 function normalizeTerminalNewlines(text: string): string {
   return text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n/g, "\r\n");
@@ -64,6 +90,21 @@ function resolveShellAlias(command: string): string {
   if (trimmed === "ll") return "ls -la";
   if (trimmed === "la") return "ls -A";
   return command;
+}
+
+function uniqueSorted(values: string[]): string[] {
+  return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+}
+
+function commonPrefix(values: string[]): string {
+  if (values.length === 0) return "";
+  let prefix = values[0] ?? "";
+  for (const value of values.slice(1)) {
+    while (prefix && !value.startsWith(prefix)) {
+      prefix = prefix.slice(0, -1);
+    }
+  }
+  return prefix;
 }
 
 async function loadJustBashModule(): Promise<JustBashModule> {
@@ -89,6 +130,32 @@ export function createJustBashPtyTransport(options: JustBashPtyOptions = {}): Pt
 
   const writePrompt = () => {
     write(formatPrompt(cwd));
+  };
+
+  const completeInputBuffer = () => {
+    const tokenMatch = inputBuffer.match(/(?:^|\s)(\S*)$/);
+    const token = tokenMatch?.[1] ?? "";
+    if (!token) return;
+
+    const tokenStart = inputBuffer.length - token.length;
+    const isFirstToken = inputBuffer.slice(0, tokenStart).trim().length === 0;
+    const fileCandidates = [
+      ...COMPLETABLE_FILES,
+      ...COMPLETABLE_FILES.map((file) => `./${file}`),
+    ];
+    const candidates = uniqueSorted(
+      (isFirstToken ? [...COMPLETABLE_COMMANDS, ...fileCandidates] : fileCandidates).filter(
+        (candidate) => candidate.startsWith(token),
+      ),
+    );
+    if (candidates.length === 0) return;
+
+    const completion = candidates.length === 1 ? candidates[0]! : commonPrefix(candidates);
+    if (!completion || completion.length <= token.length) return;
+
+    const suffix = completion.slice(token.length);
+    inputBuffer += suffix;
+    write(suffix);
   };
 
   const resetSessionState = (instance: JustBashInstance) => {
@@ -187,7 +254,7 @@ export function createJustBashPtyTransport(options: JustBashPtyOptions = {}): Pt
       connected = true;
       cb.onConnect?.();
       cb.onStatus?.("just-bash");
-      write(`${JUST_BASH_WELCOME}\r\n`);
+      write(PLAYGROUND_SHELL_WELCOME);
       writePrompt();
     },
     disconnect: () => {
@@ -204,12 +271,20 @@ export function createJustBashPtyTransport(options: JustBashPtyOptions = {}): Pt
     sendInput: (data: string) => {
       if (!connected) return false;
       if (!data) return true;
+      if (data === "\t") {
+        completeInputBuffer();
+        return true;
+      }
       if (handleControlInput(data)) return true;
 
       for (let i = 0; i < data.length; i += 1) {
         const ch = data[i];
         if (ch === "\r" || ch === "\n") {
           submitInputBuffer();
+          continue;
+        }
+        if (ch === "\t") {
+          completeInputBuffer();
           continue;
         }
         if (ch === "\x7f" || ch === "\b") {

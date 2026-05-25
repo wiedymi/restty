@@ -22,11 +22,10 @@ export function normalizeFetchedScript(text: string): string | null {
   }
 
   if (firstNonEmpty.startsWith("#!")) {
-    if (!/\b(node|bun|deno|js)\b/i.test(firstNonEmpty)) return null;
+    if (!/\b(bash|dash|sh|zsh)\b/i.test(firstNonEmpty)) return null;
     return `${noBom}\n`;
   }
-  if (!/(?:^|\n)\s*(const|let|var|function|import|export)\b/.test(noBom)) return null;
-  return `${noBom}\n`;
+  return null;
 }
 
 async function fetchScriptText(url: string): Promise<string | null> {

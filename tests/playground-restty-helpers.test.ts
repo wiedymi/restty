@@ -14,31 +14,57 @@ import { shaderStagesForPreset } from "../playground/app/lib/restty/shader-prese
 
 test("playground fonts use simple bundled paths with optional local family first", () => {
   expect(FONT_PRESETS.map((preset) => preset.id)).toEqual(["fira-code", "jetbrains-mono"]);
-  expect(buildFontsForPreset(DEFAULT_FONT_PRESET, "")).toEqual([
-    {
-      family: "Fira Code",
-      local: "prefer",
-      fallback: { path: "/fonts/FiraCode-Regular.ttf", name: "Fira Code Regular" },
+  expect(DEFAULT_FONT_PRESET).toBe("jetbrains-mono");
+
+  const defaultFonts = buildFontsForPreset(DEFAULT_FONT_PRESET, "");
+  expect(defaultFonts[0]).toMatchObject({
+    family: "JetBrains Mono Nerd Font",
+    name: "JetBrains Mono Nerd Font Regular",
+    fallback: {
+      url: expect.stringContaining("JetBrainsMonoNLNerdFontMono-Regular.ttf"),
     },
-    ...SYMBOL_FALLBACK_FONTS,
-  ]);
-  expect(buildFontsForPreset("jetbrains-mono", "Berkeley Mono")).toEqual([
-    { family: "Berkeley Mono", local: "require" },
-    {
-      family: "JetBrains Mono",
-      local: "prefer",
-      fallback: {
-        path: "/fonts/JetBrainsMono-Regular.ttf",
-        name: "JetBrains Mono Regular",
-      },
-    },
-    ...SYMBOL_FALLBACK_FONTS,
-  ]);
+  });
   expect(
-    SYMBOL_FALLBACK_FONTS.map((font) =>
-      typeof font === "object" && font !== null && "path" in font ? font.path : "",
+    defaultFonts.some(
+      (font) =>
+        typeof font === "object" &&
+        font !== null &&
+        "path" in font &&
+        font.path === "/fonts/OpenMoji-black-glyf.ttf",
     ),
-  ).toEqual(["/fonts/SymbolsNerdFontMono-Regular.ttf", "/fonts/NotoSansSymbols2-Regular.ttf"]);
+  ).toBe(true);
+  expect(
+    defaultFonts.some(
+      (font) =>
+        typeof font === "object" &&
+        font !== null &&
+        "url" in font &&
+        String(font.url).includes("ttf-symbola"),
+    ),
+  ).toBe(true);
+
+  const customFonts = buildFontsForPreset("jetbrains-mono", "Berkeley Mono");
+  expect(customFonts[0]).toEqual({ family: "Berkeley Mono", local: "require" });
+  expect(customFonts[1]).toMatchObject({
+    family: "JetBrains Mono Nerd Font",
+    name: "JetBrains Mono Nerd Font Regular",
+  });
+
+  const fallbackLabels = SYMBOL_FALLBACK_FONTS.map((font) =>
+    typeof font === "object" && font !== null && "name" in font ? font.name : "",
+  );
+  expect(fallbackLabels).toEqual([
+    "Symbols Nerd Font Mono",
+    "Symbols Nerd Font Mono",
+    "Apple Symbols",
+    "Noto Sans Symbols 2",
+    "Symbola",
+    "Noto Sans Canadian Aboriginal",
+    "Apple Color Emoji",
+    "Noto Color Emoji",
+    "OpenMoji",
+    "Noto Sans CJK",
+  ]);
 });
 
 test("playground shader presets expose named restty stages", () => {

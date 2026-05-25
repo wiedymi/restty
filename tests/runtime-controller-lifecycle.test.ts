@@ -42,7 +42,13 @@ afterEach(() => {
   }
 });
 
-function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
+function createTestRuntime(
+  options: {
+    activeTheme?: { name?: string };
+    applyTheme?: (theme: { name?: string }, sourceLabel?: string) => void;
+    ensureFont?: () => Promise<void>;
+  } = {},
+) {
   const sharedState = {
     wasm: null,
     wasmExports: null,
@@ -110,7 +116,7 @@ function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
       } as never,
       lifecycleThemeSizeRuntime: {
         cancelScheduledSizeUpdate: () => undefined,
-        getActiveTheme: () => null,
+        getActiveTheme: () => options.activeTheme ?? null,
       },
     },
     state: {
@@ -146,7 +152,7 @@ function createTestRuntime(options: { ensureFont?: () => Promise<void> } = {}) {
       cleanupFns: [],
       cleanupCanvasFns: [],
       updateGrid: () => undefined,
-      applyTheme: () => undefined,
+      applyTheme: options.applyTheme ?? (() => undefined),
       ensureFont: options.ensureFont ?? (async () => undefined),
       updateSize: () => undefined,
       replaceCanvas: () => undefined,
@@ -252,4 +258,22 @@ test("runtime controller lifecycle state stays destroyed when init finishes late
   expect(sharedState.wasmHandle).toBe(0);
   expect(states).toEqual(["created", "initializing", "destroyed"]);
   dispose();
+});
+
+test("runtime controller replays cached theme after publishing wasm handle", async () => {
+  let wasmHandleDuringTheme = 0;
+  let sourceLabel = "";
+  const activeTheme = { name: "Aizen Dark" };
+  const { publicRuntime, sharedState } = createTestRuntime({
+    activeTheme,
+    applyTheme: (_theme, nextSourceLabel) => {
+      wasmHandleDuringTheme = sharedState.wasmHandle;
+      sourceLabel = nextSourceLabel ?? "";
+    },
+  });
+
+  await publicRuntime.lifecycle.init();
+
+  expect(wasmHandleDuringTheme).toBe(1);
+  expect(sourceLabel).toBe("Aizen Dark");
 });

@@ -5,6 +5,7 @@ const NERD_SYMBOL_FONT_HINTS = [/symbols nerd font/i, /nerd fonts symbols/i];
 const COLOR_EMOJI_FONT_HINTS = [
   /apple color emoji/i,
   /noto color emoji/i,
+  /openmoji/i,
   /segoe ui emoji/i,
   /twemoji/i,
 ];

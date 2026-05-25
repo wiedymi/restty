@@ -21,13 +21,18 @@ afterEach(() => {
 
 function createFakeWebContainer(options: {
   spawnExitCodes?: Record<string, number>;
+  removes?: string[];
   writes?: Map<string, string>;
 }) {
+  const removes = options.removes ?? [];
   const writes = options.writes ?? new Map<string, string>();
   const spawnCalls: SpawnCall[] = [];
   const webcontainer: WebContainerSeedScriptContainer = {
     workdir: "/workspace",
     fs: {
+      rm: async (target: string) => {
+        removes.push(target);
+      },
       writeFile: async (target: string, text: string) => {
         writes.set(target, text);
       },
@@ -40,13 +45,14 @@ function createFakeWebContainer(options: {
     },
   };
 
-  return { spawnCalls, webcontainer, writes };
+  return { removes, spawnCalls, webcontainer, writes };
 }
 
-test("normalizeFetchedScript accepts node scripts and rejects html", () => {
-  expect(normalizeFetchedScript("\uFEFF#!/usr/bin/env node\r\nconsole.log('ok');\r\n")).toBe(
-    "#!/usr/bin/env node\nconsole.log('ok');\n",
+test("normalizeFetchedScript accepts shell scripts and rejects html or node scripts", () => {
+  expect(normalizeFetchedScript("\uFEFF#!/usr/bin/env sh\r\necho ok\r\n")).toBe(
+    "#!/usr/bin/env sh\necho ok\n",
   );
+  expect(normalizeFetchedScript("#!/usr/bin/env node\nconsole.log('ok');\n")).toBeNull();
   expect(normalizeFetchedScript("  <html><body>not js</body></html>  ")).toBeNull();
 });
 
@@ -60,71 +66,73 @@ test("fetchFirstScript skips html responses and keeps the first valid script", a
         headers: { "content-type": "text/html" },
       });
     }
-    return new Response("export const demo = 1;", {
+    return new Response("#!/usr/bin/env sh\necho demo\n", {
       status: 200,
-      headers: { "content-type": "application/javascript" },
+      headers: { "content-type": "text/plain" },
     });
   }) as typeof fetch;
 
-  await expect(fetchFirstScript(["/bad.js", "/good.js"])).resolves.toBe(
-    "export const demo = 1;\n",
+  await expect(fetchFirstScript(["/bad.sh", "/good.sh"])).resolves.toBe(
+    "#!/usr/bin/env sh\necho demo\n",
   );
-  expect(seenUrls).toEqual(["/bad.js", "/good.js"]);
+  expect(seenUrls).toEqual(["/bad.sh", "/good.sh"]);
 });
 
-test("ensureWebContainerSeedScripts writes fallbacks, removes stale scripts, and chmods demos", async () => {
-  globalThis.fetch = (async () => new Response("missing", { status: 404 })) as typeof fetch;
-
-  const { spawnCalls, webcontainer, writes } = createFakeWebContainer({});
+test("ensureWebContainerSeedScripts writes shell fallbacks, removes stale node scripts, and chmods demos", async () => {
+  const { removes, spawnCalls, webcontainer, writes } = createFakeWebContainer({});
   await ensureWebContainerSeedScripts(webcontainer);
 
-  expect(writes.get("demo.js")).toContain("restty demo fallback");
-  expect(writes.get("test.js")).toContain("restty test fallback");
-  expect(writes.get("kitty.js")).toContain("kitty fallback");
-  expect(spawnCalls.map(({ command }) => command)).toEqual(["node", "node"]);
-  expect(spawnCalls[0]?.args.slice(-4)).toEqual([
-    "demo.sh",
-    "test.sh",
-    "/workspace/demo.sh",
-    "/workspace/test.sh",
-  ]);
-  expect(spawnCalls[1]?.args.slice(-12)).toEqual([
+  expect(writes.get("demo.sh")).toContain("restty shell demo");
+  expect(writes.get("test.sh")).toContain("restty capability test");
+  expect(writes.get("kitty.sh")).toContain("restty kitty graphics probe");
+  expect(writes.get("colors.sh")).toContain("\x1b[48;5;196m");
+  expect(writes.get("kitty.sh")).toContain("\x1b_Ga=T");
+  expect(writes.get("kitty.sh")).not.toContain("printf");
+  expect(removes).toEqual([
     "demo.js",
     "test.js",
     "ansi-art.js",
     "animation.js",
     "colors.js",
     "kitty.js",
-    "/workspace/demo.js",
-    "/workspace/test.js",
-    "/workspace/ansi-art.js",
-    "/workspace/animation.js",
-    "/workspace/colors.js",
-    "/workspace/kitty.js",
+  ]);
+  expect(spawnCalls).toEqual([
+    {
+      command: "chmod",
+      args: [
+        "+x",
+        "demo.sh",
+        "test.sh",
+        "ansi-art.sh",
+        "animation.sh",
+        "colors.sh",
+        "kitty.sh",
+      ],
+    },
   ]);
 });
 
-test("ensureWebContainerSeedScripts falls back to chmod when node chmod script fails", async () => {
-  globalThis.fetch = (async () =>
-    new Response("#!/usr/bin/env node\nconsole.log('demo');\n", {
-      status: 200,
-      headers: { "content-type": "application/javascript" },
-    })) as typeof fetch;
-
+test("ensureWebContainerSeedScripts throws when shell chmod fails", async () => {
   const { spawnCalls, webcontainer, writes } = createFakeWebContainer({
-    spawnExitCodes: { node: 1, chmod: 0 },
+    spawnExitCodes: { chmod: 1 },
   });
-  await ensureWebContainerSeedScripts(webcontainer);
 
-  expect(writes.get("demo.js")).toBe("#!/usr/bin/env node\nconsole.log('demo');\n");
-  expect(spawnCalls.map(({ command }) => command)).toEqual(["node", "node", "chmod"]);
-  expect(spawnCalls[2]?.args).toEqual([
-    "+x",
-    "demo.js",
-    "test.js",
-    "ansi-art.js",
-    "animation.js",
-    "colors.js",
-    "kitty.js",
+  await expect(ensureWebContainerSeedScripts(webcontainer)).rejects.toThrow(
+    "Failed to set executable permissions for shell demo scripts",
+  );
+  expect(writes.get("demo.sh")).toContain("restty shell demo");
+  expect(spawnCalls).toEqual([
+    {
+      command: "chmod",
+      args: [
+        "+x",
+        "demo.sh",
+        "test.sh",
+        "ansi-art.sh",
+        "animation.sh",
+        "colors.sh",
+        "kitty.sh",
+      ],
+    },
   ]);
 });
