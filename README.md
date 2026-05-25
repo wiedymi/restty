@@ -16,6 +16,7 @@
 Powerful, lightweight browser terminal. Batteries included.
 
 Live demo: `https://restty.pages.dev/`
+Documentation: `https://restty.pages.dev/docs`
 
 Powered by:
 
@@ -223,7 +224,7 @@ await restty.loadPlugins([{ id: "example/metrics", options: { sampleRate: 1 } }]
 });
 ```
 
-See `docs/plugins.md` for full plugin authoring details.
+See the [Plugins docs](https://restty.pages.dev/docs/plugins) for full plugin authoring details.
 
 ### Shader stages
 
@@ -380,9 +381,17 @@ bun run playground:build
 
 ## Documentation
 
-- `docs/README.md` - docs index
-- `docs/usage.md` - practical integration guide
-- `docs/xterm-compat.md` - xterm migration shim
-- `docs/how-it-works.md` - runtime flow
-- `docs/internals/` - implementation notes and architecture
-- `THIRD_PARTY_NOTICES.md` - third-party credits and notices
+Public docs:
+
+- [Getting started](https://restty.pages.dev/docs/getting-started)
+- [Configuration](https://restty.pages.dev/docs/configuration)
+- [PTY backends](https://restty.pages.dev/docs/pty-backends)
+- [Fonts](https://restty.pages.dev/docs/fonts)
+- [Themes and shaders](https://restty.pages.dev/docs/themes)
+- [API surface](https://restty.pages.dev/docs/api-surface)
+- [Plugins](https://restty.pages.dev/docs/plugins)
+- [xterm compatibility](https://restty.pages.dev/docs/xterm-compat)
+- [Architecture](https://restty.pages.dev/docs/architecture)
+
+Repository notes remain under `docs/` for implementation details, development references, and
+internals. Third-party credits and notices are in `THIRD_PARTY_NOTICES.md`.
