@@ -2,7 +2,7 @@ import type { InputHandlerConfig } from "./types";
 import { encodeBeforeInputEvent } from "./keymap/before-input";
 import { ctrlCharForKey } from "./keymap/control";
 import { DEFAULT_CONFIG, sequences } from "./keymap/constants";
-import { encodeDefaultKeyEvent } from "./keymap/default-mapping";
+import { encodeCommandNavigationKeyEvent, encodeDefaultKeyEvent } from "./keymap/default-mapping";
 import { encodeKittyKeyEvent } from "./keymap/kitty";
 import { mapKeySequenceForPty } from "./keymap/pty-map";
 
@@ -21,7 +21,7 @@ export function encodeKeyEvent(
   if (kittyFlags !== 0) {
     return encodeKittyKeyEvent(event, kittyFlags);
   }
-  if (event.metaKey) return "";
+  if (event.metaKey) return encodeCommandNavigationKeyEvent(event);
 
   const cfg = { ...DEFAULT_CONFIG, ...config };
   let seq = "";

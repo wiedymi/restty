@@ -43,9 +43,42 @@ test("default keymap emits terminal-standard backspace/delete", () => {
   expect(sequences.delete).toBe("\x1b[3~");
 });
 
+test("default keymap supports shell line start and end bindings", () => {
+  expect(encodeKeyEvent(keyEvent({ key: "a", code: "KeyA", ctrlKey: true }))).toBe("\x01");
+  expect(encodeKeyEvent(keyEvent({ key: "e", code: "KeyE", ctrlKey: true }))).toBe("\x05");
+  expect(encodeKeyEvent(keyEvent({ key: "Home", code: "Home" }))).toBe("\x1b[H");
+  expect(encodeKeyEvent(keyEvent({ key: "End", code: "End" }))).toBe("\x1b[F");
+});
+
+test("default keymap supports shell word navigation shortcuts", () => {
+  expect(encodeKeyEvent(keyEvent({ key: "ArrowLeft", code: "ArrowLeft", ctrlKey: true }))).toBe(
+    "\x1bb",
+  );
+  expect(encodeKeyEvent(keyEvent({ key: "ArrowRight", code: "ArrowRight", ctrlKey: true }))).toBe(
+    "\x1bf",
+  );
+  expect(encodeKeyEvent(keyEvent({ key: "ArrowLeft", code: "ArrowLeft", metaKey: true }))).toBe(
+    "\x1bb",
+  );
+  expect(encodeKeyEvent(keyEvent({ key: "ArrowRight", code: "ArrowRight", metaKey: true }))).toBe(
+    "\x1bf",
+  );
+  expect(
+    encodeKeyEvent(
+      keyEvent({ key: "ArrowLeft", code: "ArrowLeft", ctrlKey: true, shiftKey: true }),
+    ),
+  ).toBe("\x1b[1;6D");
+});
+
+test("default keymap keeps non-navigation command shortcuts local", () => {
+  expect(encodeKeyEvent(keyEvent({ key: "d", code: "KeyD", metaKey: true }))).toBe("");
+});
+
 test("beforeinput delete events map to terminal-standard sequences", () => {
   expect(encodeBeforeInput(beforeInputEvent({ inputType: "deleteContentBackward" }))).toBe("\x7f");
-  expect(encodeBeforeInput(beforeInputEvent({ inputType: "deleteContentForward" }))).toBe("\x1b[3~");
+  expect(encodeBeforeInput(beforeInputEvent({ inputType: "deleteContentForward" }))).toBe(
+    "\x1b[3~",
+  );
   expect(encodeBeforeInput(beforeInputEvent({ inputType: "deleteWordBackward" }))).toBe("\x7f");
   expect(encodeBeforeInput(beforeInputEvent({ inputType: "deleteWordForward" }))).toBe("\x1b[3~");
   expect(encodeBeforeInput(beforeInputEvent({ inputType: "insertParagraph" }))).toBe("\r");

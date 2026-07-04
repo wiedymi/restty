@@ -36,10 +36,25 @@ const SIMPLE_KEY_SEQUENCES: Record<string, string> = {
   Insert: "\x1b[2~",
 };
 
+const LINE_EDIT_WORD_NAVIGATION_SEQUENCES: Record<string, string> = {
+  ArrowLeft: "\x1bb",
+  ArrowRight: "\x1bf",
+};
+
+export function encodeCommandNavigationKeyEvent(event: KeyboardEvent): string {
+  if (!event.metaKey || event.altKey || event.shiftKey) return "";
+  return LINE_EDIT_WORD_NAVIGATION_SEQUENCES[event.key ?? ""] ?? "";
+}
+
 export function encodeDefaultKeyEvent(event: KeyboardEvent): string {
   const key = event.key ?? "";
   if (key === "Tab") {
     return event.shiftKey ? sequences.shiftTab : sequences.tab;
+  }
+
+  if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey) {
+    const lineEditWordSeq = LINE_EDIT_WORD_NAVIGATION_SEQUENCES[key];
+    if (lineEditWordSeq) return lineEditWordSeq;
   }
 
   const modifierFinal = MODIFIER_CAPABLE_CSI_FINAL_BY_KEY[key];
