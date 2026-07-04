@@ -49,17 +49,16 @@ const RESTTY_PANE_STYLE_TEXT = `
   position: relative;
   z-index: 2;
   flex: 0 0 var(--restty-pane-divider-thickness, 1px);
+  background: var(--restty-pane-divider-color, #242424);
   touch-action: none;
 }
 
 .${RESTTY_PANE_ROOT_CLASS} .pane-divider.is-vertical {
   cursor: col-resize;
-  background: transparent;
 }
 
 .${RESTTY_PANE_ROOT_CLASS} .pane-divider.is-horizontal {
   cursor: row-resize;
-  background: transparent;
 }
 
 .${RESTTY_PANE_ROOT_CLASS} .pane-divider.is-vertical:hover,
@@ -180,6 +179,7 @@ export const DEFAULT_RESTTY_PANE_STYLE_OPTIONS: Required<ResttyPaneStyleOptions>
   inactivePaneOpacity: 0.9,
   activePaneOpacity: 1,
   opacityTransitionMs: 140,
+  dividerColor: "#242424",
   dividerThicknessPx: 1,
 };
 
@@ -221,6 +221,10 @@ export function normalizePaneStyleOptions(
     inactivePaneOpacity,
     activePaneOpacity,
     opacityTransitionMs,
+    dividerColor: normalizeColor(
+      options.dividerColor,
+      DEFAULT_RESTTY_PANE_STYLE_OPTIONS.dividerColor,
+    ),
     dividerThicknessPx,
   };
 }
@@ -245,6 +249,7 @@ export function applyPaneStyleOptionsToRoot(
   root.style.setProperty("--restty-pane-inactive-opacity", options.inactivePaneOpacity.toFixed(3));
   root.style.setProperty("--restty-pane-active-opacity", options.activePaneOpacity.toFixed(3));
   root.style.setProperty("--restty-pane-opacity-transition", `${options.opacityTransitionMs}ms`);
+  root.style.setProperty("--restty-pane-divider-color", options.dividerColor);
   root.style.setProperty("--restty-pane-divider-thickness", `${options.dividerThicknessPx}px`);
 }
 
@@ -256,5 +261,6 @@ export function clearPaneStyleOptionsFromRoot(root: HTMLElement): void {
   root.style.removeProperty("--restty-pane-inactive-opacity");
   root.style.removeProperty("--restty-pane-active-opacity");
   root.style.removeProperty("--restty-pane-opacity-transition");
+  root.style.removeProperty("--restty-pane-divider-color");
   root.style.removeProperty("--restty-pane-divider-thickness");
 }

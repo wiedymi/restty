@@ -5,7 +5,6 @@ import {
   listBuiltinThemeNames,
   Restty,
   type ResttyFontHintTarget,
-  type GhosttyTheme,
   type ResttyPaneApi,
 } from "../../../src/index.ts";
 import {
@@ -35,6 +34,7 @@ import {
   shaderStagesForPreset,
   type ShaderPreset,
 } from "../lib/restty/shader-presets.ts";
+import { themeBackgroundCss, themeDividerCss } from "../lib/restty/theme-style.ts";
 
 type RendererMode = "auto" | "webgpu" | "webgl2";
 
@@ -88,31 +88,6 @@ function resolveTheme(themeName: string) {
   return getBuiltinTheme(themeName);
 }
 
-function clampColorChannel(value: number): number {
-  if (!Number.isFinite(value)) return 0;
-  return Math.min(255, Math.max(0, Math.round(value)));
-}
-
-function themeColorToCss(
-  color: NonNullable<GhosttyTheme["colors"]["background"]>,
-): string {
-  const r = clampColorChannel(color.r);
-  const g = clampColorChannel(color.g);
-  const b = clampColorChannel(color.b);
-  const alpha = color.a === undefined ? 1 : clampColorChannel(color.a) / 255;
-
-  if (alpha >= 1) {
-    return `rgb(${r} ${g} ${b})`;
-  }
-
-  return `rgba(${r}, ${g}, ${b}, ${Number(alpha.toFixed(3))})`;
-}
-
-function themeBackgroundCss(theme: GhosttyTheme): string | null {
-  const background = theme.colors.background;
-  return background ? themeColorToCss(background) : null;
-}
-
 function setPlaygroundBackground(root: HTMLElement | null, background: string) {
   root?.style.setProperty("--playground-terminal-background", background);
   root?.ownerDocument.documentElement.style.setProperty(
@@ -131,11 +106,13 @@ function applyTheme(restty: Restty, themeName: string, root: HTMLElement | null 
   if (!theme) return;
 
   const background = themeBackgroundCss(theme);
+  const dividerColor = themeDividerCss(theme);
   if (background) {
     setPlaygroundBackground(root, background);
     restty.setPaneStyleOptions({
       splitBackground: background,
       paneBackground: background,
+      ...(dividerColor ? { dividerColor } : {}),
     });
   }
 

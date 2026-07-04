@@ -149,13 +149,14 @@ surface: {
 ## Pane style
 
 Pane shell styles are not terminal themes. They control split backgrounds, pane backgrounds,
-inactive opacity, and divider thickness.
+inactive opacity, divider color, and divider thickness.
 
 ```ts
 restty.setPaneStyleOptions({
   splitBackground: "#0b0b0b",
   paneBackground: "#101010",
   inactivePaneOpacity: 0.78,
+  dividerColor: "#242424",
   dividerThicknessPx: 1,
 });
 ```

@@ -11,6 +11,10 @@ import {
   createUnicodeDemoPayload,
 } from "../playground/app/lib/restty/demos.ts";
 import { shaderStagesForPreset } from "../playground/app/lib/restty/shader-presets.ts";
+import {
+  themeBackgroundCss,
+  themeDividerCss,
+} from "../playground/app/lib/restty/theme-style.ts";
 
 test("playground fonts use simple bundled paths with optional local family first", () => {
   expect(FONT_PRESETS.map((preset) => preset.id)).toEqual(["fira-code", "jetbrains-mono"]);
@@ -73,6 +77,27 @@ test("playground shader presets expose named restty stages", () => {
   expect(shaderStagesForPreset("aurora")[0]?.id).toBe("playground/aurora");
   expect(shaderStagesForPreset("crt-lite")[0]?.id).toBe("playground/crt-lite");
   expect(shaderStagesForPreset("mono-green")[0]?.id).toBe("playground/mono-green");
+});
+
+test("playground derives split divider color from theme background like Ghostty", () => {
+  expect(
+    themeBackgroundCss({
+      colors: { palette: [], background: { r: 26, g: 26, b: 26 } },
+      raw: {},
+    }),
+  ).toBe("rgb(26 26 26)");
+  expect(
+    themeDividerCss({
+      colors: { palette: [], background: { r: 26, g: 26, b: 26 } },
+      raw: {},
+    }),
+  ).toBe("rgb(16 16 16)");
+  expect(
+    themeDividerCss({
+      colors: { palette: [], background: { r: 240, g: 240, b: 240 } },
+      raw: {},
+    }),
+  ).toBe("rgb(221 221 221)");
 });
 
 test("playground demo payloads remain static terminal input", () => {

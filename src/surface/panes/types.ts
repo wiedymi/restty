@@ -81,6 +81,8 @@ export type ResttyPaneStyleOptions = {
   activePaneOpacity?: number;
   /** Duration in ms for opacity transitions between active/inactive states. */
   opacityTransitionMs?: number;
+  /** CSS color for the visible split divider. */
+  dividerColor?: string;
   /** Divider/gutter thickness in CSS pixels. */
   dividerThicknessPx?: number;
 };
