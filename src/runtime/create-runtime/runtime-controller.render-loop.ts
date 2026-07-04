@@ -11,8 +11,8 @@ type CreateRuntimeControllerRenderLoopOptions = {
   resizeState: { lastAt: number };
   CURSOR_BLINK_MS: number;
   RESIZE_ACTIVE_MS: number;
-  TARGET_RENDER_FPS: number;
   BACKGROUND_RENDER_FPS: number;
+  isSynchronizedOutput: () => boolean;
   tickWebGPU: (state: WebGPUState) => void;
   tickWebGL: (state: WebGLState) => void;
 };
@@ -39,15 +39,21 @@ export function createRuntimeControllerRenderLoop(
         typeof document !== "undefined" &&
         typeof document.visibilityState === "string" &&
         document.visibilityState !== "visible";
-      const targetRenderFps = hidden ? options.BACKGROUND_RENDER_FPS : options.TARGET_RENDER_FPS;
       const shared = options.readState();
-      const renderBudget = resizeActive
-        ? true
-        : now - shared.lastRenderTime >= 1000 / targetRenderFps;
+      // Foreground frames present on every rAF tick when dirty; rAF is
+      // already vsync-aligned, so an elapsed-time budget only drops frames.
+      // Hidden surfaces keep a low-rate budget.
+      const renderBudget = hidden
+        ? now - shared.lastRenderTime >= 1000 / options.BACKGROUND_RENDER_FPS
+        : true;
       if (shared.needsRender && renderBudget) {
         // Avoid presenting a cleared frame before the terminal core has a live handle.
         // Leaving needsRender=true retries immediately once startup finishes.
-        if (canRenderFrame(shared)) {
+        // While the app holds synchronized output (mode 2026) presentation
+        // pauses on the last stable frame; needsRender stays pending so the
+        // frame right after the end sequence presents the complete update.
+        if (canRenderFrame(shared) && !options.isSynchronizedOutput()) {
+          shared.wasm!.renderUpdate(shared.wasmHandle);
           if (options.internalState.backend === "webgpu" && "device" in state) {
             options.tickWebGPU(state);
           }

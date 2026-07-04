@@ -65,7 +65,6 @@ import type {
   ResttyFontResourceLease,
 } from "./core/resources";
 import { getDefaultResttyRuntimeSession } from "./core/session";
-import { createPtyOutputBufferController } from "./create-runtime/pty-output-buffer";
 import { fitTextTailToWidth, openLink } from "./create-runtime/runtime-io-utils";
 import {
   drawUnderlineStyle,
@@ -291,7 +290,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const BOLD_BRIGHTEN = 0.18;
   const BOLD_OFFSET = 0.06;
   const FAINT_ALPHA = 0.6;
-  const TARGET_RENDER_FPS = 120;
   const BACKGROUND_RENDER_FPS = 15;
   const GLYPH_SHAPE_CACHE_LIMIT = 12000;
   const FONT_PICK_CACHE_LIMIT = 16000;
@@ -322,15 +320,8 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     runtimeController?.sendInput(text, source, config);
   }
   const ptyTransport: PtyTransport = services.ptyTransport ?? createWebSocketPtyTransport();
-  const PTY_OUTPUT_IDLE_MS = 10;
-  const PTY_OUTPUT_MAX_MS = 40;
   const SYNC_OUTPUT_RESET_MS = 1000;
   const SYNC_OUTPUT_RESET_SEQ = "\x1b[?2026l";
-  const ptyOutputBuffer = createPtyOutputBufferController({
-    idleMs: PTY_OUTPUT_IDLE_MS,
-    maxMs: PTY_OUTPUT_MAX_MS,
-    onFlush: (output) => sendInput(output, "pty"),
-  });
   let lastCursorForCpr = { row: 1, col: 1 };
   function resolveCursorForCpr() {
     if (wasmHandle && wasmExports?.restty_active_cursor_x && wasmExports?.restty_active_cursor_y) {
@@ -507,6 +498,16 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     },
     positionToCell,
     positionToPixel,
+    getWheelCellMetrics: () => {
+      if (!gridState.cellW || !gridState.cellH) return null;
+      const dpr = currentDpr || 1;
+      return {
+        cellWidth: gridState.cellW / dpr,
+        cellHeight: gridState.cellH / dpr,
+        rows: gridState.rows || 24,
+        cols: gridState.cols || 80,
+      };
+    },
     getDefaultColors: () => ({
       fg: floatsToRgb(defaultFg),
       bg: floatsToRgb(defaultBg),
@@ -539,7 +540,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
 
   const ptyInputRuntime = createPtyInputRuntime({
     ptyTransport,
-    ptyOutputBuffer,
     inputHandler,
     emitRuntimeEvent: runtimeEvents.emit,
     getGridSize: () => ({ cols: gridState.cols || 0, rows: gridState.rows || 0 }),
@@ -1168,7 +1168,6 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
       initialPreferredRenderer: terminal.renderer ?? "auto",
       CURSOR_BLINK_MS,
       RESIZE_ACTIVE_MS,
-      TARGET_RENDER_FPS,
       BACKGROUND_RENDER_FPS,
       tickWebGPU,
       tickWebGL,

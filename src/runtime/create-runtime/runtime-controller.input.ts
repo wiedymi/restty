@@ -67,12 +67,15 @@ export function createRuntimeControllerInput(options: CreateRuntimeControllerInp
     writeToWasm(shared.wasmHandle, normalized);
     flushWasmOutputToPty();
     options.markSearchDirty();
+    // While the app holds synchronized output (mode 2026), keep feeding the
+    // terminal but arm the reset fallback in case the end sequence never
+    // arrives. The render loop skips presentation until the mode clears, so
+    // needsRender stays pending instead of dropping the frame.
     if (source === "pty" && options.inputHandler.isSynchronizedOutput?.()) {
       options.ptyInputRuntime.scheduleSyncOutputReset();
-      return;
+    } else {
+      options.ptyInputRuntime.cancelSyncOutputReset();
     }
-    options.ptyInputRuntime.cancelSyncOutputReset();
-    shared.wasm.renderUpdate(shared.wasmHandle);
     options.writeState({ needsRender: true });
   };
 

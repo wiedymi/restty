@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { InputHandler } from "../src/input";
-import type { PtyTransport } from "../src/pty";
+import type { PtyCallbacks, PtyTransport } from "../src/pty";
 import { createPtyInputRuntime } from "../src/runtime/create-runtime/pty-input-runtime";
 
 function createInputHandlerStub(mapper: (seq: string) => string): InputHandler {
@@ -57,12 +57,6 @@ test("sendKeyInput always routes payloads through PTY key mapper", () => {
   const sent: string[] = [];
   const runtime = createPtyInputRuntime({
     ptyTransport: createTransportStub(sent),
-    ptyOutputBuffer: {
-      queue: () => {},
-      flush: () => {},
-      cancel: () => {},
-      clear: () => {},
-    },
     inputHandler: createInputHandlerStub((seq) => `mapped:${seq}`),
     getGridSize: () => ({ cols: 80, rows: 24 }),
     getCursorForCpr: () => ({ row: 1, col: 1 }),
@@ -84,12 +78,6 @@ test("sendKeyInput keeps legacy mapper behavior for non-kitty payloads", () => {
   const sent: string[] = [];
   const runtime = createPtyInputRuntime({
     ptyTransport: createTransportStub(sent),
-    ptyOutputBuffer: {
-      queue: () => {},
-      flush: () => {},
-      cancel: () => {},
-      clear: () => {},
-    },
     inputHandler: createInputHandlerStub((seq) => `mapped:${seq}`),
     getGridSize: () => ({ cols: 80, rows: 24 }),
     getCursorForCpr: () => ({ row: 1, col: 1 }),
@@ -110,12 +98,6 @@ test("setPtyStatus emits deduped runtime pty-status events", () => {
   const events: string[] = [];
   const runtime = createPtyInputRuntime({
     ptyTransport: createTransportStub([]),
-    ptyOutputBuffer: {
-      queue: () => {},
-      flush: () => {},
-      cancel: () => {},
-      clear: () => {},
-    },
     inputHandler: createInputHandlerStub((seq) => seq),
     emitRuntimeEvent: (event) => {
       events.push(event.status);
@@ -135,4 +117,49 @@ test("setPtyStatus emits deduped runtime pty-status events", () => {
   runtime.setPtyStatus("connected");
 
   expect(events).toEqual(["connecting...", "connected"]);
+});
+
+test("pty onData feeds the terminal immediately with sanitized output", () => {
+  const fed: Array<[string, string | undefined]> = [];
+  let callbacks: PtyCallbacks | null = null;
+  let connected = false;
+  const transport: PtyTransport = {
+    connect: (options) => {
+      callbacks = options.callbacks;
+      connected = true;
+      options.callbacks.onConnect?.();
+    },
+    disconnect: () => {
+      connected = false;
+    },
+    sendInput: () => true,
+    resize: () => true,
+    isConnected: () => connected,
+  };
+  const inputHandler = createInputHandlerStub((seq) => seq);
+  inputHandler.filterOutput = (output) => output.split("\x1b[?2004h").join("");
+  const runtime = createPtyInputRuntime({
+    ptyTransport: transport,
+    inputHandler,
+    getGridSize: () => ({ cols: 80, rows: 24 }),
+    getCursorForCpr: () => ({ row: 1, col: 1 }),
+    sendInput: (text, source) => {
+      fed.push([text, source]);
+    },
+    runBeforeInputHook: (text) => text,
+    shouldClearSelection: () => false,
+    clearSelection: () => {},
+    syncOutputResetMs: 1000,
+    syncOutputResetSeq: "\x1b[?2026l",
+  });
+
+  runtime.connectPty("ws://example.test/pty");
+  expect(callbacks).not.toBeNull();
+  callbacks!.onData?.("chunk-1");
+  callbacks!.onData?.("\x1b[?2004hchunk-2");
+
+  expect(fed).toEqual([
+    ["chunk-1", "pty"],
+    ["chunk-2", "pty"],
+  ]);
 });

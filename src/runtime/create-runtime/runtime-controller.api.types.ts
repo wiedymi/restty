@@ -85,7 +85,6 @@ export type RuntimeControllerRenderDeps = {
   initialPreferredRenderer: PreferredRenderer;
   CURSOR_BLINK_MS: number;
   RESIZE_ACTIVE_MS: number;
-  TARGET_RENDER_FPS: number;
   BACKGROUND_RENDER_FPS: number;
   tickWebGPU: (state: WebGPUState) => void;
   tickWebGL: (state: WebGLState) => void;

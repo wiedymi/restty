@@ -9,7 +9,6 @@ import type {
 export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInputRuntime {
   const {
     ptyTransport,
-    ptyOutputBuffer,
     inputHandler,
     getGridSize,
     getResizeMeta,
@@ -42,10 +41,6 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
     setMouseStatus(label);
   }
 
-  function cancelPtyOutputFlush(): void {
-    ptyOutputBuffer.cancel();
-  }
-
   function cancelSyncOutputReset(): void {
     if (syncOutputResetTimer) {
       clearTimeout(syncOutputResetTimer);
@@ -63,19 +58,8 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
     }, syncOutputResetMs);
   }
 
-  function flushPtyOutputBuffer(): void {
-    ptyOutputBuffer.flush();
-  }
-
-  function queuePtyOutput(text: string): void {
-    ptyOutputBuffer.queue(text);
-  }
-
   function disconnectPty(): void {
-    flushPtyOutputBuffer();
-    cancelPtyOutputFlush();
     cancelSyncOutputReset();
-    ptyOutputBuffer.clear();
     ptyTransport.disconnect();
     updateMouseStatus();
     setPtyStatus("disconnected");
@@ -117,7 +101,9 @@ export function createPtyInputRuntime(options: PtyInputRuntimeOptions): PtyInput
           onData: (text) => {
             const sanitized = inputHandler.filterOutput(text);
             updateMouseStatus();
-            if (sanitized) queuePtyOutput(sanitized);
+            // Feed the terminal as data arrives; presentation is coalesced
+            // by the render loop, not by buffering the stream.
+            if (sanitized) sendInput(sanitized, "pty");
           },
         },
       });

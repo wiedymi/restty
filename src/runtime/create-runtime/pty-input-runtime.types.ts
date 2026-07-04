@@ -1,7 +1,6 @@
 import type { InputHandler } from "../../input";
 import type { PtyResizeMeta, PtyTransport } from "../../pty";
 import type { ResttyRuntimeEvent } from "../core/runtime-events";
-import type { PtyOutputBufferController } from "./pty-output-buffer.types";
 
 export type CursorPosition = {
   row: number;
@@ -16,7 +15,6 @@ export type RuntimeSendInput = (
 
 export type PtyInputRuntimeOptions = {
   ptyTransport: PtyTransport;
-  ptyOutputBuffer: PtyOutputBufferController;
   inputHandler: InputHandler;
   emitRuntimeEvent?: (event: Extract<ResttyRuntimeEvent, { type: "pty-status" }>) => void;
   getGridSize: () => { cols: number; rows: number };

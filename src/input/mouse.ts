@@ -11,10 +11,45 @@ export type MouseControllerOptions = {
   positionToCell: (event: MouseEvent | PointerEvent | WheelEvent) => CellPosition;
   /** Map pointer events to 1-based pixel coordinates (for SGR-Pixels mode). */
   positionToPixel?: (event: MouseEvent | PointerEvent | WheelEvent) => { x: number; y: number };
+  /** Provide cell metrics in CSS pixels for wheel delta accumulation. */
+  getWheelCellMetrics?: () => WheelCellMetrics | null;
+};
+
+export type WheelCellMetrics = {
+  cellWidth: number;
+  cellHeight: number;
+  rows: number;
+  cols: number;
 };
 
 type MotionMode = "none" | "drag" | "any";
 type MouseFormat = "x10" | "utf8" | "sgr" | "urxvt" | "sgr_pixels";
+
+function normalizeWheelDeltaPx(
+  delta: number,
+  deltaMode: number,
+  cellPx: number,
+  cellsPerPage: number,
+): number {
+  if (!delta) return 0;
+  // DOM_DELTA_PIXEL: precision scroll, the delta is already in CSS pixels.
+  if (deltaMode === 0) return delta;
+  // DOM_DELTA_PAGE: one page equals the visible cell count.
+  if (deltaMode === 2) return delta * cellsPerPage * cellPx;
+  // DOM_DELTA_LINE: discrete wheel ticks. Clamp the magnitude to at least one
+  // tick so slow single-notch scrolls always register (fractional ticks are
+  // reported by some mice), then convert one tick to one cell.
+  const ticks = delta > 0 ? Math.max(delta, 1) : Math.min(delta, -1);
+  return ticks * cellPx;
+}
+
+function accumulateWheelPx(pendingPx: number, cellPx: number): { cells: number; remainderPx: number } {
+  if (Math.abs(pendingPx) < cellPx) {
+    return { cells: 0, remainderPx: pendingPx };
+  }
+  const cells = Math.trunc(pendingPx / cellPx);
+  return { cells, remainderPx: pendingPx - cells * cellPx };
+}
 
 /**
  * Tracks mouse reporting state (mode, format, motion tracking) and encodes
@@ -29,6 +64,8 @@ export class MouseController {
   private button = 0;
   private flags = { 1000: false, 1002: false, 1003: false };
   private x10Event = false;
+  private pendingWheelX = 0;
+  private pendingWheelY = 0;
 
   private sendReply: (data: string) => void;
   private positionToCell: (event: MouseEvent | PointerEvent | WheelEvent) => CellPosition;
@@ -36,11 +73,13 @@ export class MouseController {
     x: number;
     y: number;
   };
+  private getWheelCellMetrics?: () => WheelCellMetrics | null;
 
   constructor(options: MouseControllerOptions) {
     this.sendReply = options.sendReply;
     this.positionToCell = options.positionToCell;
     this.positionToPixel = options.positionToPixel;
+    this.getWheelCellMetrics = options.getWheelCellMetrics;
   }
 
   setReplySink(fn: (data: string) => void) {
@@ -55,6 +94,10 @@ export class MouseController {
     fn: (event: MouseEvent | PointerEvent | WheelEvent) => { x: number; y: number },
   ) {
     this.positionToPixel = fn;
+  }
+
+  setWheelCellMetricsProvider(fn: () => WheelCellMetrics | null) {
+    this.getWheelCellMetrics = fn;
   }
 
   setMode(mode: MouseMode) {
@@ -159,12 +202,40 @@ export class MouseController {
       return this.sendMouse(code, col, row, pixel, false);
     }
     if (kind === "wheel") {
-      const delta = Math.sign((event as WheelEvent).deltaY);
-      if (!delta) return false;
-      const code = (delta < 0 ? 64 : 65) + mods;
-      return this.sendMouse(code, col, row, pixel, false);
+      const wheelEvent = event as WheelEvent;
+      if (!wheelEvent.deltaY && !wheelEvent.deltaX) return false;
+      const cells = this.consumeWheelDelta(wheelEvent);
+      const yCode = (cells.y < 0 ? 64 : 65) + mods;
+      for (let i = Math.abs(cells.y); i > 0; i -= 1) {
+        this.sendMouse(yCode, col, row, pixel, false);
+      }
+      const xCode = (cells.x < 0 ? 66 : 67) + mods;
+      for (let i = Math.abs(cells.x); i > 0; i -= 1) {
+        this.sendMouse(xCode, col, row, pixel, false);
+      }
+      // Sub-cell deltas are absorbed into the pending accumulator, so the
+      // event is consumed even when no report was emitted this time.
+      return true;
     }
     return false;
+  }
+
+  private consumeWheelDelta(event: WheelEvent): { x: number; y: number } {
+    const metrics = this.getWheelCellMetrics?.() ?? null;
+    const cellW = metrics && metrics.cellWidth > 0 ? metrics.cellWidth : 0;
+    const cellH = metrics && metrics.cellHeight > 0 ? metrics.cellHeight : 0;
+    if (!cellW || !cellH) {
+      return { x: Math.sign(event.deltaX), y: Math.sign(event.deltaY) };
+    }
+    const rows = metrics && metrics.rows > 0 ? metrics.rows : 24;
+    const cols = metrics && metrics.cols > 0 ? metrics.cols : 80;
+    const yPx = normalizeWheelDeltaPx(event.deltaY, event.deltaMode, cellH, rows);
+    const xPx = normalizeWheelDeltaPx(event.deltaX, event.deltaMode, cellW, cols);
+    const y = accumulateWheelPx(this.pendingWheelY + yPx, cellH);
+    this.pendingWheelY = y.remainderPx;
+    const x = accumulateWheelPx(this.pendingWheelX + xPx, cellW);
+    this.pendingWheelX = x.remainderPx;
+    return { x: x.cells, y: y.cells };
   }
 
   private updateFlags(code: number, enabled: boolean) {

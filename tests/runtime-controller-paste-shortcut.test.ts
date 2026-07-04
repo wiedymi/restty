@@ -166,7 +166,6 @@ function createHarness(
       initialPreferredRenderer: "auto",
       CURSOR_BLINK_MS: 600,
       RESIZE_ACTIVE_MS: 180,
-      TARGET_RENDER_FPS: 60,
       BACKGROUND_RENDER_FPS: 15,
       tickWebGPU: () => undefined,
       tickWebGL: () => undefined,

@@ -103,6 +103,15 @@ export type InputHandlerOptions = {
    */
   positionToPixel?: (event: MouseEvent | PointerEvent | WheelEvent) => { x: number; y: number };
   /**
+   * Provide cell metrics in CSS pixels for wheel delta accumulation.
+   */
+  getWheelCellMetrics?: () => {
+    cellWidth: number;
+    cellHeight: number;
+    rows: number;
+    cols: number;
+  } | null;
+  /**
    * Provide default colors for OSC 10/11/12 queries (RGB 0-255).
    */
   getDefaultColors?: () => DefaultColors;

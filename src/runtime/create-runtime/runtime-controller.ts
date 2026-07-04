@@ -31,8 +31,8 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
     resizeState: state.resizeState,
     CURSOR_BLINK_MS: render.CURSOR_BLINK_MS,
     RESIZE_ACTIVE_MS: render.RESIZE_ACTIVE_MS,
-    TARGET_RENDER_FPS: render.TARGET_RENDER_FPS,
     BACKGROUND_RENDER_FPS: render.BACKGROUND_RENDER_FPS,
+    isSynchronizedOutput: () => runtime.inputHandler.isSynchronizedOutput?.() ?? false,
     tickWebGPU: render.tickWebGPU,
     tickWebGL: render.tickWebGL,
   });
