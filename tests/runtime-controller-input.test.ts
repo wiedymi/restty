@@ -2,15 +2,30 @@ import { expect, test } from "bun:test";
 import { createRuntimeControllerInput } from "../src/runtime/create-runtime/runtime-controller.input";
 import type { RuntimeControllerSharedState } from "../src/runtime/create-runtime/runtime-controller.state.types";
 
-function createInputHarness(options: { synchronizedOutput?: () => boolean } = {}) {
+function createInputHarness(
+  options: {
+    synchronizedOutput?: () => boolean;
+    connected?: boolean;
+    forwardTerminalReplies?: boolean;
+    wasmOutput?: string;
+  } = {},
+) {
   const writes: string[] = [];
   const scheduled: string[] = [];
+  const ptyWrites: string[] = [];
+  let drainCalls = 0;
+  let pendingWasmOutput = options.wasmOutput ?? "";
   const wasm = {
     write: (_handle: number, text: string) => {
       writes.push(text);
     },
     setPixelSize: () => {},
-    drainOutput: () => "",
+    drainOutput: () => {
+      drainCalls += 1;
+      const output = pendingWasmOutput;
+      pendingWasmOutput = "";
+      return output;
+    },
   };
   const sharedState = {
     wasm: wasm as never,
@@ -29,9 +44,12 @@ function createInputHarness(options: { synchronizedOutput?: () => boolean } = {}
     ptyTransport: {
       connect: () => {},
       disconnect: () => {},
-      sendInput: () => true,
+      sendInput: (text: string) => {
+        ptyWrites.push(text);
+        return true;
+      },
       resize: () => true,
-      isConnected: () => false,
+      isConnected: () => options.connected ?? false,
     },
     inputHandler: {
       isSynchronizedOutput: options.synchronizedOutput ?? (() => false),
@@ -53,11 +71,21 @@ function createInputHarness(options: { synchronizedOutput?: () => boolean } = {}
     readState: () => sharedState,
     writeState: (patch) => Object.assign(sharedState, patch),
     getCanvas: () => ({ width: 800, height: 480 }) as HTMLCanvasElement,
+    forwardTerminalReplies: options.forwardTerminalReplies,
     markSearchDirty: () => {},
     runBeforeInputHook: (text) => text,
     runBeforeRenderOutputHook: (text) => text,
   });
-  return { sendInput, sharedState, writes, scheduled };
+  return {
+    sendInput,
+    sharedState,
+    writes,
+    scheduled,
+    ptyWrites,
+    get drainCalls() {
+      return drainCalls;
+    },
+  };
 }
 
 test("pty input marks a frame dirty even while synchronized output is active", () => {
@@ -80,4 +108,27 @@ test("pty input cancels the synchronized output reset once the mode clears", () 
 
   expect(harness.sharedState.needsRender).toBe(true);
   expect(harness.scheduled).toEqual(["schedule", "cancel"]);
+});
+
+test("terminal replies are forwarded to connected PTY by default", () => {
+  const harness = createInputHarness({ connected: true, wasmOutput: "\x1b[1;1R" });
+
+  harness.sendInput("\x1b[6n", "pty");
+
+  expect(harness.writes).toEqual(["\x1b[6n"]);
+  expect(harness.ptyWrites).toEqual(["\x1b[1;1R"]);
+});
+
+test("terminal replies can be suppressed for backend-owned headless sessions", () => {
+  const harness = createInputHarness({
+    connected: true,
+    forwardTerminalReplies: false,
+    wasmOutput: "\x1b[1;1R",
+  });
+
+  harness.sendInput("\x1b[6n", "pty");
+
+  expect(harness.writes).toEqual(["\x1b[6n"]);
+  expect(harness.ptyWrites).toEqual([]);
+  expect(harness.drainCalls).toBe(2);
 });

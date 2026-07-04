@@ -210,6 +210,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const attachCanvasEvents = terminal.attachCanvasEvents ?? true;
   const autoResize = terminal.autoResize ?? true;
   const showResizeOverlay = terminal.showResizeOverlay ?? true;
+  const forwardTerminalReplies = terminal.forwardTerminalReplies ?? true;
   const touchSelectionMode = normalizeTouchSelectionMode(terminal.touchSelectionMode);
   const touchSelectionLongPressMs = clampFiniteNumber(
     terminal.touchSelectionLongPressMs,
@@ -1136,6 +1137,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
     runtime: {
       session,
       ptyTransport,
+      forwardTerminalReplies,
       inputHandler: inputHandler!,
       ptyInputRuntime,
       interaction: runtimeInteraction,

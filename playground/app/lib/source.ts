@@ -64,6 +64,13 @@ const pageEntries: PlaygroundDocEntry[] = [
     description: "Use Just Bash, WebContainer, or an OS websocket PTY.",
   },
   {
+    slugs: ["headless"],
+    path: "../../content/docs/headless.mdx",
+    url: "/docs/headless",
+    name: "Headless terminal",
+    description: "Run the WASM terminal core without DOM, canvas, fonts, or renderer setup.",
+  },
+  {
     slugs: ["search"],
     path: "../../content/docs/search.mdx",
     url: "/docs/search",
@@ -97,7 +104,8 @@ const pageEntries: PlaygroundDocEntry[] = [
     path: "../../content/docs/troubleshooting.mdx",
     url: "/docs/troubleshooting",
     name: "Troubleshooting",
-    description: "Diagnose blank canvases, PTY failures, font loading, browser APIs, and media limits.",
+    description:
+      "Diagnose blank canvases, PTY failures, font loading, browser APIs, and media limits.",
   },
   {
     slugs: ["plugins"],
@@ -129,7 +137,7 @@ const sections: PlaygroundDocSection[] = [
   },
   {
     name: "Integrate",
-    pages: ["configuration", "surface-and-panes", "pty-backends", "search"],
+    pages: ["configuration", "surface-and-panes", "pty-backends", "headless", "search"],
   },
   {
     name: "Customize",

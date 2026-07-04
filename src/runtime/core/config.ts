@@ -87,6 +87,11 @@ export type ResttyTerminalConfig = {
   autoResize?: boolean;
   /** Show the centered cols x rows badge while resizing (default true). */
   showResizeOverlay?: boolean;
+  /**
+   * Forward terminal-generated reply bytes to the PTY transport (default true).
+   * Set false when a backend/headless terminal is authoritative for replies.
+   */
+  forwardTerminalReplies?: boolean;
   /** Attach resize/focus listeners to the window object. */
   attachWindowEvents?: boolean;
   /** Attach pointer/keyboard listeners to the canvas. */

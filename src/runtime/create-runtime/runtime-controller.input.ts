@@ -14,6 +14,7 @@ type CreateRuntimeControllerInputOptions = {
   readState: () => RuntimeControllerSharedState;
   writeState: (patch: Partial<RuntimeControllerSharedState>) => void;
   getCanvas: () => HTMLCanvasElement;
+  forwardTerminalReplies?: boolean;
   markSearchDirty: () => void;
   runBeforeInputHook: (text: string, source: string) => string | null;
   runBeforeRenderOutputHook: (text: string, source: string) => string | null;
@@ -29,6 +30,16 @@ export function createRuntimeControllerInput(options: CreateRuntimeControllerInp
   function flushWasmOutputToPty() {
     const shared = options.readState();
     if (!shared.wasm || !shared.wasmHandle) return;
+    const forwardReplies = options.forwardTerminalReplies !== false;
+    if (!forwardReplies) {
+      let iterations = 0;
+      while (iterations < 100) {
+        iterations += 1;
+        const reply = shared.wasm.drainOutput(shared.wasmHandle);
+        if (!reply) break;
+      }
+      return;
+    }
     if (!options.ptyTransport.isConnected()) return;
 
     let iterations = 0;

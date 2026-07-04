@@ -4,7 +4,7 @@ description: Public entrypoints, Restty methods, pane handles, config types, and
 ---
 
 Use the root `restty` package for application code unless you are deliberately using the xterm
-compatibility layer or an unstable internal module.
+compatibility layer, the headless terminal core, or an unstable internal module.
 
 ```ts
 import { Restty, createRestty } from "restty";
@@ -16,6 +16,7 @@ import { Restty, createRestty } from "restty";
 | --- | --- | --- |
 | `restty` | Main public API, theme helpers, font/config types, PTY transport helpers, plugin types. | Preferred |
 | `restty/xterm` | Focused xterm.js-style migration wrapper. | Compatibility |
+| `restty/headless` | DOM-free WASM terminal core wrapper for backend-owned sessions, replay, tests, and protocol inspection. | Advanced |
 | `restty/internal` | Low-level implementation modules for advanced integrations. | Unstable |
 | `restty/internal/runtime` | Runtime-focused internal modules. | Unstable |
 | `restty/internal/surface` | Surface-focused internal modules. | Unstable |
@@ -212,6 +213,19 @@ import type { PtyTransport } from "restty";
 The default runtime uses a WebSocket PTY transport when no custom transport is provided. Exported
 types let you build app-specific transports for WebContainer-backed processes, local daemons, remote
 sessions, or test harnesses.
+
+## Headless terminal
+
+```ts
+import { createHeadlessTerminal } from "restty/headless";
+import type { ResttyHeadlessReplay } from "restty/headless";
+```
+
+`restty/headless` creates a WASM terminal handle without pane DOM, canvas, fonts, shaping, or GPU
+renderer setup. Use it when a backend worker owns terminal state, needs to replay output for a
+reconnected client, or needs to inspect protocol state without mounting a browser terminal.
+
+See [Headless terminal](/docs/headless) for the replay contract and frontend wiring.
 
 ## Public types
 

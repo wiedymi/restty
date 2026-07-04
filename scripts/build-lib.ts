@@ -7,6 +7,7 @@ const entrypoints = [
   "./src/internal/runtime.ts",
   "./src/internal/surface.ts",
   "./src/xterm.ts",
+  "./src/headless.ts",
 ];
 
 const result = await Bun.build({

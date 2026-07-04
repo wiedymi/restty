@@ -52,6 +52,7 @@ export type LifecycleThemeRuntime = {
 export type RuntimeControllerRuntimeDeps = {
   session: ResttyRuntimeSession;
   ptyTransport: PtyTransport;
+  forwardTerminalReplies?: boolean;
   inputHandler: InputHandler;
   ptyInputRuntime: PtyInputRuntime;
   interaction: RuntimeInteraction;

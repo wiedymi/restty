@@ -44,6 +44,7 @@ restty.connectPty("ws://localhost:8787/pty");
 
 - `restty`: primary API (`Restty`, `createRestty`, themes, fonts, PTY helpers, plugin types).
 - `restty/xterm`: focused xterm.js-style compatibility wrapper.
+- `restty/headless`: DOM-free WASM terminal core wrapper for replay, tests, and backend-owned sessions.
 - `restty/esm`: standalone browser ESM bundle for script/CDN usage.
 - `restty/internal`, `restty/internal/runtime`, `restty/internal/surface`: unstable advanced modules.
 
@@ -57,6 +58,7 @@ method and export list.
 - [Surface and panes](https://restty.pages.dev/docs/surface-and-panes)
 - [Configuration](https://restty.pages.dev/docs/configuration)
 - [PTY backends](https://restty.pages.dev/docs/pty-backends)
+- [Headless terminal](https://restty.pages.dev/docs/headless)
 - [Search](https://restty.pages.dev/docs/search)
 - [Playground examples](https://restty.pages.dev/docs/playground-examples)
 - [Fonts](https://restty.pages.dev/docs/fonts)

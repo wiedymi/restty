@@ -1,0 +1,138 @@
+---
+title: Headless terminal
+description: Run restty's WASM terminal core without DOM, canvas, fonts, or renderer setup.
+---
+
+`restty/headless` exposes a small wrapper around the embedded WASM terminal core. It is for
+backend-owned sessions, workers, reconnect replay, protocol inspection, and tests that need terminal
+state without mounting `Restty`.
+
+```ts
+import { createHeadlessTerminal } from "restty/headless";
+
+const terminal = await createHeadlessTerminal({
+  cols: 120,
+  rows: 30,
+  replay: { maxBytes: 5_000_000 },
+});
+
+terminal.write("hello\r\n");
+
+const snapshot = terminal.snapshot();
+const pendingReply = terminal.drainOutput();
+const replay = terminal.createReplay();
+
+terminal.dispose();
+```
+
+The headless entrypoint is a normal package subpath. It is not added to `restty/esm`, because that
+bundle is the single-file browser entrypoint for direct CDN/script usage.
+
+## Backend-owned PTY
+
+When the backend owns the terminal core, write PTY output into the headless terminal first, then
+forward any terminal-generated replies back to the PTY. Device status reports and similar protocol
+queries use this path.
+
+```ts
+const terminal = await createHeadlessTerminal({ cols: 120, rows: 30 });
+
+pty.onData((chunk) => {
+  terminal.write(chunk);
+
+  const reply = terminal.drainOutput();
+  if (reply) {
+    pty.write(reply);
+  }
+
+  broadcast({
+    state: terminal.snapshot(),
+    replay: terminal.createReplay(),
+  });
+});
+```
+
+If a browser `Restty` pane is attached to that backend-owned session as a passive renderer, disable
+frontend terminal replies so the browser does not answer the same query a second time:
+
+```ts
+const restty = new Restty({
+  root,
+  terminal: {
+    forwardTerminalReplies: false,
+  },
+});
+```
+
+Leave `forwardTerminalReplies` at its default `true` for normal browser-owned PTY sessions.
+
+## Reconnect replay
+
+`createReplay()` returns a bounded write/resize event journal, not a binary snapshot of the terminal
+heap. It is small, serializable, and can rebuild a fresh terminal by replaying the bytes and resize
+events that produced the current state.
+
+```ts
+const replay = terminal.createReplay();
+
+const restored = await createHeadlessTerminal({
+  cols: replay.cols,
+  rows: replay.rows,
+});
+
+restored.applyReplay(replay);
+```
+
+The journal records the initial size, ordered `write` and `resize` events, the final size, the
+concatenated write data, and whether byte truncation happened. It compacts after a hard reset
+(`ESC c`) because earlier bytes no longer affect the visible terminal state. When the configured
+byte limit drops old chunks, `replay.truncated` becomes `true`; use that as a signal to fall back to
+a full reconnect or fresh shell state instead of promising an exact restore.
+
+Set `replay: false` when you only need protocol inspection or snapshots and do not need reconnect
+replay.
+
+## API
+
+```ts
+import {
+  ResttyHeadlessTerminal,
+  createHeadlessTerminal,
+} from "restty/headless";
+import type { ResttyHeadlessReplay } from "restty/headless";
+```
+
+`createHeadlessTerminal(options)` loads the embedded WASM module unless you pass an existing
+`wasm` instance. Reusing one `ResttyWasm` instance is useful when many headless terminals live in
+the same worker.
+
+| Option | Purpose |
+| --- | --- |
+| `cols`, `rows` | Initial grid size. Defaults to `80 x 24`. |
+| `maxScrollbackBytes` | Scrollback byte limit passed to the WASM terminal. Defaults to `10_000_000`. |
+| `pixelWidth`, `pixelHeight` | Pixel size used by protocols such as Kitty graphics. |
+| `replay` | Replay journal config, or `false` to disable replay recording. |
+| `wasm`, `wasmOptions` | Reuse an existing WASM runtime or pass loader options. |
+
+Useful methods:
+
+| Method | Purpose |
+| --- | --- |
+| `write(input)` / `writeln(input)` | Write bytes or text into the terminal core. |
+| `resize(cols, rows)` | Resize the terminal grid. |
+| `setPixelSize(width, height)` | Update pixel dimensions for graphics protocols. |
+| `renderUpdate()` | Force render-buffer refresh after low-level state changes. |
+| `getRenderState()` | Return the current WASM-backed render-state view. |
+| `snapshot()` | Return a copied render-state object safe to retain or serialize. |
+| `drainOutput()` | Read and clear terminal-generated reply bytes. |
+| `getKittyKeyboardFlags()` / `getKittyPlacements()` | Inspect Kitty protocol state. |
+| `setSearchQuery(query)`, `stepSearch()`, `searchNext()`, `searchPrevious()` | Drive the WASM search engine. |
+| `createReplay()`, `applyReplay(replay)`, `clearReplay()` | Manage reconnect replay. |
+| `dispose()` | Destroy the WASM terminal handle. |
+
+## Limits
+
+Headless mode does not load fonts, run text shaping, create a pane, attach keyboard/mouse handlers,
+or render to WebGPU/WebGL. It exposes terminal state and protocol side effects only. Use `Restty`
+for the browser surface and use `restty/headless` where the terminal core needs to run without DOM
+ownership.

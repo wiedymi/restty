@@ -45,6 +45,7 @@ const restty = new Restty({
     fontHintTarget: "auto", // "auto" | "light" | "normal"
     autoResize: true,
     showResizeOverlay: true,
+    forwardTerminalReplies: true,
     // Touch behavior:
     // "long-press" (default) | "drag" | "off"
     touchSelectionMode: "long-press",
@@ -189,7 +190,29 @@ Available subpath:
 
 - `restty/esm`
 
-## 8) Cleanup
+## 8) Headless terminal core
+
+Use `restty/headless` when a worker or backend owns terminal state without DOM, canvas, fonts, or
+renderer setup:
+
+```ts
+import { createHeadlessTerminal } from "restty/headless";
+
+const terminal = await createHeadlessTerminal({ cols: 120, rows: 30 });
+
+terminal.write("hello\r\n");
+const snapshot = terminal.snapshot();
+const reply = terminal.drainOutput();
+const replay = terminal.createReplay();
+
+terminal.dispose();
+```
+
+If a browser pane passively renders a backend-owned/headless session, set
+`terminal.forwardTerminalReplies` to `false` in the browser runtime so terminal query replies are
+owned by one side only.
+
+## 9) Cleanup
 
 ```ts
 restty.destroy();
@@ -197,7 +220,7 @@ restty.destroy();
 
 Call `destroy()` when removing the terminal from the page to release GPU/WASM/PTY resources.
 
-## 9) Advanced modules
+## 10) Advanced modules
 
 Use these only if `Restty` is not enough:
 
@@ -222,7 +245,7 @@ if (state) {
 wasm.destroy(handle);
 ```
 
-## 10) Plugin host (native)
+## 11) Plugin host (native)
 
 ```ts
 import type { ResttyPlugin } from "restty";

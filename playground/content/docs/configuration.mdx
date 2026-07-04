@@ -144,6 +144,7 @@ const restty = new Restty({
     alphaBlending: "native",
     autoResize: true,
     showResizeOverlay: true,
+    forwardTerminalReplies: true,
     attachWindowEvents: true,
     attachCanvasEvents: true,
     touchSelectionMode: "long-press",
@@ -168,6 +169,7 @@ const restty = new Restty({
 | `theme` | Initial Ghostty-compatible theme. See [Themes and shaders](/docs/themes). |
 | `autoResize` | Watches container/window changes and resizes the terminal. |
 | `showResizeOverlay` | Shows the centered `cols x rows` badge while resizing. |
+| `forwardTerminalReplies` | Forwards terminal-generated reply bytes to the PTY transport; set `false` when a backend/headless terminal owns replies. |
 | `attachWindowEvents` | Attaches runtime focus/resize listeners to `window`. |
 | `attachCanvasEvents` | Attaches pointer/keyboard listeners to the canvas. |
 | `touchSelectionMode` | `"long-press"`, `"drag"`, or `"off"`. |

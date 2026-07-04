@@ -44,6 +44,7 @@ export function createRuntimeController(options: RuntimeControllerOptions): Runt
     readState: state.readState,
     writeState: state.writeState,
     getCanvas: state.getCanvas,
+    forwardTerminalReplies: runtime.forwardTerminalReplies,
     markSearchDirty: hooks.markSearchDirty,
     runBeforeInputHook: hooks.runBeforeInputHook,
     runBeforeRenderOutputHook: hooks.runBeforeRenderOutputHook,
