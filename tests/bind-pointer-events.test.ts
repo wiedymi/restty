@@ -6,6 +6,17 @@ type Listener = EventListenerOrEventListenerObject;
 
 class FakeCanvas {
   style: Record<string, string> = {};
+  rect = {
+    x: 0,
+    y: 0,
+    left: 0,
+    top: 0,
+    right: 800,
+    bottom: 480,
+    width: 800,
+    height: 480,
+    toJSON: () => ({}),
+  };
   private listeners = new Map<string, Set<Listener>>();
 
   addEventListener(type: string, listener: Listener | null): void {
@@ -38,6 +49,10 @@ class FakeCanvas {
   setPointerCapture(): void {}
 
   releasePointerCapture(): void {}
+
+  getBoundingClientRect(): DOMRect {
+    return this.rect as DOMRect;
+  }
 }
 
 function createInputHandlerStub(options: {
@@ -496,6 +511,164 @@ test("bindPointerEvents routes wheel through native-host scroll handler", () => 
   canvas.emit("wheel", wheel.event as unknown as Event);
   expect(wheelCalls).toBe(1);
   expect(wheel.prevented()).toBe(true);
+});
+
+test("bindPointerEvents autoscrolls drag selection at viewport edges", () => {
+  const originalSetInterval = globalThis.setInterval;
+  const originalClearInterval = globalThis.clearInterval;
+  const intervalCallbacks = new Map<number, () => void>();
+  const clearedIntervals: number[] = [];
+  let nextIntervalId = 1;
+
+  globalThis.setInterval = ((handler: () => void) => {
+    const id = nextIntervalId;
+    nextIntervalId += 1;
+    intervalCallbacks.set(id, handler);
+    return id;
+  }) as unknown as typeof globalThis.setInterval;
+  globalThis.clearInterval = ((id?: number) => {
+    if (typeof id === "number") {
+      clearedIntervals.push(id);
+      intervalCallbacks.delete(id);
+    }
+  }) as unknown as typeof globalThis.clearInterval;
+
+  const cleanupCanvasFns: Array<() => void> = [];
+  try {
+    const canvas = new FakeCanvas();
+    const scrollCalls: number[] = [];
+    const selectionState = {
+      active: false,
+      dragging: false,
+      anchor: null as { row: number; col: number } | null,
+      focus: null as { row: number; col: number } | null,
+    };
+    const touchSelectionState = {
+      pendingPointerId: null,
+      activePointerId: null as number | null,
+      panPointerId: null,
+      pendingCell: null,
+      pendingStartedAt: 0,
+      pendingStartX: 0,
+      pendingStartY: 0,
+      panLastY: 0,
+      pendingTimer: 0,
+    };
+    const desktopSelectionState = {
+      pendingPointerId: null as number | null,
+      pendingCell: null as { row: number; col: number } | null,
+      startedWithActiveSelection: false,
+      lastPrimaryClickAt: 0,
+      lastPrimaryClickCell: null as { row: number; col: number } | null,
+      lastPrimaryClickCount: 0,
+    };
+    const clearPendingDesktopSelection = () => {
+      desktopSelectionState.pendingPointerId = null;
+      desktopSelectionState.pendingCell = null;
+      desktopSelectionState.startedWithActiveSelection = false;
+    };
+    const positionToCell = ({ clientX, clientY }: { clientX: number; clientY: number }) => ({
+      row: Math.max(0, Math.min(23, Math.floor(clientY / 20))),
+      col: Math.max(0, Math.min(79, Math.floor(clientX / 10))),
+    });
+
+    bindPointerEvents({
+      canvas: canvas as unknown as HTMLCanvasElement,
+      bindOptions: {
+        inputHandler: createInputHandlerStub({
+          mouseActive: false,
+          sendMouseEvent: () => false,
+        }),
+        sendKeyInput: () => {},
+        sendPasteText: () => {},
+        sendPastePayloadFromDataTransfer: () => false,
+        getLastKeydownSeq: () => "",
+        getLastKeydownSeqAt: () => 0,
+        keydownBeforeinputDedupeMs: 80,
+        openLink: () => {},
+      },
+      touchSelectionMode: "off",
+      touchSelectionLongPressMs: 450,
+      touchSelectionMoveThresholdPx: 10,
+      selectionState,
+      touchSelectionState,
+      desktopSelectionState,
+      linkState: { hoverId: 0, hoverUri: "" },
+      cleanupCanvasFns,
+      isTouchPointer: (event) => event.pointerType === "touch",
+      clearPendingTouchSelection: () => {},
+      clearPendingDesktopSelection,
+      tryActivatePendingTouchSelection: () => false,
+      beginSelectionDrag: (cell, pointerId) => {
+        clearPendingDesktopSelection();
+        selectionState.active = true;
+        selectionState.dragging = true;
+        selectionState.anchor = cell;
+        selectionState.focus = cell;
+        touchSelectionState.activePointerId = pointerId;
+      },
+      normalizeSelectionCell: (cell) => cell,
+      positionToCell,
+      scrollViewportByLines: (lines) => {
+        scrollCalls.push(lines);
+      },
+      clearSelection: () => {
+        selectionState.active = false;
+        selectionState.dragging = false;
+        selectionState.anchor = null;
+        selectionState.focus = null;
+      },
+      updateCanvasCursor: () => {},
+      markNeedsRender: () => {},
+      updateLinkHover: () => {},
+      getGridState: () => ({ cols: 80, rows: 24, cellW: 10, cellH: 20 }),
+      getWasmReady: () => true,
+      getWasmHandle: () => 1,
+    });
+
+    canvas.emit(
+      "pointerdown",
+      createPointerEvent({ pointerId: 9, clientX: 20, clientY: 200 }).event as unknown as Event,
+    );
+    canvas.emit(
+      "pointermove",
+      createPointerEvent({ pointerId: 9, clientX: 20, clientY: 220 }).event as unknown as Event,
+    );
+
+    expect(selectionState.dragging).toBe(true);
+    expect(scrollCalls).toEqual([]);
+
+    const bottomMove = createPointerEvent({ pointerId: 9, clientX: 20, clientY: 480 });
+    canvas.emit("pointermove", bottomMove.event as unknown as Event);
+    expect(bottomMove.prevented()).toBe(true);
+    expect(scrollCalls).toEqual([1]);
+    expect(selectionState.focus).toEqual({ row: 23, col: 2 });
+    expect(intervalCallbacks.size).toBe(1);
+
+    intervalCallbacks.get(1)?.();
+    expect(scrollCalls).toEqual([1, 1]);
+
+    canvas.emit(
+      "pointermove",
+      createPointerEvent({ pointerId: 9, clientX: 20, clientY: 0 }).event as unknown as Event,
+    );
+    expect(scrollCalls).toEqual([1, 1, -1]);
+    expect(selectionState.focus).toEqual({ row: 0, col: 2 });
+
+    intervalCallbacks.get(1)?.();
+    expect(scrollCalls).toEqual([1, 1, -1, -1]);
+
+    canvas.emit(
+      "pointerup",
+      createPointerEvent({ pointerId: 9, clientX: 20, clientY: 0 }).event as unknown as Event,
+    );
+    expect(intervalCallbacks.size).toBe(0);
+    expect(clearedIntervals).toEqual([1]);
+  } finally {
+    for (const cleanup of cleanupCanvasFns) cleanup();
+    globalThis.setInterval = originalSetInterval;
+    globalThis.clearInterval = originalClearInterval;
+  }
 });
 
 test("bindPointerEvents uses double-click to trigger word selection", () => {

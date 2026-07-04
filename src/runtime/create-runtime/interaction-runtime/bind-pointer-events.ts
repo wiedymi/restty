@@ -10,6 +10,9 @@ import type {
   RuntimeTouchSelectionState,
 } from "./state.types";
 
+const SELECTION_DRAG_AUTOSCROLL_EDGE_PX = 1;
+const SELECTION_DRAG_AUTOSCROLL_INTERVAL_MS = 15;
+
 export type BindPointerEventsOptions = {
   canvas: HTMLCanvasElement;
   bindOptions: BindCanvasEventsOptions;
@@ -74,10 +77,71 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
   } = options;
 
   const { inputHandler, sendKeyInput, openLink } = bindOptions;
+  let selectionAutoScrollTimer: ReturnType<typeof setInterval> | null = null;
+  let selectionAutoScrollDirection: -1 | 0 | 1 = 0;
+  let selectionAutoScrollClientX = 0;
+  let selectionAutoScrollClientY = 0;
 
   const shouldRoutePointerToAppMouse = (shiftKey: boolean) => {
     if (shiftKey) return false;
     return inputHandler.isMouseActive();
+  };
+
+  const stopSelectionAutoScroll = () => {
+    if (selectionAutoScrollTimer) {
+      clearInterval(selectionAutoScrollTimer);
+      selectionAutoScrollTimer = null;
+    }
+    selectionAutoScrollDirection = 0;
+  };
+
+  const selectionAutoScrollDirectionFor = (event: { clientY: number }): -1 | 0 | 1 => {
+    if (!selectionState.dragging || !getWasmReady() || !getWasmHandle()) return 0;
+    const { cellH } = getGridState();
+    if (!cellH) return 0;
+
+    const rect = canvas.getBoundingClientRect();
+    if (rect.height <= 0) return 0;
+    if (event.clientY <= rect.top + SELECTION_DRAG_AUTOSCROLL_EDGE_PX) return -1;
+    if (event.clientY >= rect.bottom - SELECTION_DRAG_AUTOSCROLL_EDGE_PX) return 1;
+    return 0;
+  };
+
+  const tickSelectionAutoScroll = () => {
+    if (!selectionState.dragging || !selectionAutoScrollDirection) {
+      stopSelectionAutoScroll();
+      return;
+    }
+
+    scrollViewportByLines(selectionAutoScrollDirection);
+    selectionState.focus = normalizeSelectionCell(
+      positionToCell({
+        clientX: selectionAutoScrollClientX,
+        clientY: selectionAutoScrollClientY,
+      }),
+    );
+    updateLinkHover(null);
+    updateCanvasCursor();
+    markNeedsRender();
+  };
+
+  const syncSelectionAutoScroll = (event: PointerEvent) => {
+    selectionAutoScrollClientX = event.clientX;
+    selectionAutoScrollClientY = event.clientY;
+    selectionAutoScrollDirection = selectionAutoScrollDirectionFor(event);
+
+    if (!selectionAutoScrollDirection) {
+      stopSelectionAutoScroll();
+      return;
+    }
+
+    tickSelectionAutoScroll();
+    if (!selectionAutoScrollTimer && selectionAutoScrollDirection) {
+      selectionAutoScrollTimer = setInterval(
+        tickSelectionAutoScroll,
+        SELECTION_DRAG_AUTOSCROLL_INTERVAL_MS,
+      );
+    }
   };
 
   canvas.style.touchAction =
@@ -159,6 +223,7 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
         const cell = normalizeSelectionCell(positionToCell(event));
         event.preventDefault();
         selectionState.focus = cell;
+        syncSelectionAutoScroll(event);
         updateLinkHover(null);
         updateCanvasCursor();
         markNeedsRender();
@@ -185,6 +250,7 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
       if (anchor.row !== cell.row || anchor.col !== cell.col) {
         beginSelectionDrag(anchor, event.pointerId);
         selectionState.focus = cell;
+        syncSelectionAutoScroll(event);
         updateLinkHover(null);
         updateCanvasCursor();
         markNeedsRender();
@@ -197,6 +263,7 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
     if (selectionState.dragging) {
       event.preventDefault();
       selectionState.focus = cell;
+      syncSelectionAutoScroll(event);
       updateLinkHover(null);
       updateCanvasCursor();
       markNeedsRender();
@@ -214,7 +281,7 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
     updateLinkHover(cell);
   };
 
-  const onPointerUp = createPointerUpHandler({
+  const basePointerUp = createPointerUpHandler({
     inputHandler,
     sendKeyInput,
     openLink,
@@ -235,8 +302,12 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
     linkState,
     updateLinkHover,
   });
+  const onPointerUp = (event: PointerEvent) => {
+    stopSelectionAutoScroll();
+    basePointerUp(event);
+  };
 
-  const { onPointerCancel, onWheel, onContextMenu, onPointerLeave } = createPointerAuxHandlers({
+  const auxHandlers = createPointerAuxHandlers({
     inputHandler,
     shouldRoutePointerToAppMouse,
     scrollViewportByWheel,
@@ -253,6 +324,11 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
     updateCanvasCursor,
     markNeedsRender,
   });
+  const onPointerCancel = (event: PointerEvent) => {
+    stopSelectionAutoScroll();
+    auxHandlers.onPointerCancel(event);
+  };
+  const { onWheel, onContextMenu, onPointerLeave } = auxHandlers;
 
   canvas.addEventListener("pointerdown", onPointerDown);
   canvas.addEventListener("pointermove", onPointerMove);
@@ -270,6 +346,7 @@ export function bindPointerEvents(options: BindPointerEventsOptions) {
     canvas.removeEventListener("pointerleave", onPointerLeave);
     canvas.removeEventListener("wheel", onWheel);
     canvas.removeEventListener("contextmenu", onContextMenu);
+    stopSelectionAutoScroll();
     clearPendingTouchSelection();
   });
 }
