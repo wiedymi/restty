@@ -39,9 +39,14 @@ WebContainer-backed modes seed `/demo.sh`, `/test.sh`, and related shell demo sc
 
 Cloudflare Pages static deploy:
 
-1. Run `bun run playground:build`
-2. Deploy `playground/dist/` as the output directory.
-3. `playground/public/_headers` and `_redirects` are copied into the build output so COOP/COEP headers and SPA fallback are applied.
+1. Use framework preset `None`.
+2. Set the build command to `bun install --frozen-lockfile && bun run pages:build`.
+3. Set the build output directory to `playground/dist`.
+4. Leave the root directory blank.
+5. Set `SKIP_DEPENDENCY_INSTALL=1` so Pages does not run a package-manager install before the Bun install command above.
+6. `playground/public/_headers` and `_redirects` are copied into the build output so COOP/COEP headers and SPA fallback are applied.
+
+The old `build:assets` command is obsolete. The docs and playground are built together by Vite/Fumadocs through `bun run pages:build`.
 
 ## Build the WASM module
 

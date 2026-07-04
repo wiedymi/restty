@@ -98,6 +98,7 @@
     "build:types": "tsc -p tsconfig.build.json",
     "build": "bun run build:themes && bun run clean:dist && bun run build:lib && bun run build:esm && bun run build:types",
     "playground:build": "bunx vite build --config playground/vite.config.ts",
+    "pages:build": "bun run playground:build",
     "check:themes": "bun run build:themes && git diff --exit-code -- src/theme/builtin-themes.ts",
     "lint": "oxlint src playground scripts tests",
     "format:base": "oxfmt src --config .oxfmtrc.json --ignore-path .gitignore --ignore-path .oxfmtignore",

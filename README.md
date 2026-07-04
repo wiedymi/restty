@@ -92,5 +92,13 @@ bun run format:check
 bun run playground:build
 ```
 
+Cloudflare Pages deployment settings:
+
+- Framework preset: `None`
+- Build command: `bun install --frozen-lockfile && bun run pages:build`
+- Build output directory: `playground/dist`
+- Root directory: leave blank
+- Environment variables: set `SKIP_DEPENDENCY_INSTALL=1` when using the build command above.
+
 The hosted docs are sourced from `playground/content/docs/`. Repository notes under `docs/` are
 legacy/internal references for development context.
