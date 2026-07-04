@@ -5,7 +5,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, "..", "..");
 const fontsDir = resolve(root, "playground/public/fonts");
 const jbTarget = resolve(fontsDir, "JetBrainsMono-Regular.ttf");
-const nerdTarget = resolve(fontsDir, "SymbolsNerdFontMono-Regular.ttf");
+const nerdTarget = resolve(fontsDir, "SymbolsNerdFont-Regular.ttf");
 const nerdLicenseTarget = resolve(fontsDir, "NerdFontsSymbolsOnly.LICENSE");
 const openmojiTarget = resolve(fontsDir, "OpenMoji-black-glyf.ttf");
 
@@ -63,7 +63,7 @@ const proc = Bun.spawn([
   tarPath,
   "-C",
   fontsDir,
-  "./SymbolsNerdFontMono-Regular.ttf",
+  "./SymbolsNerdFont-Regular.ttf",
   "./LICENSE",
 ]);
 const code = await proc.exited;

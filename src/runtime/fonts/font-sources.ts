@@ -19,7 +19,7 @@ const FONT_URL_JETBRAINS_MONO_ITALIC =
 const FONT_URL_JETBRAINS_MONO_BOLD_ITALIC =
   "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/BoldItalic/JetBrainsMonoNLNerdFontMono-BoldItalic.ttf";
 const FONT_URL_NERD_SYMBOLS =
-  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf";
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFont-Regular.ttf";
 const FONT_URL_NOTO_SYMBOLS =
   "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf";
 const FONT_URL_SYMBOLA = "https://cdn.jsdelivr.net/gh/ChiefMikeK/ttf-symbola@master/Symbola.ttf";
@@ -50,12 +50,7 @@ const LOCAL_FONT_ALIASES: Record<string, string[]> = {
     "euphemia ucas",
     "euphemiaucas",
   ],
-  "symbols nerd font mono": [
-    "symbols nerd font mono",
-    "symbols nerd font",
-    "nerd fonts symbols",
-    "nerdfontssymbolsonly",
-  ],
+  "symbols nerd font": ["symbols nerd font", "nerd fonts symbols", "nerdfontssymbolsonly"],
 };
 
 /** Default local-first fallback chain for terminal, symbols, emoji, and CJK coverage. */
@@ -98,8 +93,8 @@ export const DEFAULT_FONT_INPUTS: readonly ResttyFontInput[] = [
     weight: 700,
     style: "italic",
   },
-  { family: "Symbols Nerd Font Mono", name: "Symbols Nerd Font Mono" },
-  { url: FONT_URL_NERD_SYMBOLS, name: "Symbols Nerd Font Mono" },
+  { family: "Symbols Nerd Font", name: "Symbols Nerd Font" },
+  { url: FONT_URL_NERD_SYMBOLS, name: "Symbols Nerd Font" },
   { family: "Apple Symbols", name: "Apple Symbols" },
   { url: FONT_URL_NOTO_SYMBOLS, name: "Noto Sans Symbols 2" },
   { url: FONT_URL_SYMBOLA, name: "Symbola" },

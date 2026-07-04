@@ -75,6 +75,25 @@ export function fontAdvanceUnits(
   return advance;
 }
 
+/**
+ * Scale (pixels per font unit) that renders a fallback font at the primary
+ * font's em size, matching Ghostty's rule of loading every face at the same
+ * point size. Returns 0 when either font lacks a usable unitsPerEm (for
+ * example bitmap fonts), so callers can fall back to size-mode scaling.
+ */
+export function fallbackEmScale(
+  primaryFont: Font | null | undefined,
+  primaryScale: number,
+  fallbackFont: Font | null | undefined,
+): number {
+  const primaryUpem = primaryFont?.unitsPerEm ?? 0;
+  const fallbackUpem = fallbackFont?.unitsPerEm ?? 0;
+  if (!Number.isFinite(primaryUpem) || primaryUpem <= 0) return 0;
+  if (!Number.isFinite(fallbackUpem) || fallbackUpem <= 0) return 0;
+  if (!Number.isFinite(primaryScale) || primaryScale <= 0) return 0;
+  return (primaryScale * primaryUpem) / fallbackUpem;
+}
+
 /** Get the bounding-box width of a glyph in font design units, with caching. */
 export function glyphWidthUnits(entry: FontEntry, glyphId: number | undefined | null): number {
   if (!entry?.font || glyphId === undefined || glyphId === null) return 0;

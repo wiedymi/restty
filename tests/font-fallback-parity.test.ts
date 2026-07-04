@@ -37,7 +37,7 @@ test("font picking follows fallback order for matching glyphs", () => {
   const state = createFontManagerState();
   state.fonts = [
     createFontEntry(makeFont([0x41]), "Primary Mono"),
-    createFontEntry(makeFont([0x25a3]), "Symbols Nerd Font Mono"),
+    createFontEntry(makeFont([0x25a3]), "Symbols Nerd Font"),
     createFontEntry(makeFont([0x25a3]), "Noto Sans Symbols 2"),
   ];
   const picked = pickFontIndexForText(state, String.fromCodePoint(0x25a3), 1);
@@ -150,7 +150,7 @@ test("default fonts prefer local JetBrains and Nerd symbols before CDN fallbacks
       source.matchers.some((matcher) => matcher.includes("symbols nerd font")),
   );
   const nerdSymbolsUrlIndex = DEFAULT_RESOLVED_FONTS.findIndex(
-    (source) => source.kind === "url" && source.url.includes("SymbolsNerdFontMono-Regular.ttf"),
+    (source) => source.kind === "url" && source.url.includes("SymbolsNerdFont-Regular.ttf"),
   );
 
   expect(jetbrainsLocalIndex).toBeGreaterThanOrEqual(0);

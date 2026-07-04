@@ -34,56 +34,55 @@ export function constrainGlyphBox(
   let groupX = glyph.x - groupWidth * relX;
   let groupY = glyph.y - groupHeight * relY;
 
-  const padWidthFactor = minConstraintWidth - (padLeft + padRight);
-  const padHeightFactor = 1 - (padBottom + padTop);
-  const targetWidth = padWidthFactor * metrics.faceWidth;
-  const baseHeight =
-    (constraint.height ?? "cell") === "icon"
-      ? minConstraintWidth > 1
-        ? metrics.iconHeight
-        : metrics.iconHeightSingle
-      : metrics.faceHeight;
-  const targetHeight = padHeightFactor * baseHeight;
+  // Mirrors ghostty face.zig scale_factors: computed on the group box so the
+  // fit_cover1 single-cell cap can recurse without re-deriving the group.
+  const scaleFactors = (constrainWidth: number): [number, number] => {
+    if (sizeMode === "none") return [1, 1];
 
-  let widthFactor = targetWidth / groupWidth;
-  let heightFactor = targetHeight / groupHeight;
+    const multiCell = constrainWidth > 1;
+    const padWidthFactor = constrainWidth - (padLeft + padRight);
+    const padHeightFactor = 1 - (padBottom + padTop);
+    const targetWidth = padWidthFactor * metrics.faceWidth;
+    const baseHeight =
+      (constraint.height ?? "cell") === "icon"
+        ? multiCell
+          ? metrics.iconHeight
+          : metrics.iconHeightSingle
+        : metrics.faceHeight;
+    const targetHeight = padHeightFactor * baseHeight;
 
-  const scaleDownFit = Math.min(1, widthFactor, heightFactor);
-  const scaleCover = Math.min(widthFactor, heightFactor);
+    let widthFactor = targetWidth / groupWidth;
+    let heightFactor = targetHeight / groupHeight;
 
-  if (sizeMode === "fit") {
-    widthFactor = scaleDownFit;
-    heightFactor = scaleDownFit;
-  } else if (sizeMode === "cover") {
-    widthFactor = scaleCover;
-    heightFactor = scaleCover;
-  } else if (sizeMode === "fit_cover1") {
-    widthFactor = scaleCover;
-    heightFactor = scaleCover;
-    if (minConstraintWidth > 1 && heightFactor > 1) {
-      const single = constrainGlyphBox(
-        { x: 0, y: 0, width: groupWidth, height: groupHeight },
-        { ...constraint, max_constraint_width: 1 },
-        metrics,
-        1,
-      );
-      const singleScale = single.height / groupHeight;
-      heightFactor = Math.max(1, singleScale);
+    if (sizeMode === "fit") {
+      heightFactor = Math.min(1, widthFactor, heightFactor);
+      widthFactor = heightFactor;
+    } else if (sizeMode === "cover") {
+      heightFactor = Math.min(widthFactor, heightFactor);
+      widthFactor = heightFactor;
+    } else if (sizeMode === "fit_cover1") {
+      // Scale down to fit, or up to cover at least one cell; multi-cell
+      // upscaling is capped at the single-cell scale factor.
+      heightFactor = Math.min(widthFactor, heightFactor);
+      if (multiCell && heightFactor > 1) {
+        const [, singleHeightFactor] = scaleFactors(1);
+        heightFactor = Math.max(1, singleHeightFactor);
+      }
       widthFactor = heightFactor;
     }
-  } else if (sizeMode === "stretch") {
-    // keep widthFactor/heightFactor
-  } else {
-    widthFactor = 1;
-    heightFactor = 1;
-  }
+    // "stretch" keeps the independent width/height factors.
 
-  if (constraint.max_xy_ratio !== undefined && constraint.max_xy_ratio !== null) {
-    const ratio = constraint.max_xy_ratio;
-    if (groupWidth * widthFactor > groupHeight * heightFactor * ratio) {
-      widthFactor = (groupHeight * heightFactor * ratio) / groupWidth;
+    if (constraint.max_xy_ratio !== undefined && constraint.max_xy_ratio !== null) {
+      const ratio = constraint.max_xy_ratio;
+      if (groupWidth * widthFactor > groupHeight * heightFactor * ratio) {
+        widthFactor = (groupHeight * heightFactor * ratio) / groupWidth;
+      }
     }
-  }
+
+    return [widthFactor, heightFactor];
+  };
+
+  const [widthFactor, heightFactor] = scaleFactors(minConstraintWidth);
 
   const centerX = groupX + groupWidth * 0.5;
   const centerY = groupY + groupHeight * 0.5;

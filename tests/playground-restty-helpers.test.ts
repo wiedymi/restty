@@ -54,8 +54,8 @@ test("playground fonts use simple bundled paths with optional local family first
     typeof font === "object" && font !== null && "name" in font ? font.name : "",
   );
   expect(fallbackLabels).toEqual([
-    "Symbols Nerd Font Mono",
-    "Symbols Nerd Font Mono",
+    "Symbols Nerd Font",
+    "Symbols Nerd Font",
     "Apple Symbols",
     "Noto Sans Symbols 2",
     "Symbola",

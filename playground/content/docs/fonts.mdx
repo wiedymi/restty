@@ -32,8 +32,8 @@ const restty = new Restty({
         fallback: "/fonts/JetBrainsMono-Regular.ttf",
       },
       {
-        path: "/fonts/SymbolsNerdFontMono-Regular.ttf",
-        name: "Symbols Nerd Font Mono",
+        path: "/fonts/SymbolsNerdFont-Regular.ttf",
+        name: "Symbols Nerd Font",
       },
     ],
   },
@@ -92,8 +92,8 @@ terminal: {
       fallback: "/fonts/FiraCode-Regular.ttf",
     },
     {
-      path: "/fonts/SymbolsNerdFontMono-Regular.ttf",
-      name: "Symbols Nerd Font Mono",
+      path: "/fonts/SymbolsNerdFont-Regular.ttf",
+      name: "Symbols Nerd Font",
     },
     {
       path: "/fonts/NotoSansSymbols2-Regular.ttf",
@@ -118,7 +118,7 @@ Apple/Noto/Symbola symbols, emoji fonts, and CJK coverage.
 ```ts
 await restty.setFonts([
   { family: "SF Mono", local: "require" },
-  "/fonts/SymbolsNerdFontMono-Regular.ttf",
+  "/fonts/SymbolsNerdFont-Regular.ttf",
 ]);
 
 const active = restty.activePane();

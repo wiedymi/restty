@@ -17,7 +17,7 @@ const FONT_URL_JETBRAINS_MONO_ITALIC =
 const FONT_URL_JETBRAINS_MONO_BOLD_ITALIC =
   "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/JetBrainsMono/NoLigatures/BoldItalic/JetBrainsMonoNLNerdFontMono-BoldItalic.ttf";
 const FONT_URL_NERD_SYMBOLS =
-  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf";
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFont-Regular.ttf";
 const FONT_URL_SYMBOLA = "https://cdn.jsdelivr.net/gh/ChiefMikeK/ttf-symbola@master/Symbola.ttf";
 const FONT_URL_NOTO_CANADIAN_ABORIGINAL =
   "https://cdn.jsdelivr.net/gh/notofonts/noto-fonts@main/unhinted/ttf/NotoSansCanadianAboriginal/NotoSansCanadianAboriginal-Regular.ttf";
@@ -95,16 +95,16 @@ export const FONT_PRESETS: FontPreset[] = [
 
 export const PROMPT_FALLBACK_FONTS: ResttyFontInput[] = [
   {
-    family: "Symbols Nerd Font Mono",
-    name: "Symbols Nerd Font Mono",
+    family: "Symbols Nerd Font",
+    name: "Symbols Nerd Font",
     fallback: {
-      path: "/fonts/SymbolsNerdFontMono-Regular.ttf",
-      name: "Symbols Nerd Font Mono",
+      path: "/fonts/SymbolsNerdFont-Regular.ttf",
+      name: "Symbols Nerd Font",
     },
   },
   {
     url: FONT_URL_NERD_SYMBOLS,
-    name: "Symbols Nerd Font Mono",
+    name: "Symbols Nerd Font",
   },
   {
     family: "Apple Symbols",

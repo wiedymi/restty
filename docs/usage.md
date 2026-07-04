@@ -155,7 +155,7 @@ const restty = new Restty({
         family: "JetBrains Mono Nerd Font",
         local: "prefer",
         fallback:
-          "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+          "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFont-Regular.ttf",
       },
     ],
   },
@@ -167,7 +167,7 @@ Update all panes at runtime:
 ```ts
 await restty.setFonts([
   { family: "SF Mono", local: "require" },
-  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFontMono-Regular.ttf",
+  "https://cdn.jsdelivr.net/gh/ryanoasis/nerd-fonts@v3.4.0/patched-fonts/NerdFontsSymbolsOnly/SymbolsNerdFont-Regular.ttf",
 ]);
 ```
 

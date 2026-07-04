@@ -1,5 +1,5 @@
 import type { Color } from "../../renderer";
-import type { Font, FontEntry } from "../../fonts";
+import { fallbackEmScale, type Font, type FontEntry } from "../../fonts";
 import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
 import { resolveLigatureRun, resolveRenderableLigatureRun } from "./ligature-runs";
 import type { CollectWebGPUCellPassParams, GlyphQueueItem } from "./render-tick-webgpu.types";
@@ -209,7 +209,14 @@ export function collectWebGPUCellPass(params: CollectWebGPUCellPassParams) {
     if (idx === 0) return primaryScale;
     const baseScale = baseScaleByFont[idx] ?? primaryScale;
     const preserveNaturalSymbolScale = isSymbolFont(entry) && !isAppleSymbolsFont(entry);
-    if (preserveNaturalSymbolScale || isColorEmojiFont(entry)) return baseScale;
+    if (preserveNaturalSymbolScale) {
+      // Match Ghostty: symbol fonts render at the primary font's em size with
+      // no per-face size normalization (SizeAdjustment.none).
+      const emScale = fallbackEmScale(primaryEntry?.font, primaryScale, entry.font);
+      if (emScale > 0) return emScale * fontScaleOverride(entry, FONT_SCALE_OVERRIDES);
+      return baseScale;
+    }
+    if (isColorEmojiFont(entry)) return baseScale;
     const metricAdjust = clamp(fallbackScaleAdjustment(primaryEntry, entry), 1, 2);
     let adjustedScale = baseScale * metricAdjust;
     const maxSpan = fontMaxCellSpan(entry);
@@ -229,7 +236,6 @@ export function collectWebGPUCellPass(params: CollectWebGPUCellPassParams) {
 
   const bitmapScaleByFont = fontState.fonts.map((entry, idx) => {
     if (!entry?.font || idx === 0) return 1;
-    if (isSymbolFont(entry) && !isAppleSymbolsFont(entry)) return 1;
     const baseScale = baseScaleByFont[idx] ?? 0;
     if (baseScale <= 0) return 1;
     const targetScale = scaleByFont[idx] ?? baseScale;

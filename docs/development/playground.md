@@ -64,7 +64,7 @@ From repo root:
 This helper downloads missing fetched assets into `playground/public/fonts/`:
 
 - `JetBrainsMono-Regular.ttf`
-- `SymbolsNerdFontMono-Regular.ttf`
+- `SymbolsNerdFont-Regular.ttf`
 - `NerdFontsSymbolsOnly.LICENSE`
 - `OpenMoji-black-glyf.ttf`
 
