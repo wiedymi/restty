@@ -33,13 +33,16 @@ jobs:
 
       - name: Verify annotated release tag
         run: |
-          TAG_TYPE="$(git cat-file -t "$GITHUB_REF_NAME")"
+          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+
+          TAG_REF="refs/tags/$GITHUB_REF_NAME"
+          TAG_TYPE="$(git cat-file -t "$TAG_REF")"
           if [ "$TAG_TYPE" != "tag" ]; then
             echo "Release tags must be annotated. Use: git tag -a $GITHUB_REF_NAME -m $GITHUB_REF_NAME"
             exit 1
           fi
 
-          TAG_COMMIT="$(git rev-parse "$GITHUB_REF_NAME^{}")"
+          TAG_COMMIT="$(git rev-parse "$TAG_REF^{}")"
           HEAD_COMMIT="$(git rev-parse HEAD)"
           if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
             echo "Checked out commit $HEAD_COMMIT does not match tag target $TAG_COMMIT"
