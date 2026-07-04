@@ -457,6 +457,7 @@ const StreamHandler = struct {
                     try self.appendOutput(writer.buffered());
                 }
             },
+            .glyph => {},
         }
     }
 
@@ -851,7 +852,7 @@ fn collectKittyPlacements(h: *Restty) !void {
         const img_bot_y: u32 = img_bot.screen.y;
         if (img_top_y > bot_y or img_bot_y < top_y) continue;
 
-        const dest_size = p.calculatedSize(image, &h.term);
+        const dest_size = p.pixelSize(image, &h.term);
         if (dest_size.width == 0 or dest_size.height == 0) continue;
 
         const source_x: u32 = @min(image.width, p.source_x);
