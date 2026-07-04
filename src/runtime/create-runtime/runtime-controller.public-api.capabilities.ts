@@ -40,6 +40,9 @@ type RuntimeTerminalDeps = {
 };
 
 type RuntimeIoDeps = {
+  runtimeEvents: Pick<ResttyRuntimeEventHub, "subscribe">;
+  init: () => Promise<void>;
+  getLifecycleState: () => ResttyRuntimeLifecycleState;
   sendInput: RuntimeSendInput;
   ptyInputRuntime: PtyInputRuntime;
   ptyTransport: Pick<PtyTransport, "isConnected">;
@@ -127,15 +130,115 @@ export function createRuntimeTerminalView({
 }
 
 export function createRuntimeIoView({
+  runtimeEvents,
+  init,
+  getLifecycleState,
   sendInput,
   ptyInputRuntime,
   ptyTransport,
 }: RuntimeIoDeps): ResttyRuntimeIoApi {
+  type QueuedInput = {
+    text: string;
+    source?: string;
+  };
+
+  let initTask: Promise<void> | null = null;
+  let pendingConnectUrl: string | null = null;
+  const pendingInputs: QueuedInput[] = [];
+
+  function flushPendingIo(): void {
+    if (getLifecycleState() !== "ready") return;
+
+    const inputs = pendingInputs.splice(0);
+    for (const input of inputs) {
+      sendInput(input.text, input.source);
+    }
+
+    const connectUrl = pendingConnectUrl;
+    pendingConnectUrl = null;
+    if (connectUrl !== null && !ptyTransport.isConnected()) {
+      ptyInputRuntime.connectPty(connectUrl);
+    }
+  }
+
+  function waitForActiveInit(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let dispose: (() => void) | null = null;
+
+      const settle = (callback: () => void) => {
+        dispose?.();
+        dispose = null;
+        callback();
+      };
+
+      dispose = runtimeEvents.subscribe((event) => {
+        if (event.type !== "state") return;
+        if (event.state === "ready" || event.state === "destroyed") {
+          settle(resolve);
+        } else if (event.state === "failed") {
+          settle(() => reject(new Error("runtime init failed")));
+        }
+      });
+
+      const state = getLifecycleState();
+      if (state === "ready" || state === "destroyed") {
+        settle(resolve);
+      } else if (state === "failed") {
+        settle(() => reject(new Error("runtime init failed")));
+      }
+    });
+  }
+
+  function ensureReady(): void {
+    const lifecycleState = getLifecycleState();
+    if (lifecycleState === "destroyed") return;
+    if (lifecycleState === "ready") {
+      flushPendingIo();
+      return;
+    }
+
+    if (!initTask) {
+      const readinessTask = lifecycleState === "initializing" ? waitForActiveInit() : init();
+      initTask = readinessTask
+        .then(flushPendingIo)
+        .catch((err: unknown) => {
+          pendingConnectUrl = null;
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`[restty] runtime init error: ${message}`);
+        })
+        .finally(() => {
+          initTask = null;
+        });
+    }
+  }
+
+  function sendReadyInput(text: string, source?: string): void {
+    if (getLifecycleState() === "destroyed") return;
+    if (getLifecycleState() === "ready") {
+      sendInput(text, source);
+      return;
+    }
+    pendingInputs.push({ text, source });
+    ensureReady();
+  }
+
+  function connectReadyPty(url = ""): void {
+    if (getLifecycleState() === "destroyed") return;
+    if (ptyTransport.isConnected()) return;
+    pendingConnectUrl = url;
+    ensureReady();
+  }
+
+  function disconnectReadyPty(): void {
+    pendingConnectUrl = null;
+    ptyInputRuntime.disconnectPty();
+  }
+
   return {
-    sendInput,
+    sendInput: sendReadyInput,
     sendKeyInput: ptyInputRuntime.sendKeyInput,
-    connectPty: ptyInputRuntime.connectPty,
-    disconnectPty: ptyInputRuntime.disconnectPty,
+    connectPty: connectReadyPty,
+    disconnectPty: disconnectReadyPty,
     isPtyConnected: () => ptyTransport.isConnected(),
   };
 }

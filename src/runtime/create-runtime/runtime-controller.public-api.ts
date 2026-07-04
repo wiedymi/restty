@@ -62,6 +62,9 @@ export function createRuntimePublicApi(deps: RuntimeControllerPublicApiDeps): Re
       terminalCapabilities: deps.publicApiCapabilities.terminal,
     }),
     io: createRuntimeIoView({
+      runtimeEvents: deps.runtimeEvents,
+      init: deps.init,
+      getLifecycleState: deps.getLifecycleState,
       sendInput: deps.sendInput,
       ptyInputRuntime: deps.ptyInputRuntime,
       ptyTransport: deps.ptyTransport,
