@@ -31,6 +31,21 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Verify annotated release tag
+        run: |
+          TAG_TYPE="$(git cat-file -t "$GITHUB_REF_NAME")"
+          if [ "$TAG_TYPE" != "tag" ]; then
+            echo "Release tags must be annotated. Use: git tag -a $GITHUB_REF_NAME -m $GITHUB_REF_NAME"
+            exit 1
+          fi
+
+          TAG_COMMIT="$(git rev-parse "$GITHUB_REF_NAME^{}")"
+          HEAD_COMMIT="$(git rev-parse HEAD)"
+          if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+            echo "Checked out commit $HEAD_COMMIT does not match tag target $TAG_COMMIT"
+            exit 1
+          fi
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -126,7 +141,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "$GITHUB_REF_NAME" \
-            --notes-file RELEASE_NOTES.md \
-            --verify-tag
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --notes-file RELEASE_NOTES.md \
+              --latest \
+              --verify-tag
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --notes-file RELEASE_NOTES.md \
+              --latest \
+              --verify-tag
+          fi
