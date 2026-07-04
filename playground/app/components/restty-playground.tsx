@@ -142,15 +142,19 @@ function applyTheme(restty: Restty, themeName: string, root: HTMLElement | null 
   restty.forEachPane((pane) => pane.applyTheme(theme, themeName));
 }
 
-function applyTerminalOptions(restty: Restty, options: PlaygroundOptions) {
-  restty.forEachPane((pane) => {
-    pane.setRenderer(options.renderer);
-    pane.setFontSize(options.fontSize);
-    pane.setLigatures(options.ligatures);
-    pane.setFontHinting(options.fontHinting);
-    pane.setFontHintTarget(options.fontHintTarget);
-    pane.setShaderStages(shaderStagesForPreset(options.shaderPreset));
-  });
+function applyThemeToPane(pane: ResttyPaneApi, themeName: string) {
+  const theme = resolveTheme(themeName);
+  if (!theme) return;
+  pane.applyTheme(theme, themeName);
+}
+
+function applyTerminalOptionsToPane(pane: ResttyPaneApi, options: PlaygroundOptions) {
+  pane.setRenderer(options.renderer);
+  pane.setFontSize(options.fontSize);
+  pane.setLigatures(options.ligatures);
+  pane.setFontHinting(options.fontHinting);
+  pane.setFontHintTarget(options.fontHintTarget);
+  pane.setShaderStages(shaderStagesForPreset(options.shaderPreset));
 }
 
 function connectPane(pane: ResttyPaneApi | null, options: PlaygroundOptions) {
@@ -187,9 +191,19 @@ export function ResttyPlayground() {
     const restty = resttyRef.current;
     const pane = restty?.pane(id);
     if (!restty || !pane) return;
-    demoControllersRef.current.set(id, createDemoController(pane));
-    applyTerminalOptions(restty, optionsRef.current);
-    applyTheme(restty, optionsRef.current.themeName, rootRef.current);
+    if (!demoControllersRef.current.has(id)) {
+      demoControllersRef.current.set(id, createDemoController(pane));
+    }
+    applyTerminalOptionsToPane(pane, optionsRef.current);
+    applyThemeToPane(pane, optionsRef.current.themeName);
+  };
+
+  const setupAndConnectPane = (id: number) => {
+    setupPane(id);
+    syncPanes();
+    requestAnimationFrame(() =>
+      connectPane(resttyRef.current?.pane(id) ?? null, optionsRef.current),
+    );
   };
 
   useEffect(() => {
@@ -210,8 +224,7 @@ export function ResttyPlayground() {
         events: {
           onPaneCreated: (pane) => {
             queueMicrotask(() => {
-              setupPane(pane.id);
-              syncPanes();
+              setupAndConnectPane(pane.id);
             });
           },
           onPaneClosed: (pane) => {
@@ -252,10 +265,8 @@ export function ResttyPlayground() {
 
     resttyRef.current = restty;
     applyTheme(restty, optionsRef.current.themeName, root);
-    const initialPane = restty.createInitialPane({ focus: true });
-    setupPane(initialPane.id);
+    restty.createInitialPane({ focus: true });
     syncPanes();
-    requestAnimationFrame(() => connectPane(restty.activePane(), optionsRef.current));
 
     const resize = () => {
       restty.forEachPane((pane) => pane.updateSize(true));
@@ -341,11 +352,7 @@ export function ResttyPlayground() {
   const splitPane = (direction: "vertical" | "horizontal") => {
     const created = resttyRef.current?.splitActivePane(direction);
     if (!created) return;
-    setupPane(created.id);
     syncPanes();
-    requestAnimationFrame(() =>
-      connectPane(resttyRef.current?.pane(created.id) ?? null, optionsRef.current),
-    );
   };
 
   return (
