@@ -209,6 +209,7 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   const attachWindowEvents = terminal.attachWindowEvents ?? true;
   const attachCanvasEvents = terminal.attachCanvasEvents ?? true;
   const autoResize = terminal.autoResize ?? true;
+  const showResizeOverlay = terminal.showResizeOverlay ?? true;
   const touchSelectionMode = normalizeTouchSelectionMode(terminal.touchSelectionMode);
   const touchSelectionLongPressMs = clampFiniteNumber(
     terminal.touchSelectionLongPressMs,
@@ -300,8 +301,8 @@ export function createResttyRuntime(options: ResttyRuntimeConfig): ResttyRuntime
   let wasmHandle = 0;
   let wasmReady = false;
   let activeState: WebGPUState | WebGLState | null = null;
-  const RESIZE_OVERLAY_HOLD_MS = 500;
-  const RESIZE_OVERLAY_FADE_MS = 400;
+  const RESIZE_OVERLAY_HOLD_MS = showResizeOverlay ? 500 : 0;
+  const RESIZE_OVERLAY_FADE_MS = showResizeOverlay ? 400 : 0;
   const RESIZE_ACTIVE_MS = 180;
   const resizeState = {
     active: false,

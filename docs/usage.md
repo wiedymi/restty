@@ -44,6 +44,7 @@ const restty = new Restty({
     fontHinting: false,
     fontHintTarget: "auto", // "auto" | "light" | "normal"
     autoResize: true,
+    showResizeOverlay: true,
     // Touch behavior:
     // "long-press" (default) | "drag" | "off"
     touchSelectionMode: "long-press",
