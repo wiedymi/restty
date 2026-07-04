@@ -35,7 +35,11 @@ function echoLine(text = ""): string {
 }
 
 function shellScript(lines: string[]): string {
-  return `#!/usr/bin/env sh\n${lines.map((line) => echoLine(line)).join("\n")}\n`;
+  return shellCommandScript(lines.map((line) => echoLine(line)));
+}
+
+function shellCommandScript(commands: string[]): string {
+  return `#!/usr/bin/env sh\n${commands.join("\n")}\n`;
 }
 
 function range(start: number, endInclusive: number): number[] {
@@ -127,6 +131,43 @@ const TRUECOLOR_LABELS = [
 
 const DONE = `${CSI}38;5;46mDone.${CSI}0m`;
 
+export type PlaygroundAnimationFrame = {
+  lines: string[];
+  delayMs: number;
+};
+
+export const PLAYGROUND_ANIMATION_FRAME_DELAY_MS = 90;
+
+export const PLAYGROUND_ANIMATION_FRAMES: PlaygroundAnimationFrame[] = [
+  { spinner: "|", fill: 4, label: "warming render pipeline" },
+  { spinner: "/", fill: 9, label: "warming render pipeline" },
+  { spinner: "-", fill: 15, label: "uploading glyph atlas" },
+  { spinner: "\\", fill: 21, label: "uploading glyph atlas" },
+  { spinner: "|", fill: 26, label: "drawing color wave" },
+  { spinner: "/", fill: 30, label: "drawing color wave" },
+].map(({ spinner, fill, label }, index) => ({
+  delayMs: PLAYGROUND_ANIMATION_FRAME_DELAY_MS,
+  lines: [
+    `${CSI}1mrestty animation showcase ${foreground(81, spinner)}${CSI}0m`,
+    "",
+    `${foreground(81, `[${spinner}]`)} ${label}`,
+    `atlas update ${progressBar(fill)} ${String(Math.round((fill / 30) * 100)).padStart(3)}%`,
+    "",
+    COLOR_WAVE_ROWS[index * 2] ?? COLOR_WAVE_ROWS[0] ?? "",
+    COLOR_WAVE_ROWS[index * 2 + 1] ?? COLOR_WAVE_ROWS[1] ?? "",
+  ],
+}));
+
+export function renderPlaygroundAnimationFrame(frame: PlaygroundAnimationFrame): string {
+  return `${CSI}H${CSI}J${frame.lines.join("\r\n")}\r\n`;
+}
+
+function shellAnimationFrameCommands(frame: PlaygroundAnimationFrame): string[] {
+  return frame.lines.map((line, index) =>
+    echoLine(`${index === 0 ? `${CSI}H${CSI}J` : ""}${line}`),
+  );
+}
+
 const KITTY_IMAGE_WIDTH = 32;
 const KITTY_IMAGE_HEIGHT = 18;
 const KITTY_IMAGE_ID = 424242;
@@ -198,21 +239,14 @@ const ANSI_ART_SH = shellScript([
   DONE,
 ]);
 
-const ANIMATION_SH = shellScript([
-  `${CSI}1mrestty animation showcase${CSI}0m`,
-  "",
-  `${foreground(81, "[|]")} warming render pipeline`,
-  `${foreground(81, "[/]")} warming render pipeline`,
-  `${foreground(81, "[-]")} warming render pipeline`,
-  `${foreground(81, "[+]")} warming render pipeline`,
-  "",
-  `atlas update ${progressBar(5)}  16%`,
-  `atlas update ${progressBar(15)}  50%`,
-  `atlas update ${progressBar(30)} 100%`,
-  "",
-  ...COLOR_WAVE_ROWS,
-  "",
-  DONE,
+const ANIMATION_SH = shellCommandScript([
+  echoLine(`${CSI}2J${CSI}H`),
+  ...PLAYGROUND_ANIMATION_FRAMES.flatMap((frame, index) => [
+    ...shellAnimationFrameCommands(frame),
+    ...(index === PLAYGROUND_ANIMATION_FRAMES.length - 1 ? [] : ["sleep 0.09"]),
+  ]),
+  echoLine(""),
+  echoLine(DONE),
 ]);
 
 const COLORS_SH = shellScript([

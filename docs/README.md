@@ -1,15 +1,20 @@
 # restty documentation
 
-This folder is organized by audience and depth.
+The canonical public documentation lives in `../playground/content/docs/` and is published at
+`https://restty.pages.dev/docs`.
+
+This `docs/` folder is for legacy repository notes, internal architecture references, and
+development specs. Prefer the hosted docs for user-facing integration guidance.
 
 Live demo: `https://restty.pages.dev/`
 
 ## Start Here
 
 If you are integrating restty into an app, read in this order:
-1. [`../README.md`](../README.md) for install and quick start.
-2. [`usage.md`](./usage.md) for real integration patterns.
-3. [`how-it-works.md`](./how-it-works.md) for runtime mental model.
+1. [`../README.md`](../README.md) for the npm package entrypoint.
+2. [`../playground/content/docs/getting-started.mdx`](../playground/content/docs/getting-started.mdx) for canonical setup docs.
+3. [`usage.md`](./usage.md) for legacy integration notes.
+4. [`how-it-works.md`](./how-it-works.md) for runtime mental model.
 
 ## User-Facing Docs
 

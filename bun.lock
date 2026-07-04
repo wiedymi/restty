@@ -11,7 +11,7 @@
         "react": "^19.2.5",
         "react-dom": "^19.2.5",
         "react-router": "^7.14.2",
-        "text-shaper": "0.1.22",
+        "text-shaper": "0.1.23",
       },
       "devDependencies": {
         "@tailwindcss/vite": "^4.2.4",
@@ -872,7 +872,7 @@
 
     "tar-stream": ["tar-stream@2.2.0", "", { "dependencies": { "bl": "^4.0.3", "end-of-stream": "^1.4.1", "fs-constants": "^1.0.0", "inherits": "^2.0.3", "readable-stream": "^3.1.1" } }, "sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ=="],
 
-    "text-shaper": ["text-shaper@0.1.22", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-OYxqPcNEox3tlXilxZVPNub8EU/A6Lxy9vlCAe362fiGI9f3pMav497wL7cecX0CPq1yVtiBn/lii/ZZUUk9bQ=="],
+    "text-shaper": ["text-shaper@0.1.23", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-kBItvxckAzS4JkcferjxbXN7tFir/RDUBcxk1aKe2Z9QqtmoddGezmwFOc7xBjKKF/Nf9JVDCWXnK6XNVzTjIA=="],
 
     "tinyexec": ["tinyexec@1.1.2", "", {}, "sha512-dAqSqE/RabpBKI8+h26GfLq6Vb3JVXs30XYQjdMjaj/c2tS8IYYMbIzP599KtRj7c57/wYApb3QjgRgXmrCukA=="],
 

@@ -22,7 +22,7 @@ test("playground shell scripts stay jsh-compatible while emitting real terminal 
     expect(script.fallback).not.toMatch(/\b(?:for|while|printf|node)\b/);
 
     for (const line of script.fallback.trimEnd().split("\n").slice(1)) {
-      expect(line.startsWith("echo '")).toBe(true);
+      expect(line.startsWith("echo '") || line.startsWith("sleep ")).toBe(true);
     }
   }
 
@@ -31,6 +31,7 @@ test("playground shell scripts stay jsh-compatible while emitting real terminal 
   expect(scriptByTarget("test.sh")).toContain("\x1b[1mBold");
   expect(scriptByTarget("ansi-art.sh")).toContain("\x1b[1;38;5;81m");
   expect(scriptByTarget("animation.sh")).toContain("\x1b[38;5;46m");
+  expect(scriptByTarget("animation.sh")).toContain("sleep 0.09");
 });
 
 test("playground kitty shell script emits a valid direct-medium image packet", async () => {

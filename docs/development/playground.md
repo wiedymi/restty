@@ -23,9 +23,11 @@ Hinting is disabled by default, and ligatures are on by default.
 
 Playground font defaults:
 
-- `Base Font: Fira Code (default)`
+- `Bundled preset: JetBrains Mono (default)`
 - `Ligatures: On`
-- bundled Fira Code is served from `playground/public/fonts/FiraCode-Regular.ttf`
+- `Hinting: Off`
+- Fira Code remains a selectable preset and is served from `playground/public/fonts/FiraCode-Regular.ttf`.
+- JetBrains Mono and fallback symbol/emoji assets are served from `playground/public/fonts/` when present, with CDN/local fallbacks configured by `playground/app/lib/restty/fonts.ts`.
 
 Connection modes:
 
@@ -53,18 +55,21 @@ Requires Zig 0.15.2+ (matches Ghostty's minimum).
 
 There is no separate embed step script anymore; rerun `bun run build:wasm` when you want to refresh the embedded blob.
 
-## Fetch default font
+## Fetch playground font assets
 
 From repo root:
 
 - `bun run playground/scripts/fetch-fonts.ts`
 
-This downloads:
+This helper downloads missing fetched assets into `playground/public/fonts/`:
 
-- `FiraCode-Regular.ttf`
 - `JetBrainsMono-Regular.ttf`
 - `SymbolsNerdFontMono-Regular.ttf`
+- `NerdFontsSymbolsOnly.LICENSE`
 - `OpenMoji-black-glyf.ttf`
+
+Other authored playground font assets, including `FiraCode-Regular.ttf`, `NotoSansSymbols2-Regular.ttf`,
+and `NotoSansCJK-Regular.ttc`, are expected to already live in `playground/public/fonts/`.
 
 ## What It Tests
 
@@ -73,7 +78,7 @@ This downloads:
 - Resize/DPR handling.
 - Animation loop stability.
 - Text shaping + rasterized atlas rendering (foreground/background/selection/cursor).
-- Cross-cell programming ligatures with bundled Fira Code.
+- Cross-cell programming ligatures with the selectable Fira Code preset.
 
 ## Notes
 

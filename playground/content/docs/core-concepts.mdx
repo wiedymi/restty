@@ -1,0 +1,146 @@
+---
+title: Core concepts
+description: The mental model for restty surfaces, panes, runtimes, renderers, fonts, themes, and PTY transports.
+---
+
+`restty` is easiest to integrate when you treat the visible terminal as a surface that owns one or
+more pane runtimes. The surface handles layout and app-facing operations. Each pane handles terminal
+state, rendering, input, search, fonts, themes, and PTY I/O.
+
+## Surface
+
+The `Restty` instance is the surface. It mounts into a root element, creates pane DOM, tracks the
+active and focused panes, applies shared settings, runs plugins, and exposes convenience methods for
+the active pane.
+
+```ts
+import { Restty } from "restty";
+
+const restty = new Restty({
+  root,
+  surface: {
+    shortcuts: true,
+    searchUi: true,
+    defaultContextMenu: true,
+  },
+});
+```
+
+Use surface methods when an app setting should apply broadly:
+
+```ts
+restty.setFontSize(15);
+restty.setPaneStyleOptions({ inactivePaneOpacity: 0.78 });
+restty.requestLayoutSync();
+```
+
+## Panes
+
+A pane is one terminal instance inside the surface. Every pane has its own terminal core, renderer,
+search state, PTY connection, and runtime settings. Use pane handles when a command should target a
+specific pane.
+
+```ts
+const active = restty.activePane();
+const panes = restty.panes();
+const pane = restty.pane(1);
+
+active?.setSearchQuery("failed");
+pane?.connectPty("ws://localhost:8787/pty");
+```
+
+The active pane is the default target for surface convenience methods. The focused pane is the pane
+that currently owns DOM focus. They are usually the same, but integrations should use the term that
+matches the operation they need.
+
+## Runtime
+
+Each pane runtime owns terminal behavior: input mapping, clipboard, IME, touch selection, mouse
+protocols, search, font resources, theme colors, render ticks, and PTY data flow.
+
+`terminal` config is per-pane. It may be a static object or a factory that receives the pane ID,
+source pane, canvas, and IME input.
+
+```ts
+const restty = new Restty({
+  root,
+  terminal: ({ id, sourcePane }) => ({
+    renderer: id === 1 ? "webgpu" : "auto",
+    fontSize: sourcePane ? 14 : 16,
+  }),
+});
+```
+
+## Renderer
+
+`renderer: "auto"` prefers WebGPU and falls back to WebGL2. Use explicit `webgpu` or `webgl2` when
+you are testing a backend or matching an app setting.
+
+```ts
+restty.setRenderer("auto");
+console.log(restty.getBackend());
+```
+
+Shader stages run after the terminal frame is assembled. They are separate from terminal themes:
+themes provide semantic terminal colors, while shader stages transform the rendered frame.
+
+## Themes and pane backgrounds
+
+Themes are Ghostty-compatible `GhosttyTheme` objects. Semantic colors live under `theme.colors`, for
+example `theme.colors.background` and `theme.colors.foreground`.
+
+```ts
+import { getBuiltinTheme } from "restty";
+
+const theme = getBuiltinTheme("Aizen Dark");
+
+if (theme) {
+  restty.applyTheme(theme, theme.name);
+  const background = theme.colors.background;
+}
+```
+
+Terminal background and pane shell background are separate. If the surrounding split layout should
+match the terminal theme, update pane style options too.
+
+## Fonts
+
+Fonts are ordered inputs. They can be URL/path assets, in-memory buffers, or local-family requests
+resolved through browser Local Font Access when available.
+
+```ts
+await restty.setFonts([
+  { family: "SF Mono", local: "prefer", fallback: "/fonts/JetBrainsMono-Regular.ttf" },
+  "/fonts/SymbolsNerdFontMono-Regular.ttf",
+]);
+```
+
+Keep a URL or path fallback when startup must be deterministic.
+
+## PTY transports
+
+`restty` renders terminal output but does not require a specific shell backend. A `PtyTransport`
+connects the runtime to a process-like source: a WebSocket PTY server, a WebContainer-backed
+process, Just Bash, a remote session, or an app-owned test harness.
+
+```ts
+restty.connectPty("ws://localhost:8787/pty");
+```
+
+When no PTY is connected, `sendInput(...)` can still write program output into the active pane.
+`sendKeyInput(...)` follows the PTY-aware input path.
+
+## Services and plugins
+
+Services are per-pane adapters and hooks. Use them for PTY transports, state callbacks, and
+input/output filtering.
+
+Plugins are surface-level extensions. Use them when reusable behavior needs events, interceptors,
+lifecycle hooks, render hooks, or plugin-owned shader stages.
+
+## What to read next
+
+- [Surface and panes](/docs/surface-and-panes) for layout and pane handles.
+- [Search](/docs/search) for per-pane search state and the built-in search UI.
+- [PTY backends](/docs/pty-backends) for WebSocket, Just Bash, and WebContainer-backed transports.
+- [Themes and shaders](/docs/themes) for color and frame effects.

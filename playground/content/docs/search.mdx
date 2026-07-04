@@ -1,0 +1,153 @@
+---
+title: Search
+description: Enable the built-in search UI, drive per-pane search state, and observe search results from app code.
+---
+
+Search is pane-local. Each pane keeps its own query, match count, selected result, and completion
+state. The surface exposes convenience methods for the active pane, while pane handles target a
+specific pane.
+
+## Enable the built-in UI
+
+```ts
+const restty = new Restty({
+  root,
+  surface: {
+    searchUi: true,
+  },
+});
+```
+
+Use an object when you need labels, shortcut guards, status formatting, or styles.
+
+```ts
+const restty = new Restty({
+  root,
+  surface: {
+    searchUi: {
+      enabled: true,
+      placeholder: "Search output",
+      shortcut: {
+        enabled: true,
+        canOpen: (event, paneId) => {
+          console.debug("search shortcut for pane", paneId);
+          return !event.defaultPrevented;
+        },
+      },
+    },
+  },
+});
+```
+
+The built-in shortcut opens search for the active/focused pane. Use the API below for custom
+toolbars or command palettes.
+
+## Drive search from code
+
+Surface methods target the active pane:
+
+```ts
+restty.setSearchQuery("warning");
+restty.searchNext();
+restty.searchPrevious();
+restty.openSearch({ selectAll: true });
+```
+
+Pane handles target one pane:
+
+```ts
+const pane = restty.pane(1);
+
+pane?.setSearchQuery("failed");
+pane?.searchNext();
+pane?.closeSearch({ restoreFocus: true });
+```
+
+Clear the query when the app leaves search mode:
+
+```ts
+restty.clearSearch();
+```
+
+## Search state
+
+`getSearchState()` returns the public search state for the active pane or pane handle.
+
+```ts
+const state = restty.getSearchState();
+
+if (state.total > 0) {
+  console.log(`${(state.selectedIndex ?? 0) + 1} / ${state.total}`);
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `query` | Current query string. |
+| `active` | Search is currently active for this pane. |
+| `pending` | Match calculation is in progress. |
+| `complete` | Current query has finished scanning available scrollback. |
+| `total` | Number of known matches. |
+| `selectedIndex` | Zero-based selected match, or `null` when no match is selected. |
+
+`selectedIndex` is zero-based. Add one when showing it to users.
+
+## Observe changes
+
+Use `services.callbacks.onSearchState` when host UI needs to reflect search state.
+
+```ts
+const restty = new Restty({
+  root,
+  services: ({ id }) => ({
+    callbacks: {
+      onSearchState: (state) => {
+        updateSearchBadge(id, state.total);
+      },
+    },
+  }),
+});
+```
+
+Use a services factory when you need the pane ID with the callback.
+
+## Customize search UI style
+
+Search UI styles are separate from terminal themes. They affect the overlay controls, not terminal
+cell colors.
+
+```ts
+restty.setSearchUiStyleOptions({
+  panelBackground: "rgba(18, 18, 18, 0.92)",
+  panelTextColor: "#f5f5f5",
+  inputBackground: "#0f0f0f",
+  buttonHoverBackground: "#2a2a2a",
+});
+```
+
+You can also provide initial styles under `surface.searchUi.styles`.
+
+## Theme colors for matches
+
+Search match colors come from the terminal theme when provided:
+
+```ts
+const theme = parseGhosttyTheme(`
+background = #0d1117
+foreground = #c9d1d9
+search-background = #ffd33d
+search-foreground = #24292f
+search-selected-background = #ff7b72
+search-selected-foreground = #ffffff
+`);
+
+restty.applyTheme(theme, "search colors");
+```
+
+The built-in search overlay is still styled through `searchUi` options.
+
+## Common patterns
+
+Use the built-in UI when you want a terminal-local find box with focus restore. Use host UI when the
+search field belongs in an app toolbar. In both cases, keep search scoped to a pane unless your app
+explicitly loops over `restty.panes()`.

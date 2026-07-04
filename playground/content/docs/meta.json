@@ -3,13 +3,18 @@
   "pages": [
     "index",
     "getting-started",
+    "core-concepts",
+    "surface-and-panes",
     "configuration",
     "pty-backends",
+    "search",
+    "playground-examples",
     "fonts",
     "themes",
     "api-surface",
     "plugins",
     "xterm-compat",
+    "troubleshooting",
     "architecture"
   ]
 }

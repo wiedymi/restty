@@ -5,7 +5,7 @@ This guide covers authoring native `restty` plugins.
 ## Plugin contract
 
 ```ts
-import type { ResttyPlugin, ResttyPluginContext, RESTTY_PLUGIN_API_VERSION } from "restty";
+import { RESTTY_PLUGIN_API_VERSION, type ResttyPlugin, type ResttyPluginContext } from "restty";
 
 export const examplePlugin: ResttyPlugin = {
   id: "acme/example",
@@ -68,12 +68,18 @@ If compatibility checks fail, `restty.use(plugin)` throws and the failure appear
 
 ## Runtime API
 
-- `await restty.use(plugin, options?)`: activate plugin once (plugin receives `ctx.options` and second `activate` arg).
+- `await restty.use(plugin, options?)`: activate plugin if its `id` is not already active (plugin receives `ctx.options` and second `activate` arg).
 - `await restty.loadPlugins(manifest, registry)`: load declarative manifest entries from a plugin registry.
 - `restty.unuse(pluginId)`: deactivate plugin and run cleanup.
 - `restty.plugins()`: active plugin IDs.
 - `restty.pluginInfo(pluginId?)`: diagnostics snapshot (active state, errors, listener/interceptor/hook counts).
 - `pluginInfo(...).renderStages`: number of active shader stages owned by a plugin.
+
+Duplicate activation:
+
+- `use(...)` is idempotent by plugin `id` while a plugin is active. Calling it again with the same
+  `id` returns without re-running `activate(...)` or replacing options.
+- Call `unuse(pluginId)` first when you need to restart a plugin or apply different options.
 
 Manifest/registry:
 

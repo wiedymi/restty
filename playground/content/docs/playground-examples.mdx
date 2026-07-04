@@ -1,0 +1,130 @@
+---
+title: Playground examples
+description: Use the playground to test backend modes, seeded demos, panes, search, fonts, themes, renderers, and shader stages.
+---
+
+The playground at `/` is a public API consumer. Use it to test behavior before copying patterns into
+an app integration.
+
+## Start the playground
+
+```sh
+bun install
+bun run playground
+```
+
+Open:
+
+```txt
+http://localhost:5173
+```
+
+The single command starts the React Router playground/docs app and the optional PTY websocket server
+used by the `OS PTY websocket` backend.
+
+## Backend modes
+
+| Backend | Use for |
+| --- | --- |
+| `Just Bash` | Fast browser-only shell demos. |
+| `WebContainer` | Browser-hosted process runtime with the same seeded shell demos. |
+| `OS PTY websocket` | A real local shell through `bun run playground:pty`. |
+
+`Just Bash` and `WebContainer` auto-connect. `OS PTY websocket` uses the PTY websocket URL field,
+which defaults to:
+
+```txt
+ws://localhost:8787/pty
+```
+
+WebContainer defaults to command `jsh` and cwd `/`. Change those fields when you want to run a
+different WebContainer-supported command or working directory.
+
+## Seeded demo commands
+
+The browser demo backends expose the same shell scripts:
+
+```sh
+./demo.sh
+./test.sh
+./ansi-art.sh
+./animation.sh
+./colors.sh
+./kitty.sh
+```
+
+Use them as quick probes:
+
+| Command | What it exercises |
+| --- | --- |
+| `./demo.sh` | Styles, Unicode, symbols, and truecolor output. |
+| `./test.sh` | ANSI styles, width handling, box drawing, symbols, and color. |
+| `./ansi-art.sh` | Large colored text and mixed glyph coverage. |
+| `./animation.sh` | Repeated frame updates and clear-screen behavior. |
+| `./colors.sh` | Base 16, 256-color cube, grayscale, and truecolor text. |
+| `./kitty.sh` | Kitty graphics protocol image output. |
+
+## Test renderer fallback
+
+Open settings and switch `Renderer` between `Auto`, `WebGPU`, and `WebGL2`.
+
+Use `Auto` for production parity. Force `WebGPU` or `WebGL2` when isolating backend-specific
+rendering bugs.
+
+## Test panes
+
+Use the playground split controls or the default shortcuts:
+
+| Shortcut | Result |
+| --- | --- |
+| `Cmd+D` on macOS, `Ctrl+D` elsewhere | Vertical split. |
+| `Shift+Cmd+D` on macOS, `Shift+Ctrl+D` elsewhere | Horizontal split. |
+
+Each pane owns a runtime and can connect separately. In `OS PTY websocket` mode, connect a pane after
+selecting it if you want a shell session there.
+
+## Test search
+
+Run a command with known output, then open search from the playground controls or through the pane
+search UI.
+
+Good search probes:
+
+```sh
+./test.sh
+./colors.sh
+```
+
+Try queries like `Unicode`, `Truecolor`, `Done`, or `restty`.
+
+## Test fonts and themes
+
+Use settings to change font size, selected theme, and ligatures. For app code, the matching public
+APIs are:
+
+```ts
+restty.setFontSize(15);
+restty.setLigatures(false);
+restty.applyTheme(theme, theme.name);
+```
+
+Theme colors live under `theme.colors`, so app code that wants to match pane backgrounds should read
+`theme.colors.background`.
+
+## Test shader stages
+
+Use the playground shader presets as small examples of runtime frame effects. In app code, shader
+stages can be global:
+
+```ts
+restty.setShaderStages([]);
+```
+
+or pane-local:
+
+```ts
+restty.activePane()?.setShaderStages([]);
+```
+
+Treat shader presets as examples for app-owned effects. They are not required for terminal color
+themes.

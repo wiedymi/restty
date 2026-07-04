@@ -1,0 +1,182 @@
+---
+title: Troubleshooting
+description: Diagnose blank terminals, renderer fallback, PTY connection issues, WebContainer startup, fonts, themes, search, and pane layout problems.
+---
+
+Start by separating the three moving parts: the surface DOM must have size, the pane runtime must be
+initialized, and the PTY or program output path must produce data.
+
+## The terminal is blank
+
+Check the root element first. The canvas follows the root and pane size.
+
+```css
+#terminal {
+  width: 100%;
+  height: 100vh;
+}
+```
+
+Then verify there is output:
+
+```ts
+restty.sendInput("restty is rendering\r\n", "program");
+```
+
+If direct output renders but the shell does not, the issue is in the PTY transport or backend URL.
+If direct output does not render, check renderer availability, font loading, and whether the pane was
+created.
+
+## No pane was created
+
+`Restty` creates the first pane by default. If `surface.createInitialPane` is `false`, create one
+manually after app setup.
+
+```ts
+const pane = restty.createInitialPane({ focus: true });
+pane.connectPty("ws://localhost:8787/pty");
+```
+
+## WebGPU is unavailable
+
+Use `renderer: "auto"` for production embeds. It prefers WebGPU and falls back to WebGL2.
+
+```ts
+const restty = new Restty({
+  root,
+  terminal: {
+    renderer: "auto",
+  },
+});
+```
+
+Read the active backend after initialization:
+
+```ts
+console.log(restty.getBackend());
+```
+
+If you force `webgpu`, browsers without WebGPU support or required security context may not render.
+Use `webgl2` to isolate WebGPU-specific issues.
+
+## OS PTY websocket does not connect
+
+Start the local PTY server:
+
+```sh
+bun run playground:pty
+```
+
+Use the default URL:
+
+```txt
+ws://localhost:8787/pty
+```
+
+The one-command playground workflow starts the docs/playground app and the optional PTY server:
+
+```sh
+bun run playground
+```
+
+If connection opens and closes immediately, inspect the server logs for shell spawn errors and check
+the `shell` or `cwd` query parameters if your app supplies them.
+
+## WebContainer takes longer than Just Bash
+
+This is expected. Just Bash is the fastest browser-only demo backend. WebContainer boots a
+browser-hosted process environment, then starts the configured command. The playground defaults that
+command to `jsh` and seeds the same `.sh` demo scripts used by Just Bash.
+
+Use WebContainer when you need that browser-hosted process runtime. Use Just Bash when you want the
+same demos with the lowest startup cost.
+
+## Fonts look wrong or symbols are missing
+
+Ship at least one app-owned monospace font path when deterministic startup matters.
+
+```ts
+terminal: {
+  fonts: [
+    "/fonts/JetBrainsMono-Regular.ttf",
+    "/fonts/SymbolsNerdFontMono-Regular.ttf",
+  ],
+}
+```
+
+Use Local Font Access as an enhancement, not as the only path:
+
+```ts
+terminal: {
+  fonts: [
+    {
+      family: "SF Mono",
+      local: "prefer",
+      fallback: "/fonts/JetBrainsMono-Regular.ttf",
+    },
+  ],
+}
+```
+
+If icons are missing, add Nerd Font or symbol fallbacks after the primary monospace font.
+
+## A theme does not affect pane gutters
+
+Terminal themes and pane shell styles are separate. Theme colors live under `theme.colors`.
+
+```ts
+const background = theme.colors.background
+  ? `rgb(${theme.colors.background.r} ${theme.colors.background.g} ${theme.colors.background.b})`
+  : "#000000";
+
+restty.applyTheme(theme, theme.name);
+restty.setPaneStyleOptions({
+  splitBackground: background,
+  paneBackground: background,
+});
+```
+
+Use `theme.colors.background`, not `theme.background`.
+
+## Search opens but finds nothing
+
+Search is pane-local and operates on the pane's available terminal output and scrollback. Verify the
+query is set on the pane you expect:
+
+```ts
+const pane = restty.activePane();
+
+pane?.setSearchQuery("error");
+console.log(pane?.getSearchState());
+```
+
+`pending: true` means the runtime is still scanning. `total: 0` with `complete: true` means no known
+matches were found in that pane.
+
+## Split panes share one backend accidentally
+
+If you pass one stateful `ptyTransport` object in a static `services` config, every pane receives
+that same object. Use a factory for independent sessions.
+
+```ts
+const restty = new Restty({
+  root,
+  services: () => ({
+    ptyTransport: createWebSocketPtyTransport(),
+  }),
+});
+```
+
+Then connect each pane separately.
+
+## Layout changed but the terminal size did not
+
+When a surrounding app panel opens, closes, or animates without a browser resize event, request a
+layout sync.
+
+```ts
+restty.requestLayoutSync();
+restty.activePane()?.updateSize(true);
+```
+
+Keep the root element's size stable with CSS constraints.

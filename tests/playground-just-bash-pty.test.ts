@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
 import { createJustBashPtyTransport } from "../playground/app/lib/pty/just-bash-transport.ts";
+import {
+  PLAYGROUND_ANIMATION_FRAME_DELAY_MS,
+  PLAYGROUND_ANIMATION_FRAMES,
+} from "../playground/app/lib/pty/playground-shell-scripts.ts";
 
 type FakeExecOptions = {
   cwd?: string;
@@ -50,6 +54,10 @@ async function flushAsyncWork(times = 4) {
   }
 }
 
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 test("createJustBashPtyTransport connects and executes line input", async () => {
   const output: string[] = [];
   const transport = createJustBashPtyTransport({
@@ -94,6 +102,31 @@ test("createJustBashPtyTransport completes shell demo paths on tab", async () =>
   const text = output.join("");
   expect(text).toContain("./demo.sh");
   expect(text).toContain("ran:./demo.sh\r\n");
+});
+
+test("createJustBashPtyTransport streams the animation shell demo", async () => {
+  const output: string[] = [];
+  const transport = createJustBashPtyTransport({
+    loadBash: async () => ({ Bash: FakeBash }),
+  });
+
+  await transport.connect({
+    url: "",
+    callbacks: {
+      onData: (data) => output.push(data),
+    },
+  });
+
+  transport.sendInput("./animation.sh\r");
+  await wait(
+    PLAYGROUND_ANIMATION_FRAMES.length * PLAYGROUND_ANIMATION_FRAME_DELAY_MS + 80,
+  );
+
+  const text = output.join("");
+  expect(text).toContain("./animation.sh\r\n");
+  expect(text).toContain("\x1b[H\x1b[J\x1b[1mrestty animation showcase");
+  expect(text).toContain("atlas update");
+  expect(text).toContain("Done.");
 });
 
 test("createJustBashPtyTransport persists cwd from exec result and supports ll alias", async () => {

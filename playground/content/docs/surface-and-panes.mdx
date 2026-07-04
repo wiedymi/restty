@@ -1,0 +1,183 @@
+---
+title: Surface and panes
+description: Work with Restty surfaces, pane handles, split layouts, active focus, context menus, and per-pane settings.
+---
+
+The `Restty` class is the surface API. It owns the pane layout and exposes active-pane convenience
+methods. Pane handles expose the same terminal operations for a specific pane.
+
+## Create the surface
+
+```ts
+import { Restty } from "restty";
+
+const restty = new Restty({
+  root,
+  surface: {
+    createInitialPane: { focus: true },
+    shortcuts: true,
+    searchUi: true,
+    defaultContextMenu: true,
+  },
+});
+```
+
+By default, construction creates the first pane. Set `surface.createInitialPane` to `false` when
+your app needs to finish async setup before creating a runtime.
+
+```ts
+const restty = new Restty({
+  root,
+  surface: {
+    createInitialPane: false,
+  },
+});
+
+const first = restty.createInitialPane({ focus: true });
+```
+
+## Pane handles
+
+Use handles for stable, pane-local work:
+
+```ts
+const active = restty.activePane();
+const focused = restty.focusedPane();
+const pane = restty.pane(1);
+
+active?.connectPty("ws://localhost:8787/pty");
+focused?.openSearch({ selectAll: true });
+pane?.setFontSize(14);
+```
+
+`restty.panes()` returns handles for all open panes. `restty.forEachPane(...)` is useful for bulk
+settings:
+
+```ts
+restty.forEachPane((pane) => {
+  pane.setLigatures(false);
+});
+```
+
+## Active and focused panes
+
+The active pane is the surface's command target. The focused pane is the pane that currently owns
+DOM focus. Mouse and focus interactions usually keep them aligned.
+
+```ts
+restty.setActivePane(2, { focus: true });
+restty.markPaneFocused(2, { focus: true });
+```
+
+Use `setActivePane(...)` when a toolbar, tab switcher, or command palette should retarget future
+active-pane methods. Use pane handles when you already know the exact pane.
+
+## Split layout
+
+Split directions describe the layout result:
+
+| Direction | Result |
+| --- | --- |
+| `vertical` | Split left/right. |
+| `horizontal` | Split top/bottom. |
+
+```ts
+const right = restty.splitActivePane("vertical");
+const bottom = right ? restty.splitPane(right.id, "horizontal") : null;
+
+if (bottom) {
+  restty.setActivePane(bottom.id, { focus: true });
+}
+```
+
+Close panes by ID. The manager keeps at least one pane open when possible.
+
+```ts
+const closed = restty.closePane(2);
+```
+
+Call `requestLayoutSync()` after surrounding app layout changes that do not produce a browser resize
+event.
+
+## Keyboard shortcuts
+
+`surface.shortcuts: true` enables the default split shortcuts:
+
+| Shortcut | Result |
+| --- | --- |
+| `Cmd+D` on macOS, `Ctrl+D` elsewhere | Vertical split. |
+| `Shift+Cmd+D` on macOS, `Shift+Ctrl+D` elsewhere | Horizontal split. |
+
+Provide a shortcut guard when the host app has command modes or nested text inputs.
+
+```ts
+surface: {
+  shortcuts: {
+    enabled: true,
+    canHandleEvent: (event) => !event.defaultPrevented,
+  },
+}
+```
+
+## Context menu
+
+`defaultContextMenu: true` enables the built-in pane menu. It can split panes, close panes, pause,
+clear, copy, paste, and connect or disconnect when a PTY URL provider is available.
+
+```ts
+surface: {
+  defaultContextMenu: {
+    enabled: true,
+    getPtyUrl: () => "ws://localhost:8787/pty",
+  },
+}
+```
+
+Use `contextMenu` for a fully custom menu. It receives the clicked pane and the pane manager.
+
+```ts
+surface: {
+  contextMenu: {
+    getItems: (pane, manager) => [
+      { label: "Split right", action: () => manager.splitPane(pane.id, "vertical") },
+      { label: "Close pane", danger: true, action: () => manager.closePane(pane.id) },
+    ],
+  },
+}
+```
+
+## Pane style
+
+Pane shell styles are not terminal themes. They control split backgrounds, pane backgrounds,
+inactive opacity, and divider thickness.
+
+```ts
+restty.setPaneStyleOptions({
+  splitBackground: "#0b0b0b",
+  paneBackground: "#101010",
+  inactivePaneOpacity: 0.78,
+  dividerThicknessPx: 1,
+});
+```
+
+Use [Themes and shaders](/docs/themes) for terminal colors and shader stages.
+
+## Per-pane PTY sessions
+
+Each pane owns a runtime. For independent PTY sessions, provide a services factory so each pane gets
+its own transport object.
+
+```ts
+import { createWebSocketPtyTransport } from "restty";
+
+const restty = new Restty({
+  root,
+  services: () => ({
+    ptyTransport: createWebSocketPtyTransport(),
+  }),
+});
+
+restty.activePane()?.connectPty("ws://localhost:8787/pty");
+```
+
+Avoid sharing one stateful transport object across panes unless the backend is intentionally shared.

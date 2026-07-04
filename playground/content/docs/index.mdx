@@ -28,14 +28,19 @@ WebSocket PTY transport for you.
 | Goal | Start here |
 | --- | --- |
 | Embed a terminal quickly | [Getting started](/docs/getting-started) |
+| Learn the mental model | [Core concepts](/docs/core-concepts) |
+| Work with split layouts and pane handles | [Surface and panes](/docs/surface-and-panes) |
 | Tune pane behavior, render settings, callbacks, or services | [Configuration](/docs/configuration) |
 | Pick a playground backend or connect a local shell | [PTY backends](/docs/pty-backends) |
+| Drive search or use the built-in search UI | [Search](/docs/search) |
+| Try rendering and backend examples in the playground | [Playground examples](/docs/playground-examples) |
 | Configure font loading, local fonts, ligatures, or hinting | [Fonts](/docs/fonts) |
 | Apply Ghostty themes or frame shader stages | [Themes and shaders](/docs/themes) |
 | Inspect the public class, pane, plugin, and export surface | [API surface](/docs/api-surface) |
 | Extend restty without patching core | [Plugins](/docs/plugins) |
 | Migrate xterm.js-style integrations | [xterm compatibility](/docs/xterm-compat) |
 | Understand the runtime pipeline | [Architecture](/docs/architecture) |
+| Diagnose setup and runtime issues | [Troubleshooting](/docs/troubleshooting) |
 
 ## Capability snapshot
 
@@ -48,7 +53,7 @@ WebSocket PTY transport for you.
 | Search | Per-pane search state plus optional built-in search UI. |
 | Fonts | URL/path/buffer font sources, Local Font Access family lookup, fallbacks, ligatures, hinting controls, and runtime font updates. |
 | Themes | Built-in Ghostty-compatible themes, raw Ghostty theme parsing, and runtime theme application. |
-| PTY | Default WebSocket transport plus a transport interface for WebContainer, in-browser demos, or app-specific backends. |
+| PTY | Default WebSocket transport plus a transport interface for WebContainer-backed processes, browser-only demos, or app-specific backends. |
 | Plugins | Events, input/output interceptors, lifecycle hooks, render hooks, and plugin-owned shader stages. |
 | Compatibility | Focused `restty/xterm` shim for common xterm.js migration flows. |
 
@@ -59,8 +64,8 @@ themes, fonts, split panes, search, and shader stages before wiring restty into 
 
 The backend selector is the fastest way to compare runtime modes:
 
-- `Just Bash`: instant in-browser demo shell with no WebContainer boot cost.
-- `WebContainer`: browser-hosted Node scripts and package workflows.
+- `Just Bash`: instant browser-only shell demos with no WebContainer boot cost.
+- `WebContainer`: browser-hosted process runtime for the same shell demos and custom commands.
 - `OS PTY websocket`: local shell access through `bun run playground:pty`.
 
 ## Stability note

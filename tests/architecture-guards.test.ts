@@ -1046,10 +1046,15 @@ test("playground is a React Router app with Fumadocs docs", () => {
   expect(docsRoute).toContain("clientLoader.useContent");
   expect(sourceConfig).toContain('dir: "content/docs"');
   expect(sourceLoader).toContain("../../content/docs/index.mdx");
+  expect(sourceLoader).toContain("core-concepts.mdx");
+  expect(sourceLoader).toContain("surface-and-panes.mdx");
+  expect(sourceLoader).toContain("troubleshooting.mdx");
   expect(sourceLoader).toContain("getPage(slugs");
+  expect(sourceLoader).toContain("getPages()");
   expect(sourceLoader).toContain("getPageTree()");
   expect(mdxComponents).toContain("defaultMdxComponents");
   expect(layoutOptions).toContain("BaseLayoutProps");
+  expect(layoutOptions).toContain("searchToggle: { enabled: false }");
   expect(layoutOptions).toContain("themeSwitch: { enabled: false }");
 });
 

@@ -80,8 +80,8 @@ console.log(restty.pluginInfo("acme/metrics"));
 restty.unuse("acme/metrics");
 ```
 
-`use(...)` activates a plugin once. A second activation with the same `id` is rejected by the plugin
-host.
+`use(...)` activates a plugin once. A second activation with the same `id` is idempotent and returns
+without running `activate(...)` again.
 
 ## Manifest loading
 
@@ -141,7 +141,7 @@ Supported events:
 | `pane:created` | `{ paneId }` |
 | `pane:closed` | `{ paneId }` |
 | `pane:split` | `{ sourcePaneId, createdPaneId, direction }` |
-| `pane:active-changed` | `{ paneId }` |
+| `pane:active-changed` | `{ paneId: number \| null }` |
 | `layout:changed` | `{}` |
 | `pane:resized` | `{ paneId, cols, rows }` |
 | `pane:focused` | `{ paneId }` |

@@ -1,9 +1,11 @@
 import type { PtyConnectOptions, PtyResizeMeta, PtyTransport } from "../../../../src/index.ts";
 import {
+  PLAYGROUND_ANIMATION_FRAMES,
   PLAYGROUND_SHELL_FILE_MODE,
   PLAYGROUND_SHELL_COMMANDS,
   PLAYGROUND_SHELL_SCRIPTS,
   PLAYGROUND_SHELL_WELCOME,
+  renderPlaygroundAnimationFrame,
 } from "./playground-shell-scripts.ts";
 
 type JustBashExecResult = {
@@ -111,6 +113,39 @@ async function loadJustBashModule(): Promise<JustBashModule> {
   return await import("just-bash/browser");
 }
 
+function isAnimationCommand(command: string): boolean {
+  const normalized = command.replace(/\s+/g, " ");
+  return (
+    normalized === "./animation.sh" ||
+    normalized === "animation.sh" ||
+    normalized === "sh ./animation.sh" ||
+    normalized === "sh animation.sh"
+  );
+}
+
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  if (signal?.aborted) {
+    return Promise.reject(new DOMException("AbortError", "AbortError"));
+  }
+
+  return new Promise((resolve, reject) => {
+    let timer = 0;
+    const finish = () => {
+      if (timer) clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+    };
+    const abort = () => {
+      finish();
+      reject(new DOMException("AbortError", "AbortError"));
+    };
+    timer = setTimeout(() => {
+      finish();
+      resolve();
+    }, ms);
+    signal?.addEventListener("abort", abort, { once: true });
+  });
+}
+
 export function createJustBashPtyTransport(options: JustBashPtyOptions = {}): PtyTransport {
   const loadBash = options.loadBash ?? loadJustBashModule;
 
@@ -165,6 +200,16 @@ export function createJustBashPtyTransport(options: JustBashPtyOptions = {}): Pt
     inputBuffer = "";
   };
 
+  const runAnimationCommand = async (token: number, signal: AbortSignal) => {
+    write("\x1b[2J\x1b[H");
+    for (const frame of PLAYGROUND_ANIMATION_FRAMES) {
+      if (!connected || token !== connectionToken) return;
+      write(renderPlaygroundAnimationFrame(frame));
+      await sleep(frame.delayMs, signal);
+    }
+    write("\r\n\x1b[38;5;46mDone.\x1b[0m\r\n");
+  };
+
   const runCommand = async (commandLine: string, token: number) => {
     const instance = bash;
     if (!instance || !connected || token !== connectionToken) return;
@@ -184,6 +229,11 @@ export function createJustBashPtyTransport(options: JustBashPtyOptions = {}): Pt
 
     activeAbortController = new AbortController();
     try {
+      if (isAnimationCommand(trimmed)) {
+        await runAnimationCommand(token, activeAbortController.signal);
+        return;
+      }
+
       const result = await instance.exec(command, {
         cwd,
         env,

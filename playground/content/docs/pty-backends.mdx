@@ -11,16 +11,17 @@ The playground uses that same transport boundary for three backend modes.
 | Backend | Use when | Startup cost |
 | --- | --- | --- |
 | Just Bash | You want instant browser-only commands and demos. | Low |
-| WebContainer | You want Node-based scripts and package workflows inside the browser. | Higher |
+| WebContainer | You want a browser-hosted process runtime with the same seeded shell demos. | Higher |
 | OS PTY websocket | You want a real local shell through `bun run playground:pty`. | Depends on local server |
 
 ## Choosing a backend
 
 Use `Just Bash` first. It starts quickly because it does not boot WebContainer or fetch a large
-dependency graph. This keeps the playground useful on a cold page load.
+process environment. This keeps the playground useful on a cold page load.
 
-Use `WebContainer` when the demo needs a browser-hosted Node environment. The playground lazy-loads
-WebContainer only when selected and connected.
+Use `WebContainer` when the demo needs a browser-hosted process environment. The playground
+lazy-loads WebContainer only when selected and connected, defaults the command to `jsh`, and seeds
+the same `.sh` demo scripts used by Just Bash.
 
 Use `OS PTY websocket` when you are developing locally and want the terminal connected to your real
 shell.

@@ -1,0 +1,12 @@
+{
+  "name": "restty-example-local-pty-server",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "node-pty": "^1.1.0",
+    "ws": "^8.21.0"
+  }
+}

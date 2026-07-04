@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>restty minimal browser example</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="toolbar">
+        <label>
+          PTY URL
+          <input id="pty-url" value="ws://localhost:8787/pty" />
+        </label>
+        <button id="connect" type="button">Connect</button>
+        <button id="disconnect" type="button">Disconnect</button>
+        <button id="split" type="button">Split</button>
+        <button id="demo-output" type="button">Demo Output</button>
+      </header>
+      <section id="terminal" aria-label="restty terminal"></section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

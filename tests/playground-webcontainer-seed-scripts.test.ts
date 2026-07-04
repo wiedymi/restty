@@ -86,6 +86,7 @@ test("ensureWebContainerSeedScripts writes shell fallbacks, removes stale node s
   expect(writes.get("test.sh")).toContain("restty capability test");
   expect(writes.get("kitty.sh")).toContain("restty kitty graphics probe");
   expect(writes.get("colors.sh")).toContain("\x1b[48;5;196m");
+  expect(writes.get("animation.sh")).toContain("sleep 0.09");
   expect(writes.get("kitty.sh")).toContain("\x1b_Ga=T");
   expect(writes.get("kitty.sh")).not.toContain("printf");
   expect(removes).toEqual([
