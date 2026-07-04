@@ -44,10 +44,8 @@ restty.connectPty("ws://localhost:8787/pty");
 
 - `restty`: primary API (`Restty`, `createRestty`, themes, fonts, PTY helpers, plugin types).
 - `restty/xterm`: focused xterm.js-style compatibility wrapper.
-- `restty/esm`, `restty/esm/xterm`: standalone browser ESM bundles.
+- `restty/esm`: standalone browser ESM bundle for script/CDN usage.
 - `restty/internal`, `restty/internal/runtime`, `restty/internal/surface`: unstable advanced modules.
-- `restty/esm/internal`, `restty/esm/internal/runtime`, `restty/esm/internal/surface`: standalone ESM
-  versions of the unstable internal modules.
 
 See the canonical [API surface docs](https://restty.pages.dev/docs/api-surface) for the current
 method and export list.

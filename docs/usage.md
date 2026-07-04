@@ -176,20 +176,17 @@ Ligature note:
 - Programming ligatures are enabled by default.
 - Toggle them at runtime with `restty.setLigatures(false)` when you want strict per-cell operator rendering.
 
-## 7) Standalone ESM bundles
+## 7) Standalone ESM bundle
 
-Use the bundled entrypoints when you want a self-contained browser ESM artifact:
+Use the bundled entrypoint when you want a self-contained browser ESM artifact:
 
 ```ts
 import { Restty } from "restty/esm";
-import { Terminal } from "restty/esm/xterm";
 ```
 
-Available subpaths:
+Available subpath:
 
 - `restty/esm`
-- `restty/esm/internal`
-- `restty/esm/xterm`
 
 ## 8) Cleanup
 
@@ -204,7 +201,6 @@ Call `destroy()` when removing the terminal from the page to release GPU/WASM/PT
 Use these only if `Restty` is not enough:
 
 - `restty/internal`: curated unstable barrel for hackable users
-- `restty/esm/internal`: bundled internal barrel for browser ESM use
 
 Low-level example:
 

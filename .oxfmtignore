@@ -1,4 +1,5 @@
 src/theme/builtin-themes.ts
+src/wasm/embedded.ts
 src/app/index.ts
 src/wasm/runtime.ts
 src/renderer

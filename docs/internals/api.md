@@ -35,14 +35,6 @@ These are available for specialized integrations.
   - xterm-style compatibility `Terminal` wrapper for migration
 - `restty/esm`
   - standalone browser ESM bundle for the root API
-- `restty/esm/internal`
-  - standalone browser ESM bundle for the internal barrel
-- `restty/esm/internal/runtime`
-  - standalone browser ESM bundle for runtime-focused internals
-- `restty/esm/internal/surface`
-  - standalone browser ESM bundle for surface-focused internals
-- `restty/esm/xterm`
-  - standalone browser ESM bundle for xterm compatibility
 
 Published package exports are currently:
 - `restty`
@@ -51,17 +43,13 @@ Published package exports are currently:
 - `restty/internal/surface`
 - `restty/xterm`
 - `restty/esm`
-- `restty/esm/internal`
-- `restty/esm/internal/runtime`
-- `restty/esm/internal/surface`
-- `restty/esm/xterm`
 
 ## Compatibility expectations
 
 - `restty` (root entry) is the primary API and should change the slowest.
 - `restty/xterm` is a migration-oriented compatibility shim.
 - `restty/internal` and narrower internal subpaths are intentionally unstable.
-- `restty/esm*` subpaths are bundle-shape alternatives to the same root/internal/xterm surfaces.
+- `restty/esm` is the single-file browser ESM bundle for script/CDN usage.
 
 ## Design intent
 

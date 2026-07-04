@@ -66,26 +66,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/restty.esm.js",
       "default": "./dist/restty.esm.js"
-    },
-    "./esm/internal": {
-      "types": "./dist/internal.d.ts",
-      "import": "./dist/internal.esm.js",
-      "default": "./dist/internal.esm.js"
-    },
-    "./esm/internal/runtime": {
-      "types": "./dist/internal/runtime.d.ts",
-      "import": "./dist/internal/runtime.esm.js",
-      "default": "./dist/internal/runtime.esm.js"
-    },
-    "./esm/internal/surface": {
-      "types": "./dist/internal/surface.d.ts",
-      "import": "./dist/internal/surface.esm.js",
-      "default": "./dist/internal/surface.esm.js"
-    },
-    "./esm/xterm": {
-      "types": "./dist/xterm.d.ts",
-      "import": "./dist/xterm.esm.js",
-      "default": "./dist/xterm.esm.js"
     }
   },
   "scripts": {
@@ -112,12 +92,6 @@
     "playground:preview": "bun run playground/server.ts"
   },
   "dependencies": {
-    "fumadocs-core": "^16.8.7",
-    "fumadocs-ui": "^16.8.7",
-    "just-bash": "^2.14.4",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "react-router": "^7.14.2",
     "text-shaper": "0.1.23"
   },
   "devDependencies": {
@@ -128,9 +102,15 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@webcontainer/api": "^1.6.4",
     "@webgpu/types": "^0.1.69",
+    "fumadocs-core": "^16.8.7",
     "fumadocs-mdx": "^14.3.2",
+    "fumadocs-ui": "^16.8.7",
+    "just-bash": "^2.14.4",
     "oxfmt": "^0.47.0",
     "oxlint": "^1.62.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router": "^7.14.2",
     "tailwindcss": "^4.2.4",
     "typescript": "^5.9.3",
     "vite": "^8.0.10",

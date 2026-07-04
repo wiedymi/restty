@@ -1,5 +1,4 @@
-import { decodeBase64Bytes } from "../../utils/base64";
-import { WASM_BASE64 } from "../embedded";
+import { WASM_BINARY } from "../embedded";
 import { resolveWasmAbi } from "./abi";
 import { readKittyPlacements } from "./kitty";
 import { readRenderState } from "./render-state";
@@ -19,6 +18,14 @@ const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
 const SEARCH_STATUS_BYTES = 16;
 const SEARCH_VIEWPORT_MATCH_BYTES = 8;
+
+function decodeWasmBinary(binary: string): Uint8Array {
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i) & 0xff;
+  }
+  return bytes;
+}
 
 const requiredWasmExports = [
   "memory",
@@ -47,7 +54,7 @@ export class ResttyWasm {
 
   /** Load and instantiate the embedded WASM module. */
   static async load(options: ResttyWasmOptions = {}): Promise<ResttyWasm> {
-    const bytes = decodeBase64Bytes(WASM_BASE64);
+    const bytes = decodeWasmBinary(WASM_BINARY);
     let memory: WebAssembly.Memory | null = null;
     const log = options.log;
 
