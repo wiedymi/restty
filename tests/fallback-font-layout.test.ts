@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import {
   resolveFallbackBaselineAdjust,
   resolveFallbackGlyphCenterX,
+  resolveFallbackTextScale,
   resolveWideFallbackScale,
 } from "../src/runtime/fonts/fallback-layout";
 
@@ -14,6 +15,22 @@ test("wide CJK fallbacks keep their natural em scale", () => {
   });
 
   expect(scale).toBeCloseTo(0.016, 5);
+});
+
+test("wide CJK fallbacks use the primary em instead of their taller line metrics", () => {
+  const scale = resolveFallbackTextScale({
+    baseScale: 18 / 1448,
+    primaryEmScale: 18 / 1320,
+    metricAdjust: 550 / 543,
+    advanceUnits: 1000,
+    cellWidth: 8,
+    maxSpan: 2,
+    fontHeightUnits: 1448,
+    lineHeight: 18,
+  });
+
+  expect(scale).toBeCloseTo(18 / 1320, 6);
+  expect(1000 * scale).toBeCloseTo(13.63636);
 });
 
 test("wide fallback glyphs are centered across their occupied cells", () => {

@@ -136,7 +136,7 @@ test("symbol constraints remain table-driven without per-codepoint overrides", (
   expect(resolveSymbolConstraint(0x15e3)).toBeNull();
 });
 
-test("fallback font scaling uses Ghostty-style metric adjustment with wide-font width correction", () => {
+test("fallback font scaling routes primary-em wide faces through the shared resolver", () => {
   const webgpuSource = readFileSync(
     join(process.cwd(), "src/runtime/create-runtime/render-tick-webgpu-cell-pass.ts"),
     "utf8",
@@ -151,9 +151,9 @@ test("fallback font scaling uses Ghostty-style metric adjustment with wide-font 
   const upscaleOnlyPattern = /clamp\(fallbackScaleAdjustment\(primaryEntry, entry\), 1, 2\)/g;
   expect((webgpuSource.match(upscaleOnlyPattern) ?? []).length).toBe(1);
   expect((webglSource.match(upscaleOnlyPattern) ?? []).length).toBe(1);
-  const wideOnlyPattern = /if \(maxSpan > 1\) \{/g;
-  expect((webgpuSource.match(wideOnlyPattern) ?? []).length).toBe(1);
-  expect((webglSource.match(wideOnlyPattern) ?? []).length).toBe(1);
+  const sharedScalePattern = /resolveFallbackTextScale\(\{/g;
+  expect((webgpuSource.match(sharedScalePattern) ?? []).length).toBe(1);
+  expect((webglSource.match(sharedScalePattern) ?? []).length).toBe(1);
 });
 
 test("fallback glyph clamp avoids width bbox shrinking in emit paths", () => {

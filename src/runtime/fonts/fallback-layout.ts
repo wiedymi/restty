@@ -15,6 +15,43 @@ export function resolveWideFallbackScale(options: WideFallbackScaleOptions): num
   return scale * widthAdjust;
 }
 
+export type FallbackTextScaleOptions = {
+  baseScale: number;
+  primaryEmScale: number;
+  metricAdjust: number;
+  advanceUnits: number;
+  cellWidth: number;
+  maxSpan: number;
+  fontHeightUnits: number;
+  lineHeight: number;
+};
+
+/** Resolve the raster scale used for an ordinary fallback text face. */
+export function resolveFallbackTextScale(options: FallbackTextScaleOptions): number {
+  const {
+    baseScale,
+    primaryEmScale,
+    metricAdjust,
+    advanceUnits,
+    cellWidth,
+    maxSpan,
+    fontHeightUnits,
+    lineHeight,
+  } = options;
+  if (maxSpan > 1 && primaryEmScale > 0) {
+    return resolveWideFallbackScale({
+      scale: primaryEmScale,
+      advanceUnits,
+      cellWidth,
+      maxSpan,
+    });
+  }
+  let scale = baseScale * metricAdjust;
+  const heightPx = fontHeightUnits * scale;
+  if (heightPx > lineHeight && heightPx > 0) scale *= lineHeight / heightPx;
+  return scale;
+}
+
 export type FallbackGlyphCenterOptions = {
   cellX: number;
   cellWidth: number;
