@@ -4,13 +4,22 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing annotated release tag to publish"
+        required: true
+        type: string
+
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
   contents: write
   id-token: write
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -23,6 +32,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_TAG }}
           submodules: recursive
           fetch-depth: 0
 
@@ -33,12 +43,12 @@ jobs:
 
       - name: Verify annotated release tag
         run: |
-          git fetch --force origin "refs/tags/$GITHUB_REF_NAME:refs/tags/$GITHUB_REF_NAME"
+          git fetch --force origin "refs/tags/$RELEASE_TAG:refs/tags/$RELEASE_TAG"
 
-          TAG_REF="refs/tags/$GITHUB_REF_NAME"
+          TAG_REF="refs/tags/$RELEASE_TAG"
           TAG_TYPE="$(git cat-file -t "$TAG_REF")"
           if [ "$TAG_TYPE" != "tag" ]; then
-            echo "Release tags must be annotated. Use: git tag -a $GITHUB_REF_NAME -m $GITHUB_REF_NAME"
+            echo "Release tags must be annotated. Use: git tag -a $RELEASE_TAG -m $RELEASE_TAG"
             exit 1
           fi
 
@@ -54,7 +64,7 @@ jobs:
 
       - name: Verify tag matches package version
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           PACKAGE_VERSION="$(bun -e "console.log((await Bun.file('package.json').json()).version)")"
           if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
             echo "Tag version $VERSION does not match package.json version $PACKAGE_VERSION"
@@ -62,7 +72,7 @@ jobs:
           fi
 
       - name: Verify changelog release notes
-        run: bun run scripts/extract-changelog-release-notes.ts "${GITHUB_REF_NAME#v}" /tmp/release-notes.md
+        run: bun run scripts/extract-changelog-release-notes.ts "${RELEASE_TAG#v}" /tmp/release-notes.md
 
       - name: Verify generated themes
         run: bun run check:themes
@@ -92,6 +102,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_TAG }}
           submodules: recursive
           fetch-depth: 0
 
@@ -103,7 +114,7 @@ jobs:
       - name: Setup Node.js for npm
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           registry-url: "https://registry.npmjs.org/"
 
       - name: Upgrade npm for trusted publishing
@@ -130,6 +141,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Setup Bun
@@ -138,21 +150,21 @@ jobs:
           bun-version: latest
 
       - name: Extract changelog release notes
-        run: bun run scripts/extract-changelog-release-notes.ts "${GITHUB_REF_NAME#v}" RELEASE_NOTES.md
+        run: bun run scripts/extract-changelog-release-notes.ts "${RELEASE_TAG#v}" RELEASE_NOTES.md
 
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release edit "$GITHUB_REF_NAME" \
-              --title "$GITHUB_REF_NAME" \
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" \
+              --title "$RELEASE_TAG" \
               --notes-file RELEASE_NOTES.md \
               --latest \
               --verify-tag
           else
-            gh release create "$GITHUB_REF_NAME" \
-              --title "$GITHUB_REF_NAME" \
+            gh release create "$RELEASE_TAG" \
+              --title "$RELEASE_TAG" \
               --notes-file RELEASE_NOTES.md \
               --latest \
               --verify-tag
