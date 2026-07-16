@@ -20,6 +20,12 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.2.4] - 2026-07-16
+
+### Fixes
+
+- Matched Ghostty's default em-normalized `ic_width` adjustment for fallback fonts, using the primary printable-ASCII box and the fallback ideograph advance to remove excessive spacing around CJK glyphs while preserving their shared baseline and two-cell bound.
+
 ## [0.2.3] - 2026-07-16
 
 ### Fixes
