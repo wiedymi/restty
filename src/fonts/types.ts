@@ -33,6 +33,8 @@ export type FontEntry = {
   glyphCache: Map<string, ShapedCluster>;
   /** Cache of glyph advance bounds keyed by glyph ID. */
   boundsCache: Map<number, number>;
+  /** Cache of whether a claimed glyph produces visible raster coverage. */
+  glyphCoverageCache: Map<number, boolean>;
   /** Map of glyph IDs to their original text for color emoji fallback. */
   colorGlyphTexts: Map<number, string>;
   /** Set of all glyph IDs available in this font. */

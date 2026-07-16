@@ -1,5 +1,10 @@
 import type { FontManagerState } from "../../../fonts";
-import type { GlyphBufferToShapedGlyphsFn, ShapeFn, UnicodeBufferCtor } from "./types";
+import type {
+  GlyphBufferToShapedGlyphsFn,
+  RasterizeGlyphFn,
+  ShapeFn,
+  UnicodeBufferCtor,
+} from "./types";
 
 export type CreateFontRuntimeTextHelpersOptions = {
   fontState: FontManagerState;
@@ -8,4 +13,5 @@ export type CreateFontRuntimeTextHelpersOptions = {
   UnicodeBuffer: UnicodeBufferCtor;
   shape: ShapeFn;
   glyphBufferToShapedGlyphs: GlyphBufferToShapedGlyphsFn;
+  rasterizeGlyph: RasterizeGlyphFn;
 };

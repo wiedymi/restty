@@ -1,6 +1,7 @@
 import type { Color, WebGLState } from "../../renderer";
 import { fallbackEmScale, type Font, type FontEntry } from "../../fonts";
 import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
+import { resolveWideFallbackScale } from "../fonts/fallback-layout";
 import type { GlyphQueueItem } from "./render-tick-webgpu.types";
 import type { WebGLTickContext, WebGLTickDeps } from "./render-tick-webgl.types";
 
@@ -309,10 +310,12 @@ export function buildWebGLTickContext(
     const maxSpan = fontMaxCellSpan(entry);
     if (maxSpan > 1) {
       const advanceUnits = fontAdvanceUnits(entry, shapeClusterWithFont);
-      const widthPx = advanceUnits * adjustedScale;
-      const widthAdjustRaw = widthPx > 0 ? (cellW * maxSpan) / widthPx : 1;
-      const widthAdjust = clamp(widthAdjustRaw, 0.5, 2);
-      adjustedScale *= widthAdjust;
+      adjustedScale = resolveWideFallbackScale({
+        scale: adjustedScale,
+        advanceUnits,
+        cellWidth: cellW,
+        maxSpan,
+      });
     }
     const adjustedHeightPx = fontHeightUnits(entry.font) * adjustedScale;
     if (adjustedHeightPx > lineHeight && adjustedHeightPx > 0) {
