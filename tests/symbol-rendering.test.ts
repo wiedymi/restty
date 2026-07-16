@@ -136,7 +136,7 @@ test("symbol constraints remain table-driven without per-codepoint overrides", (
   expect(resolveSymbolConstraint(0x15e3)).toBeNull();
 });
 
-test("fallback font scaling routes primary-em wide faces through the shared resolver", () => {
+test("fallback font scaling routes Ghostty metric adjustment through the shared resolver", () => {
   const webgpuSource = readFileSync(
     join(process.cwd(), "src/runtime/create-runtime/render-tick-webgpu-cell-pass.ts"),
     "utf8",
@@ -145,12 +145,10 @@ test("fallback font scaling routes primary-em wide faces through the shared reso
     join(process.cwd(), "src/runtime/create-runtime/render-tick-webgl-context.ts"),
     "utf8",
   );
-  const metricOrderPattern = /"ic_width",\s+"ex_height",\s+"cap_height",\s+"line_height"/g;
-  expect((webgpuSource.match(metricOrderPattern) ?? []).length).toBeGreaterThanOrEqual(1);
-  expect((webglSource.match(metricOrderPattern) ?? []).length).toBeGreaterThanOrEqual(1);
-  const upscaleOnlyPattern = /clamp\(fallbackScaleAdjustment\(primaryEntry, entry\), 1, 2\)/g;
-  expect((webgpuSource.match(upscaleOnlyPattern) ?? []).length).toBe(1);
-  expect((webglSource.match(upscaleOnlyPattern) ?? []).length).toBe(1);
+  const metricAdjustmentPattern =
+    /const metricAdjust = resolveFallbackScaleAdjustment\(primaryEntry\?\.font, entry\.font\);/g;
+  expect((webgpuSource.match(metricAdjustmentPattern) ?? []).length).toBe(1);
+  expect((webglSource.match(metricAdjustmentPattern) ?? []).length).toBe(1);
   const sharedScalePattern = /resolveFallbackTextScale\(\{/g;
   expect((webgpuSource.match(sharedScalePattern) ?? []).length).toBe(1);
   expect((webglSource.match(sharedScalePattern) ?? []).length).toBe(1);

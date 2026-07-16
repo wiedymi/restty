@@ -1,7 +1,12 @@
 import type { Color, WebGLState } from "../../renderer";
-import { fallbackEmScale, type Font, type FontEntry } from "../../fonts";
+import { fallbackEmScale } from "../../fonts";
 import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
-import { resolveFallbackBaselineAdjust, resolveFallbackTextScale } from "../fonts/fallback-layout";
+import {
+  resolveFallbackBaselineAdjust,
+  resolveFallbackIcWidth,
+  resolveFallbackScaleAdjustment,
+  resolveFallbackTextScale,
+} from "../fonts/fallback-layout";
 import type { GlyphQueueItem } from "./render-tick-webgpu.types";
 import type { WebGLTickContext, WebGLTickDeps } from "./render-tick-webgl.types";
 
@@ -210,57 +215,6 @@ export function buildWebGLTickContext(
   const fgColorCache = new Map<number, Color>();
   const bgColorCache = new Map<number, Color>();
   const ulColorCache = new Map<number, Color>();
-  type FallbackScaleMetric = "ic_width" | "ex_height" | "cap_height" | "line_height";
-  const resolveFallbackMetric = (font: Font | null | undefined, metric: FallbackScaleMetric) => {
-    if (!font) return 0;
-    if (metric === "ic_width") {
-      const glyphId = font.glyphIdForChar("水");
-      if (!glyphId) return 0;
-      const advance = font.advanceWidth(glyphId);
-      if (!Number.isFinite(advance) || advance <= 0) return 0;
-      const bounds = font.getGlyphBounds(glyphId);
-      // If outline width exceeds advance, ic-width is likely unreliable for scaling.
-      if (
-        bounds &&
-        Number.isFinite(bounds.xMax - bounds.xMin) &&
-        bounds.xMax - bounds.xMin > advance
-      ) {
-        return 0;
-      }
-      return advance;
-    }
-    if (metric === "ex_height") {
-      const exHeight = font.os2?.sxHeight ?? 0;
-      return Number.isFinite(exHeight) && exHeight > 0 ? exHeight : 0;
-    }
-    if (metric === "cap_height") {
-      const capHeight = font.os2?.sCapHeight ?? 0;
-      return Number.isFinite(capHeight) && capHeight > 0 ? capHeight : 0;
-    }
-    const lineHeightUnits = font.height;
-    return Number.isFinite(lineHeightUnits) && lineHeightUnits > 0 ? lineHeightUnits : 0;
-  };
-  const fallbackScaleAdjustment = (
-    primary: FontEntry | undefined,
-    entry: FontEntry | undefined,
-  ): number => {
-    if (!primary?.font || !entry?.font) return 1;
-    const metricOrder: FallbackScaleMetric[] = [
-      "ic_width",
-      "ex_height",
-      "cap_height",
-      "line_height",
-    ];
-    for (let i = 0; i < metricOrder.length; i += 1) {
-      const metric = metricOrder[i];
-      const primaryMetric = resolveFallbackMetric(primary.font, metric);
-      const fallbackMetric = resolveFallbackMetric(entry.font, metric);
-      if (primaryMetric <= 0 || fallbackMetric <= 0) continue;
-      const factor = primaryMetric / fallbackMetric;
-      if (Number.isFinite(factor) && factor > 0) return factor;
-    }
-    return 1;
-  };
   const baseScaleByFont = fontState.fonts.map((entry, idx) => {
     if (!entry?.font) return primaryScale;
     if (idx === 0) return primaryScale;
@@ -283,12 +237,11 @@ export function buildWebGLTickContext(
       return baseScale;
     }
     if (isColorEmojiFont(entry)) return baseScale;
-    const metricAdjust = clamp(fallbackScaleAdjustment(primaryEntry, entry), 1, 2);
+    const metricAdjust = resolveFallbackScaleAdjustment(primaryEntry?.font, entry.font);
     const maxSpan = fontMaxCellSpan(entry);
     const advanceUnits =
       maxSpan > 1
-        ? resolveFallbackMetric(entry.font, "ic_width") ||
-          fontAdvanceUnits(entry, shapeClusterWithFont)
+        ? resolveFallbackIcWidth(entry.font) || fontAdvanceUnits(entry, shapeClusterWithFont)
         : 0;
     const emScale = fallbackEmScale(primaryEntry?.font, primaryScale, entry.font);
     return resolveFallbackTextScale({
