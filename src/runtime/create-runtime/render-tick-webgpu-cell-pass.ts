@@ -1,7 +1,7 @@
 import type { Color } from "../../renderer";
 import { fallbackEmScale, type Font, type FontEntry } from "../../fonts";
 import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
-import { resolveWideFallbackScale } from "../fonts/fallback-layout";
+import { resolveFallbackBaselineAdjust, resolveWideFallbackScale } from "../fonts/fallback-layout";
 import { resolveLigatureRun, resolveRenderableLigatureRun } from "./ligature-runs";
 import type { CollectWebGPUCellPassParams, GlyphQueueItem } from "./render-tick-webgpu.types";
 import {
@@ -174,28 +174,6 @@ export function collectWebGPUCellPass(params: CollectWebGPUCellPassParams) {
     }
     return 1;
   };
-  const fallbackMetricAnchorUnits = (
-    primary: FontEntry | undefined,
-    entry: FontEntry | undefined,
-  ): { primary: number; fallback: number } | null => {
-    if (!primary?.font || !entry?.font) return null;
-    const metricOrder: FallbackScaleMetric[] = [
-      "ic_width",
-      "ex_height",
-      "cap_height",
-      "line_height",
-    ];
-    for (let i = 0; i < metricOrder.length; i += 1) {
-      const metric = metricOrder[i];
-      const primaryMetric = resolveFallbackMetric(primary.font, metric);
-      const fallbackMetric = resolveFallbackMetric(entry.font, metric);
-      if (primaryMetric > 0 && fallbackMetric > 0) {
-        return { primary: primaryMetric, fallback: fallbackMetric };
-      }
-    }
-    return null;
-  };
-
   const baseScaleByFont = fontState.fonts.map((entry, idx) => {
     if (!entry?.font) return primaryScale;
     if (idx === 0) return primaryScale;
@@ -249,13 +227,13 @@ export function collectWebGPUCellPass(params: CollectWebGPUCellPassParams) {
     if (!entry?.font || idx === 0 || !primaryEntry?.font) return 0;
     const scale = scaleByFont[idx] ?? primaryScale;
     const preserveNaturalSymbolScale = isSymbolFont(entry) && !isAppleSymbolsFont(entry);
-    if (!preserveNaturalSymbolScale && !isColorEmojiFont(entry)) {
-      const metricAnchor = fallbackMetricAnchorUnits(primaryEntry, entry);
-      if (metricAnchor) {
-        return metricAnchor.primary * primaryScale - metricAnchor.fallback * scale;
-      }
-    }
-    return primaryEntry.font.ascender * primaryScale - entry.font.ascender * scale;
+    return resolveFallbackBaselineAdjust({
+      primaryScale,
+      fallbackScale: scale,
+      primaryAscender: primaryEntry.font.ascender,
+      fallbackAscender: entry.font.ascender,
+      regularTextFallback: !preserveNaturalSymbolScale && !isColorEmojiFont(entry),
+    });
   });
 
   const nerdMetrics = buildNerdMetrics(

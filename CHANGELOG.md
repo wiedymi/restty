@@ -20,6 +20,12 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.2.2] - 2026-07-16
+
+### Fixes
+
+- Kept ordinary fallback text on the primary font baseline after fallback scaling, eliminating the roughly one-pixel downward shift for CJK glyphs introduced in 0.2.1.
+
 ## [0.2.1] - 2026-07-16
 
 ### Fixes

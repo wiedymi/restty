@@ -32,3 +32,19 @@ export function resolveFallbackGlyphCenterX(options: FallbackGlyphCenterOptions)
   }
   return cellX + (cellWidth - glyphWidth) * 0.5;
 }
+
+export type FallbackBaselineAdjustOptions = {
+  primaryScale: number;
+  fallbackScale: number;
+  primaryAscender: number;
+  fallbackAscender: number;
+  regularTextFallback: boolean;
+};
+
+/** Resolve the vertical offset applied to a fallback glyph baseline. */
+export function resolveFallbackBaselineAdjust(options: FallbackBaselineAdjustOptions): number {
+  const { primaryScale, fallbackScale, primaryAscender, fallbackAscender, regularTextFallback } =
+    options;
+  if (regularTextFallback) return 0;
+  return primaryAscender * primaryScale - fallbackAscender * fallbackScale;
+}
