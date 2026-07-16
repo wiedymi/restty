@@ -1,7 +1,7 @@
 import type { Color } from "../../renderer";
 import { fallbackEmScale, type Font, type FontEntry } from "../../fonts";
 import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
-import { resolveFallbackBaselineAdjust, resolveWideFallbackScale } from "../fonts/fallback-layout";
+import { resolveFallbackBaselineAdjust, resolveFallbackTextScale } from "../fonts/fallback-layout";
 import { resolveLigatureRun, resolveRenderableLigatureRun } from "./ligature-runs";
 import type { CollectWebGPUCellPassParams, GlyphQueueItem } from "./render-tick-webgpu.types";
 import {
@@ -197,22 +197,23 @@ export function collectWebGPUCellPass(params: CollectWebGPUCellPassParams) {
     }
     if (isColorEmojiFont(entry)) return baseScale;
     const metricAdjust = clamp(fallbackScaleAdjustment(primaryEntry, entry), 1, 2);
-    let adjustedScale = baseScale * metricAdjust;
     const maxSpan = fontMaxCellSpan(entry);
-    if (maxSpan > 1) {
-      const advanceUnits = fontAdvanceUnits(entry, shapeClusterWithFont);
-      adjustedScale = resolveWideFallbackScale({
-        scale: adjustedScale,
-        advanceUnits,
-        cellWidth: cellW,
-        maxSpan,
-      });
-    }
-    const adjustedHeightPx = fontHeightUnits(entry.font) * adjustedScale;
-    if (adjustedHeightPx > lineHeight && adjustedHeightPx > 0) {
-      adjustedScale *= lineHeight / adjustedHeightPx;
-    }
-    return adjustedScale;
+    const advanceUnits =
+      maxSpan > 1
+        ? resolveFallbackMetric(entry.font, "ic_width") ||
+          fontAdvanceUnits(entry, shapeClusterWithFont)
+        : 0;
+    const emScale = fallbackEmScale(primaryEntry?.font, primaryScale, entry.font);
+    return resolveFallbackTextScale({
+      baseScale,
+      primaryEmScale: emScale > 0 ? emScale * fontScaleOverride(entry, FONT_SCALE_OVERRIDES) : 0,
+      metricAdjust,
+      advanceUnits,
+      cellWidth: cellW,
+      maxSpan,
+      fontHeightUnits: fontHeightUnits(entry.font),
+      lineHeight,
+    });
   });
 
   const bitmapScaleByFont = fontState.fonts.map((entry, idx) => {

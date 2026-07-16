@@ -20,6 +20,12 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.2.3] - 2026-07-16
+
+### Fixes
+
+- Rendered wide CJK fallbacks at the primary font's em size instead of shrinking them to the fallback face's taller line metrics, reducing excessive spacing while retaining two-cell fit and centered placement.
+
 ## [0.2.2] - 2026-07-16
 
 ### Fixes
