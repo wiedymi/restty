@@ -1,4 +1,5 @@
 import type { EmitWebGPUQueuedGlyphsParams } from "./render-tick-webgpu.types";
+import { resolveFallbackGlyphCenterX } from "../fonts/fallback-layout";
 
 export function emitWebGPUQueuedGlyphs(params: EmitWebGPUQueuedGlyphsParams) {
   const {
@@ -102,14 +103,15 @@ export function emitWebGPUQueuedGlyphs(params: EmitWebGPUQueuedGlyphsParams) {
         }
         let x =
           item.x + item.xPad + (penX + glyph.xOffset) * itemScale + metrics.bearingX * bitmapScale;
-        if (
-          fontIndex > 0 &&
-          item.shaped.glyphs.length === 1 &&
-          !symbolLike &&
-          maxWidth <= cellW * 1.05
-        ) {
-          x = item.x + (maxWidth - gw) * 0.5;
-        }
+        const centeredX = resolveFallbackGlyphCenterX({
+          cellX: item.x,
+          cellWidth: maxWidth,
+          glyphWidth: gw,
+          isFallback: fontIndex > 0,
+          glyphCount: item.shaped.glyphs.length,
+          symbolLike,
+        });
+        if (centeredX !== null) x = centeredX;
         const minX = item.x;
         const maxX = item.x + maxWidth;
         if (x < minX) x = minX;

@@ -47,6 +47,7 @@ export function createRuntimeFontRuntimeHelpers(options: CreateRuntimeFontRuntim
     UnicodeBuffer,
     shape,
     glyphBufferToShapedGlyphs,
+    rasterizeGlyph,
   });
 
   const gridHelpers = createFontRuntimeGridHelpers({

@@ -1,6 +1,7 @@
 import type { Color } from "../../renderer";
 import { fallbackEmScale, type Font, type FontEntry } from "../../fonts";
 import type { GlyphConstraintMeta } from "../fonts/atlas-builder";
+import { resolveWideFallbackScale } from "../fonts/fallback-layout";
 import { resolveLigatureRun, resolveRenderableLigatureRun } from "./ligature-runs";
 import type { CollectWebGPUCellPassParams, GlyphQueueItem } from "./render-tick-webgpu.types";
 import {
@@ -222,10 +223,12 @@ export function collectWebGPUCellPass(params: CollectWebGPUCellPassParams) {
     const maxSpan = fontMaxCellSpan(entry);
     if (maxSpan > 1) {
       const advanceUnits = fontAdvanceUnits(entry, shapeClusterWithFont);
-      const widthPx = advanceUnits * adjustedScale;
-      const widthAdjustRaw = widthPx > 0 ? (cellW * maxSpan) / widthPx : 1;
-      const widthAdjust = clamp(widthAdjustRaw, 0.5, 2);
-      adjustedScale *= widthAdjust;
+      adjustedScale = resolveWideFallbackScale({
+        scale: adjustedScale,
+        advanceUnits,
+        cellWidth: cellW,
+        maxSpan,
+      });
     }
     const adjustedHeightPx = fontHeightUnits(entry.font) * adjustedScale;
     if (adjustedHeightPx > lineHeight && adjustedHeightPx > 0) {

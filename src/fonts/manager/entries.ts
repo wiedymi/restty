@@ -8,6 +8,7 @@ export function createFontEntry(font: Font, label: string): FontEntry {
     label,
     glyphCache: new Map(),
     boundsCache: new Map(),
+    glyphCoverageCache: new Map(),
     colorGlyphTexts: new Map(),
     glyphIds: new Set(),
     atlas: null,
@@ -24,6 +25,7 @@ export function createFontEntry(font: Font, label: string): FontEntry {
 export function resetFontEntry(entry: FontEntry): void {
   entry.glyphCache.clear();
   entry.boundsCache.clear();
+  entry.glyphCoverageCache.clear();
   entry.colorGlyphTexts.clear();
   entry.glyphIds.clear();
   entry.atlas = null;

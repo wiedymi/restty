@@ -1,5 +1,6 @@
 import type { GlyphQueueItem } from "./render-tick-webgpu.types";
 import type { WebGLTickContext } from "./render-tick-webgl.types";
+import { resolveFallbackGlyphCenterX } from "../fonts/fallback-layout";
 
 export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
   const {
@@ -249,15 +250,15 @@ export function renderWebGLGlyphPipeline(ctx: WebGLTickContext) {
             item.xPad +
             (penX + glyph.xOffset) * itemScale +
             metrics.bearingX * bitmapScale;
-          if (
-            fontIndex > 0 &&
-            item.shaped.glyphs.length === 1 &&
-            !symbolLike &&
-            maxWidth <= cellW * 1.05
-          ) {
-            const center = item.x + (maxWidth - gw) * 0.5;
-            x = center;
-          }
+          const centeredX = resolveFallbackGlyphCenterX({
+            cellX: item.x,
+            cellWidth: maxWidth,
+            glyphWidth: gw,
+            isFallback: fontIndex > 0,
+            glyphCount: item.shaped.glyphs.length,
+            symbolLike,
+          });
+          if (centeredX !== null) x = centeredX;
           const minX = item.x;
           const maxX = item.x + maxWidth;
           if (x < minX) x = minX;

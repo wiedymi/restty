@@ -3,10 +3,10 @@ import {
   isSymbolFont,
   isColorEmojiFont,
   isNerdSymbolFont,
-  type Font,
   type FontEntry,
 } from "../../../fonts";
 import { isCoverageIgnorableCodepoint, resolvePresentationPreference } from "../codepoint-utils";
+import { glyphHasVisibleRaster } from "../../fonts/glyph-coverage";
 import type { CreateFontRuntimeTextHelpersOptions } from "./text.types";
 
 function setBoundedMap<K, V>(map: Map<K, V>, key: K, value: V, limit: number): void {
@@ -29,6 +29,7 @@ export function createFontRuntimeTextHelpers(options: CreateFontRuntimeTextHelpe
     UnicodeBuffer,
     shape,
     glyphBufferToShapedGlyphs,
+    rasterizeGlyph,
   } = options;
 
   function shapeClusterWithFont(entry: FontEntry, text: string) {
@@ -56,9 +57,21 @@ export function createFontRuntimeTextHelpers(options: CreateFontRuntimeTextHelpe
     entry.colorGlyphTexts.set(glyphId, text);
   }
 
-  function fontHasGlyph(font: Font, ch: string): boolean {
-    const glyphId = font.glyphIdForChar(ch);
-    return glyphId !== undefined && glyphId !== null && glyphId !== 0;
+  function fontHasGlyph(entry: FontEntry, ch: string, probeCoverage: boolean): boolean {
+    const glyphId = entry.font.glyphIdForChar(ch);
+    if (glyphId === undefined || glyphId === null || glyphId === 0) return false;
+    if (!probeCoverage || isColorEmojiFont(entry)) return true;
+
+    const cached = entry.glyphCoverageCache.get(glyphId);
+    if (cached !== undefined) return cached;
+    const visible = glyphHasVisibleRaster({
+      font: entry.font,
+      glyphId,
+      sizeMode: fontState.sizeMode,
+      rasterizeGlyph,
+    });
+    entry.glyphCoverageCache.set(glyphId, visible);
+    return visible;
   }
 
   function pickFontIndexForText(text: string, expectedSpan = 1, stylePreference = "regular") {
@@ -106,7 +119,7 @@ export function createFontRuntimeTextHelpers(options: CreateFontRuntimeTextHelpe
         if (predicate && !predicate(entry)) continue;
         let ok = true;
         for (const ch of requiredChars) {
-          if (!fontHasGlyph(entry.font, ch)) {
+          if (!fontHasGlyph(entry, ch, i > 0)) {
             ok = false;
             break;
           }

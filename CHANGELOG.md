@@ -20,6 +20,14 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.2.1] - 2026-07-16
+
+### Fixes
+
+- Kept wide CJK fallback glyphs at their natural em scale instead of enlarging them to fill two cells, and centered them across their occupied cells for consistent baseline and sizing in both WebGPU and WebGL2.
+- Skipped fallback fonts whose claimed glyph rasterizes without visible coverage, allowing later CJK fallbacks to render instead of leaving blank text with fonts such as variable PingFang.
+- Updated text-shaper to support current Noto Emoji WOFF2 fonts whose outlines use compact `255UInt16` encodings.
+
 ## [0.2.0] - 2026-07-04
 
 ### Breaking Changes
