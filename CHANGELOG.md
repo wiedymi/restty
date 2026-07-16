@@ -20,6 +20,12 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.2.5] - 2026-07-16
+
+### Fixes
+
+- Updated text-shaper to 0.1.27 so Unicode variation sequences use cmap format 14 mappings and surviving selectors are removed before positioning, restoring VS16 color emoji rendering and preserving adjacent kerning.
+
 ## [0.2.4] - 2026-07-16
 
 ### Fixes
