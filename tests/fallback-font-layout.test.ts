@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
 import {
+  resolveFallbackBaselineAdjust,
   resolveFallbackGlyphCenterX,
   resolveWideFallbackScale,
 } from "../src/runtime/fonts/fallback-layout";
@@ -26,4 +27,20 @@ test("wide fallback glyphs are centered across their occupied cells", () => {
   });
 
   expect(x).toBeCloseTo(41.6);
+});
+
+test("regular CJK fallback text stays on the primary baseline", () => {
+  // Bundled Fira Code + Noto Sans CJK at the default 18px height. The old
+  // metric-anchor calculation produced a visible 1.1475px downward offset.
+  expect(1053 * 0.0075 - 543 * (18 / 1448)).toBeCloseTo(1.1475);
+
+  const baselineAdjust = resolveFallbackBaselineAdjust({
+    primaryScale: 0.0075,
+    fallbackScale: 18 / 1448,
+    primaryAscender: 1800,
+    fallbackAscender: 1160,
+    regularTextFallback: true,
+  });
+
+  expect(baselineAdjust).toBe(0);
 });
