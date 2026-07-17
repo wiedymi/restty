@@ -1,6 +1,6 @@
 {
   "name": "restty",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Browser terminal rendering library powered by WASM, WebGPU/WebGL2, and TypeScript text shaping.",
   "keywords": [
     "ansi",
@@ -97,7 +97,7 @@
     "playground:preview": "bun run playground/server.ts"
   },
   "dependencies": {
-    "text-shaper": "0.1.27"
+    "text-shaper": "0.1.28"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.2.4",
