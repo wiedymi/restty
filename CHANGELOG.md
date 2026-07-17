@@ -20,6 +20,12 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.2.6] - 2026-07-17
+
+### Fixes
+
+- Updated text-shaper to 0.1.28 so Apple Color Emoji's AAT `morx` ligatures compose regional-indicator flags, keycaps, ZWJ families, rainbow flags, and skin-tone sequences into single color glyphs, with spec-correct no-op substitutions and hardened action-stack and parser-boundary handling.
+
 ## [0.2.5] - 2026-07-16
 
 ### Fixes

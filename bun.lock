@@ -5,7 +5,7 @@
     "": {
       "name": "restty",
       "dependencies": {
-        "text-shaper": "0.1.27",
+        "text-shaper": "0.1.28",
       },
       "devDependencies": {
         "@tailwindcss/vite": "^4.2.4",
@@ -872,7 +872,7 @@
 
     "tar-stream": ["tar-stream@2.2.0", "", { "dependencies": { "bl": "^4.0.3", "end-of-stream": "^1.4.1", "fs-constants": "^1.0.0", "inherits": "^2.0.3", "readable-stream": "^3.1.1" } }, "sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ=="],
 
-    "text-shaper": ["text-shaper@0.1.27", "", {}, "sha512-kfuOgxNHEHGfYaMJ5uaMbNfnmS5adMG3qPjLAgwwEy9pBsqAj4F0oSkOl8QoOdnQ8+wyIkX7M+hBYA4btWB4sw=="],
+    "text-shaper": ["text-shaper@0.1.28", "", {}, "sha512-uwm6+tkgYJ4hsTV0wZVHkZeoXR1/mthLxDiJvfU9o/FiibNinpFRC8PAMTNx8SaOjaK/5ZjDG1XAkPbKlIe2Jg=="],
 
     "tinyexec": ["tinyexec@1.1.2", "", {}, "sha512-dAqSqE/RabpBKI8+h26GfLq6Vb3JVXs30XYQjdMjaj/c2tS8IYYMbIzP599KtRj7c57/wYApb3QjgRgXmrCukA=="],
 
