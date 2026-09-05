@@ -124,6 +124,7 @@ export function createKittyImageCache(options: CreateKittyImageCacheOptions): Ki
     if (!ptr || !len) return null;
     const key = [
       placement.imageId,
+      placement.imageRevision ?? 0,
       placement.imageFormat,
       placement.imageWidth,
       placement.imageHeight,

@@ -46,7 +46,10 @@ export function createRuntimeControllerRenderLoop(
       const renderBudget = hidden
         ? now - shared.lastRenderTime >= 1000 / options.BACKGROUND_RENDER_FPS
         : true;
-      if (shared.needsRender && renderBudget) {
+      const imageChanged =
+        canRenderFrame(shared) && shared.wasm!.tickKittyAnimations(shared.wasmHandle, now);
+      if (imageChanged) options.writeState({ needsRender: true });
+      if ((shared.needsRender || imageChanged) && renderBudget) {
         // Avoid presenting a cleared frame before the terminal core has a live handle.
         // Leaving needsRender=true retries immediately once startup finishes.
         // While the app holds synchronized output (mode 2026) presentation

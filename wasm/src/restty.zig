@@ -3,6 +3,24 @@ const ghostty = @import("ghostty-vt");
 
 pub const std_options: std.Options = ghostty.std_options;
 
+extern "env" fn now_ms() f64;
+const browser_io: std.Io = .{ .userdata = null, .vtable = &browser_io_vtable };
+const browser_io_vtable: std.Io.VTable = io: {
+    var value = std.Io.failing.vtable.*;
+    value.now = &browserNow;
+    break :io value;
+};
+fn browserNow(_: ?*anyopaque, _: std.Io.Clock) std.Io.Timestamp {
+    return .{ .nanoseconds = @intFromFloat(now_ms() * std.time.ns_per_ms) };
+}
+fn decodePng(alloc: std.mem.Allocator, data: []const u8) ghostty.sys.DecodeError!ghostty.sys.Image {
+    const image = @import("wuffs").png.decode(alloc, data) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InvalidData,
+    };
+    return .{ .width = image.width, .height = image.height, .data = image.data };
+}
+
 const Allocator = std.mem.Allocator;
 
 const ErrorCode = enum(u32) {
@@ -122,10 +140,6 @@ const VtHandlerFn = @TypeOf(ghostty.Terminal.vtHandler);
 const ReadonlyHandler = @typeInfo(VtHandlerFn).@"fn".return_type.?;
 const kitty_graphics_enabled = @hasDecl(ghostty.kitty.graphics, "Command");
 const max_output_bytes: usize = 1024 * 1024;
-const max_apc_debug_bytes: usize = 16 * 1024;
-const max_apc_error_logs: u8 = 24;
-
-const log = std.log.scoped(.restty_apc);
 
 const KittyPlacementAbi = extern struct {
     image_id: u32,
@@ -149,351 +163,45 @@ const KittyPlacementAbi = extern struct {
     placement_id: u32,
     placement_external: u8,
     _pad1: [3]u8 = .{ 0, 0, 0 },
+    image_revision_low: u32,
+    image_revision_high: u32,
 };
 
 const StreamHandler = struct {
-    alloc: Allocator,
-    term: *ghostty.Terminal,
     readonly: ReadonlyHandler,
     output: *std.ArrayListUnmanaged(u8),
-    apc: ghostty.apc.Handler = .{},
-    apc_debug: std.ArrayListUnmanaged(u8) = .{},
-    apc_debug_truncated: bool = false,
-    apc_error_logs_remaining: u8 = max_apc_error_logs,
 
-    pub fn init(
-        alloc: Allocator,
-        term: *ghostty.Terminal,
-        output: *std.ArrayListUnmanaged(u8),
-    ) StreamHandler {
-        return .{
-            .alloc = alloc,
-            .term = term,
-            .readonly = .init(term),
-            .output = output,
-            .apc = .{},
-            .apc_debug = .{},
-            .apc_debug_truncated = false,
-            .apc_error_logs_remaining = max_apc_error_logs,
-        };
+    fn init(term: *ghostty.Terminal, output: *std.ArrayListUnmanaged(u8)) StreamHandler {
+        var handler = term.vtHandler();
+        handler.effects.write_pty = &writePty;
+        return .{ .readonly = handler, .output = output };
     }
-
+    fn writePty(handler: *ReadonlyHandler, bytes: []const u8) void {
+        const self: *StreamHandler = @fieldParentPtr("readonly", handler);
+        const alloc = handler.terminal.gpa();
+        const kept = bytes[bytes.len - @min(bytes.len, max_output_bytes) ..];
+        const drop = self.output.items.len -| (max_output_bytes - kept.len);
+        if (drop > 0) {
+            const remaining = self.output.items.len - drop;
+            std.mem.copyForwards(u8, self.output.items[0..remaining], self.output.items[drop..]);
+            self.output.items.len = remaining;
+        }
+        self.output.appendSlice(alloc, kept) catch {};
+    }
+    pub fn vt(self: *StreamHandler, comptime action: StreamAction.Tag, value: StreamAction.Value(action)) void {
+        // Keep Restty's device identity while upstream handles protocol behavior.
+        if (action == .device_attributes) {
+            switch (value) {
+                .primary => writePty(&self.readonly, "\x1b[?62;22;52c"),
+                .secondary => writePty(&self.readonly, "\x1b[>1;10;0c"),
+                else => self.readonly.vt(action, value),
+            }
+        } else self.readonly.vt(action, value);
+    }
     pub fn deinit(self: *StreamHandler) void {
         self.readonly.deinit();
-        self.apc.deinit();
-        self.apc_debug.deinit(self.alloc);
-    }
-
-    fn apcDebugReset(self: *StreamHandler) void {
-        self.apc_debug.clearRetainingCapacity();
-        self.apc_debug_truncated = false;
-    }
-
-    fn apcDebugCapture(self: *StreamHandler, byte: u8) void {
-        if (self.apc_debug_truncated) return;
-        if (self.apc_debug.items.len >= max_apc_debug_bytes) {
-            self.apc_debug_truncated = true;
-            return;
-        }
-        self.apc_debug.append(self.alloc, byte) catch {
-            self.apc_debug_truncated = true;
-        };
-    }
-
-    fn isBase64Byte(byte: u8) bool {
-        return (byte >= 'A' and byte <= 'Z') or
-            (byte >= 'a' and byte <= 'z') or
-            (byte >= '0' and byte <= '9') or
-            byte == '+' or
-            byte == '/' or
-            byte == '=';
-    }
-
-    fn logApcFailure(self: *StreamHandler) void {
-        if (self.apc_error_logs_remaining == 0) return;
-        const raw = self.apc_debug.items;
-        if (raw.len == 0) return;
-
-        // Only inspect Kitty APC packets.
-        if (raw[0] != 'G') return;
-
-        self.apc_error_logs_remaining -|= 1;
-
-        const kitty = raw[1..];
-        const sep_opt = std.mem.indexOfScalar(u8, kitty, ';');
-        if (sep_opt == null) {
-            const preview_len = @min(kitty.len, 64);
-            log.warn(
-                "kitty APC parse failed before payload control={s} bytes={d} truncated={} preview_hex={x}",
-                .{
-                    kitty[0..preview_len],
-                    kitty.len,
-                    self.apc_debug_truncated,
-                    kitty[0..preview_len],
-                },
-            );
-            return;
-        }
-
-        const sep = sep_opt.?;
-        const control = kitty[0..sep];
-        const payload = kitty[sep + 1 ..];
-
-        var invalid_idx: ?usize = null;
-        var invalid_byte: u8 = 0;
-        for (payload, 0..) |byte, idx| {
-            if (!isBase64Byte(byte)) {
-                invalid_idx = idx;
-                invalid_byte = byte;
-                break;
-            }
-        }
-
-        if (invalid_idx) |idx| {
-            const win_start = idx -| 12;
-            const win_end = @min(payload.len, idx + 13);
-            log.warn(
-                "kitty APC invalid payload byte control={s} payload_len={d} invalid=0x{x:0>2} at={d} around_hex={x} truncated={}",
-                .{
-                    control,
-                    payload.len,
-                    invalid_byte,
-                    idx,
-                    payload[win_start..win_end],
-                    self.apc_debug_truncated,
-                },
-            );
-            return;
-        }
-
-        const preview_len = @min(payload.len, 64);
-        log.warn(
-            "kitty APC parse failed control={s} payload_len={d} payload_mod4={d} truncated={} payload_preview_hex={x}",
-            .{
-                control,
-                payload.len,
-                payload.len % 4,
-                self.apc_debug_truncated,
-                payload[0..preview_len],
-            },
-        );
-    }
-
-    fn logKittyResponseError(
-        self: *StreamHandler,
-        cmd: *const ghostty.kitty.graphics.Command,
-        resp: ghostty.kitty.graphics.Response,
-    ) void {
-        const action: []const u8 = switch (cmd.control) {
-            .query => "q",
-            .transmit => "t",
-            .transmit_and_display => "T",
-            .display => "p",
-            .delete => "d",
-            .transmit_animation_frame => "f",
-            .control_animation => "a",
-            .compose_animation => "c",
-        };
-
-        log.warn(
-            "kitty graphics command failed action={s} quiet={} resp={s} resp_i={d} resp_I={d} resp_p={d} data_len={d}",
-            .{
-                action,
-                cmd.quiet,
-                resp.message,
-                resp.id,
-                resp.image_number,
-                resp.placement_id,
-                cmd.data.len,
-            },
-        );
-
-        if (cmd.transmission()) |t| {
-            log.warn(
-                "kitty tx fields i={d} I={d} p={d} format={} medium={} s={d} v={d} S={d} O={d} m={} compression={}",
-                .{
-                    t.image_id,
-                    t.image_number,
-                    t.placement_id,
-                    t.format,
-                    t.medium,
-                    t.width,
-                    t.height,
-                    t.size,
-                    t.offset,
-                    t.more_chunks,
-                    t.compression,
-                },
-            );
-        }
-
-        if (cmd.display()) |d| {
-            log.warn(
-                "kitty display fields i={d} I={d} p={d} x={d} y={d} w={d} h={d} X={d} Y={d} c={d} r={d} C={} U={} z={d}",
-                .{
-                    d.image_id,
-                    d.image_number,
-                    d.placement_id,
-                    d.x,
-                    d.y,
-                    d.width,
-                    d.height,
-                    d.x_offset,
-                    d.y_offset,
-                    d.columns,
-                    d.rows,
-                    d.cursor_movement,
-                    d.virtual_placement,
-                    d.z,
-                },
-            );
-        }
-
-        if (self.apc_debug.items.len > 0) {
-            const preview_len = @min(self.apc_debug.items.len, 96);
-            log.warn(
-                "kitty APC preview_hex={x} bytes={d} truncated={}",
-                .{
-                    self.apc_debug.items[0..preview_len],
-                    self.apc_debug.items.len,
-                    self.apc_debug_truncated,
-                },
-            );
-        }
-    }
-
-    fn appendOutput(self: *StreamHandler, bytes: []const u8) !void {
-        if (bytes.len == 0) return;
-
-        if (bytes.len >= max_output_bytes) {
-            self.output.clearRetainingCapacity();
-            try self.output.appendSlice(self.alloc, bytes[bytes.len - max_output_bytes ..]);
-            return;
-        }
-
-        if (self.output.items.len + bytes.len > max_output_bytes) {
-            const drop = self.output.items.len + bytes.len - max_output_bytes;
-            if (drop >= self.output.items.len) {
-                self.output.clearRetainingCapacity();
-            } else {
-                const remaining = self.output.items.len - drop;
-                std.mem.copyForwards(
-                    u8,
-                    self.output.items[0..remaining],
-                    self.output.items[drop..],
-                );
-                self.output.items.len = remaining;
-            }
-        }
-
-        try self.output.appendSlice(self.alloc, bytes);
-    }
-
-    fn deviceAttributes(
-        self: *StreamHandler,
-        req: ghostty.DeviceAttributeReq,
-    ) !void {
-        switch (req) {
-            .primary => try self.appendOutput("\x1b[?62;22;52c"),
-            .secondary => try self.appendOutput("\x1b[>1;10;0c"),
-            else => {},
-        }
-    }
-
-    fn deviceStatusReport(
-        self: *StreamHandler,
-        req: ghostty.device_status.Request,
-    ) !void {
-        switch (req) {
-            .operating_status => try self.appendOutput("\x1b[0n"),
-            .cursor_position => {
-                const pos: struct { x: usize, y: usize } = if (self.term.modes.get(.origin)) .{
-                    .x = self.term.screens.active.cursor.x -| self.term.scrolling_region.left,
-                    .y = self.term.screens.active.cursor.y -| self.term.scrolling_region.top,
-                } else .{
-                    .x = self.term.screens.active.cursor.x,
-                    .y = self.term.screens.active.cursor.y,
-                };
-
-                var buf: [64]u8 = undefined;
-                const resp = try std.fmt.bufPrint(&buf, "\x1b[{};{}R", .{
-                    pos.y + 1,
-                    pos.x + 1,
-                });
-                try self.appendOutput(resp);
-            },
-            else => {},
-        }
-    }
-
-    fn queryKittyKeyboard(self: *StreamHandler) !void {
-        var buf: [32]u8 = undefined;
-        const resp = try std.fmt.bufPrint(&buf, "\x1b[?{}u", .{
-            self.term.screens.active.kitty_keyboard.current().int(),
-        });
-        try self.appendOutput(resp);
-    }
-
-    fn apcEnd(self: *StreamHandler) !void {
-        var cmd = self.apc.end() orelse {
-            self.logApcFailure();
-            self.apcDebugReset();
-            return;
-        };
-        defer self.apcDebugReset();
-        defer cmd.deinit(self.alloc);
-
-        if (comptime !kitty_graphics_enabled) return;
-
-        switch (cmd) {
-            .kitty => |*kitty_cmd| {
-                if (self.term.kittyGraphics(self.alloc, kitty_cmd)) |resp| {
-                    if (!resp.ok()) {
-                        self.logKittyResponseError(kitty_cmd, resp);
-                    }
-                    var buf: [1024]u8 = undefined;
-                    var writer: std.Io.Writer = .fixed(&buf);
-                    try resp.encode(&writer);
-                    try self.appendOutput(writer.buffered());
-                }
-            },
-            .glyph => {},
-        }
-    }
-
-    pub fn vt(
-        self: *StreamHandler,
-        comptime action: StreamAction.Tag,
-        value: StreamAction.Value(action),
-    ) void {
-        self.vtFallible(action, value) catch |err| {
-            log.warn("error handling VT action action={} err={}", .{ action, err });
-        };
-    }
-
-    fn vtFallible(
-        self: *StreamHandler,
-        comptime action: StreamAction.Tag,
-        value: StreamAction.Value(action),
-    ) !void {
-        switch (action) {
-            .device_attributes => try self.deviceAttributes(value),
-            .device_status => try self.deviceStatusReport(value.request),
-            .kitty_keyboard_query => try self.queryKittyKeyboard(),
-            .apc_start => {
-                self.apc.start();
-                self.apcDebugReset();
-            },
-            .apc_put => {
-                self.apcDebugCapture(value);
-                self.apc.feed(self.alloc, value);
-            },
-            .apc_end => try self.apcEnd(),
-            else => self.readonly.vt(action, value),
-        }
     }
 };
-
 const TerminalStream = ghostty.Stream(StreamHandler);
 
 const Restty = struct {
@@ -502,12 +210,12 @@ const Restty = struct {
     stream: TerminalStream,
     render_state: ghostty.RenderState,
     buffers: CellBuffers,
-    graphemes: std.ArrayListUnmanaged(u32) = .{},
-    link_offsets: std.ArrayListUnmanaged(u32) = .{},
-    link_lengths: std.ArrayListUnmanaged(u32) = .{},
-    link_buffer: std.ArrayListUnmanaged(u8) = .{},
-    kitty_placements: std.ArrayListUnmanaged(KittyPlacementAbi) = .{},
-    output: std.ArrayListUnmanaged(u8) = .{},
+    graphemes: std.ArrayListUnmanaged(u32) = .empty,
+    link_offsets: std.ArrayListUnmanaged(u32) = .empty,
+    link_lengths: std.ArrayListUnmanaged(u32) = .empty,
+    link_buffer: std.ArrayListUnmanaged(u8) = .empty,
+    kitty_placements: std.ArrayListUnmanaged(KittyPlacementAbi) = .empty,
+    output: std.ArrayListUnmanaged(u8) = .empty,
     cursor: CursorInfo = .{
         .row = 0,
         .col = 0,
@@ -524,10 +232,8 @@ const Restty = struct {
 };
 
 const SearchState = struct {
-    query: std.ArrayListUnmanaged(u8) = .{},
-    screen_search: ?ghostty.search.Screen = null,
-    viewport_search: ?ghostty.search.Viewport = null,
-    viewport_matches: std.ArrayListUnmanaged(SearchViewportSpan) = .{},
+    engine: ?ghostty.search.Terminal = null,
+    viewport_matches: std.ArrayListUnmanaged(SearchViewportSpan) = .empty,
     status: SearchStatus = .{
         .active = 0,
         .pending = 0,
@@ -537,45 +243,14 @@ const SearchState = struct {
         .total_matches = 0,
         .selected_index = -1,
     },
-    active_screen_key: i32 = -1,
-    viewport_dirty: bool = false,
-    active_dirty: bool = false,
-
-    fn deinit(self: *SearchState, alloc: Allocator) void {
-        self.query.deinit(alloc);
-        if (self.screen_search) |*s| s.deinit();
-        if (self.viewport_search) |*s| s.deinit();
-        self.viewport_matches.deinit(alloc);
-        self.* = .{};
+    fn isActive(self: *const SearchState) bool {
+        return self.engine != null;
     }
-
-    fn resetRuntime(self: *SearchState) void {
-        self.viewport_matches.clearRetainingCapacity();
-        self.status.active = if (self.query.items.len > 0) 1 else 0;
-        self.status.total_matches = 0;
-        self.status.selected_index = -1;
-        self.status.pending = 0;
-        self.status.complete = 0;
-        self.viewport_dirty = false;
-        self.active_dirty = false;
-        self.active_screen_key = -1;
+    fn isQueryEqual(self: *const SearchState, value: []const u8) bool {
+        return if (self.engine) |*engine| std.mem.eql(u8, engine.needle(), value) else false;
     }
-
     fn bumpGeneration(self: *SearchState) void {
         self.status.generation +%= 1;
-    }
-
-    fn setQuery(self: *SearchState, alloc: Allocator, value: []const u8) !void {
-        self.query.clearRetainingCapacity();
-        try self.query.appendSlice(alloc, value);
-    }
-
-    fn isQueryEqual(self: *const SearchState, value: []const u8) bool {
-        return std.mem.eql(u8, self.query.items, value);
-    }
-
-    fn isActive(self: *const SearchState) bool {
-        return self.status.active != 0;
     }
 };
 
@@ -629,73 +304,36 @@ fn clampI16Unsigned(value: u16) i16 {
     return @intCast(value);
 }
 
-fn activeScreenKeyInt(h: *Restty) i32 {
-    return @intCast(@intFromEnum(h.term.screens.active_key));
-}
-
 fn clearSearch(h: *Restty) void {
-    h.search.deinit(h.alloc);
+    if (h.search.engine) |*engine| engine.deinit(&h.term);
+    h.search.viewport_matches.deinit(h.alloc);
+    h.search = .{};
 }
 
 fn initSearch(h: *Restty, query: []const u8) !void {
+    const engine = try ghostty.search.Terminal.init(h.alloc, query);
     clearSearch(h);
-    if (query.len == 0) return;
-
-    try h.search.setQuery(h.alloc, query);
-    h.search.status.active = 1;
-    h.search.status.pending = 1;
-    h.search.status.complete = 0;
-    h.search.status.total_matches = 0;
-    h.search.status.selected_index = -1;
-    h.search.active_screen_key = activeScreenKeyInt(h);
-    h.search.viewport_search = try .init(h.alloc, query);
-    h.search.screen_search = try .init(
-        h.alloc,
-        h.term.screens.active,
-        query,
-    );
-    if (h.search.viewport_search) |*vp| vp.active_dirty = true;
-    h.search.viewport_dirty = true;
-    h.search.active_dirty = true;
+    h.search.engine = engine;
+    h.search.engine.?.feed(&h.term, true);
+    refreshSearchMetadata(h);
     h.search.bumpGeneration();
 }
 
-fn ensureSearchActiveScreen(h: *Restty) !void {
-    if (!h.search.isActive()) return;
-    if (h.search.active_screen_key == activeScreenKeyInt(h) and
-        h.search.screen_search != null and
-        h.search.viewport_search != null) return;
-    try initSearch(h, h.search.query.items);
-}
-
 fn refreshSearchMetadata(h: *Restty) void {
-    const s = if (h.search.screen_search) |*s| s else {
-        h.search.status.total_matches = 0;
-        h.search.status.selected_index = -1;
-        h.search.status.pending = 0;
-        h.search.status.complete = 1;
-        return;
-    };
-    h.search.status.total_matches = @intCast(s.matchesLen());
-    h.search.status.selected_index = if (s.selected) |sel| @intCast(sel.idx) else -1;
+    const engine = if (h.search.engine) |*e| e else return;
+    h.search.status.active = 1;
+    h.search.status.complete = @intFromBool(engine.isComplete());
+    h.search.status.pending = @intFromBool(!engine.isComplete());
+    const screen = engine.activeScreenSearch();
+    h.search.status.total_matches = if (screen) |ss| @intCast(ss.matchesLen()) else 0;
+    h.search.status.selected_index = if (screen) |ss| (if (ss.selected) |sel| @intCast(sel.idx) else -1) else -1;
 }
 
-fn refreshViewportMatches(h: *Restty, force_refresh: bool) !void {
-    const vp = if (h.search.viewport_search) |*vp| vp else {
-        h.search.viewport_matches.clearRetainingCapacity();
-        return;
-    };
-    if (force_refresh) vp.reset();
-    vp.active_dirty = true;
-    const changed = try vp.update(&h.term.screens.active.pages);
-    if (!changed and !force_refresh and !h.search.viewport_dirty) return;
-
+fn refreshViewportMatches(h: *Restty) !void {
+    const engine = if (h.search.engine) |*e| e else return;
     h.search.viewport_matches.clearRetainingCapacity();
-    const selected = if (h.search.screen_search) |*screen_search|
-        screen_search.selectedMatch()
-    else
-        null;
-    while (vp.next()) |hl| {
+    const selected = if (engine.activeScreenSearch()) |ss| ss.selectedMatch() else null;
+    for (try engine.viewportMatches()) |hl| {
         const slice = hl.chunks.slice();
         const chunk_len = slice.len;
         for (0..chunk_len) |chunk_idx| {
@@ -724,48 +362,31 @@ fn refreshViewportMatches(h: *Restty, force_refresh: bool) !void {
             }
         }
     }
-    h.search.viewport_dirty = false;
 }
 
 fn stepSearch(h: *Restty, budget: u32) !void {
-    if (!h.search.isActive()) return;
-    try ensureSearchActiveScreen(h);
-    const screen_search = if (h.search.screen_search) |*s| s else return;
-
-    // Keep active-area and viewport state fresh while search is active.
-    try screen_search.reloadActive();
-    h.search.active_dirty = false;
-
+    const engine = if (h.search.engine) |*e| e else return;
+    engine.feed(&h.term, true);
     var remaining: u32 = if (budget == 0) 64 else budget;
-    var force_viewport_refresh = h.search.viewport_dirty;
     while (remaining > 0) : (remaining -= 1) {
-        screen_search.tick() catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            error.FeedRequired => {
-                try screen_search.feed();
-            },
-            error.SearchComplete => {
-                h.search.status.complete = 1;
-                h.search.status.pending = 0;
-                force_viewport_refresh = true;
-                break;
-            },
-        };
-    }
-
-    if (h.search.status.complete == 0) {
-        h.search.status.pending = 1;
+        switch (engine.tick()) {
+            .progress => {},
+            .blocked => engine.feed(&h.term, false),
+            .complete => break,
+        }
     }
     refreshSearchMetadata(h);
-    try refreshViewportMatches(h, force_viewport_refresh);
+    try refreshViewportMatches(h);
     h.search.bumpGeneration();
 }
 
-fn scrollToSelectedSearchMatch(h: *Restty) void {
-    const screen_search = if (h.search.screen_search) |*s| s else return;
-    const selected = screen_search.selectedMatch() orelse return;
-    h.term.screens.active.scroll(.{ .pin = selected.startPin() });
-    h.search.viewport_dirty = true;
+fn selectSearch(h: *Restty, direction: ghostty.search.Screen.Select) !void {
+    const engine = if (h.search.engine) |*e| e else return;
+    _ = try engine.select(&h.term, direction, .if_needed);
+    engine.feed(&h.term, false);
+    refreshSearchMetadata(h);
+    try refreshViewportMatches(h);
+    h.search.bumpGeneration();
 }
 
 fn kittyFormatToAbi(format: anytype) u8 {
@@ -795,10 +416,13 @@ fn appendKittyPlacement(
     source_width: u32,
     source_height: u32,
 ) !void {
-    const data_ptr: u32 = if (image.data.len == 0) 0 else @intCast(@intFromPtr(image.data.ptr));
-    const data_len: u32 = @intCast(image.data.len);
+    const data = image.renderData().bytes() orelse return;
+    const data_ptr: u32 = if (data.len == 0) 0 else @intCast(@intFromPtr(data.ptr));
+    const data_len: u32 = @intCast(data.len);
 
     try h.kitty_placements.append(h.alloc, .{
+        .image_revision_low = @truncate(image.generation),
+        .image_revision_high = @truncate(image.generation >> 32),
         .image_id = image.id,
         .image_format = kittyFormatToAbi(image.format),
         .image_width = image.width,
@@ -832,58 +456,51 @@ fn collectKittyPlacements(h: *Restty) !void {
     const top = pages.getTopLeft(.viewport);
     const bot = pages.getBottomRight(.viewport) orelse return;
     const top_screen = pages.pointFromPin(.screen, top) orelse return;
-    const bot_screen = pages.pointFromPin(.screen, bot) orelse return;
     const top_y: u32 = top_screen.screen.y;
-    const bot_y: u32 = bot_screen.screen.y;
 
     var it = storage.placements.iterator();
     while (it.next()) |entry| {
         const p = entry.value_ptr;
-        switch (p.location) {
-            .pin => {},
+        const origin: struct { pin: ghostty.Pin, x: i32 = 0, y: i32 = 0 } = switch (p.location) {
+            .pin => |pin| .{ .pin = pin.* },
             .virtual => continue,
-        }
-
+            .relative => |relative| origin: {
+                const chain = storage.resolveChain(relative) orelse continue;
+                switch (chain.root.location) {
+                    .pin => |pin| break :origin .{ .pin = pin.*, .x = chain.horizontal_offset, .y = chain.vertical_offset },
+                    .virtual => continue,
+                    .relative => unreachable,
+                }
+            },
+        };
+        if (origin.pin.garbage) continue;
         const image = storage.imageById(entry.key_ptr.image_id) orelse continue;
-        const rect = p.rect(image, &h.term) orelse continue;
-        const img_top = pages.pointFromPin(.screen, rect.top_left) orelse continue;
-        const img_bot = pages.pointFromPin(.screen, rect.bottom_right) orelse continue;
-        const img_top_y: u32 = img_top.screen.y;
-        const img_bot_y: u32 = img_bot.screen.y;
-        if (img_top_y > bot_y or img_bot_y < top_y) continue;
-
+        const pos = pages.pointFromPin(.screen, origin.pin) orelse continue;
         const dest_size = p.pixelSize(image, &h.term);
         if (dest_size.width == 0 or dest_size.height == 0) continue;
-
-        const source_x: u32 = @min(image.width, p.source_x);
-        const source_y: u32 = @min(image.height, p.source_y);
-        const source_width: u32 = if (p.source_width > 0)
-            @min(image.width - source_x, p.source_width)
-        else
-            image.width;
-        const source_height: u32 = if (p.source_height > 0)
-            @min(image.height - source_y, p.source_height)
-        else
-            image.height;
-        if (source_width == 0 or source_height == 0) continue;
-
-        const y_pos: i32 = @as(i32, @intCast(img_top_y)) - @as(i32, @intCast(top_y));
+        const source = p.sourceRect(image);
+        if (source.width == 0 or source.height == 0) continue;
+        const x_pos = @as(i64, pos.screen.x) + origin.x;
+        const y_pos = @as(i64, pos.screen.y) - top_y + origin.y;
+        const grid_size = p.gridSize(image, &h.term);
+        if (y_pos >= h.rows or y_pos + grid_size.rows <= 0 or
+            x_pos >= h.cols or x_pos + grid_size.cols <= 0) continue;
         try appendKittyPlacement(
             h,
             image,
             entry.key_ptr.placement_id.id,
             @intFromBool(entry.key_ptr.placement_id.tag == .external),
-            @intCast(rect.top_left.x),
-            y_pos,
+            std.math.cast(i32, x_pos) orelse continue,
+            std.math.cast(i32, y_pos) orelse continue,
             p.z,
             dest_size.width,
             dest_size.height,
             p.x_offset,
             p.y_offset,
-            source_x,
-            source_y,
-            source_width,
-            source_height,
+            source.x,
+            source.y,
+            source.width,
+            source.height,
         );
     }
 
@@ -940,16 +557,17 @@ fn collectKittyPlacements(h: *Restty) !void {
 pub export fn restty_create(cols: u16, rows: u16, max_scrollback: u32) ?*Restty {
     if (cols == 0 or rows == 0) return null;
     const alloc = std.heap.wasm_allocator;
+    ghostty.sys.decode_png = &decodePng;
 
     var colors: ghostty.Terminal.Colors = .default;
     colors.background = ghostty.color.DynamicRGB.init(.{ .r = 0, .g = 0, .b = 0 });
     colors.foreground = ghostty.color.DynamicRGB.init(.{ .r = 0xFF, .g = 0xFF, .b = 0xFF });
     colors.cursor = ghostty.color.DynamicRGB.init(.{ .r = 0xFF, .g = 0xFF, .b = 0xFF });
 
-    var term = ghostty.Terminal.init(alloc, .{
+    var term = ghostty.Terminal.init(browser_io, alloc, .{
         .cols = cols,
         .rows = rows,
-        .max_scrollback = max_scrollback,
+        .max_scrollback_bytes = max_scrollback,
         .colors = colors,
     }) catch return null;
     errdefer term.deinit(alloc);
@@ -970,10 +588,7 @@ pub export fn restty_create(cols: u16, rows: u16, max_scrollback: u32) ?*Restty 
         .rows = rows,
         .cols = cols,
     };
-    handle.stream = TerminalStream.initAlloc(
-        alloc,
-        StreamHandler.init(alloc, &handle.term, &handle.output),
-    );
+    handle.stream = TerminalStream.init(.{ .allocator = alloc, .handler = StreamHandler.init(&handle.term, &handle.output) });
     return handle;
 }
 
@@ -981,7 +596,7 @@ pub export fn restty_destroy(handle: ?*Restty) void {
     const h = handle orelse return;
     h.stream.deinit();
     h.render_state.deinit(h.alloc);
-    h.search.deinit(h.alloc);
+    clearSearch(h);
     h.term.deinit(h.alloc);
     h.buffers.deinit(h.alloc);
     h.graphemes.deinit(h.alloc);
@@ -999,19 +614,12 @@ pub export fn restty_write(handle: ?*Restty, ptr: [*]const u8, len: usize) u32 {
     const slice = ptr[0..len];
     ensureScrollingRegion(h);
     h.stream.nextSlice(slice);
-    if (h.search.isActive()) {
-        h.search.viewport_dirty = true;
-        h.search.active_dirty = true;
-    }
     return @intFromEnum(ErrorCode.ok);
 }
 
 pub export fn restty_scroll_viewport(handle: ?*Restty, delta: i32) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     h.term.scrollViewport(.{ .delta = delta });
-    if (h.search.isActive()) {
-        h.search.viewport_dirty = true;
-    }
     return @intFromEnum(ErrorCode.ok);
 }
 
@@ -1060,31 +668,66 @@ pub export fn restty_search_viewport_matches_ptr(handle: ?*Restty) usize {
 
 pub export fn restty_search_select_next(handle: ?*Restty) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
-    const screen_search = if (h.search.screen_search) |*s| s else return @intFromEnum(ErrorCode.ok);
-    _ = screen_search.select(.next) catch |err| return switch (err) {
-        error.OutOfMemory => @intFromEnum(ErrorCode.out_of_memory),
-    };
-    refreshSearchMetadata(h);
-    scrollToSelectedSearchMatch(h);
-    refreshViewportMatches(h, true) catch |err| return switch (err) {
-        error.OutOfMemory => @intFromEnum(ErrorCode.out_of_memory),
-    };
-    h.search.bumpGeneration();
+    selectSearch(h, .next) catch return @intFromEnum(ErrorCode.out_of_memory);
+    return @intFromEnum(ErrorCode.ok);
+}
+pub export fn restty_search_select_prev(handle: ?*Restty) u32 {
+    const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
+    selectSearch(h, .prev) catch return @intFromEnum(ErrorCode.out_of_memory);
     return @intFromEnum(ErrorCode.ok);
 }
 
-pub export fn restty_search_select_prev(handle: ?*Restty) u32 {
+pub export fn restty_kitty_tick(handle: ?*Restty, now: f64) u32 {
+    const h = handle orelse return 0;
+    if (!std.math.isFinite(now) or now < 0 or now >= 0x1p64) return 0;
+    const images = &h.term.screens.active.kitty_images;
+    const before = images.generation;
+    _ = images.animationTick(browser_io, @intFromFloat(now));
+    return @intFromBool(images.generation != before);
+}
+
+/// Copy a viewport-relative selection directly from the terminal buffer.
+/// The caller frees the returned bytes with restty_free.
+pub export fn restty_selection_text(
+    handle: ?*Restty,
+    anchor_row: i32,
+    anchor_col: i32,
+    focus_row: i32,
+    focus_col: i32,
+    out_ptr: *usize,
+    out_len: *usize,
+) u32 {
+    out_ptr.* = 0;
+    out_len.* = 0;
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
-    const screen_search = if (h.search.screen_search) |*s| s else return @intFromEnum(ErrorCode.ok);
-    _ = screen_search.select(.prev) catch |err| return switch (err) {
-        error.OutOfMemory => @intFromEnum(ErrorCode.out_of_memory),
-    };
-    refreshSearchMetadata(h);
-    scrollToSelectedSearchMatch(h);
-    refreshViewportMatches(h, true) catch |err| return switch (err) {
-        error.OutOfMemory => @intFromEnum(ErrorCode.out_of_memory),
-    };
-    h.search.bumpGeneration();
+    const pages = &h.term.screens.active.pages;
+    const sb = pages.scrollbar();
+    const forward = anchor_row < focus_row or (anchor_row == focus_row and anchor_col <= focus_col);
+    const first: i64 = @as(i64, @intCast(sb.offset)) + (if (forward) anchor_row else focus_row);
+    const last: i64 = @as(i64, @intCast(sb.offset)) + (if (forward) focus_row else anchor_row);
+    if (last < 0 or first >= sb.total) return @intFromEnum(ErrorCode.ok);
+    const start_col = if (first < 0) 0 else @max(0, @min(h.cols - 1, if (forward) anchor_col else focus_col));
+    const end_col = if (last >= sb.total) h.cols - 1 else @max(0, @min(h.cols - 1, if (forward) focus_col else anchor_col));
+    const start = pages.pin(.{ .screen = .{ .x = @intCast(start_col), .y = @intCast(@max(0, first)) } }) orelse return @intFromEnum(ErrorCode.invalid_arg);
+    const end = pages.pin(.{ .screen = .{ .x = @intCast(end_col), .y = @intCast(@min(sb.total - 1, last)) } }) orelse return @intFromEnum(ErrorCode.invalid_arg);
+    var writer: std.Io.Writer.Allocating = .init(h.alloc);
+    defer writer.deinit();
+    var trailing: ghostty.formatter.PageFormatter.TrailingState = .empty;
+    var iter = start.pageIterator(.right_down, end);
+    while (iter.next()) |chunk| {
+        var formatter = ghostty.formatter.PageFormatter.init(chunk.node.page(), .{ .emit = .plain, .unwrap = true, .trim = true });
+        formatter.start_y = chunk.start;
+        formatter.end_y = chunk.end - 1;
+        if (chunk.node == start.node) formatter.start_x = start.x;
+        if (chunk.node == end.node) formatter.end_x = end.x;
+        formatter.trailing_state = trailing;
+        trailing = formatter.formatWithState(&writer.writer) catch return @intFromEnum(ErrorCode.out_of_memory);
+    }
+    // A selection includes explicit blank rows; full-screen formatting trims them.
+    writer.writer.splatByteAll('\n', trailing.rows -| 1) catch return @intFromEnum(ErrorCode.out_of_memory);
+    const text = writer.toOwnedSlice() catch return @intFromEnum(ErrorCode.out_of_memory);
+    out_ptr.* = @intFromPtr(text.ptr);
+    out_len.* = text.len;
     return @intFromEnum(ErrorCode.ok);
 }
 
@@ -1186,12 +829,8 @@ pub export fn restty_reset_palette(handle: ?*Restty) u32 {
 pub export fn restty_resize(handle: ?*Restty, cols: u16, rows: u16) u32 {
     const h = handle orelse return @intFromEnum(ErrorCode.invalid_handle);
     if (cols == 0 or rows == 0) return @intFromEnum(ErrorCode.invalid_arg);
-    h.term.resize(h.alloc, cols, rows) catch return @intFromEnum(ErrorCode.internal);
+    h.term.resize(h.alloc, .{ .cols = cols, .rows = rows }) catch return @intFromEnum(ErrorCode.internal);
     ensureScrollingRegion(h);
-    if (h.search.isActive()) {
-        h.search.viewport_dirty = true;
-        h.search.active_dirty = true;
-    }
     return @intFromEnum(ErrorCode.ok);
 }
 
@@ -1255,7 +894,7 @@ pub export fn restty_render_update(handle: ?*Restty) u32 {
         const cell_graphemes = cell_slice.items(.grapheme);
         const cell_styles = cell_slice.items(.style);
         const pin = row_pins[r];
-        const page_ptr = &pin.node.data;
+        const page_ptr = pin.node.page();
 
         var c: usize = 0;
         while (c < h.cols) : (c += 1) {

@@ -25,10 +25,13 @@ afterEach(() => {
   }
 });
 
-function createLoopHarness(options: { synchronizedOutput?: () => boolean } = {}) {
+function createLoopHarness(
+  options: { synchronizedOutput?: () => boolean; imageChanged?: () => boolean } = {},
+) {
   const renderUpdates: number[] = [];
   const ticks: number[] = [];
   const wasm = {
+    tickKittyAnimations: options.imageChanged ?? (() => false),
     renderUpdate: (handle: number) => {
       renderUpdates.push(handle);
     },
@@ -105,5 +108,13 @@ test("render loop holds presentation while synchronized output is active", () =>
   harness.loop(harness.gpuState);
   expect(harness.ticks.length).toBe(1);
   expect(harness.renderUpdates).toEqual([1]);
+  expect(harness.sharedState.needsRender).toBe(false);
+});
+
+test("image frame changes render without new terminal output", () => {
+  const harness = createLoopHarness({ imageChanged: () => true });
+  harness.sharedState.needsRender = false;
+  harness.loop(harness.gpuState);
+  expect(harness.ticks).toEqual([1]);
   expect(harness.sharedState.needsRender).toBe(false);
 });

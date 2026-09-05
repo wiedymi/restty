@@ -2,6 +2,7 @@ import type { KittyPlacement, ResttyWasmExports } from "./types";
 
 const KITTY_PLACEMENT_STRIDE_V1 = 68;
 const KITTY_PLACEMENT_STRIDE_V2 = 76;
+const KITTY_PLACEMENT_STRIDE_V3 = 84;
 
 export function readKittyPlacements(
   exports: ResttyWasmExports,
@@ -27,6 +28,10 @@ export function readKittyPlacements(
     const base = i * stride;
     placements[i] = {
       imageId: view.getUint32(base + 0, true),
+      imageRevision:
+        stride >= KITTY_PLACEMENT_STRIDE_V3
+          ? view.getBigUint64(base + 76, true).toString()
+          : undefined,
       placementId: hasPlacementIdentity ? view.getUint32(base + 68, true) : 0,
       placementExternal: hasPlacementIdentity ? view.getUint8(base + 72) !== 0 : false,
       imageFormat: view.getUint8(base + 4),

@@ -9,33 +9,13 @@ const builtWasmPath = resolve(wasmDir, "zig-out/bin/restty.wasm");
 const embeddedWasmPath = resolve(root, "src/wasm/embedded.ts");
 const wasmOptimizeMode = process.env.RESTTY_WASM_OPTIMIZE?.trim() || "ReleaseSafe";
 
-function makeCommandEnv(): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) env[key] = value;
-  }
-  return env;
-}
-
-function commandOutput(command: string[], cwd: string): string | null {
-  const proc = Bun.spawnSync(command, {
-    cwd,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  if (proc.exitCode !== 0) return null;
-  return Buffer.from(proc.stdout).toString("utf-8").trim();
-}
-
 function encodeWasmBinaryLiteral(bytes: Uint8Array): string {
   let output = "";
 
   for (let i = 0; i < bytes.length; i += 1) {
     const byte = bytes[i];
     const next = bytes[i + 1];
-    const shouldHexEscape =
-      byte < 0x20 || byte === 0x7f || (byte >= 0x80 && byte <= 0x9f);
+    const shouldHexEscape = byte < 0x20 || byte === 0x7f || (byte >= 0x80 && byte <= 0x9f);
 
     if (byte === 0x5c) {
       output += "\\\\";
@@ -59,24 +39,9 @@ function encodeWasmBinaryLiteral(bytes: Uint8Array): string {
   return output;
 }
 
-function prepareDarwinBuild(env: Record<string, string>): void {
-  if (process.platform !== "darwin") return;
-
-  const sdkVersion = commandOutput(["xcrun", "--sdk", "macosx", "--show-sdk-version"], root);
-  const sdkMajor = Number.parseInt(sdkVersion?.split(".")[0] ?? "", 10);
-  if (sdkMajor >= 27 && !process.env.RESTTY_WASM_HOST_DEVELOPER_DIR) {
-    // Zig 0.15.2 links the build runner incorrectly when it autodetects the
-    // macOS 27 SDK. wasm/build.zig retargets build-time tools after startup.
-    env.DEVELOPER_DIR = "/__restty_no_xcode_sdk_autodetect__";
-  } else if (process.env.RESTTY_WASM_HOST_DEVELOPER_DIR?.trim()) {
-    env.DEVELOPER_DIR = process.env.RESTTY_WASM_HOST_DEVELOPER_DIR.trim();
-  }
-}
-
-function runCommand(command: string[], cwd: string, env: Record<string, string>): void {
+function runCommand(command: string[], cwd: string): void {
   const proc = Bun.spawnSync(command, {
     cwd,
-    env,
     stdio: ["ignore", "inherit", "inherit"],
   });
 
@@ -86,15 +51,14 @@ function runCommand(command: string[], cwd: string, env: Record<string, string>)
 }
 
 console.log("Building wasm module...");
-const buildEnv = makeCommandEnv();
 const buildCommand = [
   "zig",
   "build",
   "-Dtarget=wasm32-freestanding",
+  "-Dcpu=baseline+simd128",
   `-Doptimize=${wasmOptimizeMode}`,
 ];
-prepareDarwinBuild(buildEnv);
-runCommand(buildCommand, wasmDir, buildEnv);
+runCommand(buildCommand, wasmDir);
 
 console.log("Regenerating src/wasm/embedded.ts...");
 const bytes = await readFile(builtWasmPath);

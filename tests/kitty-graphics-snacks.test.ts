@@ -6,7 +6,7 @@ import { rewriteKittyFileMediaToDirect } from "../src/pty/kitty-media";
 import { loadResttyWasm } from "../src/wasm/runtime/restty-wasm";
 
 const PNG_1X1_BASE64 =
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO6pNwAAAABJRU5ErkJggg==";
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==";
 
 const PLACEHOLDER_GRID_4X2 =
   "\u{10EEEE}\u0305\u0305\u{10EEEE}\u0305\u030D\u{10EEEE}\u0305\u030E\u{10EEEE}\u0305\u0310\n" +

@@ -19,7 +19,11 @@ test("rewrites kitty file-medium transfer to direct-medium", () => {
     const state = { remainder: "" };
     const payload = Buffer.from(file).toString("base64");
     const input = kittyApc("i=77,t=f,f=100", payload);
-    const out = rewriteKittyFileMediaToDirect(input, state, (path) => new Uint8Array(readFileSync(path)));
+    const out = rewriteKittyFileMediaToDirect(
+      input,
+      state,
+      (path) => new Uint8Array(readFileSync(path)),
+    );
 
     expect(out).toContain("\x1b_G");
     expect(out).toContain("i=77");
@@ -72,9 +76,11 @@ test("leaves direct-medium transfers untouched", () => {
 test("keeps unresolved file-medium transfers untouched", () => {
   const state = { remainder: "" };
   const input = kittyApc("i=9,t=f,f=100", Buffer.from("/missing/file").toString("base64"));
-  expect(rewriteKittyFileMediaToDirect(input, state, () => {
-    throw new Error("missing");
-  })).toBe(input);
+  expect(
+    rewriteKittyFileMediaToDirect(input, state, () => {
+      throw new Error("missing");
+    }),
+  ).toBe(input);
 });
 
 test("drops echoed kitty response packets from PTY stream", () => {
@@ -104,7 +110,7 @@ test("rewritten APC is accepted by kitty graphics parser", async () => {
   try {
     const file = join(dir, "image.png");
     const png1x1 = Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO6pNwAAAABJRU5ErkJggg==",
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==",
       "base64",
     );
     writeFileSync(file, png1x1);
@@ -127,7 +133,7 @@ test("rewritten APC is accepted by kitty graphics parser", async () => {
     wasm.destroy(handle);
 
     expect(placements.length).toBeGreaterThan(0);
-    expect(placements[placements.length - 1]!.imageFormat).toBe(100);
+    expect(placements[placements.length - 1]!.imageFormat).toBe(4);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

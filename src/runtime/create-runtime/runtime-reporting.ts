@@ -1,7 +1,4 @@
-import {
-  selectionForRow as selectionRangeForRow,
-  getSelectionText as extractSelectionText,
-} from "../../selection";
+import { selectionForRow as selectionRangeForRow } from "../../selection";
 import type { CursorInfo, RenderState } from "../../wasm";
 import type { RuntimeReportingOptions } from "./runtime-reporting.types";
 
@@ -16,94 +13,26 @@ export function createRuntimeReporting(options: RuntimeReportingOptions) {
     return selectionRangeForRow(options.selectionState, row, cols);
   }
 
-  function getCellText(render: RenderState, idx: number): string {
-    const cp = render.codepoints[idx];
-    if (!cp) return " ";
-    let text = String.fromCodePoint(cp);
-    if (render.graphemeLen && render.graphemeOffset && render.graphemeBuffer) {
-      const extra = render.graphemeLen[idx] ?? 0;
-      if (extra > 0) {
-        const start = render.graphemeOffset[idx] ?? 0;
-        const cps = [cp];
-        for (let j = 0; j < extra; j += 1) {
-          const extraCp = render.graphemeBuffer[start + j];
-          if (extraCp) cps.push(extraCp);
-        }
-        text = String.fromCodePoint(...cps);
-      }
-    }
-    return text;
-  }
-
   function getSelectionText(): string {
-    const lastRenderState = options.getLastRenderState();
-    if (!lastRenderState) return "";
-    const { rows, cols } = lastRenderState;
     const state = options.selectionState;
-    if (!state.active || !state.anchor || !state.focus || !rows || !cols) return "";
-    const forward =
-      state.anchor.row < state.focus.row ||
-      (state.anchor.row === state.focus.row && state.anchor.col <= state.focus.col);
-    const start = forward ? state.anchor : state.focus;
-    const end = forward ? state.focus : state.anchor;
-    if (![start.row, start.col, end.row, end.col].every(Number.isSafeInteger)) return "";
-    if (start.row >= 0 && end.row < rows) {
-      return extractSelectionText(state, rows, cols, (idx) => getCellText(lastRenderState, idx));
-    }
-
     const wasm = options.getWasm();
     const handle = options.getWasmHandle();
-    const exports = options.getWasmExports();
     if (
+      !state.active ||
+      !state.anchor ||
+      !state.focus ||
       !options.getWasmReady() ||
       !wasm ||
-      !handle ||
-      !exports?.restty_scroll_viewport ||
-      !exports.restty_scrollbar_offset ||
-      !exports.restty_scrollbar_total
-    ) {
+      !handle
+    )
       return "";
-    }
-    const getOffset = () => exports.restty_scrollbar_offset!(handle);
-    const originalOffset = getOffset();
-    const total = exports.restty_scrollbar_total(handle);
-    const firstRow = originalOffset + start.row;
-    const lastRow = originalOffset + end.row;
-    if (lastRow < 0 || firstRow >= total) return "";
-    const selection = {
-      ...state,
-      anchor: { row: Math.max(0, firstRow), col: firstRow < 0 ? 0 : start.col },
-      focus: { row: Math.min(total - 1, lastRow), col: lastRow >= total ? cols - 1 : end.col },
-    };
-    // Scroll deltas cross the WASM ABI as signed 32-bit integers.
-    const moveTo = (target: number) => {
-      let offset = getOffset();
-      while (offset !== target) {
-        const delta = Math.max(-0x7fffffff, Math.min(0x7fffffff, target - offset));
-        wasm.scrollViewport(handle, delta);
-        const next = getOffset();
-        if (next !== offset + delta) throw new Error("Cannot read selected scrollback rows");
-        offset = next;
-      }
-    };
-    let render = lastRenderState;
-    let offset = originalOffset;
-    try {
-      return extractSelectionText(selection, total, cols, (idx) => {
-        const row = Math.floor(idx / cols);
-        if (row < offset || row >= offset + rows) {
-          moveTo(Math.min(row, Math.max(0, total - rows)));
-          offset = getOffset();
-          wasm.renderUpdate(handle);
-          render = wasm.getRenderState(handle);
-        }
-        return getCellText(render, idx - offset * cols);
-      });
-    } finally {
-      // Render views share WASM memory. Restore their contents as well as the viewport.
-      moveTo(originalOffset);
-      wasm.renderUpdate(handle);
-    }
+    return wasm.getSelectionText(
+      handle,
+      state.anchor.row,
+      state.anchor.col,
+      state.focus.row,
+      state.focus.col,
+    );
   }
 
   function getRenderState(): RenderState | null {

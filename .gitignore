@@ -35,3 +35,6 @@ playground/public/restty-wasm.js.map
 
 # Local package archives
 *.tgz
+
+# Zig 0.16 dependency cache
+wasm/zig-pkg/

@@ -96,23 +96,6 @@ test("copy preserves combining characters across pages", () => {
   }
 });
 
-test("copy restores the viewport if reading a page fails", () => {
-  const f = fixture(lines, 4);
-  const read = spyOn(wasm, "getRenderState").mockImplementationOnce(() => {
-    throw new Error("read failed");
-  });
-  try {
-    expect(() => f.reporting.getSelectionText()).toThrow("read failed");
-    expect(wasm.exports.restty_scrollbar_offset!(f.handle)).toBe(4);
-    expect(Array.from(f.render.codepoints)).toEqual(
-      Array.from(wasm.getRenderState(f.handle).codepoints),
-    );
-  } finally {
-    read.mockRestore();
-    wasm.destroy(f.handle);
-  }
-});
-
 test("copy has no fixed page limit", () => {
   const text = Array.from({ length: 1600 }, (_, row) => `line ${row}`);
   const f = fixture(text, 1597);
@@ -124,12 +107,12 @@ test("copy has no fixed page limit", () => {
   }
 });
 
-test("copy stops if the terminal does not scroll", () => {
+test("copy reads scrollback without any viewport scroll", () => {
   const f = fixture(lines, 4);
   const scroll = spyOn(wasm, "scrollViewport").mockImplementation(() => {});
   try {
-    expect(() => f.reporting.getSelectionText()).toThrow("Cannot read selected scrollback rows");
-    expect(scroll).toHaveBeenCalledTimes(1);
+    expect(f.reporting.getSelectionText()).toBe(lines.join("\n"));
+    expect(scroll).not.toHaveBeenCalled();
     expect(wasm.exports.restty_scrollbar_offset!(f.handle)).toBe(4);
   } finally {
     scroll.mockRestore();
@@ -157,12 +140,33 @@ test("copy does not return partial text when scrollback access is unavailable", 
       selectionState: f.state,
       getLastRenderState: () => f.render,
       getWasmReady: () => true,
-      getWasm: () => wasm,
+      getWasm: () => null,
       getWasmHandle: () => f.handle,
       getWasmExports: () => null,
       setCursorForCpr: () => {},
     });
     expect(reporting.getSelectionText()).toBe("");
+  } finally {
+    wasm.destroy(f.handle);
+  }
+});
+
+test("copy unwraps soft lines and keeps wide graphemes intact", () => {
+  const text = "abcdefghijklmno界e\u0301 then more text";
+  const f = fixture([text], 0);
+  try {
+    f.state.anchor = { row: 0, col: 0 };
+    f.state.focus = { row: 2, col: 15 };
+    expect(f.reporting.getSelectionText()).toBe(text);
+  } finally {
+    wasm.destroy(f.handle);
+  }
+});
+
+test("copy preserves selected blank lines at the end", () => {
+  const f = fixture(["first", "", ""], 0);
+  try {
+    expect(f.reporting.getSelectionText()).toBe("first\n\n");
   } finally {
     wasm.destroy(f.handle);
   }

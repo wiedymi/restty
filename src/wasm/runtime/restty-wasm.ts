@@ -60,6 +60,7 @@ export class ResttyWasm {
 
     const imports = {
       env: {
+        now_ms: () => performance.now(),
         log: (ptr: number, len: number) => {
           if (!memory || !ptr || !len) return;
           const view = new Uint8Array(memory.buffer, ptr, len);
@@ -127,6 +128,51 @@ export class ResttyWasm {
   scrollViewport(handle: number, delta: number): void {
     if (!this.exports.restty_scroll_viewport) return;
     this.exports.restty_scroll_viewport(handle, delta);
+  }
+
+  /** Advance image animations and report whether a frame changed. */
+  tickKittyAnimations(handle: number, now: number): boolean {
+    return this.exports.restty_kitty_tick(handle, now) !== 0;
+  }
+
+  /** Read selected text without moving the viewport or changing the selection. */
+  getSelectionText(
+    handle: number,
+    anchorRow: number,
+    anchorCol: number,
+    focusRow: number,
+    focusCol: number,
+  ): string {
+    const coordinates = [anchorRow, anchorCol, focusRow, focusCol];
+    if (
+      !coordinates.every(
+        (value) => Number.isInteger(value) && value >= -0x80000000 && value <= 0x7fffffff,
+      )
+    )
+      return "";
+    const result = this.exports.restty_alloc(8);
+    if (!result) throw new Error("Cannot allocate selection result");
+    let ptr = 0;
+    let len = 0;
+    try {
+      const status = this.exports.restty_selection_text(
+        handle,
+        anchorRow,
+        anchorCol,
+        focusRow,
+        focusCol,
+        result,
+        result + 4,
+      );
+      const view = new DataView(this.memory.buffer);
+      ptr = view.getUint32(result, true);
+      len = view.getUint32(result + 4, true);
+      if (status !== 0) throw new Error("Cannot read selected terminal text");
+      return textDecoder.decode(new Uint8Array(this.memory.buffer, ptr, len));
+    } finally {
+      if (ptr && len) this.exports.restty_free(ptr, len);
+      this.exports.restty_free(result, 8);
+    }
   }
 
   /** Read and clear pending output replies from terminal. */

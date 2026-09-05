@@ -15,13 +15,12 @@
 - Allow local fonts via queryLocalFonts (Chromium only, user gesture).
 
 ## WASM Strategy
-- Custom Zig wrapper over ghostty-vt Zig API.
-- Avoid relying on current C ABI (missing Terminal/RenderState).
-- Patch ghostty submodule for wasm/lib-vt builds to avoid config/font deps:
-  - `terminal/style.zig`: local BoldColor stub for `.lib`.
-  - `terminal/mouse_shape.zig`: skip build_config import for `.lib`.
-  - `quirks.zig`: avoid font import on wasm.
-- Embed wasm binary into the JS bundle for browser use (no runtime fetch).
+- Keep a small Zig adapter over the upstream terminal API and retain bulk typed-array reads.
+- Use upstream stream processing, text formatting, and whole-terminal search.
+- Pin Zig 0.16.0 and compile ReleaseSafe with WASM SIMD128.
+- Keep only the explicit browser graphics opt-in and unsupported file-media guard in the Ghostty fork.
+- Decode PNGs through Wuffs; use browser time for image animations.
+- Embed WASM in the JS bundle and rebuild it in CI and release jobs.
 
 ## Rendering Backend
 - WebGPU primary; WebGL2 fallback.

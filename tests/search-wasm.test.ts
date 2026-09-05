@@ -106,3 +106,31 @@ test("wasm search clear resets status and viewport highlights", () => {
     wasm.destroy(handle);
   }
 });
+
+test("search follows new output, resize, and alternate screen changes", () => {
+  const handle = wasm.create(20, 4, 1_000_000);
+  try {
+    wasm.write(handle, "primary needle\r\n");
+    wasm.setSearchQuery(handle, "needle");
+    completeSearch(handle);
+    expect(wasm.getSearchStatus(handle).totalMatches).toBe(1);
+    wasm.write(handle, "new needle\r\n");
+    wasm.stepSearch(handle, 64);
+    completeSearch(handle);
+    expect(wasm.getSearchStatus(handle).totalMatches).toBe(2);
+    wasm.resize(handle, 10, 4);
+    wasm.stepSearch(handle, 64);
+    completeSearch(handle);
+    expect(wasm.getSearchStatus(handle).totalMatches).toBe(2);
+    wasm.write(handle, "\x1b[?1049hother needle");
+    wasm.stepSearch(handle, 64);
+    completeSearch(handle);
+    expect(wasm.getSearchStatus(handle).totalMatches).toBe(1);
+    wasm.write(handle, "\x1b[?1049l");
+    wasm.stepSearch(handle, 64);
+    completeSearch(handle);
+    expect(wasm.getSearchStatus(handle).totalMatches).toBe(2);
+  } finally {
+    wasm.destroy(handle);
+  }
+});

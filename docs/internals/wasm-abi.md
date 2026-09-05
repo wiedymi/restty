@@ -1,8 +1,7 @@
-# WASM ABI and Memory Layout (Prototype)
+# WASM ABI and Memory Layout
 
-This prototype exposes **separate flat arrays** instead of a packed render
-buffer. The goal is to keep the WASM side simple while we iterate on the
-renderer.
+The adapter exposes separate flat arrays for bulk renderer reads. The JS loader
+and embedded WASM are built and released together.
 
 ## Core Exports
 - `restty_create(cols, rows, max_scrollback) -> handle`
@@ -80,3 +79,11 @@ Layout: `u16 row`, `u16 col`, `u8 visible`, `u8 style`, `u8 blinking`,
   - `restty_kitty_placement_stride`
   - `restty_kitty_placement_count`
   - `restty_kitty_placements_ptr`
+
+
+## Selection and image updates
+
+- `restty_selection_text(handle, anchor_row, anchor_col, focus_row, focus_col, out_ptr, out_len)` returns UTF-8 bytes for a viewport-relative selection, including scrollback. Free the returned buffer with `restty_free`.
+- `restty_kitty_tick(handle, now_ms)` advances image animations and reports a changed frame.
+- Kitty placement stride v3 is 84 bytes. The two u32 words at offsets 76 and 80 contain the image revision, read as a little-endian u64 by JS. Older placement layouts remain readable.
+- `env.now_ms()` supplies a monotonic browser clock. The module requires WASM SIMD128.

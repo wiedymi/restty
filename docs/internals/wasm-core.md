@@ -1,10 +1,31 @@
 # WASM Core (libghostty-vt Wrapper)
 
 ## Summary
-We build a custom Zig -> WASM wrapper that exposes the Ghostty terminal engine
-(`ghostty-vt` Zig API) to JS. We do not rely on the current C API because it
-only exposes key/OSC/SGR/paste utilities; the full Terminal + RenderState is in
-Zig.
+We build a small Zig -> WASM adapter over the `ghostty-vt` Zig API.
+Upstream now also exposes Terminal, RenderState, selection, and search through
+its C API. Restty keeps its existing bulk typed-array ABI to avoid per-cell
+calls and preserve its renderer integration.
+
+The core is pinned to upstream commit `492300cad104195411d12217dd22f1cd05f31376`
+plus a small browser graphics patch. Builds use Zig 0.16.0, ReleaseSafe,
+`wasm32-freestanding`, SIMD128, and a 128 KiB stack. Chrome 91+, Firefox 89+,
+and Safari 16.4+ support SIMD128. The loader imports `env.now_ms` from
+`performance.now()` for the terminal's clock.
+
+The fork adds an explicit `-Dwasm-kitty-graphics=true` opt-in and rejects
+filesystem image media on freestanding targets. The adapter provides PNG
+decoding through Wuffs. It does not keep encoded PNGs inside the terminal.
+PTY file-media rewriting remains in the host transport.
+
+Upstream's stream handler processes terminal state and replies; Restty keeps
+its device identity and bounded reply buffer. Upstream's whole-terminal search
+engine owns search state. Selection text uses upstream page formatting directly,
+with soft-line unwrapping and selected trailing blank rows preserved.
+
+Kitty images use upstream relative-placement resolution and animation playback.
+The adapter exports image revisions with each placement so texture caches update
+even when changed pixels reuse the same memory address. The render loop checks
+animation changes on each active frame without forcing a redraw when unchanged.
 
 The current wrapper (`wasm/src/restty.zig`) exports more than the original
 prototype baseline: lifecycle, render buffers, scrollback helpers, palette

@@ -2,7 +2,7 @@
     .name = .restty_wasm,
     .version = "0.0.0",
     .fingerprint = 0x1d960b595966b365,
-    .minimum_zig_version = "0.15.2",
+    .minimum_zig_version = "0.16.0",
     .paths = .{""},
     .dependencies = .{
         .ghostty = .{ .path = "../reference/ghostty" },

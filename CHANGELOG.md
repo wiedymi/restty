@@ -20,6 +20,37 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.3.0] - 2026-09-05
+
+### Breaking Changes
+
+- The embedded WASM now requires SIMD128: Chrome 91+, Firefox 89+, or Safari 16.4+. Custom WASM hosts must provide `env.now_ms()` as a monotonic clock in milliseconds.
+
+### Migration
+
+- Applications using the Restty JavaScript loader need no configuration changes. Older browser engines without SIMD128 must be updated.
+- Direct WASM hosts: `{ env: { log } }` -> `{ env: { log, now_ms: () => performance.now() } }`.
+- Source builds: Zig 0.15.2 -> Zig 0.16.0. Run `bun run build:wasm` before building the package.
+
+### Features
+
+- Updated the Ghostty core to upstream `492300cad`, with WASM parsing and memory improvements.
+- Added Kitty image animation playback and relative placements rooted in normal placements.
+
+### Fixes
+
+- Copy text directly from the terminal buffer, preserving selected blank lines and Unicode graphemes while joining soft-wrapped lines.
+- Use upstream whole-terminal search across output updates, resize, and alternate-screen changes.
+- Decode and validate PNG images in WASM through Wuffs. Invalid PNG data is rejected before rendering.
+- Refresh image textures when pixel content changes at an existing memory address.
+
+### Internal
+
+- Use upstream stream handling for terminal parsing and replies while retaining Restty device identity.
+- Build WASM with Zig 0.16.0, ReleaseSafe, SIMD128, and a 128 KiB stack. Removed the obsolete macOS SDK workaround.
+- Rebuild WASM during CI and release validation and publishing.
+- Added repeatable browser core benchmarks and regression coverage for native copy, search updates, image animation, and relative placements. Chrome WebGL2 and WebGPU rendering checks pass; Safari UI and timing checks remain unverified because local automation was unavailable.
+
 ## [0.2.7] - 2026-09-05
 
 ### Fixes

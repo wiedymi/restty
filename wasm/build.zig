@@ -1,10 +1,12 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const target = b.standardTargetOptions(.{});
+    const target = b.standardTargetOptions(.{ .default_target = .{
+        .cpu_arch = .wasm32,
+        .os_tag = .freestanding,
+        .cpu_features_add = std.Target.wasm.featureSet(&.{.simd128}),
+    } });
     const optimize = b.standardOptimizeOption(.{});
-
-    retargetMacOS27Host(b);
 
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/restty.zig"),
@@ -20,34 +22,17 @@ pub fn build(b: *std.Build) void {
 
     exe.entry = .disabled;
     exe.rdynamic = true;
+    exe.stack_size = 128 * 1024;
 
     const ghostty_dep = b.dependency("ghostty", .{
         .target = target,
         .optimize = optimize,
         .simd = false,
+        .@"wasm-kitty-graphics" = true,
     });
     exe.root_module.addImport("ghostty-vt", ghostty_dep.module("ghostty-vt"));
 
+    exe.root_module.addImport("wuffs", ghostty_dep.module("ghostty-vt").import_table.get("wuffs").?);
+
     b.installArtifact(exe);
-}
-
-fn retargetMacOS27Host(b: *std.Build) void {
-    const host = b.graph.host.result;
-    if (host.os.tag != .macos) return;
-
-    const version_range = host.os.version_range.semver;
-    if (version_range.min.major < 27) return;
-
-    const macos_15: std.SemanticVersion = .{
-        .major = 15,
-        .minor = 0,
-        .patch = 0,
-    };
-    b.graph.host = b.resolveTargetQuery(.{
-        .cpu_arch = host.cpu.arch,
-        .os_tag = .macos,
-        .os_version_min = .{ .semver = macos_15 },
-        .os_version_max = .{ .semver = macos_15 },
-        .abi = host.abi,
-    });
 }

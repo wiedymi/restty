@@ -50,6 +50,7 @@ export type KittyPlacement = {
   imageHeight: number;
   imageDataPtr: number;
   imageDataLen: number;
+  imageRevision?: string;
   x: number;
   y: number;
   z: number;
@@ -103,6 +104,16 @@ export type ResttyWasmExports = WebAssembly.Exports & {
   restty_set_default_colors?: (handle: number, fg: number, bg: number, cursor: number) => number;
   restty_set_palette?: (handle: number, ptr: number, len: number) => number;
   restty_reset_palette?: (handle: number) => number;
+  restty_kitty_tick: (handle: number, now: number) => number;
+  restty_selection_text: (
+    handle: number,
+    anchorRow: number,
+    anchorCol: number,
+    focusRow: number,
+    focusCol: number,
+    outPtr: number,
+    outLen: number,
+  ) => number;
   restty_scroll_viewport?: (handle: number, delta: number) => number;
   restty_scrollbar_total?: (handle: number) => number;
   restty_scrollbar_offset?: (handle: number) => number;
