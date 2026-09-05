@@ -20,6 +20,12 @@ This project follows SemVer. While restty is pre-1.0, breaking public API change
 
 ### Docs
 
+## [0.2.7] - 2026-09-05
+
+### Fixes
+
+- Copy the full text selection across scrollback, including offscreen rows and blank lines, while preserving the viewport and selection (#35).
+
 ## [0.2.6] - 2026-07-17
 
 ### Fixes

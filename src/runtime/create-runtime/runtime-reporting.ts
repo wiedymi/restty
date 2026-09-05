@@ -39,9 +39,71 @@ export function createRuntimeReporting(options: RuntimeReportingOptions) {
     const lastRenderState = options.getLastRenderState();
     if (!lastRenderState) return "";
     const { rows, cols } = lastRenderState;
-    return extractSelectionText(options.selectionState, rows, cols, (idx) =>
-      getCellText(lastRenderState, idx),
-    );
+    const state = options.selectionState;
+    if (!state.active || !state.anchor || !state.focus || !rows || !cols) return "";
+    const forward =
+      state.anchor.row < state.focus.row ||
+      (state.anchor.row === state.focus.row && state.anchor.col <= state.focus.col);
+    const start = forward ? state.anchor : state.focus;
+    const end = forward ? state.focus : state.anchor;
+    if (![start.row, start.col, end.row, end.col].every(Number.isSafeInteger)) return "";
+    if (start.row >= 0 && end.row < rows) {
+      return extractSelectionText(state, rows, cols, (idx) => getCellText(lastRenderState, idx));
+    }
+
+    const wasm = options.getWasm();
+    const handle = options.getWasmHandle();
+    const exports = options.getWasmExports();
+    if (
+      !options.getWasmReady() ||
+      !wasm ||
+      !handle ||
+      !exports?.restty_scroll_viewport ||
+      !exports.restty_scrollbar_offset ||
+      !exports.restty_scrollbar_total
+    ) {
+      return "";
+    }
+    const getOffset = () => exports.restty_scrollbar_offset!(handle);
+    const originalOffset = getOffset();
+    const total = exports.restty_scrollbar_total(handle);
+    const firstRow = originalOffset + start.row;
+    const lastRow = originalOffset + end.row;
+    if (lastRow < 0 || firstRow >= total) return "";
+    const selection = {
+      ...state,
+      anchor: { row: Math.max(0, firstRow), col: firstRow < 0 ? 0 : start.col },
+      focus: { row: Math.min(total - 1, lastRow), col: lastRow >= total ? cols - 1 : end.col },
+    };
+    // Scroll deltas cross the WASM ABI as signed 32-bit integers.
+    const moveTo = (target: number) => {
+      let offset = getOffset();
+      while (offset !== target) {
+        const delta = Math.max(-0x7fffffff, Math.min(0x7fffffff, target - offset));
+        wasm.scrollViewport(handle, delta);
+        const next = getOffset();
+        if (next !== offset + delta) throw new Error("Cannot read selected scrollback rows");
+        offset = next;
+      }
+    };
+    let render = lastRenderState;
+    let offset = originalOffset;
+    try {
+      return extractSelectionText(selection, total, cols, (idx) => {
+        const row = Math.floor(idx / cols);
+        if (row < offset || row >= offset + rows) {
+          moveTo(Math.min(row, Math.max(0, total - rows)));
+          offset = getOffset();
+          wasm.renderUpdate(handle);
+          render = wasm.getRenderState(handle);
+        }
+        return getCellText(render, idx - offset * cols);
+      });
+    } finally {
+      // Render views share WASM memory. Restore their contents as well as the viewport.
+      moveTo(originalOffset);
+      wasm.renderUpdate(handle);
+    }
   }
 
   function getRenderState(): RenderState | null {
